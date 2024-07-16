@@ -9,6 +9,8 @@ spec:
     imagePullPolicy: Always
     tty: true
     volumeMounts:
+    - name: go-build-cache
+      mountPath: /chorus/.cache/go-build
     - name: docker
       mountPath: /run/docker.sock
     - name: docker-config
@@ -34,6 +36,9 @@ spec:
   imagePullSecrets:
   - name: registry-auth
   volumes:
+  - name: go-build-cache
+    hostPath:
+      path: /home/dipadmin/.cache/go-build
   - name: docker
     hostPath:
       path: /run/docker.sock
