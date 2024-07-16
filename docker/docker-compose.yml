@@ -3,7 +3,7 @@ services:
   chorus-cicd-chorus:
     image: local/chorus-cicd-chorus-stage1
     volumes:
-      - $PWD/..:/ds/ds-deployer/chorus-cicd-chorus
+      - $PWD/..:/chorus/chorus-deployer/chorus-cicd-chorus
     stdin_open: true
     tty: true
     entrypoint: /bin/bash

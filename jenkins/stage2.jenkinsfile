@@ -5,7 +5,7 @@ pipeline {
       namespace 'jenkins-int-pipeline'
       label "ci-chorus-cicd-chorus-${UUID.randomUUID().toString()}"
       yamlFile "jenkins/agents/unit.yaml"
-      defaultContainer 'ds-ubuntu'
+      defaultContainer 'chorus-ubuntu'
     }
   }
   environment{
@@ -70,8 +70,8 @@ pipeline {
 
     stage('Build') {
       steps {
-        container(name: 'ds-ubuntu', shell: '/bin/bash') {
-          dir('ds-dev-ops') {
+        container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+          dir('chorus-dev-ops') {
             checkout scm
             sh '''
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
@@ -94,7 +94,7 @@ pipeline {
         }
       }
       steps {
-        dir('ds-dev-ops') {
+        dir('chorus-dev-ops') {
           checkout scm
           sh '''
             /chorus/bin/chorus test
@@ -109,7 +109,7 @@ pipeline {
           stages {
             stage('deploy'){
               steps {
-                dir('ds-dev-ops') {
+                dir('chorus-dev-ops') {
                   checkout scm
                   sh '''
                     export env=ci
@@ -129,7 +129,7 @@ pipeline {
                 }
               }
               steps {
-                dir('ds-dev-ops') {
+                dir('chorus-dev-ops') {
                   checkout scm
                   withCredentials([
                     file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"])
@@ -172,8 +172,8 @@ pipeline {
       stages {
         stage('Deploy') {
           steps {
-            container(name: 'ds-ubuntu', shell: '/bin/bash') {
-              dir('ds-dev-ops') {
+            container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+              dir('chorus-dev-ops') {
                 checkout scm
                 sh """
                   export env=int

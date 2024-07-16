@@ -1,4 +1,4 @@
-FROM registry.dip-dev.thehip.app/ds-ubuntu:latest
+FROM registry.dip-dev.thehip.app/chorus-ubuntu:latest
 
 USER root
 

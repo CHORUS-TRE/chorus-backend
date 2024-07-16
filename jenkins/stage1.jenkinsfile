@@ -10,8 +10,8 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        container(name: 'ds-ubuntu', shell: '/bin/bash') {
-          dir('ds-dev-ops') {
+        container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+          dir('chorus-dev-ops') {
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'PYPI_SERVER_USERNAME_PASSWORD', usernameVariable: 'PYPI_USERNAME', passwordVariable: 'PYPI_PASSWORD']]) {
               checkout scm
               sh '''
