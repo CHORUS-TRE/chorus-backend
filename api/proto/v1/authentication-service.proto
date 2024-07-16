@@ -1,52 +1,27 @@
 syntax = "proto3";
-package templatebackend;
-option go_package = ".;templatebackend";
+package chorus;
+option go_package = ".;chorus";
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
+import "credentials.proto";
+import "public_endpoint.proto";
+
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     info: {
-        title: "template backend";
+        title: "chorus authentication service";
         version: "1.0";
         contact: {
-            name: "template backend authentication service";
-            url: "https://template-backend.horus-graph.intranet.chuv";
-            email: "development.bdsc@chuv.ch";
+            name: "chorus authentication service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
         };
     };
-
     schemes: HTTP;
     consumes: "application/json";
     produces: "application/json";
-
-    security_definitions: {
-        security: {
-            key: "Bearer";
-            value: {
-                type: TYPE_API_KEY;
-                in: IN_HEADER;
-                name: "Authorization";
-            }
-        }
-    }
-
-    security: {
-        security_requirement: {
-            key: "Bearer";
-            value: {};
-        }
-    }
-    security: {}
 };
-
-
-message Credentials {
-    string username = 1;
-    string password = 2;
-
-    string totp = 3;
-}
 
 message AuthenticationReply {
     AuthenticationResult result = 1;
@@ -61,14 +36,12 @@ service AuthenticationService {
             post: "/api/rest/v1/authentication/login"
             body: "*"
         };
+        option (public_endpoint) = true;
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Authenticate";
             description: "This endpoint authenticates a user";
-            tags: "Authentication";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "authentication_controller"};
-            };
+            tags: "AuthenticationService";
+            security: {}
         };
     };
 }

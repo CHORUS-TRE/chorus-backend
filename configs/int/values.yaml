@@ -1,6 +1,6 @@
 ingress:
   enabled: true
-  host: "template-backend.horus-graph.intranet.chuv"
+  host: "chorus.horus-graph.intranet.chuv"
 
 service:
   port: 16080

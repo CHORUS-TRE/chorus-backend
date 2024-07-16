@@ -1,0 +1,10 @@
+apiVersion: default.chorus-tre.ch/v1alpha1
+kind: Workbench
+metadata:
+  name: {{ .Values.name }}
+spec:
+  apps:
+    {{- range .Values.apps }}
+    - name: {{ .name }}
+      image: {{ .image }}
+    {{- end }}

@@ -3,7 +3,7 @@ pipeline {
     kubernetes {
       cloud 'kubernetes-int'
       namespace 'jenkins-int-pipeline'
-      label "ci-ds-cicd-template-backend-stage1-${UUID.randomUUID().toString()}"
+      label "ci-chorus-cicd-chorus-stage1-${UUID.randomUUID().toString()}"
       yamlFile "jenkins/agents/unit.yaml"
     }
   }

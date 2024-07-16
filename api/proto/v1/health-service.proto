@@ -1,0 +1,46 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "public_endpoint.proto";
+
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus health service";
+        version: "1.0";
+        contact: {
+        name: "chorus health service";
+        url: "https://github.com/CHORUS-TRE/chorus-backend";
+        email: "dev@chorus-tre.ch";
+    };
+};
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+/* Get Health Check */
+
+message GetHealthCheckRequest {}
+
+message GetHealthCheckReply{}
+
+service HealthService {
+    rpc GetHealthCheck(GetHealthCheckRequest) returns(GetHealthCheckReply) {
+        option(google.api.http) = {
+            get: "/api/rest/v1/health"
+            additional_bindings: [{ custom: {kind: "HEAD" path:"/api/rest/v1/health"} }];
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get health check";
+            description: "This endpoint returns health check";
+            tags: "HealthService";
+            security: {}
+        };
+    };
+}

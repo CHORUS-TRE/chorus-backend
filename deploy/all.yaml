@@ -8,23 +8,23 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ds-cicd-template-backend
+  name: chorus-cicd-chorus
   namespace: int
   labels:
-    app: ds-cicd-template-backend
+    app: chorus-cicd-chorus
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ds-cicd-template-backend
+      app: chorus-cicd-chorus
   template:
     metadata:
       labels:
-        app: ds-cicd-template-backend
+        app: chorus-cicd-chorus
     spec:
       containers:
-      - name: ds-cicd-template-backend
-        image: registry.dip-dev.thehip.app/ds-cicd-template-backend:latest
+      - name: chorus-cicd-chorus
+        image: registry.dip-dev.thehip.app/chorus-cicd-chorus:latest
         ports:
         - containerPort: 3001
       imagePullSecrets:
@@ -35,11 +35,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ds-cicd-template-backend
+  name: chorus-cicd-chorus
   namespace: int
 spec:
   selector:
-    app: ds-cicd-template-backend
+    app: chorus-cicd-chorus
   ports:
     - protocol: TCP
       port: 80
@@ -51,7 +51,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ds-cicd-template-backend-ingress
+  name: chorus-cicd-chorus-ingress
   namespace: int
   annotations:
     kubernetes.io/ingress.class: "public"
@@ -61,16 +61,16 @@ metadata:
 spec:
   tls:
   - hosts:
-    - ds-cicd-template-backend.itrcs3-app.intranet.chuv
-    secretName: ds-cicd-template-backend-tls
+    - chorus-cicd-chorus.itrcs3-app.intranet.chuv
+    secretName: chorus-cicd-chorus-tls
   rules:
-  - host: ds-cicd-template-backend.itrcs3-app.intranet.chuv
+  - host: chorus-cicd-chorus.itrcs3-app.intranet.chuv
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: ds-cicd-template-backend
+            name: chorus-cicd-chorus
             port:
               number: 80

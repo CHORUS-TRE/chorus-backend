@@ -1,0 +1,42 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus steward service";
+        version: "1.0";
+        contact: {
+            name: "chorus steward service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+
+message InitializeTenantRequest {
+    uint64 tenantId = 1;
+}
+
+service StewardService {
+    rpc InitializeTenant (InitializeTenantRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/steward/tenants/initialize"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Initialize a tenant";
+            description: "This endpoint initializes a new tenant";
+            tags: "StewardService";
+        };
+    };
+
+}

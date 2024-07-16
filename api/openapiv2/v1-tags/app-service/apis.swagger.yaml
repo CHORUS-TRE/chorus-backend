@@ -1,0 +1,275 @@
+swagger: "2.0"
+info:
+  title: chorus app service
+  version: "1.0"
+  contact:
+    name: chorus app service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: AppService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/apps:
+    get:
+      summary: List apps
+      description: This endpoint returns a list of apps
+      operationId: AppService_ListApps
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListAppsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - AppService
+    post:
+      summary: Create an app
+      description: This endpoint creates an app
+      operationId: AppService_CreateApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateAppReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusApp'
+      tags:
+        - AppService
+    put:
+      summary: Update an app
+      description: This endpoint updates an app
+      operationId: AppService_UpdateApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateAppReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateAppRequest'
+      tags:
+        - AppService
+  /api/rest/v1/apps/{id}:
+    get:
+      summary: Get an app
+      description: This endpoint returns an app
+      operationId: AppService_GetApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetAppReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppService
+    delete:
+      summary: Delete an app
+      description: This endpoint deletes an app
+      operationId: AppService_DeleteApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteAppReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppService
+definitions:
+  chorusApp:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      dockerImageName:
+        type: string
+      dockerImageTag:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusCreateAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateAppResult'
+  chorusCreateAppResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusDeleteAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteAppResult'
+  chorusDeleteAppResult:
+    type: object
+  chorusGetAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetAppResult'
+  chorusGetAppResult:
+    type: object
+    properties:
+      app:
+        $ref: '#/definitions/chorusApp'
+  chorusListAppsReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApp'
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
+  chorusUpdateAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateAppResult'
+  chorusUpdateAppRequest:
+    type: object
+    properties:
+      app:
+        $ref: '#/definitions/chorusApp'
+  chorusUpdateAppResult:
+    type: object
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

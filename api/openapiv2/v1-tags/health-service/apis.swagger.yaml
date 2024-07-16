@@ -1,0 +1,72 @@
+swagger: "2.0"
+info:
+  title: chorus health service
+  version: "1.0"
+  contact:
+    name: chorus health service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: HealthService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/health:
+    get:
+      summary: Get health check
+      description: This endpoint returns health check
+      operationId: HealthService_GetHealthCheck
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetHealthCheckReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - HealthService
+      security: []
+    head:
+      summary: Get health check
+      description: This endpoint returns health check
+      operationId: HealthService_GetHealthCheck2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetHealthCheckReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - HealthService
+      security: []
+definitions:
+  chorusGetHealthCheckReply:
+    type: object
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

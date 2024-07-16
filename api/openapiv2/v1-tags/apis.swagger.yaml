@@ -1,22 +1,474 @@
 swagger: "2.0"
 info:
-  title: template backend
+  title: CHORUS backend API
+  description: CHORUS backend API documentation
   version: "1.0"
   contact:
-    name: template backend authentication service
-    url: https://template-backend.horus-graph.intranet.chuv
-    email: development.bdsc@chuv.ch
+    name: CHORUS dev team
+    url: https://www.chorus-tre.ch
 tags:
+  - name: AppInstanceService
+  - name: AppService
   - name: AuthenticationService
-  - name: IndexService
+  - name: HealthService
+  - name: NotificationService
+  - name: StewardService
   - name: UserService
+  - name: WorkspaceService
 schemes:
   - http
+  - https
 consumes:
   - application/json
 produces:
   - application/json
 paths:
+  /api/rest/v1/app-instances:
+    get:
+      summary: List app instances
+      description: This endpoint returns a list of app instances
+      operationId: AppInstanceService_ListAppInstances
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListAppInstancesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - AppInstanceService
+    post:
+      summary: Create an app instance
+      description: This endpoint creates an app instance
+      operationId: AppInstanceService_CreateAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateAppInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusAppInstance'
+      tags:
+        - AppInstanceService
+    put:
+      summary: Update an app instance
+      description: This endpoint updates an app instance
+      operationId: AppInstanceService_UpdateAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateAppInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateAppInstanceRequest'
+      tags:
+        - AppInstanceService
+  /api/rest/v1/app-instances/{id}:
+    get:
+      summary: Get an app instance
+      description: This endpoint returns an app instance
+      operationId: AppInstanceService_GetAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetAppInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppInstanceService
+    delete:
+      summary: Delete an app instance
+      description: This endpoint deletes an app instance
+      operationId: AppInstanceService_DeleteAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteAppInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppInstanceService
+  /api/rest/v1/apps:
+    get:
+      summary: List apps
+      description: This endpoint returns a list of apps
+      operationId: AppService_ListApps
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListAppsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - AppService
+    post:
+      summary: Create an app
+      description: This endpoint creates an app
+      operationId: AppService_CreateApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateAppReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusApp'
+      tags:
+        - AppService
+    put:
+      summary: Update an app
+      description: This endpoint updates an app
+      operationId: AppService_UpdateApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateAppReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateAppRequest'
+      tags:
+        - AppService
+  /api/rest/v1/apps/{id}:
+    get:
+      summary: Get an app
+      description: This endpoint returns an app
+      operationId: AppService_GetApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetAppReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppService
+    delete:
+      summary: Delete an app
+      description: This endpoint deletes an app
+      operationId: AppService_DeleteApp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteAppReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppService
   /api/rest/v1/authentication/login:
     post:
       summary: Authenticate
@@ -26,7 +478,25 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendAuthenticationReply'
+            $ref: '#/definitions/chorusAuthenticationReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
@@ -36,11 +506,281 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/templatebackendCredentials'
+            $ref: '#/definitions/chorusCredentials'
       tags:
-        - Authentication
-      x-openapi-router-controller: authentication_controller
+        - AuthenticationService
+      security: []
+  /api/rest/v1/health:
+    get:
+      summary: Get health check
+      description: This endpoint returns health check
+      operationId: HealthService_GetHealthCheck
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetHealthCheckReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - HealthService
+      security: []
+    head:
+      summary: Get health check
+      description: This endpoint returns health check
+      operationId: HealthService_GetHealthCheck2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetHealthCheckReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - HealthService
+      security: []
+  /api/rest/v1/notifications:
+    get:
+      summary: List notifications
+      description: This endpoint returns a list of notifications
+      operationId: NotificationService_GetNotifications
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetNotificationsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: isRead
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - NotificationService
+  /api/rest/v1/notifications/count:
+    get:
+      summary: Count unread notifications
+      description: This endpoint returns the amount of unread notifications
+      operationId: NotificationService_CountUnreadNotifications
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCountUnreadNotificationsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - NotificationService
+  /api/rest/v1/notifications/read:
+    post:
+      summary: Mark a notification as read
+      description: This endpoint marks a notification as read
+      operationId: NotificationService_MarkNotificationsAsRead
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            type: object
+            properties: {}
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusMarkNotificationsAsReadRequest'
+      tags:
+        - NotificationService
+  /api/rest/v1/steward/tenants/initialize:
+    post:
+      summary: Initialize a tenant
+      description: This endpoint initializes a new tenant
+      operationId: StewardService_InitializeTenant
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            type: object
+            properties: {}
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusInitializeTenantRequest'
+      tags:
+        - StewardService
   /api/rest/v1/users:
+    get:
+      summary: List users
+      description: This endpoint returns a list of users
+      operationId: UserService_GetUsers
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetUsersReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - UserService
     post:
       summary: Create a user
       description: This endpoint creates a user
@@ -49,7 +789,25 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendCreateUserReply'
+            $ref: '#/definitions/chorusCreateUserReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
@@ -59,10 +817,49 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/templatebackendUser'
+            $ref: '#/definitions/chorusUser'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
+      security: []
+    put:
+      summary: Update a user
+      description: This endpoint updates a user
+      operationId: UserService_UpdateUser
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateUserReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateUserRequest'
+      tags:
+        - UserService
   /api/rest/v1/users/me:
     get:
       summary: Get my own user
@@ -72,14 +869,31 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetUserMeReply'
+            $ref: '#/definitions/chorusGetUserMeReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/rpcStatus'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
   /api/rest/v1/users/me/password:
     put:
       summary: Update password
@@ -89,7 +903,25 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendUpdatePasswordReply'
+            $ref: '#/definitions/chorusUpdatePasswordReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
@@ -99,10 +931,89 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/templatebackendUpdatePasswordRequest'
+            $ref: '#/definitions/chorusUpdatePasswordRequest'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
+  /api/rest/v1/users/me/totp/enable:
+    post:
+      summary: Enable TOTP
+      description: This endpoint enables the TOTP of the authenticated user
+      operationId: UserService_EnableTotp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusEnableTotpReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusEnableTotpRequest'
+      tags:
+        - UserService
+  /api/rest/v1/users/me/totp/reset:
+    post:
+      summary: Reset TOTP
+      description: This endpoint resets the TOTP of the authenticated user
+      operationId: UserService_ResetTotp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusResetTotpReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusResetTotpRequest'
+      tags:
+        - UserService
   /api/rest/v1/users/{id}:
     get:
       summary: Get a user
@@ -112,7 +1023,25 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetUserReply'
+            $ref: '#/definitions/chorusGetUserReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
@@ -124,8 +1053,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
     delete:
       summary: Delete a user
       description: This endpoint deletes a user
@@ -134,7 +1062,25 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendDeleteUserReply'
+            $ref: '#/definitions/chorusDeleteUserReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
@@ -146,8 +1092,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
   /api/rest/v1/users/{id}/password/reset:
     post:
       summary: Reset password
@@ -157,7 +1102,25 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendResetPasswordReply'
+            $ref: '#/definitions/chorusResetPasswordReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
@@ -172,130 +1135,351 @@ paths:
           in: body
           required: true
           schema:
-            type: object
+            $ref: '#/definitions/UserServiceResetPasswordBody'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
-  /api/v1/hello:
+        - UserService
+  /api/rest/v1/workspaces:
     get:
-      summary: Get a hello
-      description: This endpoint returns a hello
-      operationId: IndexService_GetHello
+      summary: List workspaces
+      description: This endpoint returns a list of workspaces
+      operationId: WorkspaceService_ListWorkspaces
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetHelloReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      tags:
-        - Index
-      x-openapi-router-controller: index_controller
-  /api/v1/hello/{identifier}:
-    post:
-      summary: Get a hello
-      description: This endpoint returns a hello
-      operationId: IndexService_CreateHello
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/templatebackendCreateHelloReply'
+            $ref: '#/definitions/chorusListWorkspacesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/rpcStatus'
       parameters:
-        - name: identifier
-          in: path
-          required: true
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
           type: integer
-          format: int32
-        - name: body
-          in: body
-          required: true
-          schema:
-            type: object
-            properties:
-              title:
-                type: string
-              content:
-                type: string
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
       tags:
-        - Index
-      x-openapi-router-controller: index_controller
-  /api/v1/helloo:
-    get:
-      summary: Get a hello
-      description: This endpoint returns a hello
-      operationId: IndexService_GetHelloo
+        - WorkspaceService
+    post:
+      summary: Create a workspace
+      description: This endpoint creates a workspace
+      operationId: WorkspaceService_CreateWorkspace
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetHelloReply'
+            $ref: '#/definitions/chorusCreateWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspace'
       tags:
-        - Index
-      x-openapi-router-controller: index_controller
+        - WorkspaceService
+    put:
+      summary: Update a workspace
+      description: This endpoint updates a workspace
+      operationId: WorkspaceService_UpdateWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceRequest'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}:
+    get:
+      summary: Get a workspace
+      description: This endpoint returns a workspace
+      operationId: WorkspaceService_GetWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+    delete:
+      summary: Delete a workspace
+      description: This endpoint deletes a workspace
+      operationId: WorkspaceService_DeleteWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
 definitions:
-  protobufAny:
+  UserServiceResetPasswordBody:
     type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
-  templatebackendAuthenticationReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/templatebackendAuthenticationResult'
-  templatebackendAuthenticationResult:
-    type: object
-    properties:
-      token:
-        type: string
-  templatebackendCreateHelloReply:
-    type: object
-    properties:
-      identifier:
-        type: integer
-        format: int32
-      title:
-        type: string
-      content:
-        type: string
-  templatebackendCreateUserReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/templatebackendCreateUserResult'
-    title: Create Users
-  templatebackendCreateUserResult:
+  chorusApp:
     type: object
     properties:
       id:
         type: string
         format: uint64
-  templatebackendCredentials:
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      dockerImageName:
+        type: string
+      dockerImageTag:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusAppInstance:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      appId:
+        type: string
+        format: uint64
+      workspaceId:
+        type: string
+        format: uint64
+      status:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusAuthenticationReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAuthenticationResult'
+  chorusAuthenticationResult:
+    type: object
+    properties:
+      token:
+        type: string
+  chorusCountUnreadNotificationsReply:
+    type: object
+    properties:
+      result:
+        type: integer
+        format: int64
+  chorusCreateAppInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateAppInstanceResult'
+  chorusCreateAppInstanceResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusCreateAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateAppResult'
+  chorusCreateAppResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusCreateUserReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateUserResult'
+    title: Create Users
+  chorusCreateUserResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusCreateWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateWorkspaceResult'
+  chorusCreateWorkspaceResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusCredentials:
     type: object
     properties:
       username:
@@ -304,52 +1488,260 @@ definitions:
         type: string
       totp:
         type: string
-  templatebackendDeleteUserReply:
+  chorusDeleteAppInstanceReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendDeleteUserResult'
-  templatebackendDeleteUserResult:
+        $ref: '#/definitions/chorusDeleteAppInstanceResult'
+  chorusDeleteAppInstanceResult:
     type: object
-  templatebackendGetHelloReply:
+  chorusDeleteAppReply:
     type: object
     properties:
-      content:
+      result:
+        $ref: '#/definitions/chorusDeleteAppResult'
+  chorusDeleteAppResult:
+    type: object
+  chorusDeleteUserReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteUserResult'
+  chorusDeleteUserResult:
+    type: object
+  chorusDeleteWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteWorkspaceResult'
+  chorusDeleteWorkspaceResult:
+    type: object
+  chorusEnableTotpReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusEnableTotpResult'
+  chorusEnableTotpRequest:
+    type: object
+    properties:
+      totp:
         type: string
-  templatebackendGetUserMeReply:
+    title: Enable TOTP
+  chorusEnableTotpResult:
+    type: object
+  chorusGetAppInstanceReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendGetUserMeResult'
-  templatebackendGetUserMeResult:
+        $ref: '#/definitions/chorusGetAppInstanceResult'
+  chorusGetAppInstanceResult:
+    type: object
+    properties:
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
+  chorusGetAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetAppResult'
+  chorusGetAppResult:
+    type: object
+    properties:
+      app:
+        $ref: '#/definitions/chorusApp'
+  chorusGetHealthCheckReply:
+    type: object
+  chorusGetNotificationsReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusNotification'
+      totalItems:
+        type: integer
+        format: int64
+  chorusGetUserMeReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetUserMeResult'
+  chorusGetUserMeResult:
     type: object
     properties:
       me:
-        $ref: '#/definitions/templatebackendUser'
+        $ref: '#/definitions/chorusUser'
     title: Get User (me)
-  templatebackendGetUserReply:
+  chorusGetUserReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendGetUserResult'
-  templatebackendGetUserResult:
+        $ref: '#/definitions/chorusGetUserResult'
+  chorusGetUserResult:
     type: object
     properties:
       user:
-        $ref: '#/definitions/templatebackendUser'
-  templatebackendResetPasswordReply:
+        $ref: '#/definitions/chorusUser'
+  chorusGetUsersReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendResetPasswordResult'
-  templatebackendResetPasswordResult:
-    type: object
-  templatebackendUpdatePasswordReply:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusUser'
+  chorusGetWorkspaceReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendUpdateUserResult'
-  templatebackendUpdatePasswordRequest:
+        $ref: '#/definitions/chorusGetWorkspaceResult'
+  chorusGetWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
+  chorusInitializeTenantRequest:
+    type: object
+    properties:
+      tenantId:
+        type: string
+        format: uint64
+  chorusListAppInstancesReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAppInstance'
+  chorusListAppsReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApp'
+  chorusListWorkspacesReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspace'
+  chorusMarkNotificationsAsReadRequest:
+    type: object
+    properties:
+      notificationIds:
+        type: array
+        items:
+          type: string
+      markAll:
+        type: boolean
+  chorusNotification:
+    type: object
+    properties:
+      id:
+        type: string
+      tenantId:
+        type: string
+        format: uint64
+      message:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      readAt:
+        type: string
+        format: date-time
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusResetPasswordReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusResetPasswordResult'
+  chorusResetPasswordResult:
+    type: object
+  chorusResetTotpReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusResetTotpResult'
+  chorusResetTotpRequest:
+    type: object
+    properties:
+      password:
+        type: string
+    title: Reset TOTP
+  chorusResetTotpResult:
+    type: object
+    properties:
+      totpSecret:
+        type: string
+      totpRecoveryCodes:
+        type: array
+        items:
+          type: string
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
+  chorusUpdateAppInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateAppInstanceResult'
+  chorusUpdateAppInstanceRequest:
+    type: object
+    properties:
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
+  chorusUpdateAppInstanceResult:
+    type: object
+  chorusUpdateAppReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateAppResult'
+  chorusUpdateAppRequest:
+    type: object
+    properties:
+      app:
+        $ref: '#/definitions/chorusApp'
+  chorusUpdateAppResult:
+    type: object
+  chorusUpdatePasswordReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateUserResult'
+  chorusUpdatePasswordRequest:
     type: object
     properties:
       currentPassword:
@@ -357,9 +1749,32 @@ definitions:
       newPassword:
         type: string
     title: Update User Password
-  templatebackendUpdateUserResult:
+  chorusUpdateUserReply:
     type: object
-  templatebackendUser:
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateUserResult'
+  chorusUpdateUserRequest:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
+    title: Update User
+  chorusUpdateUserResult:
+    type: object
+  chorusUpdateWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateWorkspaceResult'
+  chorusUpdateWorkspaceRequest:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
+  chorusUpdateWorkspaceResult:
+    type: object
+  chorusUser:
     type: object
     properties:
       id:
@@ -370,8 +1785,6 @@ definitions:
       lastName:
         type: string
       username:
-        type: string
-      email:
         type: string
       password:
         type: string
@@ -391,11 +1804,66 @@ definitions:
         format: date-time
       passwordChanged:
         type: boolean
+  chorusWorkspace:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      shortName:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      appInsanceIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+      appInstances:
+        type: array
+        items:
+          type: string
+          format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
 securityDefinitions:
-  Bearer:
+  bearer:
     type: apiKey
+    description: 'Authentication token: Bearer <token>'
     name: Authorization
     in: header
 security:
-  - Bearer: []
-  - {}
+  - bearer: []

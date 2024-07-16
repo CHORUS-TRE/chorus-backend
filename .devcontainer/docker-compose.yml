@@ -1,18 +1,21 @@
 version: '3'
 services:
-  template_backend:
-    build:
-      context: ..
-      dockerfile: docker/dockerfiles/dev.dockerfile
-    volumes:
-      - ..:/workspace:cached
-      - /run/docker.sock:/run/docker.sock
-    command: /bin/sh -c "while sleep 1000; do :; done"
+  # chorus:
+  #   build:
+  #     context: ..
+  #     dockerfile: docker/dockerfiles/dev.dockerfile
+  #   volumes:
+  #     - ..:/workspace:cached
+  #     - /run/docker.sock:/run/docker.sock
+  #   command: /bin/sh -c "while sleep 1000; do :; done"
   postgres:
     image: postgres
     ports:
-      - 5433:5432
+      - 5432:5432
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: template_backend
+      POSTGRES_DB: chorus
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ../docker/.postgresvolume:/var/lib/postgresql/data

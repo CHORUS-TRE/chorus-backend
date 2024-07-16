@@ -1,0 +1,174 @@
+swagger: "2.0"
+info:
+  title: chorus attachment service
+  version: "1.0"
+  contact:
+    name: chorus attachment service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: AttachmentService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/attachments:
+    post:
+      summary: Create attachment
+      description: This endpoint creates an attachment
+      operationId: AttachmentService_CreateAttachments
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            type: object
+            properties: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateAttachmentsRequest'
+      tags:
+        - Attachments
+  /api/rest/v1/attachments/{id}:
+    get:
+      summary: Get an attachment
+      description: This endpoint returns an attachment
+      operationId: AttachmentService_GetAttachment
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetAttachmentReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Attachments
+    delete:
+      summary: Delete an attachment
+      description: This endpoint deletes an attachment
+      operationId: AttachmentService_DeleteAttachment
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteAttachmentReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Attachments
+definitions:
+  chorusAttachment:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      key:
+        type: string
+      filename:
+        type: string
+      value:
+        type: string
+      contentType:
+        type: string
+      location:
+        type: string
+      documentCategory:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusCreateAttachmentRequest:
+    type: object
+    properties:
+      key:
+        type: string
+      filename:
+        type: string
+      value:
+        type: string
+      contentType:
+        type: string
+      location:
+        type: string
+      documentCategory:
+        type: string
+  chorusCreateAttachmentsRequest:
+    type: object
+    properties:
+      resourceId:
+        type: string
+        format: uint64
+      resourceType:
+        type: string
+      attachments:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusCreateAttachmentRequest'
+  chorusDeleteAttachmentReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteAttachmentResult'
+  chorusDeleteAttachmentResult:
+    type: object
+  chorusGetAttachmentReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAttachment'
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+security:
+  - Bearer: []

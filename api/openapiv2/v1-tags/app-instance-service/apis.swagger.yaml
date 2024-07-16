@@ -1,0 +1,273 @@
+swagger: "2.0"
+info:
+  title: chorus app instance service
+  version: "1.0"
+  contact:
+    name: chorus app instance service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: AppInstanceService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/app-instances:
+    get:
+      summary: List app instances
+      description: This endpoint returns a list of app instances
+      operationId: AppInstanceService_ListAppInstances
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListAppInstancesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - AppInstanceService
+    post:
+      summary: Create an app instance
+      description: This endpoint creates an app instance
+      operationId: AppInstanceService_CreateAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateAppInstanceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusAppInstance'
+      tags:
+        - AppInstanceService
+    put:
+      summary: Update an app instance
+      description: This endpoint updates an app instance
+      operationId: AppInstanceService_UpdateAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateAppInstanceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateAppInstanceRequest'
+      tags:
+        - AppInstanceService
+  /api/rest/v1/app-instances/{id}:
+    get:
+      summary: Get an app instance
+      description: This endpoint returns an app instance
+      operationId: AppInstanceService_GetAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetAppInstanceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppInstanceService
+    delete:
+      summary: Delete an app instance
+      description: This endpoint deletes an app instance
+      operationId: AppInstanceService_DeleteAppInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteAppInstanceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - AppInstanceService
+definitions:
+  chorusAppInstance:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      appId:
+        type: string
+        format: uint64
+      workspaceId:
+        type: string
+        format: uint64
+      status:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusCreateAppInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateAppInstanceResult'
+  chorusCreateAppInstanceResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusDeleteAppInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteAppInstanceResult'
+  chorusDeleteAppInstanceResult:
+    type: object
+  chorusGetAppInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetAppInstanceResult'
+  chorusGetAppInstanceResult:
+    type: object
+    properties:
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
+  chorusListAppInstancesReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAppInstance'
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
+  chorusUpdateAppInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateAppInstanceResult'
+  chorusUpdateAppInstanceRequest:
+    type: object
+    properties:
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
+  chorusUpdateAppInstanceResult:
+    type: object
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

@@ -1,11 +1,11 @@
 swagger: "2.0"
 info:
-  title: template backend
+  title: chorus
   version: "1.0"
   contact:
-    name: template backend index service
-    url: https://gitlab.itrcs3-app.intranet.chuv/datascience/ds-template-backend
-    email: dev@chuv.ch
+    name: chorus index service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
 tags:
   - name: IndexService
 schemes:
@@ -24,7 +24,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetHelloReply'
+            $ref: '#/definitions/chorusGetHelloReply'
         default:
           description: An unexpected error response.
           schema:
@@ -41,7 +41,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendCreateHelloReply'
+            $ref: '#/definitions/chorusCreateHelloReply'
         default:
           description: An unexpected error response.
           schema:
@@ -56,12 +56,7 @@ paths:
           in: body
           required: true
           schema:
-            type: object
-            properties:
-              title:
-                type: string
-              content:
-                type: string
+            $ref: '#/definitions/IndexServiceCreateHelloBody'
       tags:
         - Index
       x-openapi-router-controller: index_controller
@@ -74,7 +69,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetHelloReply'
+            $ref: '#/definitions/chorusGetHelloReply'
         default:
           description: An unexpected error response.
           schema:
@@ -83,6 +78,28 @@ paths:
         - Index
       x-openapi-router-controller: index_controller
 definitions:
+  IndexServiceCreateHelloBody:
+    type: object
+    properties:
+      title:
+        type: string
+      content:
+        type: string
+  chorusCreateHelloReply:
+    type: object
+    properties:
+      identifier:
+        type: integer
+        format: int32
+      title:
+        type: string
+      content:
+        type: string
+  chorusGetHelloReply:
+    type: object
+    properties:
+      content:
+        type: string
   protobufAny:
     type: object
     properties:
@@ -102,21 +119,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/protobufAny'
-  templatebackendCreateHelloReply:
-    type: object
-    properties:
-      identifier:
-        type: integer
-        format: int32
-      title:
-        type: string
-      content:
-        type: string
-  templatebackendGetHelloReply:
-    type: object
-    properties:
-      content:
-        type: string
 securityDefinitions:
   Bearer:
     type: apiKey

@@ -1,6 +1,6 @@
 syntax = "proto3";
-package templatebackend;
-option go_package = ".;templatebackend";
+package chorus;
+option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
 
@@ -10,16 +10,15 @@ message User {
     string firstName = 2;
     string lastName = 3;
     string username = 4;
-    string email = 5;
-    string password = 6;
-    string status = 7;
+    string password = 5;
+    string status = 6;
 
-    repeated string roles = 8;
+    repeated string roles = 7;
 
-    bool totpEnabled = 9;
+    bool totpEnabled = 8;
 
-    google.protobuf.Timestamp createdAt = 10;
-    google.protobuf.Timestamp updatedAt = 11;
+    google.protobuf.Timestamp createdAt = 9;
+    google.protobuf.Timestamp updatedAt = 10;
 
-    bool passwordChanged = 12;
+    bool passwordChanged = 11;
 }

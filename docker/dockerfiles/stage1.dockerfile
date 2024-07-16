@@ -2,13 +2,12 @@ FROM registry.dip-dev.thehip.app/ds-ubuntu:latest
 
 USER root
 
-RUN apt update && apt install libpq-dev -y --no-install-recommends
+ARG GOLANG_VERSION=1.22.5
+RUN curl -LO https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm go${GOLANG_VERSION}.linux-amd64.tar.gz
+ENV PATH="${PATH}:/usr/local/go/bin"
 
-USER ds
+USER chorus
 
-COPY ./requirements.txt /template_backend/requirements.txt
-COPY ./docker/secret_exec.sh /template_backend/docker/secret_exec.sh
-RUN --mount=type=secret,id=PYPI_USERNAME,uid=1000 --mount=type=secret,id=PYPI_PASSWORD,uid=1000 \
-    /template_backend/docker/secret_exec.sh pip install -r /template_backend/requirements.txt
-
-WORKDIR /template_backend
+WORKDIR /chorus

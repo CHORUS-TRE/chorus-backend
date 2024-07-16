@@ -1,0 +1,129 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/protobuf/empty.proto";
+
+import "common.proto";
+import "workspace.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus workspace service";
+        version: "1.0";
+        contact: {
+            name: "chorus workspace service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListWorkspacesRequest {
+    PaginationQuery pagination = 1;
+}
+message ListWorkspacesReply {
+    repeated Workspace result = 1;
+}
+
+message GetWorkspaceRequest {
+    uint64 id = 1;
+}
+
+message GetWorkspaceResult {
+    Workspace workspace = 1;
+}
+message GetWorkspaceReply {
+    GetWorkspaceResult result = 1;
+}
+
+message CreateWorkspaceReply {
+    CreateWorkspaceResult result = 1;
+}
+message CreateWorkspaceResult {
+    uint64 id = 1;
+}
+
+message UpdateWorkspaceRequest {
+    Workspace workspace = 1;
+}
+
+message UpdateWorkspaceResult {}
+
+message UpdateWorkspaceReply {
+    UpdateWorkspaceResult result = 1;
+}
+
+message DeleteWorkspaceRequest {
+    uint64  id = 1;
+}
+
+message DeleteWorkspaceResult {}
+
+message DeleteWorkspaceReply {
+    DeleteWorkspaceResult result = 1;
+}
+
+service WorkspaceService {
+    rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspaces/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a workspace";
+            description: "This endpoint returns a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc ListWorkspaces(ListWorkspacesRequest) returns (ListWorkspacesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspaces"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workspaces";
+            description: "This endpoint returns a list of workspaces";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc CreateWorkspace(Workspace) returns (CreateWorkspaceReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workspaces"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a workspace";
+            description: "This endpoint creates a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc UpdateWorkspace(UpdateWorkspaceRequest) returns (UpdateWorkspaceReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/workspaces"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update a workspace";
+            description: "This endpoint updates a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc DeleteWorkspace(DeleteWorkspaceRequest) returns (DeleteWorkspaceReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workspaces/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a workspace";
+            description: "This endpoint deletes a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+}

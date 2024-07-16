@@ -3,13 +3,13 @@ pipeline {
     kubernetes {
       cloud 'kubernetes-int'
       namespace 'jenkins-int-pipeline'
-      label "ci-ds-cicd-template-backend-${UUID.randomUUID().toString()}"
+      label "ci-chorus-cicd-chorus-${UUID.randomUUID().toString()}"
       yamlFile "jenkins/agents/unit.yaml"
       defaultContainer 'ds-ubuntu'
     }
   }
   environment{
-    componentName = 'template-backend'
+    componentName = 'chorus'
   }
   stages {
     stage('Set version') {
@@ -72,28 +72,33 @@ pipeline {
       steps {
         container(name: 'ds-ubuntu', shell: '/bin/bash') {
           dir('ds-dev-ops') {
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'PYPI_SERVER_USERNAME_PASSWORD', usernameVariable: 'PYPI_USERNAME', passwordVariable: 'PYPI_PASSWORD']]) {
-              checkout scm
-              sh '''
-                cd docker
-                ./build-stage2.sh
-              '''
-            }
+            checkout scm
+            sh '''
+              PATH="$PATH:$PWD/scripts/tools/linux/bin"
+              golangci-lint run
+              cd docker
+              ./build-stage2.sh
+            '''
           }
         }
       }
     }
 
     stage('Test') {
+      agent {
+        docker {
+            image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
+            registryUrl 'http://registry.dip-dev.thehip.app'
+            registryCredentialsId 'dsr_registry'
+            alwaysPull true
+        }
+      }
       steps {
-        container(name: 'ds-ubuntu', shell: '/bin/bash') {
-          dir('ds-dev-ops') {
-            checkout scm
-            sh '''
-              #pip3 install -r requirements.txt
-              #python3 -m unittest discover ./src
-            '''
-          }
+        dir('ds-dev-ops') {
+          checkout scm
+          sh '''
+            /chorus/bin/chorus test
+          '''
         }
       }
     }
@@ -117,7 +122,7 @@ pipeline {
             stage('test') {
               agent {
                 docker {
-                    image "registry.dip-dev.thehip.app/ds-cicd-template-backend:${IMAGE_TAG}"
+                    image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
                     registryUrl 'http://registry.dip-dev.thehip.app'
                     registryCredentialsId 'dsr_registry'
                     alwaysPull true
@@ -130,14 +135,14 @@ pipeline {
                     file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"])
                   ]){
                     sh """
-                      echo "looking for pod name"
-                      POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
-                      echo "waiting 60sec for pod \$POD_NAME to be ready"
-                      kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
-                      kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
-                      kubectl -n ci logs -f pod/\$POD_NAME &
-                      sleep 20
-                      python3 -m unittest discover ./src/tests/acceptance
+                      // echo "looking for pod name"
+                      // POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
+                      // echo "waiting 60sec for pod \$POD_NAME to be ready"
+                      // kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
+                      // kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
+                      // kubectl -n ci logs -f pod/\$POD_NAME &
+                      // sleep 20
+                      // python3 -m unittest discover ./src/tests/acceptance
                     """
                   }
                 }

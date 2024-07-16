@@ -2,11 +2,11 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-nameOverride: "template-backend"
+nameOverride: "chorus"
 
 aesPassphrase: ""
 
-image: registry.dip-dev.thehip.app/ds-cicd-template-backend:latest
+image: registry.dip-dev.thehip.app/chorus-cicd-chorus:latest
 
 version: master
 

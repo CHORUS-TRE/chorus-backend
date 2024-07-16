@@ -2,12 +2,11 @@ FROM registry.dip-dev.thehip.app/ds-ubuntu:latest
 
 USER root
 
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip unzip default-jre libpq-dev
-
-COPY requirements.txt  /ds/ds-deployer/requirements.txt
-RUN pip3 install -r requirements.txt
-RUN rm /ds/ds-deployer/requirements.txt
+ARG GOLANG_VERSION=1.22.5
+RUN curl -LO https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+    rm go${GOLANG_VERSION}.linux-amd64.tar.gz
+ENV PATH="${PATH}:/usr/local/go/bin"
 
 USER ds
 

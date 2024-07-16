@@ -23,9 +23,9 @@ spec:
         - containerPort: 5000
         volumeMounts:
         - name: backend-config
-          mountPath: /template_backend/conf
-        command: ["python3"]
-        args: ["-m", "src.cmd.start", "--config", "/template_backend/conf/config.yaml"]
+          mountPath: /chorus/conf
+        command: ["/chorus/bin/chorus"]
+        args: ["start", "--config", "/chorus/conf/config.yaml"]
       - name: postgres
         image: postgres
         ports:
@@ -36,7 +36,7 @@ spec:
         - name: POSTGRES_PASSWORD
           value: password
         - name: POSTGRES_DB
-          value: template_backend
+          value: chorus
       imagePullSecrets:
       - name: registry-auth
       volumes:

@@ -1,0 +1,283 @@
+swagger: "2.0"
+info:
+  title: chorus workspace service
+  version: "1.0"
+  contact:
+    name: chorus workspace service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: WorkspaceService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/workspaces:
+    get:
+      summary: List workspaces
+      description: This endpoint returns a list of workspaces
+      operationId: WorkspaceService_ListWorkspaces
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkspacesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - WorkspaceService
+    post:
+      summary: Create a workspace
+      description: This endpoint creates a workspace
+      operationId: WorkspaceService_CreateWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspace'
+      tags:
+        - WorkspaceService
+    put:
+      summary: Update a workspace
+      description: This endpoint updates a workspace
+      operationId: WorkspaceService_UpdateWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceRequest'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}:
+    get:
+      summary: Get a workspace
+      description: This endpoint returns a workspace
+      operationId: WorkspaceService_GetWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+    delete:
+      summary: Delete a workspace
+      description: This endpoint deletes a workspace
+      operationId: WorkspaceService_DeleteWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+definitions:
+  chorusCreateWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateWorkspaceResult'
+  chorusCreateWorkspaceResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+  chorusDeleteWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteWorkspaceResult'
+  chorusDeleteWorkspaceResult:
+    type: object
+  chorusGetWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkspaceResult'
+  chorusGetWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
+  chorusListWorkspacesReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspace'
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
+  chorusUpdateWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateWorkspaceResult'
+  chorusUpdateWorkspaceRequest:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
+  chorusUpdateWorkspaceResult:
+    type: object
+  chorusWorkspace:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      shortName:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      appInsanceIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+      appInstances:
+        type: array
+        items:
+          type: string
+          format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

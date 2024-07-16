@@ -1,0 +1,13 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message Notification {
+    string id = 1;
+    uint64 tenantId = 2;
+    string message = 3;
+    google.protobuf.Timestamp createdAt = 4;
+    google.protobuf.Timestamp readAt = 5;
+}

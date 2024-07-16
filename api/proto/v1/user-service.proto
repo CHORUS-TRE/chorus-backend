@@ -1,49 +1,28 @@
 syntax = "proto3";
-package templatebackend;
-option go_package = ".;templatebackend";
+package chorus;
+option go_package = ".;chorus";
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 import "google/protobuf/empty.proto";
 
 import "user.proto";
-
+import "public_endpoint.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     info: {
-        title: "template backend";
+        title: "chorus user service";
         version: "1.0";
         contact: {
-            name: "template backend user service";
-            url: "https://template-backend.horus-graph.intranet.chuv";
-            email: "development.bdsc@chuv.ch";
+            name: "chorus user service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
         };
     };
-
     schemes: HTTP;
     consumes: "application/json";
     produces: "application/json";
-
-    security_definitions: {
-        security: {
-            key: "Bearer";
-            value: {
-                type: TYPE_API_KEY;
-                in: IN_HEADER;
-                name: "Authorization";
-            }
-        }
-    }
-
-    security: {
-        security_requirement: {
-            key: "Bearer";
-            value: {};
-        }
-    }
-    security: {}
 };
-
 
 // Get Users
 message GetUsersRequest {
@@ -162,91 +141,56 @@ service UserService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Update password";
             description: "This endpoint updates the password of the authenticated user";
-            tags: "Users";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "user_controller"};
-            };
+            tags: "UserService";
         };
     };
 
-    // rpc EnableTotp (EnableTotpRequest) returns (EnableTotpReply) {
-    //     option (google.api.http) = {
-    //         post: "/api/rest/v1/users/me/totp/enable"
-    //         body: "*"
-    //     };
-    //     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    //    //         summary: "Enable TOTP";
-    //         description: "This endpoint enables the TOTP of the authenticated user";
-    //         tags: "Users";
-    //         extensions: {
-    //             key: "x-openapi-router-controller";
-    //             value {string_value: "user_controller"};
-    //         };
-    //     };
-    // };
-
-    // rpc ResetTotp (ResetTotpRequest) returns (ResetTotpReply) {
-    //     option (google.api.http) = {
-    //         post: "/api/rest/v1/users/me/totp/reset"
-    //         body: "*"
-    //     };
-    //     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    //    //         summary: "Reset TOTP";
-    //         description: "This endpoint resets the TOTP of the authenticated user";
-    //         tags: "Users";
-    //         extensions: {
-    //             key: "x-openapi-router-controller";
-    //             value {string_value: "user_controller"};
-    //         };
-    //     };
-    // };
-
-    rpc GetUserMe(google.protobuf.Empty) returns (GetUserMeReply) {
+    rpc EnableTotp (EnableTotpRequest) returns (EnableTotpReply) {
         option (google.api.http) = {
-            get: "/api/rest/v1/users/me"
+            post: "/api/rest/v1/users/me/totp/enable"
+            body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "Get my own user";
-            description: "This endpoint returns the details of the authenticated user";
-            tags: "Users";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "user_controller"};
-            };
+            summary: "Enable TOTP";
+            description: "This endpoint enables the TOTP of the authenticated user";
+            tags: "UserService";
         };
     };
 
-    // rpc GetUsers(GetUsersRequest) returns (GetUsersReply) {
-    //     option (google.api.http) = {
-    //         get: "/api/rest/v1/users"
-    //     };
-    //     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    //    //         summary: "List users";
-    //         description: "This endpoint returns a list of users";
-    //         tags: "Users";
-    //         extensions: {
-    //             key: "x-openapi-router-controller";
-    //             value {string_value: "user_controller"};
-    //         };
-    //     };
-    // };
+    rpc ResetTotp (ResetTotpRequest) returns (ResetTotpReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/users/me/totp/reset"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Reset TOTP";
+            description: "This endpoint resets the TOTP of the authenticated user";
+            tags: "UserService";
+        };
+    };
 
-    // rpc UpdateUser(UpdateUserRequest) returns (UpdateUserReply) {
-    //     option (google.api.http) = {
-    //         put: "/api/rest/v1/users"
-    //         body: "*"
-    //     };
-    //     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-    //    //         summary: "Update a user";
-    //         description: "This endpoint updates a user";
-    //         tags: "Users";
-    //         extensions: {
-    //             key: "x-openapi-router-controller";
-    //             value {string_value: "user_controller"};
-    //         };
-    //     };
-    // };
+    rpc GetUsers(GetUsersRequest) returns (GetUsersReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/users"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List users";
+            description: "This endpoint returns a list of users";
+            tags: "UserService";
+        };
+    };
+
+    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/users"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update a user";
+            description: "This endpoint updates a user";
+            tags: "UserService";
+        };
+    };
 
     rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordReply) {
         option (google.api.http) = {
@@ -256,11 +200,7 @@ service UserService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Reset password";
             description: "This endpoint resets a user's password";
-            tags: "Users";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "user_controller"};
-            };
+            tags: "UserService";
         };
     };
 
@@ -271,11 +211,18 @@ service UserService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a user";
             description: "This endpoint returns a user";
-            tags: "Users";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "user_controller"};
-            };
+            tags: "UserService";
+        };
+    };
+
+    rpc GetUserMe(google.protobuf.Empty) returns (GetUserMeReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/users/me"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get my own user";
+            description: "This endpoint returns the details of the authenticated user";
+            tags: "UserService";
         };
     };
 
@@ -286,11 +233,7 @@ service UserService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a user";
             description: "This endpoint deletes a user";
-            tags: "Users";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "user_controller"};
-            };
+            tags: "UserService";
         };
     };
 
@@ -299,14 +242,12 @@ service UserService {
             post: "/api/rest/v1/users"
             body: "*"
         };
+        option (public_endpoint) = true;
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Create a user";
             description: "This endpoint creates a user";
-            tags: "Users";
-            extensions: {
-                key: "x-openapi-router-controller";
-                value {string_value: "user_controller"};
-            };
+            tags: "UserService";
+            security: {}
         };
     };
 }

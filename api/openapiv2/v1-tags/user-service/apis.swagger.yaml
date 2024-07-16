@@ -1,11 +1,11 @@
 swagger: "2.0"
 info:
-  title: template backend
+  title: chorus user service
   version: "1.0"
   contact:
-    name: template backend user service
-    url: https://template-backend.horus-graph.intranet.chuv
-    email: development.bdsc@chuv.ch
+    name: chorus user service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
 tags:
   - name: UserService
 schemes:
@@ -16,6 +16,21 @@ produces:
   - application/json
 paths:
   /api/rest/v1/users:
+    get:
+      summary: List users
+      description: This endpoint returns a list of users
+      operationId: UserService_GetUsers
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetUsersReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - UserService
     post:
       summary: Create a user
       description: This endpoint creates a user
@@ -24,7 +39,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendCreateUserReply'
+            $ref: '#/definitions/chorusCreateUserReply'
         default:
           description: An unexpected error response.
           schema:
@@ -34,10 +49,31 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/templatebackendUser'
+            $ref: '#/definitions/chorusUser'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
+      security: []
+    put:
+      summary: Update a user
+      description: This endpoint updates a user
+      operationId: UserService_UpdateUser
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateUserReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateUserRequest'
+      tags:
+        - UserService
   /api/rest/v1/users/me:
     get:
       summary: Get my own user
@@ -47,14 +83,13 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetUserMeReply'
+            $ref: '#/definitions/chorusGetUserMeReply'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/rpcStatus'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
   /api/rest/v1/users/me/password:
     put:
       summary: Update password
@@ -64,7 +99,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendUpdatePasswordReply'
+            $ref: '#/definitions/chorusUpdatePasswordReply'
         default:
           description: An unexpected error response.
           schema:
@@ -74,10 +109,53 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/templatebackendUpdatePasswordRequest'
+            $ref: '#/definitions/chorusUpdatePasswordRequest'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
+  /api/rest/v1/users/me/totp/enable:
+    post:
+      summary: Enable TOTP
+      description: This endpoint enables the TOTP of the authenticated user
+      operationId: UserService_EnableTotp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusEnableTotpReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusEnableTotpRequest'
+      tags:
+        - UserService
+  /api/rest/v1/users/me/totp/reset:
+    post:
+      summary: Reset TOTP
+      description: This endpoint resets the TOTP of the authenticated user
+      operationId: UserService_ResetTotp
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusResetTotpReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusResetTotpRequest'
+      tags:
+        - UserService
   /api/rest/v1/users/{id}:
     get:
       summary: Get a user
@@ -87,7 +165,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendGetUserReply'
+            $ref: '#/definitions/chorusGetUserReply'
         default:
           description: An unexpected error response.
           schema:
@@ -99,8 +177,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
     delete:
       summary: Delete a user
       description: This endpoint deletes a user
@@ -109,7 +186,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendDeleteUserReply'
+            $ref: '#/definitions/chorusDeleteUserReply'
         default:
           description: An unexpected error response.
           schema:
@@ -121,8 +198,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
   /api/rest/v1/users/{id}/password/reset:
     post:
       summary: Reset password
@@ -132,7 +208,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendResetPasswordReply'
+            $ref: '#/definitions/chorusResetPasswordReply'
         default:
           description: An unexpected error response.
           schema:
@@ -147,83 +223,106 @@ paths:
           in: body
           required: true
           schema:
-            type: object
+            $ref: '#/definitions/UserServiceResetPasswordBody'
       tags:
-        - Users
-      x-openapi-router-controller: user_controller
+        - UserService
 definitions:
-  protobufAny:
+  UserServiceResetPasswordBody:
     type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
-  templatebackendCreateUserReply:
+  chorusCreateUserReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendCreateUserResult'
+        $ref: '#/definitions/chorusCreateUserResult'
     title: Create Users
-  templatebackendCreateUserResult:
+  chorusCreateUserResult:
     type: object
     properties:
       id:
         type: string
         format: uint64
-  templatebackendDeleteUserReply:
+  chorusDeleteUserReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendDeleteUserResult'
-  templatebackendDeleteUserResult:
+        $ref: '#/definitions/chorusDeleteUserResult'
+  chorusDeleteUserResult:
     type: object
-  templatebackendGetUserMeReply:
+  chorusEnableTotpReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendGetUserMeResult'
-  templatebackendGetUserMeResult:
+        $ref: '#/definitions/chorusEnableTotpResult'
+  chorusEnableTotpRequest:
+    type: object
+    properties:
+      totp:
+        type: string
+    title: Enable TOTP
+  chorusEnableTotpResult:
+    type: object
+  chorusGetUserMeReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetUserMeResult'
+  chorusGetUserMeResult:
     type: object
     properties:
       me:
-        $ref: '#/definitions/templatebackendUser'
+        $ref: '#/definitions/chorusUser'
     title: Get User (me)
-  templatebackendGetUserReply:
+  chorusGetUserReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendGetUserResult'
-  templatebackendGetUserResult:
+        $ref: '#/definitions/chorusGetUserResult'
+  chorusGetUserResult:
     type: object
     properties:
       user:
-        $ref: '#/definitions/templatebackendUser'
-  templatebackendResetPasswordReply:
+        $ref: '#/definitions/chorusUser'
+  chorusGetUsersReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendResetPasswordResult'
-  templatebackendResetPasswordResult:
-    type: object
-  templatebackendUpdatePasswordReply:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusUser'
+  chorusResetPasswordReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/templatebackendUpdateUserResult'
-  templatebackendUpdatePasswordRequest:
+        $ref: '#/definitions/chorusResetPasswordResult'
+  chorusResetPasswordResult:
+    type: object
+  chorusResetTotpReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusResetTotpResult'
+  chorusResetTotpRequest:
+    type: object
+    properties:
+      password:
+        type: string
+    title: Reset TOTP
+  chorusResetTotpResult:
+    type: object
+    properties:
+      totpSecret:
+        type: string
+      totpRecoveryCodes:
+        type: array
+        items:
+          type: string
+  chorusUpdatePasswordReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateUserResult'
+  chorusUpdatePasswordRequest:
     type: object
     properties:
       currentPassword:
@@ -231,9 +330,20 @@ definitions:
       newPassword:
         type: string
     title: Update User Password
-  templatebackendUpdateUserResult:
+  chorusUpdateUserReply:
     type: object
-  templatebackendUser:
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateUserResult'
+  chorusUpdateUserRequest:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
+    title: Update User
+  chorusUpdateUserResult:
+    type: object
+  chorusUser:
     type: object
     properties:
       id:
@@ -244,8 +354,6 @@ definitions:
       lastName:
         type: string
       username:
-        type: string
-      email:
         type: string
       password:
         type: string
@@ -265,11 +373,22 @@ definitions:
         format: date-time
       passwordChanged:
         type: boolean
-securityDefinitions:
-  Bearer:
-    type: apiKey
-    name: Authorization
-    in: header
-security:
-  - Bearer: []
-  - {}
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

@@ -1,0 +1,129 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/protobuf/empty.proto";
+
+import "common.proto";
+import "app-instance.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus app instance service";
+        version: "1.0";
+        contact: {
+            name: "chorus app instance service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListAppInstancesRequest {
+    PaginationQuery pagination = 1;
+}
+message ListAppInstancesReply {
+    repeated AppInstance result = 1;
+}
+
+message GetAppInstanceRequest {
+    uint64 id = 1;
+}
+
+message GetAppInstanceResult {
+    AppInstance appInstance = 1;
+}
+message GetAppInstanceReply {
+    GetAppInstanceResult result = 1;
+}
+
+message CreateAppInstanceReply {
+    CreateAppInstanceResult result = 1;
+}
+message CreateAppInstanceResult {
+    uint64 id = 1;
+}
+
+message UpdateAppInstanceRequest {
+    AppInstance appInstance = 1;
+}
+
+message UpdateAppInstanceResult {}
+
+message UpdateAppInstanceReply {
+    UpdateAppInstanceResult result = 1;
+}
+
+message DeleteAppInstanceRequest {
+    uint64  id = 1;
+}
+
+message DeleteAppInstanceResult {}
+
+message DeleteAppInstanceReply {
+    DeleteAppInstanceResult result = 1;
+}
+
+service AppInstanceService {
+    rpc GetAppInstance(GetAppInstanceRequest) returns (GetAppInstanceReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/app-instances/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get an app instance";
+            description: "This endpoint returns an app instance";
+            tags: "AppInstanceService";
+        };
+    };
+
+    rpc ListAppInstances(ListAppInstancesRequest) returns (ListAppInstancesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/app-instances"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List app instances";
+            description: "This endpoint returns a list of app instances";
+            tags: "AppInstanceService";
+        };
+    };
+
+    rpc CreateAppInstance(AppInstance) returns (CreateAppInstanceReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/app-instances"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create an app instance";
+            description: "This endpoint creates an app instance";
+            tags: "AppInstanceService";
+        };
+    };
+
+    rpc UpdateAppInstance(UpdateAppInstanceRequest) returns (UpdateAppInstanceReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/app-instances"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update an app instance";
+            description: "This endpoint updates an app instance";
+            tags: "AppInstanceService";
+        };
+    };
+
+    rpc DeleteAppInstance(DeleteAppInstanceRequest) returns (DeleteAppInstanceReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/app-instances/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete an app instance";
+            description: "This endpoint deletes an app instance";
+            tags: "AppInstanceService";
+        };
+    };
+}

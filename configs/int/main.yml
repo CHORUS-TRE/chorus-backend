@@ -12,12 +12,13 @@ daemon:
   jobs:
     job_status_gc:
       enabled: true
-  private_key_file: ./configs/dev/files/keys/template_backend_privkey.pem
-  public_key_file: ./configs/dev/files/keys/template_backend_pubkey.pem
+  private_key_file: ./configs/dev/files/keys/chorus_privkey.pem
+  public_key_file: ./configs/dev/files/keys/chorus_pubkey.pem
+  salt: tractor-pessimist5-recolor-dicing-endorse-recipient-puritan-bribe-spotty
 
 storage:
   datastores:
-    template_backend:
+    chorus:
       type: postgres
       driver: psycopg2
       migration_table_name: tt_migrations
@@ -25,14 +26,14 @@ storage:
       port: 5432
       username: admin
       password: password
-      database: template_backend
+      database: chorus
       max_connections: 10
       max_lifetime: 10s
       debug_mode: true
       ssl:
         enabled: false
-        certificate_file: /template_backend/postgres-certs/client.crt
-        key_file: /template_backend/postgres-certs/client.key
+        certificate_file: /chorus/postgres-certs/client.crt
+        key_file: /chorus/postgres-certs/client.key
 
 services:
   index_service:

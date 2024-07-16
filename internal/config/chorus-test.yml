@@ -1,0 +1,89 @@
+daemon:
+  http:
+    host: localhost
+    port: 5000
+    header_client_ip: True-Client-IP
+  grpc:
+    host: 127.0.0.1
+    port: 5555
+  jwt:
+    secret: jwt_secret
+    expiration_time: 10
+  totp:
+    num_recovery_codes: 10
+  pprof_enabled: true
+  salt: 1234
+ 
+storage:
+  description: This is a description
+  datastores:
+    chorus:
+      type: postgres
+      host: localhost
+      port: 40657
+      username: root
+      password: password
+      database: chorus
+      max_connections: 10
+      max_lifetime: 10s
+      ssl:
+        enabled: true
+        certificate_file: /chorus/postgres-certs/client.crt
+        key_file: /chorus/postgres-certs/client.key
+
+log:
+  loggers:
+    stdout_technical:
+      enabled: true
+      type: stdout
+      level: info
+      category: technical
+    stdout_business:
+      enabled: true
+      type: stdout
+      level: info
+      category: business
+    stdout_security:
+      enabled: true
+      type: stdout
+      level: warn
+      category: security
+    file_technical:
+      enabled: true
+      type: file
+      level: error
+      category: technical
+      path: /var/log/chorus/technical.log
+      max_age: 7
+      max_backups: 20
+      max_size: 50
+    redis_technical:
+      enabled: true
+      type: redis
+      level: info
+      category: technical
+      host: redis
+      port: 6379
+      database: 0
+      password: redis_password
+      key: log
+    # For Graylog, only the "GELF HTTP" inputs are supported
+    graylog_technical:
+      type: graylog
+      enabled: true
+      level: debug
+      category: technical
+      graylogtimeout: 5s
+      grayloghost: http://local.chorus-tre.ch:12201/gelf   # Must include the entire ingestor URL (typically at /gelf)
+      graylogbulkreceiving: true                            # Must be aligned with the "Enable Bulk Receiving" option of the graylog Input
+      graylogauthorizeselfsignedcertificate: true           # For TLS/HTTPS, skip certificate authority signature
+
+tenants:
+  88888:
+    ip_whitelist:
+      enabled: true
+      subnetworks:
+        - 127.0.0.1/32
+        - 10.1.0.0/16
+
+        

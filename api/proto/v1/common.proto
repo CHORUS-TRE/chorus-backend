@@ -1,0 +1,47 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+
+message PaginationQuery {
+    uint32 offset = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Optionally offset the number of results",
+        // default: "0",
+    }];
+    uint32 limit = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Optionally limit the number of results (between 1 and 500)",
+        // default: "20",
+    }];
+    Sort sort = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Optionally sort the results",
+        // default: "created_at-asc",
+        // pattern: "(created_at-asc|created_at-desc)"
+    }];
+    repeated string query = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Optionally filter the results";
+        extensions: {
+            key: "x-example";
+            value: {
+                list_value: {
+                    values: [
+                        {string_value: "user_id=9999"},
+                        {string_value: "status=STATUS_CREATED,STATUS_CLOSED"}
+                    ]
+                }
+            }
+        }
+    }];
+}
+
+message Sort {
+    string order = 1;
+    string type = 2;
+}
+
+enum SortOrder {
+    DESC = 0;
+    ASC = 1;
+}
+

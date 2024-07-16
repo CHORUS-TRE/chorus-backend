@@ -6,7 +6,7 @@
 	// 	"context": ".." 
 	// },
 	"dockerComposeFile": ["docker-compose.yml"],
-	"service": "template_backend",
+	"service": "chorus",
 	"workspaceFolder": "/workspace",
 	"shutdownAction": "stopCompose",
 	"customizations": {

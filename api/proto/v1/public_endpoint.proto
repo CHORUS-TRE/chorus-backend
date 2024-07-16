@@ -1,0 +1,10 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/descriptor.proto";
+
+// Define a custom option for marking public endpoints
+extend google.protobuf.MethodOptions {
+    bool public_endpoint = 50001;
+}

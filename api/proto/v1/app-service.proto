@@ -1,0 +1,129 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/protobuf/empty.proto";
+
+import "common.proto";
+import "app.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus app service";
+        version: "1.0";
+        contact: {
+            name: "chorus app service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListAppsRequest {
+    PaginationQuery pagination = 1;
+}
+message ListAppsReply {
+    repeated App result = 1;
+}
+
+message GetAppRequest {
+    uint64 id = 1;
+}
+
+message GetAppResult {
+    App app = 1;
+}
+message GetAppReply {
+    GetAppResult result = 1;
+}
+
+message CreateAppReply {
+    CreateAppResult result = 1;
+}
+message CreateAppResult {
+    uint64 id = 1;
+}
+
+message UpdateAppRequest {
+    App app = 1;
+}
+
+message UpdateAppResult {}
+
+message UpdateAppReply {
+    UpdateAppResult result = 1;
+}
+
+message DeleteAppRequest {
+    uint64  id = 1;
+}
+
+message DeleteAppResult {}
+
+message DeleteAppReply {
+    DeleteAppResult result = 1;
+}
+
+service AppService {
+    rpc GetApp(GetAppRequest) returns (GetAppReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/apps/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get an app";
+            description: "This endpoint returns an app";
+            tags: "AppService";
+        };
+    };
+
+    rpc ListApps(ListAppsRequest) returns (ListAppsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/apps"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List apps";
+            description: "This endpoint returns a list of apps";
+            tags: "AppService";
+        };
+    };
+
+    rpc CreateApp(App) returns (CreateAppReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/apps"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create an app";
+            description: "This endpoint creates an app";
+            tags: "AppService";
+        };
+    };
+
+    rpc UpdateApp(UpdateAppRequest) returns (UpdateAppReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/apps"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update an app";
+            description: "This endpoint updates an app";
+            tags: "AppService";
+        };
+    };
+
+    rpc DeleteApp(DeleteAppRequest) returns (DeleteAppReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/apps/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete an app";
+            description: "This endpoint deletes an app";
+            tags: "AppService";
+        };
+    };
+}

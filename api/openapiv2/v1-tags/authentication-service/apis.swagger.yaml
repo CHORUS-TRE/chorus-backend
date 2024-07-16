@@ -1,11 +1,11 @@
 swagger: "2.0"
 info:
-  title: template backend
+  title: chorus authentication service
   version: "1.0"
   contact:
-    name: template backend authentication service
-    url: https://template-backend.horus-graph.intranet.chuv
-    email: development.bdsc@chuv.ch
+    name: chorus authentication service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
 tags:
   - name: AuthenticationService
 schemes:
@@ -24,7 +24,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/templatebackendAuthenticationReply'
+            $ref: '#/definitions/chorusAuthenticationReply'
         default:
           description: An unexpected error response.
           schema:
@@ -34,11 +34,30 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/templatebackendCredentials'
+            $ref: '#/definitions/chorusCredentials'
       tags:
-        - Authentication
-      x-openapi-router-controller: authentication_controller
+        - AuthenticationService
+      security: []
 definitions:
+  chorusAuthenticationReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAuthenticationResult'
+  chorusAuthenticationResult:
+    type: object
+    properties:
+      token:
+        type: string
+  chorusCredentials:
+    type: object
+    properties:
+      username:
+        type: string
+      password:
+        type: string
+      totp:
+        type: string
   protobufAny:
     type: object
     properties:
@@ -58,30 +77,3 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/protobufAny'
-  templatebackendAuthenticationReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/templatebackendAuthenticationResult'
-  templatebackendAuthenticationResult:
-    type: object
-    properties:
-      token:
-        type: string
-  templatebackendCredentials:
-    type: object
-    properties:
-      username:
-        type: string
-      password:
-        type: string
-      totp:
-        type: string
-securityDefinitions:
-  Bearer:
-    type: apiKey
-    name: Authorization
-    in: header
-security:
-  - Bearer: []
-  - {}
