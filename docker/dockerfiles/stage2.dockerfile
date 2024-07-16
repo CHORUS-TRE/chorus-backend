@@ -1,8 +1,11 @@
 FROM registry.dip-dev.thehip.app/chorus-stage1:latest AS build
 
-USER chorus
+# USER chorus
+# COPY --chown=chorus:chorus . /chorus
 
-COPY --chown=chorus:chorus . /chorus
+COPY . /chorus
+
+ENV GOCACHE="/chorus/.cache/go-build"
 
 RUN cd /chorus/cmd/chorus && \
     go build -trimpath -ldflags "$LD_FLAGS" -o ../../bin/chorus

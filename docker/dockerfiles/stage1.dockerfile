@@ -8,4 +8,6 @@ RUN curl -LO https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH="${PATH}:/usr/local/go/bin"
 
+ENV GOCACHE="/chorus/.cache/go-build"
+
 WORKDIR /chorus
