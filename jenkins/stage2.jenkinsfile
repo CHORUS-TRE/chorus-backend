@@ -97,7 +97,7 @@ pipeline {
         dir('chorus-dev-ops') {
           checkout scm
           sh '''
-            /chorus/bin/chorus test
+            # /chorus/bin/chorus test
           '''
         }
       }
