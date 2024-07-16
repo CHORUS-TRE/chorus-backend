@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: chorus-ubuntu
-    image: registry.dip-dev.thehip.app/chorus-stage1
+    image: registry.dip-dev.thehip.app/chorus-ubuntu
     imagePullPolicy: Always
     tty: true
     volumeMounts:
