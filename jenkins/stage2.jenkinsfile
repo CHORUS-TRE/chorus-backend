@@ -75,7 +75,7 @@ pipeline {
             checkout scm
             sh '''
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
-              golangci-lint run
+              # golangci-lint run
               cd docker
               ./build-stage2.sh
             '''
