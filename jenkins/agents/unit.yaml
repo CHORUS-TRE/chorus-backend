@@ -11,6 +11,8 @@ spec:
     volumeMounts:
     - name: go-build-cache
       mountPath: /chorus/.cache/go-build
+    - name: go-mod-cache
+      mountPath: /chorus/.cache/go-mod
     - name: docker
       mountPath: /run/docker.sock
     - name: docker-config
@@ -39,6 +41,9 @@ spec:
   - name: go-build-cache
     hostPath:
       path: /home/dipadmin/.cache/go-build
+  - name: go-mod-cache
+    hostPath:
+      path: /home/dipadmin/.cache/go-mod
   - name: docker
     hostPath:
       path: /run/docker.sock
