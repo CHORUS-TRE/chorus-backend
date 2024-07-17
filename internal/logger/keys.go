@@ -13,7 +13,10 @@ const (
 	LoggerKeyCorrelationID string = "correlation_id"
 	LoggerKeyUserID        string = "user_id"
 
-	LoggerKeyAppID string = "app_id"
+	LoggerKeyAppID         string = "app_id"
+	LoggerKeyAppInstanceID string = "app_instance_id"
+	LoggerKeyWorkbenchID   string = "workbench_id"
+	LoggerKeyWorkspaceID   string = "workspace_id"
 
 	LoggerKeyMethod     string = "method"
 	LoggerKeyCount      string = "count"
@@ -51,11 +54,15 @@ func WithAppIDField(appID uint64) zap.Field {
 }
 
 func WithAppInstanceIDField(appID uint64) zap.Field {
-	return zap.Uint64(LoggerKeyAppID, appID)
+	return zap.Uint64(LoggerKeyAppInstanceID, appID)
 }
 
 func WithWorkspaceIDField(appID uint64) zap.Field {
-	return zap.Uint64(LoggerKeyAppID, appID)
+	return zap.Uint64(LoggerKeyWorkbenchID, appID)
+}
+
+func WithWorkbenchIDField(appID uint64) zap.Field {
+	return zap.Uint64(LoggerKeyWorkspaceID, appID)
 }
 
 func WithCountField(count int) zap.Field {

@@ -5,9 +5,9 @@ const (
 )
 
 /*
-	Sensitive is a container for sensitive strings,
-	which can be read from yaml config files,
-	but marshaling them to yaml will redact them.
+Sensitive is a container for sensitive strings,
+which can be read from yaml config files,
+but marshaling them to yaml will redact them.
 */
 type Sensitive string
 

@@ -14,6 +14,7 @@ tags:
   - name: NotificationService
   - name: StewardService
   - name: UserService
+  - name: WorkbenchService
   - name: WorkspaceService
 schemes:
   - http
@@ -1138,6 +1139,229 @@ paths:
             $ref: '#/definitions/UserServiceResetPasswordBody'
       tags:
         - UserService
+  /api/rest/v1/workbenchs:
+    get:
+      summary: List workbenchs
+      description: This endpoint returns a list of workbenchs
+      operationId: WorkbenchService_ListWorkbenchs
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkbenchsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - WorkbenchService
+    post:
+      summary: Create a workbench
+      description: This endpoint creates a workbench
+      operationId: WorkbenchService_CreateWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkbench'
+      tags:
+        - WorkbenchService
+    put:
+      summary: Update a workbench
+      description: This endpoint updates a workbench
+      operationId: WorkbenchService_UpdateWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkbenchRequest'
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}:
+    get:
+      summary: Get a workbench
+      description: This endpoint returns a workbench
+      operationId: WorkbenchService_GetWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
+    delete:
+      summary: Delete a workbench
+      description: This endpoint deletes a workbench
+      operationId: WorkbenchService_DeleteWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
   /api/rest/v1/workspaces:
     get:
       summary: List workspaces
@@ -1392,6 +1616,8 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+      prettyName:
+        type: string
   chorusAppInstance:
     type: object
     properties:
@@ -1468,6 +1694,17 @@ definitions:
       id:
         type: string
         format: uint64
+  chorusCreateWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateWorkbenchResult'
+  chorusCreateWorkbenchResult:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
   chorusCreateWorkspaceReply:
     type: object
     properties:
@@ -1508,6 +1745,13 @@ definitions:
       result:
         $ref: '#/definitions/chorusDeleteUserResult'
   chorusDeleteUserResult:
+    type: object
+  chorusDeleteWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteWorkbenchResult'
+  chorusDeleteWorkbenchResult:
     type: object
   chorusDeleteWorkspaceReply:
     type: object
@@ -1591,6 +1835,16 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusUser'
+  chorusGetWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkbenchResult'
+  chorusGetWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusGetWorkspaceReply:
     type: object
     properties:
@@ -1623,6 +1877,14 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusApp'
+  chorusListWorkbenchsReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkbench'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -1762,6 +2024,18 @@ definitions:
     title: Update User
   chorusUpdateUserResult:
     type: object
+  chorusUpdateWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateWorkbenchResult'
+  chorusUpdateWorkbenchRequest:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
+  chorusUpdateWorkbenchResult:
+    type: object
   chorusUpdateWorkspaceReply:
     type: object
     properties:
@@ -1804,6 +2078,45 @@ definitions:
         format: date-time
       passwordChanged:
         type: boolean
+  chorusWorkbench:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      workspaceId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      shortName:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      appInsanceIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+      appInstances:
+        type: array
+        items:
+          type: string
+          format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusWorkspace:
     type: object
     properties:

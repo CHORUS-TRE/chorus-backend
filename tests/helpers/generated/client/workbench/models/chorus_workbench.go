@@ -14,10 +14,16 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusApp chorus app
+// ChorusWorkbench chorus workbench
 //
-// swagger:model chorusApp
-type ChorusApp struct {
+// swagger:model chorusWorkbench
+type ChorusWorkbench struct {
+
+	// app insance ids
+	AppInsanceIds []string `json:"appInsanceIds"`
+
+	// app instances
+	AppInstances []string `json:"appInstances"`
 
 	// created at
 	// Format: date-time
@@ -26,20 +32,14 @@ type ChorusApp struct {
 	// description
 	Description string `json:"description,omitempty"`
 
-	// docker image name
-	DockerImageName string `json:"dockerImageName,omitempty"`
-
-	// docker image tag
-	DockerImageTag string `json:"dockerImageTag,omitempty"`
-
 	// id
 	ID string `json:"id,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
 
-	// pretty name
-	PrettyName string `json:"prettyName,omitempty"`
+	// short name
+	ShortName string `json:"shortName,omitempty"`
 
 	// status
 	Status string `json:"status,omitempty"`
@@ -53,10 +53,13 @@ type ChorusApp struct {
 
 	// user Id
 	UserID string `json:"userId,omitempty"`
+
+	// workspace Id
+	WorkspaceID string `json:"workspaceId,omitempty"`
 }
 
-// Validate validates this chorus app
-func (m *ChorusApp) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus workbench
+func (m *ChorusWorkbench) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCreatedAt(formats); err != nil {
@@ -73,7 +76,7 @@ func (m *ChorusApp) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusApp) validateCreatedAt(formats strfmt.Registry) error {
+func (m *ChorusWorkbench) validateCreatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
@@ -85,7 +88,7 @@ func (m *ChorusApp) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusApp) validateUpdatedAt(formats strfmt.Registry) error {
+func (m *ChorusWorkbench) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
 	}
@@ -97,13 +100,13 @@ func (m *ChorusApp) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus app based on context it is used
-func (m *ChorusApp) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this chorus workbench based on context it is used
+func (m *ChorusWorkbench) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusApp) MarshalBinary() ([]byte, error) {
+func (m *ChorusWorkbench) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -111,8 +114,8 @@ func (m *ChorusApp) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusApp) UnmarshalBinary(b []byte) error {
-	var res ChorusApp
+func (m *ChorusWorkbench) UnmarshalBinary(b []byte) error {
+	var res ChorusWorkbench
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

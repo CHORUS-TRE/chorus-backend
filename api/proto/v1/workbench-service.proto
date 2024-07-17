@@ -1,0 +1,129 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/protobuf/empty.proto";
+
+import "common.proto";
+import "workbench.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus workbench service";
+        version: "1.0";
+        contact: {
+            name: "chorus workbench service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListWorkbenchsRequest {
+    PaginationQuery pagination = 1;
+}
+message ListWorkbenchsReply {
+    repeated Workbench result = 1;
+}
+
+message GetWorkbenchRequest {
+    uint64 id = 1;
+}
+
+message GetWorkbenchResult {
+    Workbench workbench = 1;
+}
+message GetWorkbenchReply {
+    GetWorkbenchResult result = 1;
+}
+
+message CreateWorkbenchReply {
+    CreateWorkbenchResult result = 1;
+}
+message CreateWorkbenchResult {
+    uint64 id = 1;
+}
+
+message UpdateWorkbenchRequest {
+    Workbench workbench = 1;
+}
+
+message UpdateWorkbenchResult {}
+
+message UpdateWorkbenchReply {
+    UpdateWorkbenchResult result = 1;
+}
+
+message DeleteWorkbenchRequest {
+    uint64  id = 1;
+}
+
+message DeleteWorkbenchResult {}
+
+message DeleteWorkbenchReply {
+    DeleteWorkbenchResult result = 1;
+}
+
+service WorkbenchService {
+    rpc GetWorkbench(GetWorkbenchRequest) returns (GetWorkbenchReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workbenchs/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a workbench";
+            description: "This endpoint returns a workbench";
+            tags: "WorkbenchService";
+        };
+    };
+
+    rpc ListWorkbenchs(ListWorkbenchsRequest) returns (ListWorkbenchsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workbenchs"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workbenchs";
+            description: "This endpoint returns a list of workbenchs";
+            tags: "WorkbenchService";
+        };
+    };
+
+    rpc CreateWorkbench(Workbench) returns (CreateWorkbenchReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workbenchs"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a workbench";
+            description: "This endpoint creates a workbench";
+            tags: "WorkbenchService";
+        };
+    };
+
+    rpc UpdateWorkbench(UpdateWorkbenchRequest) returns (UpdateWorkbenchReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/workbenchs"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update a workbench";
+            description: "This endpoint updates a workbench";
+            tags: "WorkbenchService";
+        };
+    };
+
+    rpc DeleteWorkbench(DeleteWorkbenchRequest) returns (DeleteWorkbenchReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workbenchs/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a workbench";
+            description: "This endpoint deletes a workbench";
+            tags: "WorkbenchService";
+        };
+    };
+}

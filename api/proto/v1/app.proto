@@ -19,4 +19,6 @@ message App {
 
     google.protobuf.Timestamp createdAt = 9;
     google.protobuf.Timestamp updatedAt = 10;
+
+    string prettyName = 11;
 }

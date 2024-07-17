@@ -1,0 +1,24 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message Workbench {
+    uint64 id = 1;
+
+    uint64 tenantId = 2;
+    uint64 userId = 3;
+    uint64 workspaceId = 4;
+
+    string name = 5;
+    string shortName = 6;
+    string description = 7;
+    string status = 8;
+
+    repeated uint64 appInsanceIds = 9;
+    repeated uint64 appInstances = 10;
+    
+    google.protobuf.Timestamp createdAt = 11;
+    google.protobuf.Timestamp updatedAt = 12;
+}

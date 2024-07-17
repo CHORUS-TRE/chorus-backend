@@ -24,9 +24,9 @@ my_string: 'string'
 
 func TestEncodeSecret(t *testing.T) {
 	val := struct {
-		SomeString      string       `yaml:"some_string"`
-		EmptyString     string       `yaml:"empty_string"`
-		SomeStringOmit  string       `yaml:"some_string_omit,omitempty"`
+		SomeString      string    `yaml:"some_string"`
+		EmptyString     string    `yaml:"empty_string"`
+		SomeStringOmit  string    `yaml:"some_string_omit,omitempty"`
 		EmptyStringOmit string    `yaml:"empty_string_omit,omitempty"`
 		SomeSecret      Sensitive `yaml:"some_secret"`
 		EmptySecret     Sensitive `yaml:"empty_secret"`
