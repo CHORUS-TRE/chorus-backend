@@ -32,9 +32,9 @@ spec:
       postStart:
         exec:
           command: ['sh', '-c', "cp /chorus/chorus-deployer/.docker/secret/config.json /chorus/chorus-deployer/.docker/config.json"]
-  - name: jnlp
-    image: registry.dip-dev.thehip.app/chorus-jnlp/jenkins/inbound-agent:3107.v665000b_51092-15
-    imagePullPolicy: Always
+  # - name: jnlp
+  #   image: registry.dip-dev.thehip.app/chorus-jnlp/jenkins/inbound-agent:3107.v665000b_51092-15
+  #   imagePullPolicy: Always
   imagePullSecrets:
   - name: registry-auth
   volumes:
