@@ -84,24 +84,24 @@ pipeline {
       }
     }
 
-    stage('Test') {
-      agent {
-        docker {
-            image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-            registryUrl 'http://registry.dip-dev.thehip.app'
-            registryCredentialsId 'dsr_registry'
-            alwaysPull true
-        }
-      }
-      steps {
-        dir('chorus-dev-ops') {
-          checkout scm
-          sh '''
-            # /chorus/bin/chorus test
-          '''
-        }
-      }
-    }
+    // stage('Test') {
+    //   agent {
+    //     docker {
+    //         image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
+    //         registryUrl 'http://registry.dip-dev.thehip.app'
+    //         registryCredentialsId 'dsr_registry'
+    //         alwaysPull true
+    //     }
+    //   }
+    //   steps {
+    //     dir('chorus-dev-ops') {
+    //       checkout scm
+    //       sh '''
+    //         # /chorus/bin/chorus test
+    //       '''
+    //     }
+    //   }
+    // }
 
     stage('Test CI') {
       stages {

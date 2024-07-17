@@ -8,7 +8,7 @@ COPY . /chorus
 ENV GOCACHE="/chorus/.cache/go-build"
 ENV GOMODCACHE="/chorus/.cache/go-mod"
 
-RUN --mount=type=cache,target="/chorus/.cache/go-build" cd /chorus/cmd/chorus && \
+RUN --mount=type=cache,target="/chorus/.cache/go-build" --mount=type=cache,target="/chorus/.cache/go-mod" cd /chorus/cmd/chorus && \
     go build -trimpath -ldflags "$LD_FLAGS" -o /chorus/bin/chorus
 
 FROM ubuntu:latest
