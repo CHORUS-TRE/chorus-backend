@@ -27,6 +27,7 @@ func AppInstanceToBusiness(appInstance *chorus.AppInstance) (*model.AppInstance,
 		UserID:      appInstance.UserId,
 		AppID:       appInstance.AppId,
 		WorkspaceID: appInstance.WorkspaceId,
+		WorkbenchID: appInstance.WorkbenchId,
 
 		Status: status,
 
@@ -52,6 +53,7 @@ func AppInstanceFromBusiness(appInstance *model.AppInstance) (*chorus.AppInstanc
 		UserId:      appInstance.UserID,
 		AppId:       appInstance.AppID,
 		WorkspaceId: appInstance.WorkspaceID,
+		WorkbenchId: appInstance.WorkbenchID,
 
 		Status: appInstance.Status.String(),
 

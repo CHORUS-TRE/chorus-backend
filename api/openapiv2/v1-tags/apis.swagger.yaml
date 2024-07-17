@@ -1636,6 +1636,9 @@ definitions:
       workspaceId:
         type: string
         format: uint64
+      workbenchId:
+        type: string
+        format: uint64
       status:
         type: string
       createdAt:

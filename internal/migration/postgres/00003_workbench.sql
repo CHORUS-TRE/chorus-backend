@@ -24,3 +24,7 @@ CREATE TABLE public.workbenchs (
     CONSTRAINT workspacecon FOREIGN KEY (workspaceid) REFERENCES workspaces(id)
 );
 -- +migrate StatementEnd
+
+-- +migrate StatementBegin
+ALTER TABLE app_instances ADD COLUMN workbenchid BIGINT NOT NULL DEFAULT 0 REFERENCES workbenchs(id);
+-- +migrate StatementEnd

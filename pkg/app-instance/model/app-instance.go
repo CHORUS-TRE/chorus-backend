@@ -14,6 +14,7 @@ type AppInstance struct {
 	UserID      uint64
 	AppID       uint64
 	WorkspaceID uint64
+	WorkbenchID uint64
 
 	Status AppInstanceStatus
 

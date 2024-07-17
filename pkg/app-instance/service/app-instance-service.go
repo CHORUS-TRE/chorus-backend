@@ -87,14 +87,19 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 		return 0, errors.Wrapf(err, "unable to get app %v", appInstance.AppID)
 	}
 
-	wName := s.getWorkbenchName(appInstance.WorkspaceID)
+	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
+	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
-	err = s.client.CreateAppInstance(wName, wName, app.Name, app.GetImage())
+	err = s.client.CreateAppInstance(wsName, wbName, app.Name, app.GetImage())
 	if err != nil {
 		return 0, errors.Wrapf(err, "unable to create app instance %v", id)
 	}
 
 	return id, nil
+}
+
+func (s *AppInstanceService) getWorkspaceName(id uint64) string {
+	return "workspace" + fmt.Sprintf("%v", id)
 }
 
 func (s *AppInstanceService) getWorkbenchName(id uint64) string {

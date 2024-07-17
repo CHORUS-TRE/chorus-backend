@@ -57,12 +57,17 @@ func (u *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 }
 
 func (u *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
-	err := u.store.DeleteWorkbench(ctx, tenantID, workbenchID)
+	workbench, err := u.store.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return errors.Wrapf(err, "unable to get workbench %v", workbench.ID)
+	}
+
+	err = u.store.DeleteWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete workbench %v", workbenchID)
 	}
 
-	err = u.client.DeleteWorkbench(u.getWorkbenchName(workbenchID), u.getWorkbenchName(workbenchID))
+	err = u.client.DeleteWorkbench(u.getWorkspaceName(workbench.WorkspaceID), u.getWorkbenchName(workbenchID))
 	if err != nil {
 		return errors.Wrapf(err, "unable to delete workbench %v", workbenchID)
 	}
@@ -84,7 +89,7 @@ func (u *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return 0, errors.Wrapf(err, "unable to create workbench %v", workbench.ID)
 	}
 
-	err = u.client.CreateWorkbench(u.getWorkbenchName(id), u.getWorkbenchName(id))
+	err = u.client.CreateWorkbench(u.getWorkspaceName(workbench.WorkspaceID), u.getWorkbenchName(id))
 	if err != nil {
 		return 0, errors.Wrapf(err, "unable to create workbench %v", workbench.ID)
 	}
@@ -92,6 +97,9 @@ func (u *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	return id, nil
 }
 
+func (u *WorkbenchService) getWorkspaceName(id uint64) string {
+	return "workspace" + fmt.Sprintf("%v", id)
+}
 func (u *WorkbenchService) getWorkbenchName(id uint64) string {
 	return "workbench" + fmt.Sprintf("%v", id)
 }

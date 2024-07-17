@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -62,10 +61,12 @@ func (u *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, worksp
 		return errors.Wrapf(err, "unable to delete workspace %v", workspaceID)
 	}
 
-	err = u.client.DeleteWorkbench(u.getWorkbenchName(workspaceID), u.getWorkbenchName(workspaceID))
-	if err != nil {
-		return errors.Wrapf(err, "unable to delete workbench %v", workspaceID)
-	}
+	// TODO implement delete all workspaces and appInstances
+
+	// err = u.client.DeleteWorkbench(u.getWorkbenchName(workspaceID), u.getWorkbenchName(workspaceID))
+	// if err != nil {
+	// 	return errors.Wrapf(err, "unable to delete workbench %v", workspaceID)
+	// }
 
 	return nil
 }
@@ -84,14 +85,16 @@ func (u *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		return 0, errors.Wrapf(err, "unable to create workspace %v", workspace.ID)
 	}
 
-	err = u.client.CreateWorkbench(u.getWorkbenchName(id), u.getWorkbenchName(id))
-	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create workbench %v", workspace.ID)
-	}
+	// should we do something as we can lazily create namespace with helm if needed..?
+
+	// err = u.client.CreateWorkbench(u.getWorkbenchName(id), u.getWorkbenchName(id))
+	// if err != nil {
+	// 	return 0, errors.Wrapf(err, "unable to create workbench %v", workspace.ID)
+	// }
 
 	return id, nil
 }
 
-func (u *WorkspaceService) getWorkbenchName(id uint64) string {
-	return "workbench" + fmt.Sprintf("%v", id)
-}
+// func (u *WorkspaceService) getWorkbenchName(id uint64) string {
+// 	return "workbench" + fmt.Sprintf("%v", id)
+// }
