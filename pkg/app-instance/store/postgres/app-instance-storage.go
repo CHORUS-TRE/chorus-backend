@@ -54,7 +54,7 @@ WHERE tenantid = $1 AND status != 'deleted';
 func (s *AppInstanceStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error) {
 	const appInstanceQuery = `
 INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $7, NOW(), NOW()) RETURNING id;
+VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64
