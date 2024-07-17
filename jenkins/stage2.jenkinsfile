@@ -94,7 +94,7 @@ pipeline {
     //     docker {
     //         image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
     //         registryUrl 'http://registry.dip-dev.thehip.app'
-    //         registryCredentialsId 'dsr_registry'
+    //         registryCredentialsId 'chorus_registry'
     //         alwaysPull true
     //     }
     //   }
@@ -129,7 +129,7 @@ pipeline {
                 docker {
                     image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
                     registryUrl 'http://registry.dip-dev.thehip.app'
-                    registryCredentialsId 'dsr_registry'
+                    registryCredentialsId 'chorus_registry'
                     alwaysPull true
                 }
               }
