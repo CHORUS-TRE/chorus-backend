@@ -93,7 +93,7 @@ pipeline {
     //   agent {
     //     docker {
     //         image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-    //         registryUrl 'http://registry.dip-dev.thehip.app'
+    //         registryUrl 'https://registry.dip-dev.thehip.app'
     //         registryCredentialsId 'chorus_registry'
     //         alwaysPull true
     //     }
@@ -128,7 +128,7 @@ pipeline {
               agent {
                 docker {
                     image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-                    registryUrl 'http://registry.dip-dev.thehip.app'
+                    registryUrl 'https://registry.dip-dev.thehip.app'
                     registryCredentialsId 'chorus_registry'
                     alwaysPull true
                 }
