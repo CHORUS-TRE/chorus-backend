@@ -137,7 +137,8 @@ pipeline {
                 dir('chorus-dev-ops') {
                   checkout scm
                   withCredentials([
-                    file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"])
+                    file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"]),
+                    file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
                   ]){
                     sh """
                       // echo "looking for pod name"
