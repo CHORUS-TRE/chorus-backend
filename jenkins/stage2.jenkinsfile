@@ -131,6 +131,7 @@ pipeline {
                     registryUrl 'https://registry.dip-dev.thehip.app'
                     registryCredentialsId 'chorus_registry'
                     alwaysPull true
+                    args '-ti --entrypoint /bin/bash'
                 }
               }
               steps {
