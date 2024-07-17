@@ -1,6 +1,6 @@
 ingress:
   enabled: true
-  host: "chorus.horus-graph.intranet.chuv"
+  host: "chorus.dip-dev.thehip.app"
 
 service:
   port: 16080
