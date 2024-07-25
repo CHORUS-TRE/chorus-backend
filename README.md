@@ -72,3 +72,6 @@ Create a complete service (here the workbench service)
 
 ### 10. Tests
 // todo
+
+Any use of the software for purposes other than academic research, including for commercial purposes, shall be requested in advance from CHUV.
+
