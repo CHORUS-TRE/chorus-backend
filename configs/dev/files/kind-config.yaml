@@ -1,7 +1,14 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
-certificatesDir: "configs/dev/files/kind-pregenerated-certs"
+networking:
+  apiServerAddress: "127.0.0.1"
+  apiServerPort: 41491
 nodes:
-  - role: control-plane
-  - role: worker
-  - role: worker
+- role: control-plane
+  extraMounts:
+  - hostPath: /home/localadmin/chuv/chorus/chorus-backend/configs/dev/files/kind-pregenerated-certs
+    containerPath: /mnt/kind-pregenerated-certs
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration 
+    certificatesDir: /mnt/kind-pregenerated-certs
