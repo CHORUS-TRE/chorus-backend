@@ -73,7 +73,7 @@ func runServer() error {
 
 	// 1. Init and serve the HTTP server, but it will return 503 errors until
 	// the gRPC server has started.
-	handler, mux, opts := rest.InitServer(ctx, cfg, getVersion(), started, provider.ProvideKeyFunc(cfg.Daemon.JWT.Secret.PlainText()), provider.ProvideClaimsFactory())
+	handler, mux, opts := rest.InitServer(ctx, cfg, getVersion(), started, provider.ProvideWorkbench().ProxyWorkbench, provider.ProvideKeyFunc(cfg.Daemon.JWT.Secret.PlainText()), provider.ProvideClaimsFactory())
 
 	httpSrv := &http.Server{
 		Addr:    httpHostPort,

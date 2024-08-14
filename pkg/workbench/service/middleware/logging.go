@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -44,6 +45,25 @@ func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID ui
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return res, nil
+}
+
+func (c workbenchServiceLogging) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
+	now := time.Now()
+
+	err := c.next.ProxyWorkbench(ctx, tenantID, workbenchID, w, r)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return errors.Wrapf(err, "unable to proxy workbenchs")
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+
+	return nil
 }
 
 func (c workbenchServiceLogging) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {

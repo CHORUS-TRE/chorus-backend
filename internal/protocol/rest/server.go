@@ -16,7 +16,7 @@ import (
 
 // InitServer initializes a HTTP-server and returns an empty request multiplexer
 // for a GRPC gateway and a configuration object.
-func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
+func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
@@ -31,6 +31,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddMetrics(handler)
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
+	handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
 
 	//nolint: staticcheck
 	opts := []grpc.DialOption{

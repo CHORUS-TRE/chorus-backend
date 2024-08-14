@@ -3,20 +3,28 @@ package helm
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	helmaction "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 )
 
 type HelmClienter interface {
 	CreateWorkbench(namespace, workbenchName string) error
+	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	CreateAppInstance(namespace, workbenchName, appName, appImage string) error
 	DeleteApp(namespace, workbenchName, appName string) error
 	DeleteWorkbench(namespace, workbenchName string) error
@@ -72,6 +80,78 @@ func (c *client) getConfig(namespace string) (*helmaction.Configuration, error) 
 
 	return actionConfig, nil
 
+}
+
+func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error) {
+	helmConfig, err := c.getConfig(namespace)
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to get config")
+	}
+
+	config, err := helmConfig.RESTClientGetter.ToRESTConfig()
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to convert to rest config")
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to get clienset")
+	}
+
+	pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), v1.ListOptions{
+		LabelSelector: fmt.Sprintf("workbench=%s", serviceName),
+	})
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to get pods")
+	}
+
+	if len(pods.Items) == 0 {
+		return 0, nil, errors.New("No pods found for the service")
+	}
+
+	podName := pods.Items[0].Name
+	ports := []string{"0:8080"}
+
+	req := clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Namespace(namespace).
+		Name(podName).
+		SubResource("portforward")
+
+	transport, upgrader, err := spdy.RoundTripperFor(config)
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to get spdy round tripper")
+	}
+
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
+
+	stopChan := make(chan struct{}, 1)
+	readyChan := make(chan struct{})
+	out, errOut := io.Discard, io.Discard
+
+	pf, err := portforward.New(dialer, ports, stopChan, readyChan, out, errOut)
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to create the port forwarder")
+	}
+
+	go func() {
+		if err := pf.ForwardPorts(); err != nil {
+			logger.TechLog.Error(context.Background(), "portforwarding error", zap.Error(err))
+		}
+	}()
+
+	<-readyChan
+
+	forwardedPorts, err := pf.GetPorts()
+	if err != nil {
+		return 0, nil, errors.Wrap(err, "unable to get ports")
+	}
+	if len(forwardedPorts) != 1 {
+		return 0, nil, errors.New("not right number of forwarded ports")
+	}
+	port := forwardedPorts[0]
+
+	return port.Local, stopChan, nil
 }
 
 func (c *client) CreateWorkbench(namespace, workbenchName string) error {
