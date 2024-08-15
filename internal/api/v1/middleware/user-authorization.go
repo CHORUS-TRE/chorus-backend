@@ -27,7 +27,7 @@ func UserAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) fun
 }
 
 func (c userControllerAuthorization) GetUsers(ctx context.Context, req *chorus.GetUsersRequest) (*chorus.GetUsersReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (c userControllerAuthorization) GetUsers(ctx context.Context, req *chorus.G
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.Ge
 }
 
 func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
-	// err := c.isAuthenticatedAndAuthorized(ctx)
+	// err := c.IsAuthenticatedAndAuthorized(ctx)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -54,7 +54,7 @@ func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, empty *empty.Empty) (*chorus.GetUserMeReply, error) {
-	err := c.isAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
+	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c userControllerAuthorization) GetUserMe(ctx context.Context, empty *empty
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
-	err := c.isAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
+	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.UpdateUserRequest) (*chorus.UpdateUserReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
-	err := c.isAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
+	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.ResetTotpRequest) (*chorus.ResetTotpReply, error) {
-	err := c.isAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
+	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *chorus.ResetPasswordRequest) (*chorus.ResetPasswordReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}

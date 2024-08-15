@@ -27,7 +27,7 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizedRoles []stri
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context
 func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Contex
 func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Context, req *chorus.UpdateAppInstanceRequest) (*chorus.UpdateAppInstanceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Contex
 func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}

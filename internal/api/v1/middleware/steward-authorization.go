@@ -27,7 +27,7 @@ func StewardAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) 
 }
 
 func (c stewardControllerAuthorization) InitializeTenant(ctx context.Context, request *chorus.InitializeTenantRequest) (*empty.Empty, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}

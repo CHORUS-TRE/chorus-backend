@@ -14,6 +14,7 @@ import (
 type contextKey string
 
 const JWTClaimsContextKey contextKey = "JWTClaims"
+const JWTTokenContextKey contextKey = "JWTToken"
 
 type ErrInvalidClaims struct {
 	msg string
@@ -72,7 +73,6 @@ func ExtractTenantID(ctx context.Context) (uint64, error) {
 }
 
 func ExtractUserID(ctx context.Context) (uint64, error) {
-	fmt.Println(ctx.Value(JWTClaimsContextKey))
 	claims, ok := ctx.Value(JWTClaimsContextKey).(*JWTClaims)
 	if !ok {
 		return 0, errors.New("malformed jwt-token")

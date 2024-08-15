@@ -16,7 +16,14 @@ type authorization struct {
 	authorizedRoles []string
 }
 
-func (c authorization) isAuthenticatedAndAuthorized(ctx context.Context) error {
+func NewAuthorization(logger *logger.ContextLogger, authorizedRoles []string) authorization {
+	return authorization{
+		logger,
+		authorizedRoles,
+	}
+}
+
+func (c authorization) IsAuthenticatedAndAuthorized(ctx context.Context) error {
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")
@@ -28,7 +35,7 @@ func (c authorization) isAuthenticatedAndAuthorized(ctx context.Context) error {
 	return nil
 }
 
-func (c authorization) isAuthenticatedAndAuthorizedWithRoles(ctx context.Context, roles []string) error {
+func (c authorization) IsAuthenticatedAndAuthorizedWithRoles(ctx context.Context, roles []string) error {
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")

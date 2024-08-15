@@ -22,6 +22,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
 		runtime.WithIncomingHeaderMatcher(newHeaderMatcher(cfg)),
+		runtime.WithOutgoingHeaderMatcher(newOutgoingHeaderMatcher()),
 	)
 
 	handler := middleware.AddLogger(logger.TechLog, mux)
@@ -32,6 +33,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
 	handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
+	handler = middleware.AddJWTFromCookie(handler)
 
 	//nolint: staticcheck
 	opts := []grpc.DialOption{
@@ -53,5 +55,16 @@ func newHeaderMatcher(cfg config.Config) runtime.HeaderMatcherFunc {
 
 	return func(name string) (string, bool) {
 		return name, strings.EqualFold(name, cfg.Daemon.HTTP.HeaderClientIP)
+	}
+}
+
+func newOutgoingHeaderMatcher() runtime.HeaderMatcherFunc {
+	return func(key string) (string, bool) {
+		switch key {
+		case "set-cookie":
+			return key, true
+		default:
+			return runtime.DefaultHeaderMatcher(key)
+		}
 	}
 }

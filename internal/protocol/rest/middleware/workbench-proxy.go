@@ -6,8 +6,10 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	jwt_go "github.com/golang-jwt/jwt"
 	"go.uber.org/zap"
 )
@@ -17,12 +19,13 @@ type ProxyWorkbenchHandler func(ctx context.Context, tenantID, workbenchID uint6
 func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/([0-9]+)/stream`)
 
+	auth := middleware.NewAuthorization(logger.TechLog, []string{model.RoleAuthenticated.String()})
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		m := reg.FindStringSubmatch(r.RequestURI)
 		if m == nil {
-			// no match, continue to next mid
 			h.ServeHTTP(w, r)
 			return
 		}
@@ -41,20 +44,14 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, keyFunc jwt_go.
 			return
 		}
 
-		// TODO get jwt via cookie
+		ctx = GetContextWithAuth(ctx, r, keyFunc, claimsFactory)
 
-		// jwt := r.Header.Get("Authorization")
-		// tokenString := strings.TrimPrefix(jwt, "Bearer ")
-
-		// claims, err := jwt_helper.ParseToken(ctx, tokenString, keyFunc, claimsFactory)
-		// if err != nil {
-		// 	logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
-		// 	h.ServeHTTP(w, r)
-		// 	return
-		// }
-		// tenantID := jwt_helper.TenantIDFromClaims(claims)
-		// ctx = context.WithValue(ctx, jwt_model.JWTClaimsContextKey, claims)
-		// ctx = context.WithValue(ctx, logger.TenantIDContextKey{}, tenantID)
+		err = auth.IsAuthenticatedAndAuthorized(ctx)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
+			h.ServeHTTP(w, r)
+			return
+		}
 
 		err = pw(ctx, 1, workbenchID, w, r.WithContext(ctx))
 		if err != nil {
