@@ -120,6 +120,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 }
 
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
+	// TODO error handling, port forwarding re-creation, cache eviction, cleaning on cache evit and sig stop
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
