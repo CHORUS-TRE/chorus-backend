@@ -116,12 +116,6 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return 0, errors.Wrapf(err, "unable to create workbench %v", workbench.ID)
 	}
 
-	// time.Sleep(time.Second)
-	// port, stopChan, err := s.client.CreatePortForward(namespace, workbenchName)
-	// if err != nil {
-	// 	return 0, errors.Wrapf(err, "Failed to create port forward: %v", err)
-	// }
-
 	return id, nil
 }
 

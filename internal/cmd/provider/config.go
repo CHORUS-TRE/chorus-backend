@@ -93,6 +93,7 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Services
 	v.SetDefault("services.authentication_service.enabled", false)
+	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
 
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")

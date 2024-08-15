@@ -44,6 +44,8 @@ services:
       host: smtp-relay.sendinblue.com
       port: 587
       authentication: "none"
+  workbench_service:
+    stream_proxy_enabled: true
 
 clients:
   helm_client:

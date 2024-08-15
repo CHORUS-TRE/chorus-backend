@@ -196,6 +196,10 @@ type (
 		AuthenticationService struct {
 			Enabled bool `yaml:"enabled"`
 		} `yaml:"authentication_service"`
+
+		WorkbenchService struct {
+			StreamProxyEnabled bool `yaml:"stream_proxy_enabled"`
+		} `yaml:"workbench_service"`
 	}
 
 	Job struct {

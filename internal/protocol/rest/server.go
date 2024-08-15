@@ -32,7 +32,9 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddMetrics(handler)
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
-	handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
+	if cfg.Services.WorkbenchService.StreamProxyEnabled {
+		handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
+	}
 	handler = middleware.AddJWTFromCookie(handler)
 
 	//nolint: staticcheck
