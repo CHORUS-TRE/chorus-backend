@@ -12,8 +12,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
-
-	"github.com/pkg/errors"
 )
 
 type Workbencher interface {
@@ -62,7 +60,7 @@ func NewWorkbenchService(store WorkbenchStore, client helm.HelmClienter) *Workbe
 func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
 	workbenchs, err := s.store.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to query workbenchs")
+		return nil, fmt.Errorf("unable to query workbenchs: %w", err)
 	}
 	return workbenchs, nil
 }
@@ -70,7 +68,7 @@ func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get workbench %v", workbench.ID)
+		return nil, fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
 	}
 
 	return workbench, nil
@@ -79,17 +77,17 @@ func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get workbench %v", workbench.ID)
+		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
 	}
 
 	err = s.store.DeleteWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to delete workbench %v", workbenchID)
+		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.client.DeleteWorkbench(s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbenchID))
 	if err != nil {
-		return errors.Wrapf(err, "unable to delete workbench %v", workbenchID)
+		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
 	return nil
@@ -97,7 +95,7 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 
 func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error {
 	if err := s.store.UpdateWorkbench(ctx, workbench.TenantID, workbench); err != nil {
-		return errors.Wrapf(err, "unable to update workbench %v", workbench.ID)
+		return fmt.Errorf("unable to update workbench %v: %w", workbench.ID, err)
 	}
 
 	return nil
@@ -106,14 +104,14 @@ func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model
 func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
 	id, err := s.store.CreateWorkbench(ctx, workbench.TenantID, workbench)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create workbench %v", workbench.ID)
+		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
 
 	namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(id)
 
 	err = s.client.CreateWorkbench(namespace, workbenchName)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create workbench %v", workbench.ID)
+		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
 
 	return id, nil
@@ -130,12 +128,12 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 
 	port, stopChan, err := s.client.CreatePortForward(proxyID.namespace, proxyID.workbench)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to create port forward: %v", err)
+		return nil, fmt.Errorf("Failed to create port forward: %w", err)
 	}
 
 	targetURL, err := url.Parse(fmt.Sprintf("http://localhost:%v", port))
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed to parse url: %v", err)
+		return nil, fmt.Errorf("Failed to parse url: %w", err)
 
 	}
 
@@ -163,7 +161,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get workbench %v", workbench.ID)
+		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
 	}
 
 	namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbenchID)
@@ -175,7 +173,7 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 
 	proxy, err := s.getProxy(proxyID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get proxy %v", proxyID)
+		return fmt.Errorf("unable to get proxy %v: %w", proxyID, err)
 	}
 
 	proxy.reverseProxy.ServeHTTP(w, r)
@@ -184,8 +182,8 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 }
 
 func (s *WorkbenchService) getWorkspaceName(id uint64) string {
-	return "workspace" + fmt.Sprintf("%v", id)
+	return fmt.Sprintf("workspace%v", id)
 }
 func (s *WorkbenchService) getWorkbenchName(id uint64) string {
-	return "workbench" + fmt.Sprintf("%v", id)
+	return fmt.Sprintf("workbench%v", id)
 }

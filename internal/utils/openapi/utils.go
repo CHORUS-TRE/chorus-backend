@@ -3,9 +3,9 @@ package openapi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-openapi/runtime"
-	"github.com/pkg/errors"
 	"io"
+
+	"github.com/go-openapi/runtime"
 )
 
 type openAPIError struct {
@@ -27,7 +27,7 @@ func ExtractServiceError(originalError error) error {
 		resp := apiErr.Response.(runtime.ClientResponse)
 		bodyBytes, err := io.ReadAll(resp.Body())
 		if err != nil {
-			return errors.Wrap(originalError, err.Error())
+			return fmt.Errorf("%s: %w", err.Error(), originalError)
 		}
 		var realError openAPIError
 		err = json.Unmarshal(bodyBytes, &realError)
@@ -35,11 +35,11 @@ func ExtractServiceError(originalError error) error {
 			var realError openAPINumericError
 			err = json.Unmarshal(bodyBytes, &realError)
 			if err != nil {
-				return errors.Wrap(originalError, string(bodyBytes))
+				return fmt.Errorf("%s: %w", string(bodyBytes), originalError)
 			}
-			return errors.Wrap(originalError, fmt.Sprintf("%d: %s, %s", realError.Code, realError.Error, realError.Message))
+			return fmt.Errorf("%d: %s, %s: %w", realError.Code, realError.Error, realError.Message, originalError)
 		}
-		return errors.Wrap(originalError, fmt.Sprintf("%s: %s, %s", realError.Code, realError.Error, realError.Message))
+		return fmt.Errorf("%s: %s, %s: %w", realError.Code, realError.Error, realError.Message, originalError)
 	}
 	return originalError
 }

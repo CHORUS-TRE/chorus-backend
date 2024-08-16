@@ -1,9 +1,8 @@
 package model
 
 import (
+	"errors"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // AppInstance maps an entry in the 'app_instances' database table.

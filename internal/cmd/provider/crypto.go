@@ -13,7 +13,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
-	"github.com/pkg/errors"
 )
 
 var daemonEncryptionKeyOnce sync.Once
@@ -50,7 +49,7 @@ func loadEncryptionKey(filename string) (*crypto.Secret, error) {
 	//nolint:gosec
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to open file %v", filename)
+		return nil, fmt.Errorf("unable to open file %v: %w", filename, err)
 	}
 
 	return loadEncryptionKeyFromReader(file, filename)
@@ -59,7 +58,7 @@ func loadEncryptionKey(filename string) (*crypto.Secret, error) {
 func loadEncryptionKeyFromReader(r io.Reader, filename string) (*crypto.Secret, error) {
 	secretPEM, err := io.ReadAll(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to read private key content")
+		return nil, fmt.Errorf("unable to read private key content: %w", err)
 	}
 
 	block, _ := pem.Decode(secretPEM)
@@ -77,7 +76,7 @@ func loadPrivateKey(f string) (*crypto.Secret, error) {
 	//nolint:gosec
 	secretPEM, err := os.ReadFile(f)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read file %v", f)
+		return nil, fmt.Errorf("unable to read file %v: %w", f, err)
 	}
 
 	block, _ := pem.Decode(secretPEM)

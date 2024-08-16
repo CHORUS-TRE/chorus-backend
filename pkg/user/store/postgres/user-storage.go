@@ -4,15 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
-
+	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // UserStorage is the handler through which a PostgresDB backend can be queried.
@@ -87,7 +84,7 @@ func (s *UserStorage) DeleteTotpRecoveryCode(ctx context.Context, tenantID, code
 DELETE FROM totp_recovery_codes WHERE tenantid = $1 AND id = $2;
 `
 	if _, err := s.db.ExecContext(ctx, query, tenantID, codeID); err != nil {
-		return errors.Wrap(err, "unable to delete recovery code")
+		return fmt.Errorf("unable to delete recovery code: %w", err)
 	}
 	return nil
 }
@@ -108,26 +105,26 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 
 	defer func() {
 		if txErr = tx.Rollback(); txErr != nil {
-			err = errors.Wrap(err, txErr.Error())
+			err = fmt.Errorf("%s: %w", txErr.Error(), err)
 		}
 	}()
 
 	if err = s.updateUserAndRoles(ctx, tx, tenantID, user); err != nil {
-		return errors.Wrap(err, "unable to update user and roles")
+		return fmt.Errorf("unable to update user and roles: %w", err)
 	}
 
 	if _, err = s.db.ExecContext(ctx, deleteRecoveryCodesQuery, tenantID, user.ID); err != nil {
-		return errors.Wrap(err, "unable to delete recovery codes")
+		return fmt.Errorf("unable to delete recovery codes: %w", err)
 	}
 
 	for _, rc := range totpRecoveryCodes {
 		if _, err = tx.ExecContext(ctx, insertRecoveryCodeQuery, tenantID, user.ID, rc); err != nil {
-			return errors.Wrap(err, "unable to insert recovery codes")
+			return fmt.Errorf("unable to insert recovery codes: %w", err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return errors.Wrap(err, "unable to commit")
+		return fmt.Errorf("unable to commit: %w", err)
 	}
 
 	return err
@@ -142,11 +139,11 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 
 	rows, err := s.db.ExecContext(ctx, query, tenantID, userID, model.UserDeleted.String(), "-"+uuid.Next())
 	if err != nil {
-		return errors.Wrap(err, "unable to exec")
+		return fmt.Errorf("unable to exec: %w", err)
 	}
 	affected, err := rows.RowsAffected()
 	if err != nil {
-		return errors.Wrap(err, "unable to get rows affected")
+		return fmt.Errorf("unable to get rows affected: %w", err)
 	}
 
 	if affected == 0 {
@@ -164,17 +161,17 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 
 	defer func() {
 		if txErr = tx.Rollback(); txErr != nil {
-			err = errors.Wrap(err, txErr.Error())
+			err = fmt.Errorf("%s: %w", txErr.Error(), err)
 		}
 	}()
 
 	err = s.updateUserAndRoles(ctx, tx, tenantID, user)
 	if err != nil {
-		return errors.Wrap(err, "unable to update")
+		return fmt.Errorf("unable to update: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
-		return errors.Wrap(err, "unable to commit")
+		return fmt.Errorf("unable to commit: %w", err)
 	}
 
 	return err
@@ -200,11 +197,11 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 	rows, err := tx.ExecContext(ctx, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username,
 		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
-		return errors.Wrap(err, "unable to exec")
+		return fmt.Errorf("unable to exec: %w", err)
 	}
 	affected, err := rows.RowsAffected()
 	if err != nil {
-		return errors.Wrap(err, "unable to get rows affected")
+		return fmt.Errorf("unable to get rows affected: %w", err)
 	}
 
 	if affected == 0 {
@@ -213,13 +210,13 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 
 	roles, err := s.GetRoles(ctx)
 	if err != nil {
-		return errors.Wrap(err, "unable to get roles")
+		return fmt.Errorf("unable to get roles: %w", err)
 	}
 
 	// Delete Old User Roles
 	_, err = tx.ExecContext(ctx, deleteUserRolesQuery, user.ID)
 	if err != nil {
-		return errors.Wrap(err, "unable to delete old roles")
+		return fmt.Errorf("unable to delete old roles: %w", err)
 	}
 
 	// Add new User Roles
@@ -228,7 +225,7 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 		for _, r := range roles {
 			if ur.String() == r.Name {
 				if _, err = tx.ExecContext(ctx, insertUserRoleQuery, user.ID, r.ID); err != nil {
-					return errors.Wrap(err, "unable to exec in")
+					return fmt.Errorf("unable to exec in: %w", err)
 				}
 				found = true
 				break
@@ -347,7 +344,7 @@ func (s *UserStorage) CreateRole(ctx context.Context, role string) error {
 
 	_, err := s.db.ExecContext(ctx, query, role)
 	if err != nil {
-		return errors.Wrap(err, "unable to create role")
+		return fmt.Errorf("unable to create role: %w", err)
 	}
 
 	return nil

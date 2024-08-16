@@ -2,15 +2,15 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 type appInstanceServiceLogging struct {
@@ -36,7 +36,7 @@ func (c appInstanceServiceLogging) ListAppInstances(ctx context.Context, tenantI
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, errors.Wrapf(err, "unable to get appInstances")
+		return res, fmt.Errorf("unable to get appInstances: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -56,7 +56,7 @@ func (c appInstanceServiceLogging) GetAppInstance(ctx context.Context, tenantID,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, errors.Wrapf(err, "unable to get appInstance")
+		return res, fmt.Errorf("unable to get appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -76,7 +76,7 @@ func (c appInstanceServiceLogging) DeleteAppInstance(ctx context.Context, tenant
 			logger.WithAppInstanceIDField(appInstanceID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return errors.Wrapf(err, "unable to delete appInstance")
+		return fmt.Errorf("unable to delete appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -96,7 +96,7 @@ func (c appInstanceServiceLogging) UpdateAppInstance(ctx context.Context, appIns
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return errors.Wrapf(err, "unable to update appInstance")
+		return fmt.Errorf("unable to update appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -115,7 +115,7 @@ func (c appInstanceServiceLogging) CreateAppInstance(ctx context.Context, appIns
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return appInstanceId, errors.Wrapf(err, "unable to create appInstance")
+		return appInstanceId, fmt.Errorf("unable to create appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,

@@ -1,9 +1,8 @@
 package model
 
 import (
+	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Workspace maps an entry in the 'workspaces' database table.
@@ -46,6 +45,6 @@ func ToWorkspaceStatus(status string) (WorkspaceStatus, error) {
 	case WorkspaceDeleted.String():
 		return WorkspaceDeleted, nil
 	default:
-		return "", errors.New("unexpected WorkspaceStatus: " + status)
+		return "", fmt.Errorf("unexpected WorkspaceStatus: %s", status)
 	}
 }

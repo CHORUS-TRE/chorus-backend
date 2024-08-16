@@ -9,6 +9,7 @@ package migration
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	migrate "github.com/rubenv/sql-migrate"
 )
 
@@ -52,7 +52,7 @@ func Migrate(storageType string, migrations map[string]string, migrationTable st
 		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to execute database migrations (retry: %v). Retrying in 10 seconds", i), zap.Error(err))
 		time.Sleep(10 * time.Second)
 	}
-	return 0, errors.Wrapf(err, "unable to execute database migrations")
+	return 0, fmt.Errorf("unable to execute database migrations: %w", err)
 }
 
 func parseMigration(m map[string]string) (*migrate.MemoryMigrationSource, error) {

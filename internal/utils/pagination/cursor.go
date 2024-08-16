@@ -3,8 +3,7 @@ package pagination
 import (
 	"encoding/base64"
 	"encoding/json"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	pb "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 )
@@ -86,10 +85,10 @@ func RequestCursorFromPb[T any](rcPb *pb.RequestCursor) (*RequestCursor[T], erro
 		cursorData = new(T)
 		currentPage, err := base64.StdEncoding.DecodeString(rcPb.CurrentPage)
 		if err != nil {
-			return nil, errors.Wrap(err, "not a valid base64-encoded string")
+			return nil, fmt.Errorf("not a valid base64-encoded string: %w", err)
 		}
 		if err := json.Unmarshal(currentPage, cursorData); err != nil {
-			return nil, errors.Wrap(err, "failed to deserialize data into the target struct")
+			return nil, fmt.Errorf("failed to deserialize data into the target struct: %w", err)
 		}
 	}
 
@@ -123,7 +122,7 @@ func (cursor *ResponseCursor[T]) ToPb() (*pb.ResponseCursor, error) {
 	if cursor.CursorData != nil {
 		currentPageBytes, err := json.Marshal(cursor.CursorData)
 		if err != nil {
-			return responseCursor, errors.Wrap(err, "failed to marshal cursor data as JSON")
+			return responseCursor, fmt.Errorf("failed to marshal cursor data as JSON: %w", err)
 		}
 
 		currentPage = base64.StdEncoding.EncodeToString(currentPageBytes)

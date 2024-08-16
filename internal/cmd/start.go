@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,7 +15,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	google_grpc "google.golang.org/grpc"
@@ -46,7 +46,7 @@ func runServer() error {
 	cfg := provider.ProvideConfig()
 	err := runExportConfig()
 	if err != nil {
-		return errors.Wrap(err, "unable to export config")
+		return fmt.Errorf("unable to export config: %w", err)
 	}
 
 	info := provider.ProvideComponentInfo()

@@ -1,23 +1,24 @@
 package converter
 
 import (
+	"fmt"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
-	"github.com/pkg/errors"
 )
 
 func WorkbenchToBusiness(workbench *chorus.Workbench) (*model.Workbench, error) {
 	ca, err := FromProtoTimestamp(workbench.CreatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	ua, err := FromProtoTimestamp(workbench.UpdatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert updatedAt timestamp")
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 	status, err := model.ToWorkbenchStatus(workbench.Status)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert workbench status")
+		return nil, fmt.Errorf("unable to convert workbench status: %w", err)
 	}
 
 	return &model.Workbench{
@@ -41,11 +42,11 @@ func WorkbenchToBusiness(workbench *chorus.Workbench) (*model.Workbench, error) 
 func WorkbenchFromBusiness(workbench *model.Workbench) (*chorus.Workbench, error) {
 	ca, err := ToProtoTimestamp(workbench.CreatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	ua, err := ToProtoTimestamp(workbench.UpdatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert updatedAt timestamp")
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
 	return &chorus.Workbench{

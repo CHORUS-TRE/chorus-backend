@@ -1,15 +1,16 @@
 package storage
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/pkg/errors"
 )
 
 func Rollback(tx *sqlx.Tx, txErr error) error {
 	rollErr := tx.Rollback()
 	if rollErr != nil {
-		return errors.Wrap(rollErr, txErr.Error())
+		return fmt.Errorf("%s: %w", txErr.Error(), rollErr)
 	}
 	return txErr
 }

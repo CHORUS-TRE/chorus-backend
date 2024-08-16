@@ -2,10 +2,10 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 )
@@ -22,7 +22,7 @@ func (s *TenantStorage) GetTenant(ctx context.Context, tenantID uint64) (*model.
 	const q = `SELECT * FROM tenants where id = $1`
 	t := &model.Tenant{}
 	if err := s.db.Get(t, q, tenantID); err != nil {
-		return nil, errors.Wrap(err, "unable to get tenant")
+		return nil, fmt.Errorf("unable to get tenant: %w", err)
 	}
 	return t, nil
 }
@@ -32,5 +32,5 @@ func (s *TenantStorage) CreateTenant(ctx context.Context, tenantID uint64, name 
 		INSERT INTO tenants(id, name, createdat, updatedat) VALUES($1, $2, $3, $3);
 	`
 	_, err := s.db.ExecContext(ctx, ins, tenantID, name, time.Now().UTC())
-	return errors.Wrap(err, "unable to create tenant")
+	return fmt.Errorf("unable to create tenant: %w", err)
 }

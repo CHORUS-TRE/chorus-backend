@@ -1,10 +1,10 @@
 package helpers
 
 import (
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/openapi"
-
 	"github.com/go-openapi/runtime"
 	. "github.com/onsi/gomega"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/openapi"
 )
 
 func ExpectAPIError(expectedErr interface{}) Assertion {

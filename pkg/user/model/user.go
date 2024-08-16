@@ -1,9 +1,8 @@
 package model
 
 import (
+	"errors"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // User maps an entry in the 'user' database table.

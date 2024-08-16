@@ -2,13 +2,13 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // AppInstanceStorage is the handler through which a PostgresDB backend can be queried.
@@ -102,11 +102,11 @@ func (s *AppInstanceStorage) DeleteAppInstance(ctx context.Context, tenantID uin
 
 	rows, err := s.db.ExecContext(ctx, query, tenantID, appInstanceID, model.AppInstanceDeleted.String())
 	if err != nil {
-		return errors.Wrap(err, "unable to exec")
+		return fmt.Errorf("unable to exec: %w", err)
 	}
 	affected, err := rows.RowsAffected()
 	if err != nil {
-		return errors.Wrap(err, "unable to get rows affected")
+		return fmt.Errorf("unable to get rows affected: %w", err)
 	}
 
 	if affected == 0 {

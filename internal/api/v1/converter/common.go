@@ -1,14 +1,15 @@
 package converter
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func ToProtoTimestamp(t time.Time) (*timestamp.Timestamp, error) {
@@ -49,7 +50,7 @@ func FromProtoStringDate(t string) (time.Time, error) {
 
 	date, err := time.Parse(time.RFC3339, t)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "unable to convert proto string date to time.Time")
+		return time.Time{}, fmt.Errorf("unable to convert proto string date to time.Time: %w", err)
 	}
 	return date, nil
 }

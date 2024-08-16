@@ -2,11 +2,11 @@ package helm
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	helmloader "helm.sh/helm/v3/pkg/chart/loader"
@@ -42,7 +42,7 @@ func GetHelmChart() (*chart.Chart, error) {
 
 	chart, err := helmloader.LoadFiles(files)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error loading Helm chart: %v", err)
+		return nil, fmt.Errorf("Error loading Helm chart: %w", err)
 	}
 
 	return chart, err

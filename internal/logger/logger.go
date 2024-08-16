@@ -2,12 +2,12 @@ package logger
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"sync"
 
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	jack "gopkg.in/natefinch/lumberjack.v2"

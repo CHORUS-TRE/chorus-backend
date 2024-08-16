@@ -2,15 +2,15 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 type appServiceLogging struct {
@@ -36,7 +36,7 @@ func (c appServiceLogging) ListApps(ctx context.Context, tenantID uint64, pagina
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, errors.Wrapf(err, "unable to get apps")
+		return res, fmt.Errorf("unable to get apps: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -56,7 +56,7 @@ func (c appServiceLogging) GetApp(ctx context.Context, tenantID, appID uint64) (
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, errors.Wrapf(err, "unable to get app")
+		return res, fmt.Errorf("unable to get app: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -76,7 +76,7 @@ func (c appServiceLogging) DeleteApp(ctx context.Context, tenantID, appID uint64
 			logger.WithAppIDField(appID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return errors.Wrapf(err, "unable to delete app")
+		return fmt.Errorf("unable to delete app: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -96,7 +96,7 @@ func (c appServiceLogging) UpdateApp(ctx context.Context, app *model.App) error 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return errors.Wrapf(err, "unable to update app")
+		return fmt.Errorf("unable to update app; %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -115,7 +115,7 @@ func (c appServiceLogging) CreateApp(ctx context.Context, app *model.App) (uint6
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return appId, errors.Wrapf(err, "unable to create app")
+		return appId, fmt.Errorf("unable to create app: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,

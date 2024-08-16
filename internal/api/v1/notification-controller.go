@@ -2,7 +2,12 @@ package v1
 
 import (
 	"context"
+	"fmt"
 	"strings"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
@@ -10,11 +15,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/service"
-	"github.com/golang/protobuf/ptypes/empty"
-	errors "github.com/pkg/errors"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type NotificationController struct {
@@ -122,11 +122,11 @@ func (c NotificationController) getNotificationToServiceRequest(tenantID, userID
 func notificationFromBusiness(r *model.Notification) (*chorus.Notification, error) {
 	ca, err := converter.ToProtoTimestamp(r.CreatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	ra, err := converter.ToProtoTimestamp(utils.ToTime(r.ReadAt))
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	return &chorus.Notification{
 		Id:        r.ID,

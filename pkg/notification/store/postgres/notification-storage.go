@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
-	"github.com/pkg/errors"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -33,7 +32,7 @@ func (s *NotificationStorage) CreateNotification(ctx context.Context, notificati
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == DuplicateKeyErrorCode {
 			return nil
 		}
-		return errors.Wrap(err, "unable to create notification")
+		return fmt.Errorf("unable to create notification: %w", err)
 	}
 	for _, userID := range userIDs {
 		const query = `INSERT INTO notifications_read_by (tenantid, notificationid, userid) VALUES ($1,$2,$3)`
@@ -62,13 +61,13 @@ func (s *NotificationStorage) MarkNotificationsAsRead(ctx context.Context, tenan
 	if markAll {
 		const query = `UPDATE notifications_read_by SET readat=now() WHERE tenantid=$1 AND userid=$2 AND readat IS null`
 		if _, err := s.db.ExecContext(ctx, query, tenantID, userID); err != nil {
-			return errors.Wrap(err, "unable to mark notifications as read")
+			return fmt.Errorf("unable to mark notifications as read: %w", err)
 		}
 	} else {
 		for _, notificationID := range notificationIDs {
 			const query = `UPDATE notifications_read_by SET readat=now() WHERE tenantid=$1 AND notificationid=$2 AND userid=$3 AND readat IS null`
 			if _, err := s.db.ExecContext(ctx, query, tenantID, notificationID, userID); err != nil {
-				return errors.Wrap(err, "unable to mark notification as read")
+				return fmt.Errorf("unable to mark notification as read: %w", err)
 			}
 		}
 	}

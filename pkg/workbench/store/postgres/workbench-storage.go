@@ -2,14 +2,14 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // WorkbenchStorage is the handler through which a PostgresDB backend can be queried.
@@ -103,11 +103,11 @@ func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64,
 
 	rows, err := s.db.ExecContext(ctx, query, tenantID, workbenchID, model.WorkbenchDeleted.String(), "-"+uuid.Next())
 	if err != nil {
-		return errors.Wrap(err, "unable to exec")
+		return fmt.Errorf("unable to exec: %w", err)
 	}
 	affected, err := rows.RowsAffected()
 	if err != nil {
-		return errors.Wrap(err, "unable to get rows affected")
+		return fmt.Errorf("unable to get rows affected: %w", err)
 	}
 
 	if affected == 0 {

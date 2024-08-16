@@ -1,9 +1,8 @@
 package model
 
 import (
+	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Workbench maps an entry in the 'workbenchs' database table.
@@ -47,6 +46,6 @@ func ToWorkbenchStatus(status string) (WorkbenchStatus, error) {
 	case WorkbenchDeleted.String():
 		return WorkbenchDeleted, nil
 	default:
-		return "", errors.New("unexpected WorkbenchStatus: " + status)
+		return "", fmt.Errorf("unexpected WorkbenchStatus: %s", status)
 	}
 }

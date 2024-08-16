@@ -6,11 +6,10 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
@@ -101,10 +100,10 @@ func (f *gelfFlusher) flush(entries [][]byte) error {
 	var buf bytes.Buffer
 	g := gzip.NewWriter(&buf)
 	if _, err := g.Write(payload); err != nil {
-		return errors.Errorf("ERROR - can't gzip the log payload for Graylog (Write)")
+		return errors.New("ERROR - can't gzip the log payload for Graylog (Write)")
 	}
 	if err := g.Close(); err != nil {
-		return errors.Errorf("ERROR - can't gzip the log payload for Graylog (Close)")
+		return errors.New("ERROR - can't gzip the log payload for Graylog (Close)")
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

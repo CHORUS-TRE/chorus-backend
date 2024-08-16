@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"html/template"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/mailer"
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
 )
 
 type mailerServiceLogging struct {
@@ -29,7 +30,7 @@ func (c mailerServiceLogging) SendMessage(ctx context.Context, tenantID uint64, 
 			zap.Float64("elapsed_ms", float64(time.Since(now).Nanoseconds())/1000000.0),
 			zap.Uint64("tenant_id", tenantID),
 		)
-		return errors.Wrapf(err, "unable to send message")
+		return fmt.Errorf("unable to send message: %w", err)
 	}
 
 	c.logger.Info(ctx, "message sent",
@@ -54,7 +55,7 @@ func (c mailerServiceLogging) Send(ctx context.Context, tenantID uint64, to []st
 			zap.Float64("elapsed_ms", float64(time.Since(now).Nanoseconds())/1000000.0),
 			zap.Uint64("tenant_id", tenantID),
 		)
-		return errors.Wrapf(err, "unable to send message")
+		return fmt.Errorf("unable to send message: %w", err)
 	}
 
 	c.logger.Info(ctx, "message sent",
