@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-backend-{{ include "backend.nameid" . }}
+  labels:
+    app: deployment-backend-{{ include "backend.nameid" . }}
+    nameid: {{ include "backend.nameid" . }}
+    version: {{ .Values.version }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deployment-backend-{{ include "backend.nameid" . }}
+  template:
+    metadata:
+      labels:
+        app: deployment-backend-{{ include "backend.nameid" . }}
+      annotations:
+        timestamp: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }}
+    spec:
+      containers:
+      - name: deployment-backend-{{ include "backend.nameid" . }}
+        image: {{ .Values.image }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: backend-config
+          mountPath: /chorus/conf
+        command: ["/chorus/bin/chorus"]
+        args: ["start", "--config", "/chorus/conf/config.yaml"]
+      {{- if .Values.deployment.postrgresEnabled }}
+      - name: postgres
+        image: postgres
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: admin
+        - name: POSTGRES_PASSWORD
+          value: password
+        - name: POSTGRES_DB
+          value: chorus
+      {{- end }}
+      {{- if .Values.deployment.serviceAccountName }}
+      serviceAccountName: {{ .Values.deployment.serviceAccountName }}
+      {{- end }}
+      imagePullSecrets:
+      - name: registry-auth
+      volumes:
+      - name: backend-config
+        secret:
+          secretName: backend-config-{{ include "backend.nameid" . }}
+          items:
+          - key: config.yaml
+            path: config.yaml
+          - key: privkey.pem
+            path: privkey.pem
+          - key: pubkey.pem
+            path: pubkey.pem

@@ -6,7 +6,9 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -35,5 +37,9 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 			return nil, status.Errorf(codes.Unauthenticated, "%v", err)
 		}
 	}
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/")
+	grpc.SetHeader(ctx, header)
+
 	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
 }

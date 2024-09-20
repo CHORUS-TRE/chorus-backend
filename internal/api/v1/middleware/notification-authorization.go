@@ -26,7 +26,7 @@ func NotificationAuthorizing(logger *logger.ContextLogger, authorizedRoles []str
 }
 
 func (c notificationControllerAuthorization) CountUnreadNotifications(ctx context.Context, empty *empty.Empty) (*chorus.CountUnreadNotificationsReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (c notificationControllerAuthorization) CountUnreadNotifications(ctx contex
 	return c.next.CountUnreadNotifications(ctx, empty)
 }
 func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context.Context, req *chorus.MarkNotificationsAsReadRequest) (*empty.Empty, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context
 	return c.next.MarkNotificationsAsRead(ctx, req)
 }
 func (c notificationControllerAuthorization) GetNotifications(ctx context.Context, req *chorus.GetNotificationsRequest) (*chorus.GetNotificationsReply, error) {
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}

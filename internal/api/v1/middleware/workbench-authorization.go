@@ -27,7 +27,7 @@ func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizedRoles []string
 func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, req *chorus.ListWorkbenchsRequest) (*chorus.ListWorkbenchsReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, re
 func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req 
 func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.CreateWorkbenchReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, r
 func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, req *chorus.UpdateWorkbenchRequest) (*chorus.UpdateWorkbenchReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, r
 func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, req *chorus.DeleteWorkbenchRequest) (*chorus.DeleteWorkbenchReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}

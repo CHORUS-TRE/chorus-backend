@@ -1,23 +1,24 @@
 package converter
 
 import (
+	"fmt"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
-	"github.com/pkg/errors"
 )
 
 func AppToBusiness(app *chorus.App) (*model.App, error) {
 	ca, err := FromProtoTimestamp(app.CreatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	ua, err := FromProtoTimestamp(app.UpdatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert updatedAt timestamp")
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 	status, err := model.ToAppStatus(app.Status)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert app status")
+		return nil, fmt.Errorf("unable to convert app status: %w", err)
 	}
 
 	return &model.App{
@@ -42,11 +43,11 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 func AppFromBusiness(app *model.App) (*chorus.App, error) {
 	ca, err := ToProtoTimestamp(app.CreatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	ua, err := ToProtoTimestamp(app.UpdatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert updatedAt timestamp")
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
 	return &chorus.App{

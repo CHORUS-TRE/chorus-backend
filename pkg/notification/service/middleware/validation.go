@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"context"
+	"fmt"
+
+	val "github.com/go-playground/validator/v10"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/service"
-	"github.com/pkg/errors"
-
-	val "github.com/go-playground/validator/v10"
 )
 
 type validation struct {
@@ -32,7 +32,7 @@ func (v validation) CountUnreadNotifications(ctx context.Context, req service.Co
 }
 func (v validation) MarkNotificationsAsRead(ctx context.Context, req service.MarkNotificationsAsReadRequest) error {
 	if err := v.validate.Struct(req); err != nil {
-		return errors.Wrap(err, "unable to mark notification as read")
+		return fmt.Errorf("unable to mark notification as read: %w", err)
 	}
 	return v.next.MarkNotificationsAsRead(ctx, req)
 }

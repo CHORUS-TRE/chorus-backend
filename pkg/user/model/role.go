@@ -1,6 +1,6 @@
 package model
 
-import "github.com/pkg/errors"
+import "fmt"
 
 // Role maps an entry in the 'roles' database table.
 type Role struct {
@@ -33,7 +33,7 @@ func ToUserRole(role string) (UserRole, error) {
 	case RoleChorus.String():
 		return RoleChorus, nil
 	default:
-		return "", errors.Errorf("unexpected role %v", role)
+		return "", fmt.Errorf("unexpected role %v", role)
 	}
 }
 

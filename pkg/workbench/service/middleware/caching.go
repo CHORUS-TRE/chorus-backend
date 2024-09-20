@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
@@ -58,6 +59,11 @@ func (c *Caching) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64
 	}
 
 	return
+}
+
+func (c *Caching) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
+	return c.next.ProxyWorkbench(ctx, tenantID, workbenchID, w, r)
+
 }
 
 func (c *Caching) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {

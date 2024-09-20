@@ -5,15 +5,15 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"io"
-
-	"github.com/pkg/errors"
 )
 
 func EncryptToString(plaintext []byte, key []byte) (string, error) {
 	e, err := Encrypt(plaintext, key)
 	if err != nil {
-		return "", errors.Wrapf(err, "unable to encrypt plaintext")
+		return "", fmt.Errorf("unable to encrypt plaintext: %w", err)
 	}
 	return base64.StdEncoding.EncodeToString(e), nil
 }
@@ -40,7 +40,7 @@ func Encrypt(plaintext []byte, key []byte) ([]byte, error) {
 func DecryptFromString(ciphertext string, key []byte) ([]byte, error) {
 	c, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to decode base64 encoded ciphertext")
+		return nil, fmt.Errorf("unable to decode base64 encoded ciphertext: %w", err)
 	}
 	return Decrypt(c, key)
 }

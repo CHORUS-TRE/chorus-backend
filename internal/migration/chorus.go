@@ -7,8 +7,6 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -19,14 +17,14 @@ func getMigration(path string) (map[string]string, error) {
 
 	files, err := listMigrationFiles(MigrationEmbed, path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to list '%s' migration files", path)
+		return nil, fmt.Errorf("unable to list %q migration files: %w", path, err)
 	}
 
 	res := map[string]string{}
 	for _, file := range files {
 		content, err := readFile(MigrationEmbed, filePath(path, file))
 		if err != nil {
-			return nil, errors.Wrapf(err, "unable to read embedded file '%s'", file)
+			return nil, fmt.Errorf("unable to read embedded file %q: %w", file, err)
 		}
 		res[removeFileExtension(file)] = content
 	}

@@ -1,3 +1,0 @@
-{{- if not .Values.aesPassphrase }}
-{{- fail ".Values.aesPassphrase need to be provided" }}
-{{- end }}

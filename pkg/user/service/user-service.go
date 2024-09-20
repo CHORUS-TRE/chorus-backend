@@ -2,7 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/mailer"
@@ -11,10 +15,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
-
-	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Userer interface {
@@ -84,7 +84,7 @@ func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret
 func (u *UserService) GetUsers(ctx context.Context, req GetUsersReq) ([]*model.User, error) {
 	users, err := u.store.GetUsers(ctx, req.TenantID)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to query users")
+		return nil, fmt.Errorf("unable to query users: %w", err)
 	}
 	return users, nil
 }
@@ -92,7 +92,7 @@ func (u *UserService) GetUsers(ctx context.Context, req GetUsersReq) ([]*model.U
 func (u *UserService) GetUser(ctx context.Context, req GetUserReq) (*model.User, error) {
 	user, err := u.store.GetUser(ctx, req.TenantID, req.ID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to get user %v", req.ID)
+		return nil, fmt.Errorf("unable to get user %v: %w", req.ID, err)
 	}
 
 	user.Password = ""
@@ -104,7 +104,7 @@ func (u *UserService) GetUser(ctx context.Context, req GetUserReq) (*model.User,
 func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPasswordReq) error {
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get user %v", req.UserID)
+		return fmt.Errorf("unable to get user %v: %w", req.UserID, err)
 	}
 
 	if !helper.CheckPassHash(user.Password, req.CurrentPassword) {
@@ -118,7 +118,7 @@ func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPass
 
 	hashed, err := helper.HashPass(req.NewPassword)
 	if err != nil {
-		return errors.Wrap(err, "unable to hash password")
+		return fmt.Errorf("unable to hash password: %w", err)
 	}
 
 	user.Password = hashed
@@ -126,7 +126,7 @@ func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPass
 
 	err = u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return errors.Wrapf(err, "unable to update user %v", req.UserID)
+		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
 	return nil
 
@@ -134,7 +134,7 @@ func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPass
 
 func (u *UserService) SoftDeleteUser(ctx context.Context, req DeleteUserReq) error {
 	if err := u.store.SoftDeleteUser(ctx, req.TenantID, req.ID); err != nil {
-		return errors.Wrap(err, "unable to delete user")
+		return fmt.Errorf("unable to delete user: %w", err)
 	}
 
 	return nil
@@ -144,7 +144,7 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) error {
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.User.ID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get user %v", req.User.ID)
+		return fmt.Errorf("unable to get user %v: %w", req.User.ID, err)
 	}
 
 	req.User.Roles = filterDuplicateRoles(req.User.Roles)
@@ -155,12 +155,12 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) error {
 	user.Status = req.User.Status
 
 	if err = verifyRoles(req.User.Roles); err != nil {
-		return errors.Wrap(err, "role verification failed")
+		return fmt.Errorf("role verification failed: %w", err)
 	}
 	user.Roles = req.User.Roles
 
 	if err := u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
-		return errors.Wrapf(err, "unable to update user %v", req.User.ID)
+		return fmt.Errorf("unable to update user %v: %w", req.User.ID, err)
 	}
 
 	return nil
@@ -180,12 +180,12 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (uint64
 
 	password, err := helper.GeneratePassword(20)
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to generate password")
+		return 0, fmt.Errorf("unable to generate password: %w", err)
 	}
 
 	hash, err := helper.HashPass(password)
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to hash password")
+		return 0, fmt.Errorf("unable to hash password: %w", err)
 	}
 
 	user := reqToUserBusiness(req.User)
@@ -193,7 +193,7 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (uint64
 
 	id, err := u.store.CreateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return 0, errors.Wrapf(err, "unable to create user %v", user.Username)
+		return 0, fmt.Errorf("unable to create user %v: %w", user.Username, err)
 	}
 
 	go u.sendMailWithTempPassword("Please change your password", req.TenantID, user, password, mailer.TemporaryPasswordKey)
@@ -207,13 +207,13 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 
 		secret, err := crypto.CreateTotpSecret(user.Username, u.daemonEncryptionKey)
 		if err != nil {
-			return 0, errors.Wrap(err, "unable to create totp secret")
+			return 0, fmt.Errorf("unable to create totp secret: %w", err)
 		}
 		user.TotpSecret = &secret
 
 		recoveryCodes, err := crypto.CreateTotpRecoveryCodes(u.totpNumRecoveryCodes, u.daemonEncryptionKey)
 		if err != nil {
-			return 0, errors.Wrap(err, "unable to create totp recovery codes")
+			return 0, fmt.Errorf("unable to create totp recovery codes: %w", err)
 		}
 		user.TotpRecoveryCodes = recoveryCodes
 		user.TotpEnabled = true
@@ -221,14 +221,14 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to hash password")
+		return 0, fmt.Errorf("unable to hash password: %w", err)
 	}
 	user.Password = string(hash)
 	user.PasswordChanged = true
 
 	id, err := u.store.CreateUser(ctx, req.TenantID, reqToUserBusiness(req.User))
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to store user")
+		return 0, fmt.Errorf("unable to store user: %w", err)
 	}
 	return id, nil
 }
@@ -236,7 +236,7 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 func (u *UserService) EnableUserTotp(ctx context.Context, req EnableTotpReq) error {
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get user: %v", req.UserID)
+		return fmt.Errorf("unable to get user: %v: %w", req.UserID, err)
 	}
 
 	isTotpValid, err := crypto.VerifyTotp(req.Totp, utils.ToString(user.TotpSecret), u.daemonEncryptionKey)
@@ -250,8 +250,8 @@ func (u *UserService) EnableUserTotp(ctx context.Context, req EnableTotpReq) err
 	}
 
 	user.TotpEnabled = true
-	if err = u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
-		return errors.Errorf("unable to update user %v", req.UserID)
+	if err := u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
+		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
 
 	return nil
@@ -261,7 +261,7 @@ func (u *UserService) ResetUserTotp(ctx context.Context, req ResetTotpReq) (stri
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "unable to get user %v", req.UserID)
+		return "", nil, fmt.Errorf("unable to get user %v: %w", req.UserID, err)
 	}
 
 	if !helper.CheckPassHash(user.Password, req.Password) {
@@ -277,27 +277,27 @@ func (u *UserService) ResetUserTotp(ctx context.Context, req ResetTotpReq) (stri
 
 	totpSecret, err := crypto.CreateTotpSecret(user.Username, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "unable to create totp secret")
+		return "", nil, fmt.Errorf("unable to create totp secret: %w", err)
 	}
 	user.TotpSecret = &totpSecret
 
 	decTotpSecret, err := crypto.DecryptTotpSecret(totpSecret, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "unable to decrypt totp secret")
+		return "", nil, fmt.Errorf("unable to decrypt totp secret: %w", err)
 	}
 
 	recoveryCodes, err := crypto.CreateTotpRecoveryCodes(u.totpNumRecoveryCodes, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "unabel to create totp recovery codes")
+		return "", nil, fmt.Errorf("unable to create totp recovery codes: %w", err)
 	}
 
 	decRecoveryCodes, err := crypto.DecryptTotpRecoveryCodes(recoveryCodes, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "unable to decrypt totp recovery codes")
+		return "", nil, fmt.Errorf("unable to decrypt totp recovery codes: %w", err)
 	}
 
 	if err = u.store.UpdateUserWithRecoveryCodes(ctx, req.TenantID, user, recoveryCodes); err != nil {
-		return "", nil, errors.Wrapf(err, "unable to update user %v", req.UserID)
+		return "", nil, fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
 
 	return decTotpSecret, decRecoveryCodes, nil
@@ -307,17 +307,17 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 
 	password, err := helper.GeneratePassword(20)
 	if err != nil {
-		return errors.Wrap(err, "unable to generate password")
+		return fmt.Errorf("unable to generate password: %w", err)
 	}
 
 	hash, err := helper.HashPass(password)
 	if err != nil {
-		return errors.Wrap(err, "unable to hash password")
+		return fmt.Errorf("unable to hash password: %w", err)
 	}
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return errors.Wrapf(err, "unable to get user %v", req.UserID)
+		return fmt.Errorf("unable to get user %v: %w", req.UserID, err)
 	}
 
 	user.Password = hash
@@ -326,7 +326,7 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 
 	err = u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return errors.Wrapf(err, "unabel to update user %v", req.UserID)
+		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
 
 	go u.sendMailWithTempPassword("Password reset, please change your password", req.TenantID, user, password, mailer.TemporaryPasswordKey)
@@ -337,7 +337,7 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 func (s *UserService) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error) {
 	recoveryCodes, err := s.store.GetTotpRecoveryCodes(ctx, tenantID, userID)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get totp recovery codes for user")
+		return nil, fmt.Errorf("unable to get totp recovery codes for user: %w", err)
 	}
 	return recoveryCodes, nil
 }
@@ -345,7 +345,7 @@ func (s *UserService) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID
 func (s *UserService) DeleteTotpRecoveryCode(ctx context.Context, req *DeleteTotpRecoveryCodeReq) error {
 	err := s.store.DeleteTotpRecoveryCode(ctx, req.TenantID, req.CodeID)
 	if err != nil {
-		return errors.Wrap(err, "unable to delete totp recovery code")
+		return fmt.Errorf("unable to delete totp recovery code: %w", err)
 	}
 	return nil
 }
@@ -378,7 +378,8 @@ func (u *UserService) GetRoles(ctx context.Context) ([]*model.Role, error) {
 func verifyRoles(roles []model.UserRole) error {
 	for _, role := range roles {
 		if _, ok := model.ValidRoles[role]; !ok {
-			return errors.Wrapf(&service.InvalidParametersErr{}, "invalid role: %s", role)
+			err := &service.InvalidParametersErr{}
+			return fmt.Errorf("invalid role: %s: %w", role, err)
 		}
 	}
 

@@ -16,12 +16,13 @@ import (
 
 // InitServer initializes a HTTP-server and returns an empty request multiplexer
 // for a GRPC gateway and a configuration object.
-func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
+func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
 		runtime.WithIncomingHeaderMatcher(newHeaderMatcher(cfg)),
+		runtime.WithOutgoingHeaderMatcher(newOutgoingHeaderMatcher()),
 	)
 
 	handler := middleware.AddLogger(logger.TechLog, mux)
@@ -31,6 +32,10 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddMetrics(handler)
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
+	if cfg.Services.WorkbenchService.StreamProxyEnabled {
+		handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
+	}
+	handler = middleware.AddJWTFromCookie(handler)
 
 	//nolint: staticcheck
 	opts := []grpc.DialOption{
@@ -52,5 +57,16 @@ func newHeaderMatcher(cfg config.Config) runtime.HeaderMatcherFunc {
 
 	return func(name string) (string, bool) {
 		return name, strings.EqualFold(name, cfg.Daemon.HTTP.HeaderClientIP)
+	}
+}
+
+func newOutgoingHeaderMatcher() runtime.HeaderMatcherFunc {
+	return func(key string) (string, bool) {
+		switch key {
+		case "set-cookie":
+			return key, true
+		default:
+			return runtime.DefaultHeaderMatcher(key)
+		}
 	}
 }

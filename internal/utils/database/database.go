@@ -3,10 +3,10 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 

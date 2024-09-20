@@ -10,7 +10,6 @@ import (
 
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
-	"github.com/pkg/errors"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
@@ -128,7 +127,7 @@ func (f *osFlusher) Flush(entries [][]byte) error {
 	// Perform the request with the client.
 	var res, err = req.Do(ctx, f.client)
 	if err != nil {
-		return errors.Wrap(err, "could not perform opensearch request")
+		return fmt.Errorf("could not perform opensearch request: %w", err)
 	}
 
 	defer func() {
@@ -137,7 +136,7 @@ func (f *osFlusher) Flush(entries [][]byte) error {
 
 	if res.IsError() {
 		_, _ = io.Copy(os.Stderr, res.Body)
-		return errors.Errorf("bulk operation failed: %s", res.Status())
+		return fmt.Errorf("bulk operation failed: %s", res.Status())
 	}
 
 	return nil

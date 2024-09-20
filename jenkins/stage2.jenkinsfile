@@ -181,6 +181,22 @@ pipeline {
         branch 'master'
       }
       stages {
+        stage('tag') {
+          steps {
+            container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+              withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'jenkins', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+                dir('chorus-dev-ops') {
+                  checkout scm
+                  sh """
+                    git config --global --add safe.directory '*'
+                    git tag $VERSION
+                    git push https://${env.GIT_USERNAME}:${env.GIT_PASSWORD}@github.com/CHORUS-TRE/chorus-backend.git $VERSION
+                  """
+                }
+              }
+            }
+          }
+        }
         stage('Deploy') {
           steps {
             container(name: 'chorus-ubuntu', shell: '/bin/bash') {

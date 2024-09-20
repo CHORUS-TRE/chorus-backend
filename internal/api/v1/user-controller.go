@@ -2,8 +2,11 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
@@ -11,10 +14,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
-
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // UserController is the user service controller handler.
@@ -279,11 +278,11 @@ func (c UserController) ResetPassword(ctx context.Context, req *chorus.ResetPass
 func userToServiceRequest(user *chorus.User) (*service.UserReq, error) {
 	ca, err := converter.FromProtoTimestamp(user.CreatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert createdAt timestamp")
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 	ua, err := converter.FromProtoTimestamp(user.UpdatedAt)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to convert updatedAt timestamp")
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 	userStatus, err := model.ToUserStatus(user.Status)
 	if err != nil {

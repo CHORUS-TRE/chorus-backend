@@ -1,0 +1,10 @@
+ingress:
+  enabled: true
+  host: "backend.dev.chorus-tre.ch"
+
+service:
+  port: 5000
+
+deployment:
+  postgresEnabled: false
+  serviceAccountName: "backend-service-account"

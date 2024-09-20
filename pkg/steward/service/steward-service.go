@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	tenant_model "github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
-	"github.com/pkg/errors"
 )
 
 type Tenanter interface {
@@ -43,17 +42,17 @@ func (s *StewardService) InitializeNewTenant(ctx context.Context, tenantID uint6
 
 	// 1) ensure that default roles exist
 	if err := s.createDefaultRoles(ctx); err != nil {
-		return errors.Wrapf(err, "unable to create default roles")
+		return fmt.Errorf("unable to create default roles: %w", err)
 	}
 
 	// 2) ensure that technical tenant is created with required users
 	if err := s.createTechnicalTenant(ctx); err != nil {
-		return errors.Wrapf(err, "unable to create technical tenant")
+		return fmt.Errorf("unable to create technical tenant: %w", err)
 	}
 
 	// 3) Create tenant
 	if err := s.createTenant(ctx, tenantID); err != nil {
-		return errors.Wrapf(err, "unable to create tenant: %v", tenantID)
+		return fmt.Errorf("unable to create tenant: %v: %w", tenantID, err)
 	}
 
 	return nil
@@ -63,7 +62,7 @@ func (s *StewardService) createDefaultRoles(ctx context.Context) error {
 
 	for _, r := range []string{user_model.RoleAuthenticated.String(), user_model.RoleAdmin.String(), user_model.RoleChorus.String()} {
 		if err := s.userer.CreateRole(ctx, r); err != nil {
-			return errors.Wrapf(err, "unable to create '%v' role", r)
+			return fmt.Errorf("unable to create '%v' role: %w", r, err)
 		}
 	}
 
@@ -73,7 +72,7 @@ func (s *StewardService) createTechnicalTenant(ctx context.Context) error {
 
 	err := s.tenanter.CreateTenant(ctx, s.conf.Daemon.TenantID, fmt.Sprintf("CHORUS-TECHNICAL-TENANT-%v", s.conf.Daemon.TenantID))
 	if err != nil && !strings.Contains(err.Error(), "duplicate key") {
-		return errors.Wrapf(err, "unable to create technical tenant: %v", s.conf.Daemon.TenantID)
+		return fmt.Errorf("unable to create technical tenant: %v: %w", s.conf.Daemon.TenantID, err)
 	}
 
 	return nil
@@ -87,7 +86,7 @@ func (s *StewardService) createTenant(ctx context.Context, tenantID uint64) erro
 	if err != nil {
 
 		if strings.Contains(err.Error(), "duplicate key") {
-			return fmt.Errorf("tenant %v already exists", tenantID)
+			return fmt.Errorf("tenant %v already exists: %w", tenantID, err)
 		}
 
 		return err

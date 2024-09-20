@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +35,7 @@ func (c userServiceLogging) GetUsers(ctx context.Context, req service.GetUsersRe
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, errors.Wrapf(err, "unable to get users")
+		return res, fmt.Errorf("unable to get users: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -55,7 +55,7 @@ func (c userServiceLogging) GetUser(ctx context.Context, req service.GetUserReq)
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, errors.Wrapf(err, "unable to get user")
+		return res, fmt.Errorf("unable to get user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -75,7 +75,7 @@ func (c userServiceLogging) SoftDeleteUser(ctx context.Context, req service.Dele
 			logger.WithUserIDField(req.ID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return errors.Wrapf(err, "unable to delete user")
+		return fmt.Errorf("unable to delete user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -95,7 +95,7 @@ func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUs
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return errors.Wrapf(err, "unable to update user")
+		return fmt.Errorf("unable to update user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -114,7 +114,7 @@ func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUs
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return userId, errors.Wrapf(err, "unable to create user")
+		return userId, fmt.Errorf("unable to create user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",

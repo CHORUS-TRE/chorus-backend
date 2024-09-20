@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
-	"github.com/pkg/errors"
 )
 
 type Notificationer interface {
@@ -33,20 +33,20 @@ func NewNotificationService(store NotificationStore) *NotificationService {
 func (s NotificationService) CountUnreadNotifications(ctx context.Context, req CountUnreadNotificationRequest) (uint32, error) {
 	count, err := s.store.CountUnreadNotifications(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return 0, errors.Wrap(err, "unable to count unread notifications")
+		return 0, fmt.Errorf("unable to count unread notifications: %w", err)
 	}
 	return count, nil
 }
 func (s NotificationService) MarkNotificationsAsRead(ctx context.Context, req MarkNotificationsAsReadRequest) error {
 	if err := s.store.MarkNotificationsAsRead(ctx, req.TenantID, req.UserID, req.NotificationIDs, req.MarkAll); err != nil {
-		return errors.Wrap(err, "unable to mark notification as read")
+		return fmt.Errorf("unable to mark notification as read: %w", err)
 	}
 	return nil
 }
 func (s NotificationService) GetNotifications(ctx context.Context, req GetNotificationsRequest) ([]*model.Notification, uint32, error) {
 	notifications, count, err := s.store.GetNotifications(ctx, req.TenantID, req.UserID, req.Query, req.IsRead, req.Offset, req.Limit, req.Sort.ToBusinessSort())
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "unable to get notifications")
+		return nil, 0, fmt.Errorf("unable to get notifications: %w", err)
 	}
 	return notifications, count, nil
 }

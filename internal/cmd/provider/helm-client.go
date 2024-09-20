@@ -15,7 +15,7 @@ var helmClient helm.HelmClienter
 func ProvideHelmClient() helm.HelmClienter {
 	helmClientOnce.Do(func() {
 		cfg := ProvideConfig()
-		if cfg.Clients.HelmClient.KubeConfig == "" {
+		if cfg.Clients.HelmClient.KubeConfig == "" && cfg.Clients.HelmClient.Token == "" {
 			helmClient = helm.NewTestClient()
 		} else {
 			var err error

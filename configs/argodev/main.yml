@@ -1,0 +1,66 @@
+daemon:
+  title: "template backend"
+  http:
+    host: 0.0.0.0
+    port: 5000
+    headers:
+      access_control_allow_origin: "*"
+      access_control_max_age: "600"
+  jwt:
+    secret: "{{ .jwt_secret }}"
+    expiration_time: 259200 # 72h
+  jobs:
+    job_status_gc:
+      enabled: true
+  private_key_file: /chorus/conf/privkey.pem
+  public_key_file: /chorus/conf/pubkey.pem
+  salt: tractor-pessimist5-recolor-dicing-endorse-recipient-puritan-bribe-spotty
+
+storage:
+  datastores:
+    chorus:
+      type: postgres
+      migration_table_name: tt_migrations
+      host: chorus-dev-backend-postgresql
+      port: 5432
+      username: chorus-dev-user
+      password: '{{ .postgres_password }}'
+      database: chorus
+      max_connections: 10
+      max_lifetime: 10s
+      debug_mode: true
+      ssl:
+        enabled: false
+        certificate_file: /chorus/postgres-certs/client.crt
+        key_file: /chorus/postgres-certs/client.key
+
+services:
+  index_service:
+    key: value
+  authentication_service:
+    enabled: true
+  mailer_service:
+    smtp:
+      user: smtpUser
+      password: smtpPassword
+      host: smtp-relay.sendinblue.com
+      port: 587
+      authentication: "none"
+  workbench_service:
+    stream_proxy_enabled: true
+
+clients:
+  helm_client:
+    ca: {{ quote .service_account_secret_ca }}
+    token: {{ quote .service_account_secret_token }}
+    api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
+
+log:
+  loggers:
+    stdout_technical:
+      level: debug
+    stdout_security:
+      level: debug
+    stdout_business:
+      level: debug
+

@@ -27,7 +27,7 @@ func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizedRoles []string
 func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req 
 func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, r
 func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, req *chorus.UpdateWorkspaceRequest) (*chorus.UpdateWorkspaceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, r
 func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, req *chorus.DeleteWorkspaceRequest) (*chorus.DeleteWorkspaceReply, error) {
 	// TODO check for permission
 
-	err := c.isAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
 	}

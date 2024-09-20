@@ -1,9 +1,8 @@
 package model
 
 import (
+	"errors"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // App maps an entry in the 'apps' database table.

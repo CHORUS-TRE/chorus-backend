@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"html/template"
 	"net"
@@ -12,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/jordan-wright/email"
-	"github.com/pkg/errors"
 )
 
 type Mailer interface {
@@ -37,7 +37,7 @@ func NewMailerService(user, password, authentication string, from map[uint64]str
 
 	host, port, err := net.SplitHostPort(hostPort)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse host:port: %v", hostPort)
+		return nil, fmt.Errorf("unable to parse host port: %v: %w", hostPort, err)
 	}
 
 	if strings.ToLower(authentication) != "none" {
@@ -83,7 +83,7 @@ func NewMailerService(user, password, authentication string, from map[uint64]str
 func (m *MailerService) prepare(name, mailTemplate string) error {
 	var tmpl, err = template.New(name).Parse(mailTemplate)
 	if err != nil {
-		return errors.Wrapf(err, "could not prepare template %q", name)
+		return fmt.Errorf("could not prepare template %q: %w", name, err)
 	}
 	m.templates[name] = tmpl
 	return nil
@@ -127,7 +127,7 @@ func (m *MailerService) Send(ctx context.Context, tenantID uint64, to []string, 
 		err = mail.Send(m.hostPort, m.auth)
 	}
 	if err != nil {
-		return errors.Wrapf(err, "could not send mail via %v: from: %v, to: %v, subject: %v", m.hostPort, from, to, subject)
+		return fmt.Errorf("could not send mail via %v: from: %v, to: %v, subject: %v. %w", m.hostPort, from, to, subject, err)
 	}
 
 	return nil

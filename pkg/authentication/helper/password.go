@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/trustelem/zxcvbn"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,7 +30,7 @@ func IsStrongPassword(pwd string) bool {
 func HashPass(pass string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to hash password")
+		return "", fmt.Errorf("unable to hash password: %w", err)
 	}
 	return string(hash), nil
 }

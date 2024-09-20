@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-backend-{{ include "backend.nameid" . }}
+  labels:
+    version: {{ .Values.version }}
+    nameid: {{ include "backend.nameid" . }}
+spec:
+  selector:
+    app: deployment-backend-{{ include "backend.nameid" . }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: 5000
+  type: ClusterIP
