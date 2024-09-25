@@ -27,7 +27,6 @@ spec:
         volumeMounts:
         - name: backend-config
           mountPath: /chorus/conf
-        volumeMounts:
         - name: backend-config-secrets
           mountPath: /chorus/conf
         command: ["/chorus/bin/chorus"]
