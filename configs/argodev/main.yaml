@@ -12,7 +12,7 @@ daemon:
   jobs:
     job_status_gc:
       enabled: true
-  private_key: {{ .daemon_private_key }}
+  private_key: "{{ .daemon_private_key }}"
   salt: tractor-pessimist5-recolor-dicing-endorse-recipient-puritan-bribe-spotty
 
 storage:
@@ -50,8 +50,8 @@ services:
 
 clients:
   helm_client:
-    ca: {{ .service_account_secret_ca }}
-    token: {{ .service_account_secret_token }}
+    ca: "{{ .service_account_secret_ca }}"
+    token: "{{ .service_account_secret_token }}"
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
 
 log:
