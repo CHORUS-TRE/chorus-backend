@@ -15,19 +15,24 @@
         {{- $secretName := "configaespassphrase-argodev" }}
         {{- $secretKey := "passphrase" }}
         {{- $secret := lookup "v1" "Secret" $namespace $secretName }}
-        {{- $passphrase = $secret.data.passphrase | b64dec }}
+        {{- if $secret }}
+            {{- $passphrase = $secret.data.passphrase | b64dec }}
+        {{- end }}
     {{- end }}
 
-    {{- $encryptedFile := .Files.Get "files/secrets.yaml.enc" }}
-    {{- $salt := $encryptedFile | substr 0 64 }}
-    {{- $remainingFile := $encryptedFile | substr 64 -1 }}
-    {{- $ivAndEncryptedData := $remainingFile | b64enc }}
-    {{- $passphraseWithSalt :=  (printf "%s%s" $passphrase $salt) | sha256sum | substr 0 32 }}
-    {{- $secrets := $ivAndEncryptedData | decryptAES $passphraseWithSalt | fromYaml -}}
+    {{- if (ne $passphrase "") }}
+        {{- $encryptedFile := .Files.Get "files/secrets.yaml.enc" }}
+        {{- $salt := $encryptedFile | substr 0 64 }}
+        {{- $remainingFile := $encryptedFile | substr 64 -1 }}
+        {{- $ivAndEncryptedData := $remainingFile | b64enc }}
+        {{- $passphraseWithSalt :=  (printf "%s%s" $passphrase $salt) | sha256sum | substr 0 32 }}
+        {{- $secrets := $ivAndEncryptedData | decryptAES $passphraseWithSalt | fromYaml -}}
 
-    {{- $_ := set $secrets "Template" $.Template }}
-    {{- tpl (.Files.Get "files/main.yml") $secrets -}}
-
+        {{- $_ := set $secrets "Template" $.Template }}
+        {{- tpl (.Files.Get "files/main.yml") $secrets -}}
+    {{- else }}
+        {{- printf "%s" (.Files.Get "files/main.yml") }}
+    {{- end }}
 {{- end -}}
 
 {{/*

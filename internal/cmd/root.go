@@ -27,6 +27,7 @@ const (
 )
 
 var configFilename = ""
+var configOverrideFilename = ""
 
 var rootCmd = &cobra.Command{
 	Use:   componentName,
@@ -45,7 +46,13 @@ func init() {
 		&configFilename,
 		"config",
 		"",
-		"config file (default is ./configs/dev/chorus.yml)",
+		"config file path (default is ./configs/dev/chorus.yml)",
+	)
+	rootCmd.PersistentFlags().StringVar(
+		&configOverrideFilename,
+		"config-override",
+		"",
+		"config override file path (useful for secrets)",
 	)
 	rootCmd.PersistentFlags().StringVar(
 		&component.RuntimeEnvironment,
@@ -66,6 +73,9 @@ func init() {
 func initConfig() {
 	if configFilename != "" {
 		viper.SetConfigFile(configFilename)
+		if configOverrideFilename != "" {
+			viper.SetConfigFile(configOverrideFilename)
+		}
 	} else {
 		viper.AddConfigPath(configDevPath)
 		viper.SetConfigName(configDevFilename)

@@ -27,8 +27,11 @@ spec:
         volumeMounts:
         - name: backend-config
           mountPath: /chorus/conf
+        volumeMounts:
+        - name: backend-config-secrets
+          mountPath: /chorus/conf
         command: ["/chorus/bin/chorus"]
-        args: ["start", "--config", "/chorus/conf/config.yaml"]
+        args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/conf/secrets.yaml"]
       {{- if .Values.deployment.postrgresEnabled }}
       - name: postgres
         image: postgres
@@ -58,3 +61,9 @@ spec:
             path: privkey.pem
           - key: pubkey.pem
             path: pubkey.pem
+      - name: backend-config-secrets
+        secret:
+          secretName: backend-secrets
+          items:
+          - key: secrets.yaml
+            path: secrets.yaml

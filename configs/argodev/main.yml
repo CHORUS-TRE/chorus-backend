@@ -51,8 +51,8 @@ services:
 
 clients:
   helm_client:
-    ca: {{ quote .service_account_secret_ca }}
-    token: {{ quote .service_account_secret_token }}
+    ca: {{ .service_account_secret_ca }}
+    token: {{ .service_account_secret_token }}
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
 
 log:
