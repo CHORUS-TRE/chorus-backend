@@ -28,9 +28,9 @@ spec:
         - name: backend-config
           mountPath: /chorus/conf
         - name: backend-config-secrets
-          mountPath: /chorus/conf
+          mountPath: /chorus/secrets
         command: ["/chorus/bin/chorus"]
-        args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/conf/secrets.yaml"]
+        args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/secrets/secrets.yaml"]
       {{- if .Values.deployment.postrgresEnabled }}
       - name: postgres
         image: postgres

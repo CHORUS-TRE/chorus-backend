@@ -53,6 +53,7 @@ type (
 		TenantID     uint64 `yaml:"tenant_id"`
 
 		PrivateKeyFile string `yaml:"private_key_file"`
+		PrivateKey     string `yaml:"private_key"`
 		PublicKeyFile  string `yaml:"public_key_file"`
 		Salt           string `yaml:"salt"`
 	}

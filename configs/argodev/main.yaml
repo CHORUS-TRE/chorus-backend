@@ -12,8 +12,7 @@ daemon:
   jobs:
     job_status_gc:
       enabled: true
-  private_key_file: /chorus/conf/privkey.pem
-  public_key_file: /chorus/conf/pubkey.pem
+  private_key: {{ .daemon_private_key }}
   salt: tractor-pessimist5-recolor-dicing-endorse-recipient-puritan-bribe-spotty
 
 storage:
