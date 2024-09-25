@@ -31,7 +31,12 @@
         {{- $_ := set $secrets "Template" $.Template }}
         {{- tpl (.Files.Get "files/main.yaml") $secrets -}}
     {{- else }}
-        {{- printf "%s" (.Files.Get "files/main.yaml") }}
+        {{- $file := .Files.Get "files/main.yaml" }}
+        {{- if $file }}
+            {{- printf "%s" (.Files.Get "files/main.yaml") }}
+        {{- else }}
+            {{- printf "%s" ((.Values.main).yaml) }}
+        {{- end }}
     {{- end }}
 {{- end -}}
 
