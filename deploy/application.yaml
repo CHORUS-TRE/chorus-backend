@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chorus-dev-backend
+  namespace: argocd
+spec:
+  project: chorus-dev
+  destination:
+    name: chorus-dev
+    namespace: backend
+  sources:
+    - repoURL: https://github.com/CHORUS-TRE/chorus-backend.git
+      path: deploy/backend
+      targetRevision: HEAD
+      helm:
+        valueFiles:
+          - ../../configs/argodev/values.yaml
+        fileParameters:
+          - name: main.yaml
+            path: ../../configs/argodev/main.yaml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - preserveResourcesOnDeletion=true
+      - ServerSideApply=false
