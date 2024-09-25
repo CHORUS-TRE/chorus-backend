@@ -73,9 +73,6 @@ func init() {
 func initConfig() {
 	if configFilename != "" {
 		viper.SetConfigFile(configFilename)
-		if configOverrideFilename != "" {
-			viper.SetConfigFile(configOverrideFilename)
-		}
 	} else {
 		viper.AddConfigPath(configDevPath)
 		viper.SetConfigName(configDevFilename)
@@ -86,6 +83,16 @@ func initConfig() {
 	} else {
 		fmt.Fprintf(os.Stderr, "Error reading config file %v: %v", viper.ConfigFileUsed(), err)
 		os.Exit(1)
+	}
+
+	if configOverrideFilename != "" {
+		viper.SetConfigFile(configOverrideFilename)
+		if err := viper.MergeInConfig(); err == nil {
+			fmt.Println("Using additional config file:", viper.ConfigFileUsed())
+		} else {
+			fmt.Fprintf(os.Stderr, "Error merging config file %v: %v", viper.ConfigFileUsed(), err)
+			os.Exit(1)
+		}
 	}
 }
 
