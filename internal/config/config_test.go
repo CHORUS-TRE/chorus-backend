@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testConfig = "./chorus-test.yml"
+const testConfig = "./chorus-test.yaml"
 
 func TestDecodeDaemon(t *testing.T) {
 	cfg := config(t)

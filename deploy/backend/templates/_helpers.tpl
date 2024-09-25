@@ -29,9 +29,9 @@
         {{- $secrets := $ivAndEncryptedData | decryptAES $passphraseWithSalt | fromYaml -}}
 
         {{- $_ := set $secrets "Template" $.Template }}
-        {{- tpl (.Files.Get "files/main.yml") $secrets -}}
+        {{- tpl (.Files.Get "files/main.yaml") $secrets -}}
     {{- else }}
-        {{- printf "%s" (.Files.Get "files/main.yml") }}
+        {{- printf "%s" (.Files.Get "files/main.yaml") }}
     {{- end }}
 {{- end -}}
 

@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	viper.SetDefault("config", "../../configs/dev/chorus.yml")
+	viper.SetDefault("config", "../../configs/dev/chorus.yaml")
 
 	pflag.String("config", viper.GetString("config"), "The configuration file path can be relative or absolute.")
 	pflag.Bool("clean", false, "Clean database after tests.")

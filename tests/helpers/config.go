@@ -16,7 +16,7 @@ import (
 var cfg config.Config
 
 const TEST_CONFIG_FILE = "TEST_CONFIG_FILE"
-const LOCAL_DEV_CONFIG_FILE = "./../../../configs/dev/chorus.yml"
+const LOCAL_DEV_CONFIG_FILE = "./../../../configs/dev/chorus.yaml"
 
 func TestConfigFile() string {
 	if os.Getenv(TEST_CONFIG_FILE) != "" {

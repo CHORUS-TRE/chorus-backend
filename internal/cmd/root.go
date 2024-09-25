@@ -46,7 +46,7 @@ func init() {
 		&configFilename,
 		"config",
 		"",
-		"config file path (default is ./configs/dev/chorus.yml)",
+		"config file path (default is ./configs/dev/chorus.yaml)",
 	)
 	rootCmd.PersistentFlags().StringVar(
 		&configOverrideFilename,
