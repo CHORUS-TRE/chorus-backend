@@ -142,7 +142,7 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Wo
 
 	res, err := c.workbench.CreateWorkbench(ctx, workbench)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateWorkbench': %v", err.Error())
+		return nil, status.Errorf(codes.Internal, "unable to call 'CreateWorkbench': %v", err.Error())
 	}
 	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Id: res}}, nil
 }

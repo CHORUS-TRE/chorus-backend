@@ -3,6 +3,8 @@ kind: Workbench
 metadata:
   name: {{ .Values.name }}
 spec:
+  imagePullSecrets: 
+    - "image-pull-secret"
   apps:
     {{- range .Values.apps }}
     - name: {{ .name }}

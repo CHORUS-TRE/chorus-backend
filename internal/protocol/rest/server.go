@@ -35,6 +35,9 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
 		handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
 	}
+	if cfg.Services.AuthenticationService.DevAuthEnabled {
+		handler = middleware.AddDevAuth(handler)
+	}
 	handler = middleware.AddJWTFromCookie(handler)
 
 	//nolint: staticcheck

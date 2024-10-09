@@ -14,7 +14,7 @@ fi
 
 PATH="$PATH:$PWD/scripts/tools/$OS/bin"
 
-export KUBECONFIG="$DIR/configs/dev/files/kubeconfig.yaml"
+export KUBECONFIG="$PWD/configs/dev/files/kubeconfig.yaml"
 
 clusters=$(kind get clusters)
 exists=0

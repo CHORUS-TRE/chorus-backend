@@ -2,15 +2,18 @@ package middleware
 
 import (
 	"context"
+	"io/fs"
 	"net/http"
 	"regexp"
 	"strconv"
 
+	embed "github.com/CHORUS-TRE/chorus-backend/api"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	jwt_go "github.com/golang-jwt/jwt"
+
 	"go.uber.org/zap"
 )
 
@@ -59,5 +62,22 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, keyFunc jwt_go.
 			h.ServeHTTP(w, r)
 			return
 		}
+	})
+}
+
+func AddDevAuth(h http.Handler) http.Handler {
+	devAuthFS, _ := fs.Sub(embed.DevAuthEmbed, "dev-auth")
+	fs := http.FS(devAuthFS)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		if r.RequestURI == "/dev-auth" {
+			handler := http.StripPrefix("/dev-auth", http.FileServer(fs))
+			handler.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

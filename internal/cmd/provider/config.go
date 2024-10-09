@@ -93,6 +93,7 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Services
 	v.SetDefault("services.authentication_service.enabled", false)
+	v.SetDefault("services.authentication_service.dev_auth_enabled", false)
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
 
 	// Loggers

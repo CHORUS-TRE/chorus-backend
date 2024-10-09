@@ -2,6 +2,8 @@ package helm
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -194,6 +196,29 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 	return port.Local, stopChan, nil
 }
 
+func EncodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, error) {
+	auths := make(map[string]map[string]string)
+
+	for _, entry := range entries {
+		auth := base64.StdEncoding.EncodeToString([]byte(entry.Username + ":" + entry.Password))
+
+		auths[entry.Registry] = map[string]string{
+			"auth": auth,
+		}
+	}
+
+	result := map[string]map[string]map[string]string{
+		"auths": auths,
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonData), nil
+}
+
 func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	actionConfig, err := c.getConfig(namespace)
 	if err != nil {
@@ -204,9 +229,20 @@ func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	install.CreateNamespace = true
 	install.Namespace = namespace
 	install.ReleaseName = workbenchName
+
 	vals := map[string]interface{}{
 		"name": workbenchName,
 		"apps": []map[string]string{},
+	}
+	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
+		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
+		if err != nil {
+			return fmt.Errorf("Unable to encode registries: %w", err)
+		}
+		vals["imagePullSecret"] = map[string]string{
+			"name":             "image-pull-secret",
+			"dockerConfigJson": dockerConfig,
+		}
 	}
 
 	_, err = install.Run(c.chart, vals)

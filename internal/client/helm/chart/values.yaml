@@ -1,2 +1,13 @@
 name: my-workbench
 apps: []
+
+imagePullSecret:
+  name: image-pull-secret
+  dockerConfigJson: |
+    {
+      "auths": {
+        "<registry>": {
+          "auth": "<username:password in base64>"
+        }
+      }
+    }

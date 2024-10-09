@@ -117,6 +117,14 @@ type (
 		Token     string `yaml:"token,omitempty"`      // either a service account token
 		CA        string `yaml:"ca,omitempty"`         // and service account ca
 		APIServer string `yaml:"api_server,omitempty"` // and service account api server
+
+		ImagePullSecrets []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
+	}
+
+	ImagePullSecret struct {
+		Registry string `yaml:"registry,omitempty"`
+		Username string `yaml:"username,omitempty"`
+		Password string `yaml:"password,omitempty"`
 	}
 
 	Tenant struct {
@@ -199,7 +207,8 @@ type (
 		} `yaml:"mailer_service"`
 
 		AuthenticationService struct {
-			Enabled bool `yaml:"enabled"`
+			Enabled        bool `yaml:"enabled"`
+			DevAuthEnabled bool `yaml:"dev_auth_enabled"`
 		} `yaml:"authentication_service"`
 
 		WorkbenchService struct {
