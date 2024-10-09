@@ -47,6 +47,7 @@ services:
       authentication: "none"
   workbench_service:
     stream_proxy_enabled: true
+    backend_in_k8s: false
 
 clients:
   helm_client:
