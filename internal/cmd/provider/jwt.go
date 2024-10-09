@@ -12,7 +12,7 @@ import (
 var claimsFactoryOnce sync.Once
 var claimsFactory jwt_model.ClaimsFactory
 
-// ProvideClaimsFactory returns a fresh JWT-claims-factory istance.
+// ProvideClaimsFactory returns a fresh JWT-claims-factory instance.
 func ProvideClaimsFactory() jwt_model.ClaimsFactory {
 	claimsFactoryOnce.Do(func() {
 		claimsFactory = jwt_model.NewJWTClaimsFactory(logger.SecLog)

@@ -37,18 +37,18 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 	return &workbench, nil
 }
 
-func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (s *WorkbenchStorage) ListWorkbenches(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
 	const query = `
 SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, createdat, updatedat
 	FROM workbenchs
 WHERE tenantid = $1 AND status != 'deleted';
 `
-	var workbenchs []*model.Workbench
-	if err := s.db.SelectContext(ctx, &workbenchs, query, tenantID); err != nil {
+	var workbenches []*model.Workbench
+	if err := s.db.SelectContext(ctx, &workbenches, query, tenantID); err != nil {
 		return nil, err
 	}
 
-	return workbenchs, nil
+	return workbenches, nil
 }
 
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
@@ -95,8 +95,8 @@ func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64,
 
 func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error {
 	const query = `
-		UPDATE workbenchs	SET 
-			(status, name, updatedat, deletedat) = 
+		UPDATE workbenchs SET
+			(status, name, updatedat, deletedat) =
 			($3, concat(name, $4::TEXT), NOW(), NOW())
 		WHERE tenantid = $1 AND id = $2;
 	`

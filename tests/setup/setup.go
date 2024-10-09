@@ -52,7 +52,7 @@ func main() {
 	cfg := provider.ProvideConfig().Storage.Datastores[dbID]
 	ctx := context.Background()
 
-	// Failsafe: if the dabase does not start with the 'acc_' prefix, return an error so we don't wipe accidently the INT databases.
+	// Failsafe: if the database does not start with the 'acc_' prefix, return an error so we don't wipe accidently the INT databases.
 	if !strings.HasPrefix(cfg.Database, "acc_") {
 		logger.TechLog.Fatal(ctx, "DB must start with the 'acc_' prefix", zap.String("db_name", cfg.Database))
 	}

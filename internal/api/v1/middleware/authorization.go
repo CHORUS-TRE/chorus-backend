@@ -3,12 +3,12 @@ package middleware
 import (
 	"context"
 
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
 type authorization struct {
