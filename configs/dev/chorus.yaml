@@ -37,6 +37,7 @@ services:
     key: value
   authentication_service:
     enabled: true
+    dev_auth_enabled: true
   mailer_service:
     smtp:
       user: smtpUser
