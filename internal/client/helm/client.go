@@ -178,6 +178,8 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 
 	go func() {
 		if err := pf.ForwardPorts(); err != nil {
+			// todo check if err is ErrLostConnectionToPod
+			// if so recreacte portforward
 			logger.TechLog.Error(context.Background(), "portforwarding error", zap.Error(err))
 		}
 	}()

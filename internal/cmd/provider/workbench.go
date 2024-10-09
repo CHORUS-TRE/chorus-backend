@@ -22,6 +22,7 @@ var workbench service.Workbencher
 func ProvideWorkbench() service.Workbencher {
 	workbenchOnce.Do(func() {
 		workbench = service.NewWorkbenchService(
+			ProvideConfig(),
 			ProvideWorkbenchStore(),
 			ProvideHelmClient(),
 		)

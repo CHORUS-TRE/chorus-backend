@@ -213,6 +213,7 @@ type (
 
 		WorkbenchService struct {
 			StreamProxyEnabled bool `yaml:"stream_proxy_enabled"`
+			BackendInK8S       bool `yaml:"backend_in_k8s"`
 		} `yaml:"workbench_service"`
 	}
 

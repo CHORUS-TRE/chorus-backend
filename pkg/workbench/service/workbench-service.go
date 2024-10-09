@@ -10,8 +10,11 @@ import (
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
+	"go.uber.org/zap"
 )
 
 type Workbencher interface {
@@ -43,14 +46,16 @@ type proxy struct {
 }
 
 type WorkbenchService struct {
+	cfg        config.Config
 	store      WorkbenchStore
 	client     helm.HelmClienter
 	mutex      sync.Mutex
 	proxyCache map[proxyID]*proxy
 }
 
-func NewWorkbenchService(store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
 	return &WorkbenchService{
+		cfg:        cfg,
 		store:      store,
 		client:     client,
 		proxyCache: make(map[proxyID]*proxy),
@@ -126,12 +131,23 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		return proxy, nil
 	}
 
-	port, stopChan, err := s.client.CreatePortForward(proxyID.namespace, proxyID.workbench)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create port forward: %w", err)
-	}
+	var xpraUrl string
+	var port uint16
+	var stopChan chan struct{}
+	var err error
+	if !s.cfg.Services.WorkbenchService.BackendInK8S {
+		port, stopChan, err = s.client.CreatePortForward(proxyID.namespace, proxyID.workbench)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to create port forward: %w", err)
+		}
 
-	targetURL, err := url.Parse(fmt.Sprintf("http://localhost:%v", port))
+		xpraUrl = fmt.Sprintf("http://localhost:%v", port)
+	} else {
+		xpraUrl = fmt.Sprintf("http://%v.%v:8080", proxyID.workbench, proxyID.namespace)
+	}
+	logger.TechLog.Debug(context.Background(), "targetUrl", zap.String("xpraUrl", xpraUrl))
+
+	targetURL, err := url.Parse(xpraUrl)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse url: %w", err)
 
