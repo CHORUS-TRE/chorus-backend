@@ -15,16 +15,16 @@ consumes:
 produces:
   - application/json
 paths:
-  /api/rest/v1/workbenchs:
+  /api/rest/v1/workbenches:
     get:
-      summary: List workbenchs
-      description: This endpoint returns a list of workbenchs
-      operationId: WorkbenchService_ListWorkbenchs
+      summary: List workbenches
+      description: This endpoint returns a list of workbenches
+      operationId: WorkbenchService_ListWorkbenches
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListWorkbenchsReply'
+            $ref: '#/definitions/chorusListWorkbenchesReply'
         default:
           description: An unexpected error response.
           schema:
@@ -105,7 +105,7 @@ paths:
             $ref: '#/definitions/chorusUpdateWorkbenchRequest'
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}:
+  /api/rest/v1/workbenches/{id}:
     get:
       summary: Get a workbench
       description: This endpoint returns a workbench
@@ -177,7 +177,7 @@ definitions:
     properties:
       workbench:
         $ref: '#/definitions/chorusWorkbench'
-  chorusListWorkbenchsReply:
+  chorusListWorkbenchesReply:
     type: object
     properties:
       result:
@@ -249,7 +249,7 @@ definitions:
         type: string
       status:
         type: string
-      appInsanceIds:
+      appInstanceIds:
         type: array
         items:
           type: string

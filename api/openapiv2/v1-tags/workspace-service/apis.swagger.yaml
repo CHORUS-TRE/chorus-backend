@@ -246,7 +246,7 @@ definitions:
         type: string
       status:
         type: string
-      appInsanceIds:
+      appInstanceIds:
         type: array
         items:
           type: string

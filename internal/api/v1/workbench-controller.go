@@ -87,8 +87,8 @@ func NewWorkbenchController(workbench service.Workbencher) WorkbenchController {
 	return WorkbenchController{workbench: workbench}
 }
 
-// ListWorkbenchs extracts the retrieved workbenchs from the service and inserts them into a reply object.
-func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.ListWorkbenchsRequest) (*chorus.ListWorkbenchsReply, error) {
+// ListWorkbenches extracts the retrieved workbenches from the service and inserts them into a reply object.
+func (c WorkbenchController) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -100,20 +100,20 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.workbench.ListWorkbenchs(ctx, tenantID, pagination)
+	res, err := c.workbench.ListWorkbenches(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenchs': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenches': %v", err.Error())
 	}
 
-	var workbenchs []*chorus.Workbench
+	var workbenches []*chorus.Workbench
 	for _, r := range res {
 		workbench, err := converter.WorkbenchFromBusiness(r)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 		}
-		workbenchs = append(workbenchs, workbench)
+		workbenches = append(workbenches, workbench)
 	}
-	return &chorus.ListWorkbenchsReply{Result: workbenchs}, nil
+	return &chorus.ListWorkbenchesReply{Result: workbenches}, nil
 }
 
 // CreateWorkbench extracts the workbench from the request and passes it to the workbench service.

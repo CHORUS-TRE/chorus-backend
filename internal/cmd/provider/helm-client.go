@@ -21,7 +21,7 @@ func ProvideHelmClient() helm.HelmClienter {
 			var err error
 			helmClient, err = helm.NewClient(cfg)
 			if err != nil {
-				logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to provide helm cleint: '%v'", err))
+				logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to provide helm client: '%v'", err))
 			}
 		}
 	})

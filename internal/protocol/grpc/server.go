@@ -4,11 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/metrics"
-	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/grpc/middleware"
 	jwt_go "github.com/golang-jwt/jwt"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
@@ -17,6 +12,12 @@ import (
 	"google.golang.org/grpc/codes"
 	_ "google.golang.org/grpc/encoding/gzip" // Install the gzip compressor
 	"google.golang.org/grpc/status"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/metrics"
+	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/grpc/middleware"
 )
 
 // InitServer initialize and return gRPC server with middleware interceptors specified in './middleware'.
@@ -59,7 +60,7 @@ func InitServer(whitelister middleware.ClientWhitelister, keyFunc jwt_go.Keyfunc
 	unary = append(unary, grpc_recovery.UnaryServerInterceptor(recoveryOpts...))
 	stream = append(stream, grpc_recovery.StreamServerInterceptor(recoveryOpts...))
 
-	// gRPC grpcServer statup options.
+	// gRPC grpcServer startup options.
 	opts := []grpc.ServerOption{}
 	opts = append(opts, grpc.ChainUnaryInterceptor(unary...))
 	opts = append(opts, grpc.ChainStreamInterceptor(stream...))
