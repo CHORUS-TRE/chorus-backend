@@ -84,37 +84,37 @@ func local_request_WorkbenchService_GetWorkbench_0(ctx context.Context, marshale
 }
 
 var (
-	filter_WorkbenchService_ListWorkbenchs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_WorkbenchService_ListWorkbenches_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_WorkbenchService_ListWorkbenchs_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListWorkbenchsRequest
+func request_WorkbenchService_ListWorkbenches_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListWorkbenchesRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenchs_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenches_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListWorkbenchs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListWorkbenches(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_WorkbenchService_ListWorkbenchs_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListWorkbenchsRequest
+func local_request_WorkbenchService_ListWorkbenches_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListWorkbenchesRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenchs_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenches_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListWorkbenchs(ctx, &protoReq)
+	msg, err := server.ListWorkbenches(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -237,7 +237,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -254,7 +254,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 
 	})
 
-	mux.Handle("GET", pattern_WorkbenchService_ListWorkbenchs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_WorkbenchService_ListWorkbenches_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -262,12 +262,12 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenchs", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenches", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_WorkbenchService_ListWorkbenchs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_WorkbenchService_ListWorkbenches_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
@@ -275,7 +275,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 			return
 		}
 
-		forward_WorkbenchService_ListWorkbenchs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkbenchService_ListWorkbenches_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -287,7 +287,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -312,7 +312,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -337,7 +337,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -401,7 +401,7 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -417,25 +417,25 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
-	mux.Handle("GET", pattern_WorkbenchService_ListWorkbenchs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_WorkbenchService_ListWorkbenches_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenchs", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenches", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_WorkbenchService_ListWorkbenchs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_WorkbenchService_ListWorkbenches_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_WorkbenchService_ListWorkbenchs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkbenchService_ListWorkbenches_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -445,7 +445,7 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -467,7 +467,7 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -489,7 +489,7 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -509,21 +509,21 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 }
 
 var (
-	pattern_WorkbenchService_GetWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenchs", "id"}, ""))
+	pattern_WorkbenchService_GetWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenches", "id"}, ""))
 
-	pattern_WorkbenchService_ListWorkbenchs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
+	pattern_WorkbenchService_ListWorkbenches_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenches"}, ""))
 
-	pattern_WorkbenchService_CreateWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
+	pattern_WorkbenchService_CreateWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenches"}, ""))
 
-	pattern_WorkbenchService_UpdateWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
+	pattern_WorkbenchService_UpdateWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenches"}, ""))
 
-	pattern_WorkbenchService_DeleteWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenchs", "id"}, ""))
+	pattern_WorkbenchService_DeleteWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenches", "id"}, ""))
 )
 
 var (
 	forward_WorkbenchService_GetWorkbench_0 = runtime.ForwardResponseMessage
 
-	forward_WorkbenchService_ListWorkbenchs_0 = runtime.ForwardResponseMessage
+	forward_WorkbenchService_ListWorkbenches_0 = runtime.ForwardResponseMessage
 
 	forward_WorkbenchService_CreateWorkbench_0 = runtime.ForwardResponseMessage
 

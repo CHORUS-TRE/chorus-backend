@@ -24,7 +24,7 @@ func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizedRoles []string
 	}
 }
 
-func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, req *chorus.ListWorkbenchsRequest) (*chorus.ListWorkbenchsReply, error) {
+func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
 	// TODO check for permission
 
 	err := c.IsAuthenticatedAndAuthorized(ctx)
@@ -32,7 +32,7 @@ func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, re
 		return nil, err
 	}
 	//nolint: staticcheck
-	return c.next.ListWorkbenchs(ctx, req)
+	return c.next.ListWorkbenches(ctx, req)
 }
 
 func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {

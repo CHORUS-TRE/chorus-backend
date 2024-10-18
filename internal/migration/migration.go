@@ -27,7 +27,7 @@ const (
 // ErrNoMigration is returned when the migration with given ID is not found.
 var ErrNoMigration = errors.New("migration not found")
 
-// Migrate executes the initalization of a postgres database instance
+// Migrate executes the initialization of a postgres database instance
 // with the schemata provided in postgresMigrations. It returns the
 // number of performed migrations.
 func Migrate(storageType string, migrations map[string]string, migrationTable string, db *sqlx.DB) (int, error) {

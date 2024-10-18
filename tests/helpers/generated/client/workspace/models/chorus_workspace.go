@@ -19,8 +19,8 @@ import (
 // swagger:model chorusWorkspace
 type ChorusWorkspace struct {
 
-	// app insance ids
-	AppInsanceIds []string `json:"appInsanceIds"`
+	// app instance ids
+	AppInstanceIds []string `json:"appInstanceIds"`
 
 	// app instances
 	AppInstances []string `json:"appInstances"`

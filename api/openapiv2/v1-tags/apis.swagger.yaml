@@ -1139,16 +1139,16 @@ paths:
             $ref: '#/definitions/UserServiceResetPasswordBody'
       tags:
         - UserService
-  /api/rest/v1/workbenchs:
+  /api/rest/v1/workbenches:
     get:
-      summary: List workbenchs
-      description: This endpoint returns a list of workbenchs
-      operationId: WorkbenchService_ListWorkbenchs
+      summary: List workbenches
+      description: This endpoint returns a list of workbenches
+      operationId: WorkbenchService_ListWorkbenches
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListWorkbenchsReply'
+            $ref: '#/definitions/chorusListWorkbenchesReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -1283,7 +1283,7 @@ paths:
             $ref: '#/definitions/chorusUpdateWorkbenchRequest'
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}:
+  /api/rest/v1/workbenches/{id}:
     get:
       summary: Get a workbench
       description: This endpoint returns a workbench
@@ -1880,7 +1880,7 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusApp'
-  chorusListWorkbenchsReply:
+  chorusListWorkbenchesReply:
     type: object
     properties:
       result:
@@ -2104,7 +2104,7 @@ definitions:
         type: string
       status:
         type: string
-      appInsanceIds:
+      appInstanceIds:
         type: array
         items:
           type: string
@@ -2140,7 +2140,7 @@ definitions:
         type: string
       status:
         type: string
-      appInsanceIds:
+      appInstanceIds:
         type: array
         items:
           type: string

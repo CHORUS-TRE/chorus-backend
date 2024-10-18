@@ -21,7 +21,7 @@ import (
 // If clients have a recent enough version of Graylog, we strongly recommend that "Enable Bulk Receiving" be activated on the input
 //
 // CONFIG:
-//   - `grayloghost` needs to be exact address of the graylog ingester (which ofter is at `/gelf`). e.g. http://localhost:12201/gelf
+//   - `grayloghost` needs to be exact address of the graylog ingester (which often is at `/gelf`). e.g. http://localhost:12201/gelf
 //   - `graylogbulkreceiving` should be set to true/false, in sync with "Enable Bulk Receiving" on the graylog GELF HTTP input config side. If those options are not in sync, the logger won't work. Defaults to false
 //   - `graylogtimeout` is the timeout to use for http connections sending data to graylog (e.g. 5s). Defaults to 5s.
 //   - `graylogauthorizeselfsignedcertificate` to authorize self signed certificate with TLS/HTTPS communication

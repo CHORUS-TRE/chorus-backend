@@ -60,7 +60,7 @@ type ClientService interface {
 
 	WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceGetWorkbenchOK, error)
 
-	WorkbenchServiceListWorkbenchs(params *WorkbenchServiceListWorkbenchsParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchsOK, error)
+	WorkbenchServiceListWorkbenches(params *WorkbenchServiceListWorkbenchesParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchesOK, error)
 
 	WorkbenchServiceUpdateWorkbench(params *WorkbenchServiceUpdateWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceUpdateWorkbenchOK, error)
 
@@ -80,7 +80,7 @@ func (a *Client) WorkbenchServiceCreateWorkbench(params *WorkbenchServiceCreateW
 	op := &runtime.ClientOperation{
 		ID:                 "WorkbenchService_CreateWorkbench",
 		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workbenchs",
+		PathPattern:        "/api/rest/v1/workbenches",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -119,7 +119,7 @@ func (a *Client) WorkbenchServiceDeleteWorkbench(params *WorkbenchServiceDeleteW
 	op := &runtime.ClientOperation{
 		ID:                 "WorkbenchService_DeleteWorkbench",
 		Method:             "DELETE",
-		PathPattern:        "/api/rest/v1/workbenchs/{id}",
+		PathPattern:        "/api/rest/v1/workbenches/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -158,7 +158,7 @@ func (a *Client) WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkben
 	op := &runtime.ClientOperation{
 		ID:                 "WorkbenchService_GetWorkbench",
 		Method:             "GET",
-		PathPattern:        "/api/rest/v1/workbenchs/{id}",
+		PathPattern:        "/api/rest/v1/workbenches/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -185,24 +185,24 @@ func (a *Client) WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkben
 }
 
 /*
-WorkbenchServiceListWorkbenchs lists workbenchs
+WorkbenchServiceListWorkbenches lists workbenches
 
-This endpoint returns a list of workbenchs
+This endpoint returns a list of workbenches
 */
-func (a *Client) WorkbenchServiceListWorkbenchs(params *WorkbenchServiceListWorkbenchsParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchsOK, error) {
+func (a *Client) WorkbenchServiceListWorkbenches(params *WorkbenchServiceListWorkbenchesParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchesOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewWorkbenchServiceListWorkbenchsParams()
+		params = NewWorkbenchServiceListWorkbenchesParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "WorkbenchService_ListWorkbenchs",
+		ID:                 "WorkbenchService_ListWorkbenches",
 		Method:             "GET",
-		PathPattern:        "/api/rest/v1/workbenchs",
+		PathPattern:        "/api/rest/v1/workbenches",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &WorkbenchServiceListWorkbenchsReader{formats: a.formats},
+		Reader:             &WorkbenchServiceListWorkbenchesReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -214,12 +214,12 @@ func (a *Client) WorkbenchServiceListWorkbenchs(params *WorkbenchServiceListWork
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*WorkbenchServiceListWorkbenchsOK)
+	success, ok := result.(*WorkbenchServiceListWorkbenchesOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenchsDefault)
+	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenchesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -236,7 +236,7 @@ func (a *Client) WorkbenchServiceUpdateWorkbench(params *WorkbenchServiceUpdateW
 	op := &runtime.ClientOperation{
 		ID:                 "WorkbenchService_UpdateWorkbench",
 		Method:             "PUT",
-		PathPattern:        "/api/rest/v1/workbenchs",
+		PathPattern:        "/api/rest/v1/workbenches",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
