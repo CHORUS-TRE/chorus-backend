@@ -32,5 +32,9 @@ func (s *TenantStorage) CreateTenant(ctx context.Context, tenantID uint64, name 
 		INSERT INTO tenants(id, name, createdat, updatedat) VALUES($1, $2, $3, $3);
 	`
 	_, err := s.db.ExecContext(ctx, ins, tenantID, name, time.Now().UTC())
-	return fmt.Errorf("unable to create tenant: %w", err)
+	if err != nil {
+		return fmt.Errorf("unable to create tenant: %w", err)
+	}
+
+	return nil
 }

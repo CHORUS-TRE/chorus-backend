@@ -355,6 +355,8 @@ definitions:
         type: string
       username:
         type: string
+      source:
+        type: string
       password:
         type: string
       status:

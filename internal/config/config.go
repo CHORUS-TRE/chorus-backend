@@ -207,14 +207,35 @@ type (
 		} `yaml:"mailer_service"`
 
 		AuthenticationService struct {
-			Enabled        bool `yaml:"enabled"`
-			DevAuthEnabled bool `yaml:"dev_auth_enabled"`
+			Enabled        bool   `yaml:"enabled"`
+			DevAuthEnabled bool   `yaml:"dev_auth_enabled"`
+			Modes          []Mode `yaml:"modes"`
 		} `yaml:"authentication_service"`
 
 		WorkbenchService struct {
 			StreamProxyEnabled bool `yaml:"stream_proxy_enabled"`
 			BackendInK8S       bool `yaml:"backend_in_k8s"`
 		} `yaml:"workbench_service"`
+	}
+
+	Mode struct {
+		Type                      string `yaml:"type"`
+		Enabled                   bool   `yaml:"enabled"`
+		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
+		OpenID                    OpenID `yaml:"openid,omitempty"`
+	}
+
+	OpenID struct {
+		ID                string   `yaml:"id"`
+		ChorusBackendHost string   `yaml:"chorus_backend_host"`
+		AuthorizeURL      string   `yaml:"authorize_url"`
+		TokenURL          string   `yaml:"token_url"`
+		UserInfoURL       string   `yaml:"user_info_url"`
+		LogoutURL         string   `yaml:"logout_url"`
+		UserNameClaim     string   `yaml:"user_name_claim"`
+		ClientID          string   `yaml:"client_id"`
+		ClientSecret      string   `yaml:"client_secret"`
+		Scopes            []string `yaml:"scopes"`
 	}
 
 	Job struct {

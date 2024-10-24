@@ -49,7 +49,7 @@ type WorkbenchService struct {
 	cfg        config.Config
 	store      WorkbenchStore
 	client     helm.HelmClienter
-	mutex      sync.Mutex
+	rwMutex    sync.RWMutex
 	proxyCache map[proxyID]*proxy
 }
 
@@ -124,12 +124,15 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	// TODO error handling, port forwarding re-creation, cache eviction, cleaning on cache evit and sig stop
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
+	s.rwMutex.RLock()
 	if proxy, exists := s.proxyCache[proxyID]; exists {
+		s.rwMutex.RUnlock()
 		return proxy, nil
 	}
+	s.rwMutex.RUnlock()
+
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
 
 	var xpraUrl string
 	var port uint16
@@ -150,8 +153,9 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	targetURL, err := url.Parse(xpraUrl)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse url: %w", err)
-
 	}
+
+	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 	originalDirector := reverseProxy.Director
@@ -159,7 +163,6 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Director = func(req *http.Request) {
 		originalDirector(req)
 
-		reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
 		req.URL.Path = reg.ReplaceAllString(req.URL.Path, "")
 	}
 
