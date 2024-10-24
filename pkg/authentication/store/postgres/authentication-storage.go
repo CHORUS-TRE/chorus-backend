@@ -20,14 +20,14 @@ func NewAuthenticationStorage(db *sqlx.DB) *AuthenticationStorage {
 }
 
 // GetActiveUser fetches a user entry from the database that matches the provided username.
-func (s *AuthenticationStorage) GetActiveUser(ctx context.Context, username string) (*model.User, error) {
+func (s *AuthenticationStorage) GetActiveUser(ctx context.Context, username, source string) (*model.User, error) {
 	const query = `
-SELECT id, tenantid, firstname, lastname, username, password, totpsecret, totpenabled
+SELECT id, tenantid, firstname, lastname, username, source, password, totpsecret, totpenabled
 FROM users
-WHERE username = $1 AND status = 'active';
+WHERE username = $1 AND source = $2 AND status = 'active';
 `
 	var u model.User
-	if err := s.db.GetContext(ctx, &u, query, username); err != nil {
+	if err := s.db.GetContext(ctx, &u, query, username, source); err != nil {
 		return nil, err
 	}
 

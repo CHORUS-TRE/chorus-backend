@@ -25,7 +25,7 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 // GetUsers queries all stocked users that are not 'deleted'.
 func (s *UserStorage) GetUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
 	const query = `
-SELECT id, tenantid, firstname, lastname, username, status, createdat, updatedat
+SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
 FROM users
 WHERE tenantid = $1 AND status != 'deleted';
 `
@@ -47,7 +47,7 @@ WHERE tenantid = $1 AND status != 'deleted';
 
 func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error) {
 	const query = `
-		SELECT id, tenantid, firstname, lastname, username, status, password, passwordChanged,totpenabled, totpsecret, createdat, updatedat
+		SELECT id, tenantid, firstname, lastname, username, source, status, password, passwordChanged,totpenabled, totpsecret, createdat, updatedat
 		FROM users
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -180,7 +180,7 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) error {
 	const userUpdateQuery = `
 		UPDATE users
-		SET firstname = $3, lastname = $4, username = $5, status = $6, password = $7, passwordChanged = $8, totpenabled = $9, totpsecret = $10, updatedat = NOW()
+		SET firstname = $3, lastname = $4, username = $5, source = $6, status = $7, password = $8, passwordChanged = $9, totpenabled = $10, totpsecret = $11, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2;
 	`
 
@@ -194,7 +194,7 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 	`
 
 	// Update User
-	rows, err := tx.ExecContext(ctx, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username,
+	rows, err := tx.ExecContext(ctx, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
 		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
@@ -242,9 +242,9 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 // CreateUser saves the provided user object in the database 'users' table.
 func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (uint64, error) {
 	const userQuery = `
-INSERT INTO users (tenantid, firstname, lastname, username, password, passwordChanged, status,
+INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status,
                    totpsecret, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id;
 	`
 	const userRoleQuery = `
 INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
@@ -262,7 +262,7 @@ INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 
 	var id uint64
 	err = tx.GetContext(ctx, &id,
-		userQuery, tenantID, user.FirstName, user.LastName, user.Username, user.Password, user.PasswordChanged, user.Status, user.TotpSecret,
+		userQuery, tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret,
 	)
 	if err != nil {
 		return 0, storage.Rollback(tx, err)

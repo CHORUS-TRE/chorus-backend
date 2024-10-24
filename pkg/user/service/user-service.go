@@ -152,6 +152,7 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) error {
 	user.FirstName = req.User.FirstName
 	user.LastName = req.User.LastName
 	user.Username = req.User.Username
+	user.Source = req.User.Source
 	user.Status = req.User.Status
 
 	if err = verifyRoles(req.User.Roles); err != nil {
