@@ -19,7 +19,7 @@ import (
 type ChorusAuthenticateOauthRedirectReply struct {
 
 	// result
-	Result *ChorusAuthenticateOauthResult `json:"result,omitempty"`
+	Result *ChorusAuthenticateOauthRedirectResult `json:"result,omitempty"`
 }
 
 // Validate validates this chorus authenticate oauth redirect reply

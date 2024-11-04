@@ -63,10 +63,13 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
 	}
 
-	uri, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
+	token, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
 	if err != nil {
 		return nil, errors.Wrap(err, "error callback")
 	}
 
-	return &chorus.AuthenticateOauthRedirectReply{Result: &chorus.AuthenticateOauthResult{RedirectURI: uri}}, nil
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/")
+	grpc.SetHeader(ctx, header)
+
+	return &chorus.AuthenticateOauthRedirectReply{Result: &chorus.AuthenticateOauthRedirectResult{Token: token}}, nil
 }

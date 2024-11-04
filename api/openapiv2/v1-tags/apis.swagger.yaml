@@ -1743,7 +1743,12 @@ definitions:
     type: object
     properties:
       result:
-        $ref: '#/definitions/chorusAuthenticateOauthResult'
+        $ref: '#/definitions/chorusAuthenticateOauthRedirectResult'
+  chorusAuthenticateOauthRedirectResult:
+    type: object
+    properties:
+      token:
+        type: string
   chorusAuthenticateOauthReply:
     type: object
     properties:

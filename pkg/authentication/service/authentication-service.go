@@ -133,6 +133,11 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 		return "", &ErrUnauthorized{}
 	}
 
+	if user.Source != "internal" {
+		logger.SecLog.Info(ctx, "user from external source attempted internal password authentication", zap.String("username", username), zap.String("source", user.Source))
+		return "", &ErrUnauthorized{}
+	}
+
 	if !verifyPassword(user.Password, password) {
 		logger.SecLog.Info(ctx, "user has entered an invalid password", zap.String("username", username))
 		return "", &ErrUnauthorized{}
@@ -226,18 +231,8 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		return "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
 	}
 
-	//map[
-	// email:sami.perrin@chuv.ch
-	// email_verified:true
-	// family_name:Perrin
-	// given_name:Sami
-	// name:Sami Perrin
-	// preferred_username:sami
-	// sub:e9bdea5a-2f28-42ba-af5a-4c7aeddf7c57
-	// ]
 	type OAuthUser struct {
-		Username string `json:"sub"`
-		// PreferredUsername string `json:"preferred_username"`
+		Username  string `json:"sub"`
 		Email     string `json:"email"`
 		FirstName string `json:"given_name"`
 		LastName  string `json:"family_name"`
@@ -248,8 +243,6 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
 		return "", fmt.Errorf("failed to decode user info response: %v", err)
 	}
-
-	fmt.Println("userInfo", userInfo)
 
 	user, err := a.store.GetActiveUser(ctx, userInfo.Username, providerID)
 	if err != nil {

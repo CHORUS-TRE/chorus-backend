@@ -59,6 +59,23 @@ services:
             - profile
             - email
             - roles
+      - type: openid
+        enabled: true
+        openid:
+          id: keycloakdev
+          chorus_backend_host: "http://localhost:5000"
+          authorize_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+          token_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+          user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+          logout_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?redirect_uri=http://localhost:5000"
+          user_name_claim: "preferred_username"
+          client_id: chorus
+          client_secret: "<keycloak dev chorus secret>"
+          scopes:
+            - openid
+            - profile
+            - email
+            - roles
   mailer_service:
     smtp:
       user: smtpUser
