@@ -4,11 +4,11 @@ import (
 	"context"
 	"net/http"
 
+	val "github.com/go-playground/validator/v10"
+
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
-
-	val "github.com/go-playground/validator/v10"
 )
 
 type validation struct {
@@ -25,11 +25,11 @@ func Validation(validate *val.Validate) func(service.Workbencher) service.Workbe
 	}
 }
 
-func (v validation) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (v validation) ListWorkbenches(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, err
 	}
-	return v.next.ListWorkbenchs(ctx, tenantID, pagination)
+	return v.next.ListWorkbenches(ctx, tenantID, pagination)
 }
 func (v validation) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	return v.next.ProxyWorkbench(ctx, tenantID, workbenchID, w, r)

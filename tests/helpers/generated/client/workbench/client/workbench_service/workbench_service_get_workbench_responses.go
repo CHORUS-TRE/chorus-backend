@@ -88,12 +88,12 @@ func (o *WorkbenchServiceGetWorkbenchOK) Code() int {
 
 func (o *WorkbenchServiceGetWorkbenchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workbenchs/{id}][%d] workbenchServiceGetWorkbenchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workbenches/{id}][%d] workbenchServiceGetWorkbenchOK %s", 200, payload)
 }
 
 func (o *WorkbenchServiceGetWorkbenchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workbenchs/{id}][%d] workbenchServiceGetWorkbenchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workbenches/{id}][%d] workbenchServiceGetWorkbenchOK %s", 200, payload)
 }
 
 func (o *WorkbenchServiceGetWorkbenchOK) GetPayload() *models.ChorusGetWorkbenchReply {
@@ -162,12 +162,12 @@ func (o *WorkbenchServiceGetWorkbenchDefault) Code() int {
 
 func (o *WorkbenchServiceGetWorkbenchDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workbenchs/{id}][%d] WorkbenchService_GetWorkbench default %s", o._statusCode, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workbenches/{id}][%d] WorkbenchService_GetWorkbench default %s", o._statusCode, payload)
 }
 
 func (o *WorkbenchServiceGetWorkbenchDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workbenchs/{id}][%d] WorkbenchService_GetWorkbench default %s", o._statusCode, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workbenches/{id}][%d] WorkbenchService_GetWorkbench default %s", o._statusCode, payload)
 }
 
 func (o *WorkbenchServiceGetWorkbenchDefault) GetPayload() *models.RPCStatus {

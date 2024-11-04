@@ -7,7 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
 
-// AddCORS returns a new http.Handler that allows Cross Origin Resoruce Sharing.
+// AddCORS returns a new http.Handler that allows Cross Origin Resource Sharing.
 func AddCORS(h http.Handler, cfg config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// XXX: What origins do we allow? Currently all can pass.

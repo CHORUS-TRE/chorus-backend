@@ -28,20 +28,20 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
 	now := time.Now()
 
-	res, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
+	res, err := c.next.ListWorkbenches(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get workbenchs: %w", err)
+		return res, fmt.Errorf("unable to get workbenches: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		zap.Int("num_workbenchs", len(res)),
+		zap.Int("num_workbenches", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return res, nil
@@ -56,7 +56,7 @@ func (c workbenchServiceLogging) ProxyWorkbench(ctx context.Context, tenantID, w
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to proxy workbenchs: %w", err)
+		return fmt.Errorf("unable to proxy workbenches: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
