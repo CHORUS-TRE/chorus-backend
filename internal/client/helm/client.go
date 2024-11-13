@@ -299,6 +299,7 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 	upgrade := helmaction.NewUpgrade(actionConfig)
 	upgrade.Namespace = namespace
 	upgrade.Install = true
+	upgrade.Force = true
 
 	appMaps := []map[string]interface{}{}
 	for _, app := range apps {
