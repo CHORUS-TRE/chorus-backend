@@ -296,8 +296,9 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 		return fmt.Errorf("Unable to get config: %w", err)
 	}
 
-	install := helmaction.NewUpgrade(actionConfig)
-	install.Namespace = namespace
+	upgrade := helmaction.NewUpgrade(actionConfig)
+	upgrade.Namespace = namespace
+	upgrade.Install = true
 
 	appMaps := []map[string]interface{}{}
 	for _, app := range apps {
@@ -321,9 +322,9 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 
 	logger.TechLog.Debug(context.Background(), "updating workkbench", zap.Any("vals", vals))
 
-	_, err = install.Run(workbenchName, c.chart, vals)
+	_, err = upgrade.Run(workbenchName, c.chart, vals)
 	if err != nil {
-		return fmt.Errorf("Failed to install workbench: %w", err)
+		return fmt.Errorf("Failed to upgrade workbench: %w", err)
 	}
 
 	return nil
