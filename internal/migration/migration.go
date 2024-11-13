@@ -31,6 +31,13 @@ var ErrNoMigration = errors.New("migration not found")
 // with the schemata provided in postgresMigrations. It returns the
 // number of performed migrations.
 func Migrate(storageType string, migrations map[string]string, migrationTable string, db *sqlx.DB) (int, error) {
+	switch storageType {
+	case POSTGRES:
+		storageType = "postgres"
+	default:
+		return 0, fmt.Errorf("unsupported storageType %q", storageType)
+	}
+
 	memoryMigrations, err := parseMigration(migrations)
 	if err != nil {
 		return 0, err
@@ -38,13 +45,7 @@ func Migrate(storageType string, migrations map[string]string, migrationTable st
 
 	migrate.SetTable(migrationTable)
 
-	switch storageType {
-	case POSTGRES:
-		// Postgres uses the postgres driver.
-		storageType = "postgres"
-	}
-
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		var n int
 		if n, err = migrate.Exec(db.DB, storageType, memoryMigrations, migrate.Up); err == nil {
 			return n, nil
