@@ -88,7 +88,13 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
-	err = s.client.CreateAppInstance(wsName, wbName, app.Name, app.DockerImageName, app.DockerImageTag)
+	clientApp := helm.AppInstance{
+		AppName:    app.Name,
+		AppImage:   app.DockerImageName,
+		AppVersion: app.DockerImageName,
+	}
+
+	err = s.client.CreateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
 		return 0, fmt.Errorf("unable to create app instance %v: %w", id, err)
 	}

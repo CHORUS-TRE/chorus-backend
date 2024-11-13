@@ -21,7 +21,7 @@ func (c *testClient) CreatePortForward(namespace, serviceName string) (uint16, c
 	return 0, nil, nil
 }
 
-func (c *testClient) CreateAppInstance(namespace, workbenchName, appName, appImage, appVersion string) error {
+func (c *testClient) CreateAppInstance(namespace, workbenchName string, app AppInstance) error {
 	return nil
 }
 

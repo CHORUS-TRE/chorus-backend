@@ -28,7 +28,7 @@ type HelmClienter interface {
 	CreateWorkbench(namespace, workbenchName string) error
 	UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
-	CreateAppInstance(namespace, workbenchName, appName, appImage, appVersion string) error
+	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
 	DeleteApp(namespace, workbenchName, appName string) error
 	DeleteWorkbench(namespace, workbenchName string) error
 }
@@ -47,11 +47,19 @@ type AppInstance struct {
 func appToMap(app AppInstance) map[string]string {
 	m := map[string]string{
 		"app":  app.AppName,
-		"name": app.AppImage,
+		"name": app.AppName,
 	}
 	if app.AppVersion != "" {
 		m["version"] = app.AppVersion
 	}
+
+	if app.AppImage != "" {
+		m["image"] = app.AppImage
+		if app.AppVersion != "" {
+			m["image"] = app.AppImage + ":" + app.AppVersion
+		}
+	}
+
 	return m
 }
 
@@ -310,7 +318,7 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 	return nil
 }
 
-func (c *client) CreateAppInstance(namespace, workbenchName, appName, appImage, appVersion string) error {
+func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
 	actionConfig, err := c.getConfig(namespace)
 	if err != nil {
 		return fmt.Errorf("Unable to get config: %w", err)
@@ -322,13 +330,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName, appName, appImage, 
 		return fmt.Errorf("Failed to get release: %w", err)
 	}
 
-	app := map[string]string{
-		"app":  appName,
-		"name": appImage,
-	}
-	if appVersion != "" {
-		app["version"] = appVersion
-	}
+	app := appToMap(appInstance)
 
 	vals := release.Config
 	vals["apps"] = append(vals["apps"].([]interface{}), app)
