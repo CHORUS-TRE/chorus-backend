@@ -65,6 +65,7 @@ SELECT
     ai.createdat,
     ai.updatedat,
 	a.name as AppName,
+    a.dockerimageregistry as AppDockerImageRegistry,
     a.dockerimagename as AppDockerImageName,
     a.dockerimagetag as AppDockerImageTag
 FROM 

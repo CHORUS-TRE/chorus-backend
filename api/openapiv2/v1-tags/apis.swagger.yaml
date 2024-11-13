@@ -1698,6 +1698,8 @@ definitions:
         type: string
       status:
         type: string
+      dockerImageRegistry:
+        type: string
       dockerImageName:
         type: string
       dockerImageTag:

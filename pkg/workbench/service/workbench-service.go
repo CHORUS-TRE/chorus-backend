@@ -84,9 +84,10 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 		clientApps := []helm.AppInstance{}
 		for _, app := range apps {
 			clientApps = append(clientApps, helm.AppInstance{
-				AppName:    utils.ToString(app.AppName),
-				AppImage:   utils.ToString(app.AppDockerImageName),
-				AppVersion: utils.ToString(app.AppDockerImageTag),
+				AppName:     utils.ToString(app.AppName),
+				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
+				AppImage:    utils.ToString(app.AppDockerImageName),
+				AppVersion:  utils.ToString(app.AppDockerImageTag),
 			})
 		}
 

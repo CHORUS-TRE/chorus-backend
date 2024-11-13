@@ -39,13 +39,14 @@ type client struct {
 }
 
 type AppInstance struct {
-	AppName    string
-	AppImage   string
-	AppVersion string
+	AppName     string
+	AppRegistry string
+	AppImage    string
+	AppVersion  string
 }
 
-func appToMap(app AppInstance) map[string]string {
-	m := map[string]string{
+func appToMap(app AppInstance) map[string]interface{} {
+	m := map[string]interface{}{
 		"app":  app.AppName,
 		"name": app.AppName,
 	}
@@ -53,10 +54,18 @@ func appToMap(app AppInstance) map[string]string {
 		m["version"] = app.AppVersion
 	}
 
-	if app.AppImage != "" {
-		m["image"] = app.AppImage
-		if app.AppVersion != "" {
-			m["image"] = app.AppImage + ":" + app.AppVersion
+	if app.AppRegistry != "" {
+		if app.AppVersion == "" {
+			m["image"] = map[string]string{
+				"registry":   app.AppRegistry,
+				"repository": app.AppImage,
+			}
+		} else {
+			m["image"] = map[string]string{
+				"registry":   app.AppRegistry,
+				"repository": app.AppImage,
+				"tag":        app.AppVersion,
+			}
 		}
 	}
 
@@ -290,7 +299,7 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 	install := helmaction.NewUpgrade(actionConfig)
 	install.Namespace = namespace
 
-	appMaps := []map[string]string{}
+	appMaps := []map[string]interface{}{}
 	for _, app := range apps {
 		appMaps = append(appMaps, appToMap(app))
 	}
