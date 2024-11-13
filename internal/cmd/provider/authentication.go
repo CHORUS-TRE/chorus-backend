@@ -23,7 +23,7 @@ func ProvideAuthenticator() service.Authenticator {
 	cfg := ProvideConfig()
 
 	authenticatorOnce.Do(func() {
-		authenticator = service.NewAuthenticationService(&cfg.Daemon, ProvideUser(), ProvideAuthenticationStore(), ProvideDaemonEncryptionKey())
+		authenticator = service.NewAuthenticationService(cfg, ProvideUser(), ProvideAuthenticationStore(), ProvideDaemonEncryptionKey())
 		authenticator = service_mw.Logging(logger.SecLog)(authenticator)
 	})
 	return authenticator

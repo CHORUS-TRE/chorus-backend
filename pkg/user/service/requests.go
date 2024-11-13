@@ -13,6 +13,7 @@ type UserReq struct {
 	FirstName       string `validate:"required,generalstring"`
 	LastName        string `validate:"required,generalstring"`
 	Username        string `validate:"required,generalstring"`
+	Source          string `validate:"required,generalstring"`
 	Password        string
 	PasswordChanged bool
 	Status          model.UserStatus `validate:"required"`
@@ -33,6 +34,7 @@ type UserUpdateReq struct {
 	FirstName string           `validate:"required,generalstring"`
 	LastName  string           `validate:"required,generalstring"`
 	Username  string           `validate:"required,generalstring"`
+	Source    string           `validate:"required,generalstring"`
 	Status    model.UserStatus `validate:"required"`
 
 	Roles []model.UserRole `validate:"min=1"`
@@ -97,6 +99,7 @@ func reqToUserBusiness(req *UserReq) *model.User {
 		FirstName:       req.FirstName,
 		LastName:        req.LastName,
 		Username:        req.Username,
+		Source:          req.Source,
 		Password:        req.Password,
 		PasswordChanged: req.PasswordChanged,
 		Status:          req.Status,

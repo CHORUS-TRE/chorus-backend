@@ -15,6 +15,11 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
+	AppName                *string
+	AppDockerImageRegistry *string
+	AppDockerImageName     *string
+	AppDockerImageTag      *string
+
 	Status AppInstanceStatus
 
 	CreatedAt time.Time

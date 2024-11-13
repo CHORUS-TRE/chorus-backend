@@ -38,7 +38,83 @@ paths:
       tags:
         - AuthenticationService
       security: []
+  /api/rest/v1/authentication/oauth2/{id}/login:
+    get:
+      summary: Authenticate using Auth 2.0
+      description: This endpoint redirects a user to a configured oauth2 provider
+      operationId: AuthenticationService_AuthenticateOauth
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAuthenticateOauthReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      tags:
+        - AuthenticationService
+      security: []
+  /api/rest/v1/authentication/oauth2/{id}/redirect:
+    get:
+      summary: Authenticate redirect using Auth 2.0
+      description: This endpoint is called by the provider after auth for the backend to retrieve the user profile
+      operationId: AuthenticationService_AuthenticateOauthRedirect
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAuthenticateOauthRedirectReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: state
+          in: query
+          required: false
+          type: string
+        - name: sessionState
+          in: query
+          required: false
+          type: string
+        - name: code
+          in: query
+          required: false
+          type: string
+      tags:
+        - AuthenticationService
+      security: []
 definitions:
+  chorusAuthenticateOauthRedirectReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAuthenticateOauthRedirectResult'
+  chorusAuthenticateOauthRedirectResult:
+    type: object
+    properties:
+      token:
+        type: string
+  chorusAuthenticateOauthReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAuthenticateOauthResult'
+  chorusAuthenticateOauthResult:
+    type: object
+    properties:
+      redirectURI:
+        type: string
   chorusAuthenticationReply:
     type: object
     properties:

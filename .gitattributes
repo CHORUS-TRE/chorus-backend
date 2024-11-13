@@ -1,0 +1,3 @@
+api/openapiv2/v1-tags/** linguist-generated=true
+internal/api/v1/chorus/** linguist-generated=true
+tests/helpers/generated/client/** linguist-generated=true

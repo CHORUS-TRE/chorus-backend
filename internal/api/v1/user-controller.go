@@ -191,6 +191,19 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
+	contains := false
+	for _, r := range user.Roles {
+		if r == model.RoleAuthenticated {
+			contains = true
+			break
+		}
+	}
+	if !contains {
+		user.Roles = append(user.Roles, model.RoleAuthenticated)
+	}
+
+	user.Source = "internal"
+
 	res, err := c.user.CreateUser(ctx, service.CreateUserReq{TenantID: tenantID, User: user})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateUser': %v", err.Error())
@@ -298,6 +311,7 @@ func userToServiceRequest(user *chorus.User) (*service.UserReq, error) {
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		Username:    user.Username,
+		Source:      user.Source,
 		Password:    user.Password,
 		Status:      userStatus,
 		Roles:       roles,
@@ -322,6 +336,7 @@ func userToUpdateServiceRequest(user *chorus.User) (*service.UserUpdateReq, erro
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Username:  user.Username,
+		Source:    user.Source,
 		Status:    userStatus,
 		Roles:     roles,
 	}, nil

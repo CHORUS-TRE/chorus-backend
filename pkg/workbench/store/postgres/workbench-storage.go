@@ -8,6 +8,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
+	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
@@ -45,6 +46,53 @@ WHERE tenantid = $1 AND status != 'deleted';
 `
 	var workbenchs []*model.Workbench
 	if err := s.db.SelectContext(ctx, &workbenchs, query, tenantID); err != nil {
+		return nil, err
+	}
+
+	return workbenchs, nil
+}
+
+func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error) {
+	const query = `
+SELECT 
+    ai.id,
+    ai.tenantid,
+    ai.userid,
+    ai.appid,
+    ai.workspaceid,
+    ai.workbenchid,
+    ai.status,
+    ai.createdat,
+    ai.updatedat,
+	a.name as AppName,
+    a.dockerimageregistry as AppDockerImageRegistry,
+    a.dockerimagename as AppDockerImageName,
+    a.dockerimagetag as AppDockerImageTag
+FROM 
+    app_instances ai
+JOIN 
+    apps a ON ai.appid = a.id
+WHERE 
+    ai.workbenchid = $1 
+    AND ai.status != 'deleted';
+;
+`
+	var appInstances []*app_instance_model.AppInstance
+	if err := s.db.SelectContext(ctx, &appInstances, query, workbenchID); err != nil {
+		return nil, err
+	}
+
+	return appInstances, nil
+}
+
+func (s *WorkbenchStorage) ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error) {
+	const query = `
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, createdat, updatedat
+	FROM workbenchs
+WHERE status = 'active';
+`
+	var workbenchs []*model.Workbench
+	if err := s.db.SelectContext(ctx, &workbenchs, query); err != nil {
 		return nil, err
 	}
 

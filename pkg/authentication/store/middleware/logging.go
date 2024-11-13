@@ -16,12 +16,12 @@ type authenticationStorageLogging struct {
 	next   service.AuthenticationStore
 }
 
-func (a authenticationStorageLogging) GetActiveUser(ctx context.Context, username string) (*model.User, error) {
+func (a authenticationStorageLogging) GetActiveUser(ctx context.Context, username, source string) (*model.User, error) {
 	a.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := a.next.GetActiveUser(ctx, username)
+	res, err := a.next.GetActiveUser(ctx, username, source)
 	if err != nil {
 		a.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

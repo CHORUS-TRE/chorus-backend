@@ -9,6 +9,7 @@ type User struct {
 	FirstName   string
 	LastName    string
 	Username    string
+	Source      string
 	Password    string
 	Status      string
 	TotpEnabled bool

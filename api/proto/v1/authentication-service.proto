@@ -30,6 +30,52 @@ message AuthenticationResult {
     string token  = 1;
 }
 
+message AuthenticationMode {
+    string type  = 1;
+    optional Internal internal = 2;
+    optional OpenID openid = 3;
+}
+
+message Internal {
+    bool public_registration_enabled = 1;
+}
+
+message OpenID {
+    string id = 1;
+}
+
+message GetAuthenticationModesReply {
+    repeated AuthenticationMode result = 1;
+}
+
+message AuthenticateOauthRequest {
+    string id = 1;
+}
+
+message AuthenticateOauthReply {
+    AuthenticateOauthResult result = 1;
+}
+
+message AuthenticateOauthResult {
+    string redirectURI = 1;
+}
+
+message AuthenticateOauthRedirectRequest {
+    string id = 1;
+    string state = 2;
+    string session_state = 3;
+    string code = 4;
+}
+
+message AuthenticateOauthRedirectResult {
+    string token = 1;
+}
+
+message AuthenticateOauthRedirectReply {
+    AuthenticateOauthRedirectResult result = 1;
+}
+
+
 service AuthenticationService {
     rpc Authenticate(Credentials) returns (AuthenticationReply) {
         option (google.api.http) = {
@@ -40,6 +86,32 @@ service AuthenticationService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Authenticate";
             description: "This endpoint authenticates a user";
+            tags: "AuthenticationService";
+            security: {}
+        };
+    };
+
+    rpc AuthenticateOauth(AuthenticateOauthRequest) returns (AuthenticateOauthReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/authentication/oauth2/{id}/login"
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Authenticate using Auth 2.0";
+            description: "This endpoint redirects a user to a configured oauth2 provider";
+            tags: "AuthenticationService";
+            security: {}
+        };
+    };
+
+    rpc AuthenticateOauthRedirect(AuthenticateOauthRedirectRequest) returns (AuthenticateOauthRedirectReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/authentication/oauth2/{id}/redirect"
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Authenticate redirect using Auth 2.0";
+            description: "This endpoint is called by the provider after auth for the backend to retrieve the user profile";
             tags: "AuthenticationService";
             security: {}
         };
