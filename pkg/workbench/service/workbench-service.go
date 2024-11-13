@@ -12,6 +12,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
+	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"go.uber.org/zap"
@@ -29,6 +31,7 @@ type Workbencher interface {
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
+	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error)
 	ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error)
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
@@ -77,9 +80,19 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 	}
 
 	for _, workbench := range workbenchs {
+		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
+		clientApps := []helm.AppInstance{}
+		for _, app := range apps {
+			clientApps = append(clientApps, helm.AppInstance{
+				AppName:    utils.ToString(app.AppName),
+				AppImage:   utils.ToString(app.AppDockerImageName),
+				AppVersion: utils.ToString(app.AppDockerImageTag),
+			})
+		}
+
 		namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(namespace, workbenchName)
+		err = s.client.UpdateWorkbench(namespace, workbenchName, clientApps)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 		}

@@ -13,7 +13,7 @@ func (c *testClient) CreateWorkbench(namespace, workbenchName string) error {
 	return nil
 }
 
-func (c *testClient) UpdateWorkbench(namespace, workbenchName string) error {
+func (c *testClient) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
 	return nil
 }
 

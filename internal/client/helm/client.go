@@ -26,7 +26,7 @@ import (
 
 type HelmClienter interface {
 	CreateWorkbench(namespace, workbenchName string) error
-	UpdateWorkbench(namespace, workbenchName string) error
+	UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	CreateAppInstance(namespace, workbenchName, appName, appImage, appVersion string) error
 	DeleteApp(namespace, workbenchName, appName string) error
@@ -36,6 +36,23 @@ type HelmClienter interface {
 type client struct {
 	cfg   config.Config
 	chart *helmchart.Chart
+}
+
+type AppInstance struct {
+	AppName    string
+	AppImage   string
+	AppVersion string
+}
+
+func appToMap(app AppInstance) map[string]string {
+	m := map[string]string{
+		"app":  app.AppName,
+		"name": app.AppImage,
+	}
+	if app.AppVersion != "" {
+		m["version"] = app.AppVersion
+	}
+	return m
 }
 
 func debug(format string, v ...interface{}) {
@@ -256,7 +273,7 @@ func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	return nil
 }
 
-func (c *client) UpdateWorkbench(namespace, workbenchName string) error {
+func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
 	actionConfig, err := c.getConfig(namespace)
 	if err != nil {
 		return fmt.Errorf("Unable to get config: %w", err)
@@ -265,9 +282,14 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string) error {
 	install := helmaction.NewUpgrade(actionConfig)
 	install.Namespace = namespace
 
+	appMaps := []map[string]string{}
+	for _, app := range apps {
+		appMaps = append(appMaps, appToMap(app))
+	}
+
 	vals := map[string]interface{}{
 		"name": workbenchName,
-		"apps": []map[string]string{},
+		"apps": appMaps,
 	}
 	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
 		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
