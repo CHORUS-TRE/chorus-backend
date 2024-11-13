@@ -26,8 +26,9 @@ import (
 
 type HelmClienter interface {
 	CreateWorkbench(namespace, workbenchName string) error
+	UpdateWorkbench(namespace, workbenchName string) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
-	CreateAppInstance(namespace, workbenchName, appName, appImage string) error
+	CreateAppInstance(namespace, workbenchName, appName, appImage, appVersion string) error
 	DeleteApp(namespace, workbenchName, appName string) error
 	DeleteWorkbench(namespace, workbenchName string) error
 }
@@ -255,7 +256,39 @@ func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	return nil
 }
 
-func (c *client) CreateAppInstance(namespace, workbenchName, appName, appImage string) error {
+func (c *client) UpdateWorkbench(namespace, workbenchName string) error {
+	actionConfig, err := c.getConfig(namespace)
+	if err != nil {
+		return fmt.Errorf("Unable to get config: %w", err)
+	}
+
+	install := helmaction.NewUpgrade(actionConfig)
+	install.Namespace = namespace
+
+	vals := map[string]interface{}{
+		"name": workbenchName,
+		"apps": []map[string]string{},
+	}
+	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
+		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
+		if err != nil {
+			return fmt.Errorf("Unable to encode registries: %w", err)
+		}
+		vals["imagePullSecret"] = map[string]string{
+			"name":             "image-pull-secret",
+			"dockerConfigJson": dockerConfig,
+		}
+	}
+
+	_, err = install.Run(workbenchName, c.chart, vals)
+	if err != nil {
+		return fmt.Errorf("Failed to install workbench: %w", err)
+	}
+
+	return nil
+}
+
+func (c *client) CreateAppInstance(namespace, workbenchName, appName, appImage, appVersion string) error {
 	actionConfig, err := c.getConfig(namespace)
 	if err != nil {
 		return fmt.Errorf("Unable to get config: %w", err)
@@ -269,7 +302,10 @@ func (c *client) CreateAppInstance(namespace, workbenchName, appName, appImage s
 
 	app := map[string]string{
 		"app":  appName,
-		"name": appName,
+		"name": appImage,
+	}
+	if appVersion != "" {
+		app["version"] = appVersion
 	}
 
 	vals := release.Config

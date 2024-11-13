@@ -29,6 +29,7 @@ type Workbencher interface {
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
+	ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error)
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
@@ -54,11 +55,34 @@ type WorkbenchService struct {
 }
 
 func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
-	return &WorkbenchService{
+	s := &WorkbenchService{
 		cfg:        cfg,
 		store:      store,
 		client:     client,
 		proxyCache: make(map[proxyID]*proxy),
+	}
+
+	go func() {
+		s.updateAllWorkbenchs(context.Background())
+	}()
+
+	return s
+}
+
+func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
+	workbenchs, err := s.store.ListAllActiveWorkbenchs(ctx)
+	if err != nil {
+		logger.TechLog.Error(ctx, "unable to query workbenchs", zap.Error(err))
+		return
+	}
+
+	for _, workbench := range workbenchs {
+		namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbench.ID)
+
+		err = s.client.UpdateWorkbench(namespace, workbenchName)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+		}
 	}
 }
 

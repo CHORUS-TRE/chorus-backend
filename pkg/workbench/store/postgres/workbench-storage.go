@@ -51,6 +51,20 @@ WHERE tenantid = $1 AND status != 'deleted';
 	return workbenchs, nil
 }
 
+func (s *WorkbenchStorage) ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error) {
+	const query = `
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, createdat, updatedat
+	FROM workbenchs
+WHERE status = 'active';
+`
+	var workbenchs []*model.Workbench
+	if err := s.db.SelectContext(ctx, &workbenchs, query); err != nil {
+		return nil, err
+	}
+
+	return workbenchs, nil
+}
+
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
 	const workbenchQuery = `
