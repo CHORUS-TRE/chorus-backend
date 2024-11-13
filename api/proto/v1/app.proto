@@ -14,11 +14,13 @@ message App {
     string description = 5;
     string status = 6;
     
-    string dockerImageName = 7;
-    string dockerImageTag = 8;
+    string dockerImageRegistry = 7;
+    string dockerImageName = 8;
+    string dockerImageTag = 9;
 
-    google.protobuf.Timestamp createdAt = 9;
-    google.protobuf.Timestamp updatedAt = 10;
 
-    string prettyName = 11;
+    google.protobuf.Timestamp createdAt = 10;
+    google.protobuf.Timestamp updatedAt = 11;
+
+    string prettyName = 12;
 }

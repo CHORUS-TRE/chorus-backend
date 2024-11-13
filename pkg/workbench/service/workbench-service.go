@@ -12,6 +12,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
+	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"go.uber.org/zap"
@@ -29,6 +31,8 @@ type Workbencher interface {
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
+	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error)
+	ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error)
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
@@ -49,16 +53,50 @@ type WorkbenchService struct {
 	cfg        config.Config
 	store      WorkbenchStore
 	client     helm.HelmClienter
-	mutex      sync.Mutex
+	rwMutex    sync.RWMutex
 	proxyCache map[proxyID]*proxy
 }
 
 func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
-	return &WorkbenchService{
+	s := &WorkbenchService{
 		cfg:        cfg,
 		store:      store,
 		client:     client,
 		proxyCache: make(map[proxyID]*proxy),
+	}
+
+	go func() {
+		s.updateAllWorkbenchs(context.Background())
+	}()
+
+	return s
+}
+
+func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
+	workbenchs, err := s.store.ListAllActiveWorkbenchs(ctx)
+	if err != nil {
+		logger.TechLog.Error(ctx, "unable to query workbenchs", zap.Error(err))
+		return
+	}
+
+	for _, workbench := range workbenchs {
+		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
+		clientApps := []helm.AppInstance{}
+		for _, app := range apps {
+			clientApps = append(clientApps, helm.AppInstance{
+				AppName:     utils.ToString(app.AppName),
+				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
+				AppImage:    utils.ToString(app.AppDockerImageName),
+				AppVersion:  utils.ToString(app.AppDockerImageTag),
+			})
+		}
+
+		namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbench.ID)
+
+		err = s.client.UpdateWorkbench(namespace, workbenchName, clientApps)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+		}
 	}
 }
 
@@ -124,12 +162,15 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	// TODO error handling, port forwarding re-creation, cache eviction, cleaning on cache evit and sig stop
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
+	s.rwMutex.RLock()
 	if proxy, exists := s.proxyCache[proxyID]; exists {
+		s.rwMutex.RUnlock()
 		return proxy, nil
 	}
+	s.rwMutex.RUnlock()
+
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
 
 	var xpraUrl string
 	var port uint16
@@ -150,8 +191,9 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	targetURL, err := url.Parse(xpraUrl)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to parse url: %w", err)
-
 	}
+
+	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 	originalDirector := reverseProxy.Director
@@ -159,7 +201,6 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Director = func(req *http.Request) {
 		originalDirector(req)
 
-		reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
 		req.URL.Path = reg.ReplaceAllString(req.URL.Path, "")
 	}
 

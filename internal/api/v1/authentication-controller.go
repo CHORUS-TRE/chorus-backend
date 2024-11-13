@@ -5,6 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	"github.com/pkg/errors"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -42,4 +43,33 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 	grpc.SetHeader(ctx, header)
 
 	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
+}
+
+func (a AuthenticationController) AuthenticateOauth(ctx context.Context, req *chorus.AuthenticateOauthRequest) (*chorus.AuthenticateOauthReply, error) {
+	if req == nil || req.Id == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
+	}
+
+	uri, err := a.authenticator.AuthenticateOAuth(ctx, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	return &chorus.AuthenticateOauthReply{Result: &chorus.AuthenticateOauthResult{RedirectURI: uri}}, nil
+}
+
+func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context, req *chorus.AuthenticateOauthRedirectRequest) (*chorus.AuthenticateOauthRedirectReply, error) {
+	if req == nil || req.Id == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
+	}
+
+	token, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
+	if err != nil {
+		return nil, errors.Wrap(err, "error callback")
+	}
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/")
+	grpc.SetHeader(ctx, header)
+
+	return &chorus.AuthenticateOauthRedirectReply{Result: &chorus.AuthenticateOauthRedirectResult{Token: token}}, nil
 }

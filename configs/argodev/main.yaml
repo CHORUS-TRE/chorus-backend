@@ -39,6 +39,27 @@ services:
   authentication_service:
     enabled: true
     dev_auth_enabled: true
+    modes:
+      - type: internal
+        enabled: true
+        public_registration_enabled: true
+      - type: openid
+        enabled: true
+        openid:
+          id: keycloak
+          chorus_backend_host: "https://backend.dev.chorus-tre.ch"
+          authorize_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+          token_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+          user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+          logout_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?redirect_uri=https://backend.dev.chorus-tre.ch"
+          user_name_claim: "preferred_username"
+          client_id: chorus
+          client_secret: "<secret>"
+          scopes:
+            - openid
+            - profile
+            - email
+            - roles
   mailer_service:
     smtp:
       user: smtpUser

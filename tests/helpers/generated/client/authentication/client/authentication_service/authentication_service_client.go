@@ -56,6 +56,10 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	AuthenticationServiceAuthenticate(params *AuthenticationServiceAuthenticateParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOK, error)
 
+	AuthenticationServiceAuthenticateOauth(params *AuthenticationServiceAuthenticateOauthParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthOK, error)
+
+	AuthenticationServiceAuthenticateOauthRedirect(params *AuthenticationServiceAuthenticateOauthRedirectParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthRedirectOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -95,6 +99,84 @@ func (a *Client) AuthenticationServiceAuthenticate(params *AuthenticationService
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuthenticationServiceAuthenticateOauth authenticates using auth 2 0
+
+This endpoint redirects a user to a configured oauth2 provider
+*/
+func (a *Client) AuthenticationServiceAuthenticateOauth(params *AuthenticationServiceAuthenticateOauthParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuthenticationServiceAuthenticateOauthParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuthenticationService_AuthenticateOauth",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/authentication/oauth2/{id}/login",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuthenticationServiceAuthenticateOauthReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuthenticationServiceAuthenticateOauthOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuthenticationServiceAuthenticateOauthRedirect authenticates redirect using auth 2 0
+
+This endpoint is called by the provider after auth for the backend to retrieve the user profile
+*/
+func (a *Client) AuthenticationServiceAuthenticateOauthRedirect(params *AuthenticationServiceAuthenticateOauthRedirectParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthRedirectOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuthenticationServiceAuthenticateOauthRedirectParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuthenticationService_AuthenticateOauthRedirect",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/authentication/oauth2/{id}/redirect",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuthenticationServiceAuthenticateOauthRedirectReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuthenticationServiceAuthenticateOauthRedirectOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthRedirectDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

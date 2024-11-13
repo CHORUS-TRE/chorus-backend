@@ -41,6 +41,9 @@ type ChorusUser struct {
 	// roles
 	Roles []string `json:"roles"`
 
+	// source
+	Source string `json:"source,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 

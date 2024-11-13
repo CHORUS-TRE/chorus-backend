@@ -29,6 +29,9 @@ type ChorusApp struct {
 	// docker image name
 	DockerImageName string `json:"dockerImageName,omitempty"`
 
+	// docker image registry
+	DockerImageRegistry string `json:"dockerImageRegistry,omitempty"`
+
 	// docker image tag
 	DockerImageTag string `json:"dockerImageTag,omitempty"`
 
