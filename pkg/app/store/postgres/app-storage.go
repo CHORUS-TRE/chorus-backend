@@ -24,7 +24,7 @@ func NewAppStorage(db *sqlx.DB) *AppStorage {
 
 func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error) {
 	const query = `
-		SELECT id, tenantid, userid, name, description, status, dockerimagename, dockerimagetag, createdat, updatedat
+		SELECT id, tenantid, userid, name, description, status, dockerimageregistry, dockerimagename, dockerimagetag, createdat, updatedat
 			FROM apps
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -39,7 +39,7 @@ func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) 
 
 func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
 	const query = `
-SELECT id, tenantid, userid, name, description, status, dockerimagename, dockerimagetag, createdat, updatedat
+SELECT id, tenantid, userid, name, description, status, dockerimageregistry, dockerimagename, dockerimagetag, createdat, updatedat
 	FROM apps
 WHERE tenantid = $1 AND status != 'deleted';
 `
@@ -54,13 +54,13 @@ WHERE tenantid = $1 AND status != 'deleted';
 // CreateApp saves the provided app object in the database 'apps' table.
 func (s *AppStorage) CreateApp(ctx context.Context, tenantID uint64, app *model.App) (uint64, error) {
 	const appQuery = `
-INSERT INTO apps (tenantid, userid, name, description, status, dockerimagename, dockerimagetag, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id;
+INSERT INTO apps (tenantid, userid, name, description, status, dockerimageregistry, dockerimagename, dockerimagetag, createdat, updatedat)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64
 	err := s.db.GetContext(ctx, &id, appQuery,
-		tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag,
+		tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageRegistry, app.DockerImageName, app.DockerImageTag,
 	)
 	if err != nil {
 		return 0, err

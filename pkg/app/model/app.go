@@ -16,20 +16,13 @@ type App struct {
 	Description string
 	Status      AppStatus
 
-	DockerImageName string
-	DockerImageTag  string
+	DockerImageRegistry string
+	DockerImageName     string
+	DockerImageTag      string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
-}
-
-func (a App) GetImage() string {
-	if a.DockerImageTag == "" {
-		return a.DockerImageName
-	}
-
-	return a.DockerImageName + ":" + a.DockerImageTag
 }
 
 // AppStatus represents the status of an app.
