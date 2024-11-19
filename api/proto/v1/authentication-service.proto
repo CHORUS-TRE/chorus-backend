@@ -44,6 +44,10 @@ message OpenID {
     string id = 1;
 }
 
+message GetAuthenticationModesRequest {
+    
+}
+
 message GetAuthenticationModesReply {
     repeated AuthenticationMode result = 1;
 }
@@ -77,6 +81,19 @@ message AuthenticateOauthRedirectReply {
 
 
 service AuthenticationService {
+    rpc GetAuthenticationModes(GetAuthenticationModesRequest) returns (GetAuthenticationModesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/authentication/modes"
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get list of possible way to authenticate";
+            description: "This endpoint list all the way the backend accept authentication";
+            tags: "AuthenticationService";
+            security: {}
+        };
+    };
+
     rpc Authenticate(Credentials) returns (AuthenticationReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/authentication/login"

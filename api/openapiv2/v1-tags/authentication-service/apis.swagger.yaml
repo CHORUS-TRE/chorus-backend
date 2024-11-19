@@ -38,6 +38,23 @@ paths:
       tags:
         - AuthenticationService
       security: []
+  /api/rest/v1/authentication/modes:
+    get:
+      summary: Get list of possible way to authenticate
+      description: This endpoint list all the way the backend accept authentication
+      operationId: AuthenticationService_GetAuthenticationModes
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetAuthenticationModesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - AuthenticationService
+      security: []
   /api/rest/v1/authentication/oauth2/{id}/login:
     get:
       summary: Authenticate using Auth 2.0
@@ -115,6 +132,15 @@ definitions:
     properties:
       redirectURI:
         type: string
+  chorusAuthenticationMode:
+    type: object
+    properties:
+      type:
+        type: string
+      internal:
+        $ref: '#/definitions/chorusInternal'
+      openid:
+        $ref: '#/definitions/chorusOpenID'
   chorusAuthenticationReply:
     type: object
     properties:
@@ -133,6 +159,24 @@ definitions:
       password:
         type: string
       totp:
+        type: string
+  chorusGetAuthenticationModesReply:
+    type: object
+    properties:
+      result:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAuthenticationMode'
+  chorusInternal:
+    type: object
+    properties:
+      publicRegistrationEnabled:
+        type: boolean
+  chorusOpenID:
+    type: object
+    properties:
+      id:
         type: string
   protobufAny:
     type: object
