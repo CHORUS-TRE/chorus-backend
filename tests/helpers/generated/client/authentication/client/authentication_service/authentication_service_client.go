@@ -60,6 +60,8 @@ type ClientService interface {
 
 	AuthenticationServiceAuthenticateOauthRedirect(params *AuthenticationServiceAuthenticateOauthRedirectParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthRedirectOK, error)
 
+	AuthenticationServiceGetAuthenticationModes(params *AuthenticationServiceGetAuthenticationModesParams, opts ...ClientOption) (*AuthenticationServiceGetAuthenticationModesOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -177,6 +179,45 @@ func (a *Client) AuthenticationServiceAuthenticateOauthRedirect(params *Authenti
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthRedirectDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuthenticationServiceGetAuthenticationModes gets list of possible way to authenticate
+
+This endpoint list all the way the backend accept authentication
+*/
+func (a *Client) AuthenticationServiceGetAuthenticationModes(params *AuthenticationServiceGetAuthenticationModesParams, opts ...ClientOption) (*AuthenticationServiceGetAuthenticationModesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuthenticationServiceGetAuthenticationModesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuthenticationService_GetAuthenticationModes",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/authentication/modes",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuthenticationServiceGetAuthenticationModesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuthenticationServiceGetAuthenticationModesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuthenticationServiceGetAuthenticationModesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

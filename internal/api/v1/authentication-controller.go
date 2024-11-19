@@ -23,6 +23,37 @@ func NewAuthenticationController(authenticator service.Authenticator) Authentica
 	return AuthenticationController{authenticator: authenticator}
 }
 
+func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, req *chorus.GetAuthenticationModesRequest) (*chorus.GetAuthenticationModesReply, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials: %v", "empty request")
+	}
+
+	modes := a.authenticator.GetAuthenticationModes()
+
+	res := []*chorus.AuthenticationMode{}
+
+	for _, mode := range modes {
+		if mode.Type == "internal" {
+			res = append(res, &chorus.AuthenticationMode{
+				Type: mode.Type,
+				Internal: &chorus.Internal{
+					PublicRegistrationEnabled: mode.Internal.PublicRegistrationEnabled,
+				},
+			})
+		}
+		if mode.Type == "openid" {
+			res = append(res, &chorus.AuthenticationMode{
+				Type: mode.Type,
+				Openid: &chorus.OpenID{
+					Id: mode.OpenID.ID,
+				},
+			})
+		}
+	}
+
+	return &chorus.GetAuthenticationModesReply{Result: res}, nil
+}
+
 // Authenticate extracts the fields from an 'AuthenticationRequest' and passes them to the service.
 func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.Credentials) (*chorus.AuthenticationReply, error) {
 	if req == nil {

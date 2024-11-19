@@ -27,6 +27,7 @@ import (
 // Authenticator defines the authentication service API.
 type Authenticator interface {
 	Authenticate(ctx context.Context, username, password, totp string) (string, error)
+	GetAuthenticationModes() []model.AuthenticationMode
 	AuthenticateOAuth(ctx context.Context, providerID string) (string, error)
 	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, error)
 }
@@ -119,6 +120,30 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 		store:               store,
 		oauthConfigs:        oauthConfigs,
 	}
+}
+
+func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationMode {
+	res := []model.AuthenticationMode{}
+	for _, mode := range a.cfg.Services.AuthenticationService.Modes {
+		if mode.Type == "internal" {
+			res = append(res, model.AuthenticationMode{
+				Type: mode.Type,
+				Internal: model.Internal{
+					PublicRegistrationEnabled: mode.PublicRegistrationEnabled,
+				},
+			})
+		}
+		if mode.Type == "openid" {
+			res = append(res, model.AuthenticationMode{
+				Type: mode.Type,
+				OpenID: model.OpenID{
+					ID: mode.OpenID.ID,
+				},
+			})
+		}
+
+	}
+	return res
 }
 
 // Authenticate verifies whether the user is activated and the provided password is
