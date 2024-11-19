@@ -99,6 +99,30 @@ WHERE status = 'active';
 	return workbenchs, nil
 }
 
+func (s *WorkbenchStorage) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64) error {
+	const query = `
+UPDATE public.workbenchs
+SET 
+    accessedat = NOW(),
+    accessedcount = accessedcount + batch_data.count
+FROM (
+    SELECT UNNEST($1::BIGINT[]) AS id, UNNEST($2::BIGINT[]) AS count
+) AS batch_data
+WHERE workbenchs.id = batch_data.id
+;
+`
+	ids := make([]uint64, 0, len(proxyHitCountMap))
+	counts := make([]uint64, 0, len(proxyHitCountMap))
+
+	for id, count := range proxyHitCountMap {
+		ids = append(ids, id)
+		counts = append(counts, count)
+	}
+
+	_, err := s.db.ExecContext(ctx, query, ids, counts)
+	return err
+}
+
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
 	const workbenchQuery = `

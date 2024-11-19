@@ -213,8 +213,9 @@ type (
 		} `yaml:"authentication_service"`
 
 		WorkbenchService struct {
-			StreamProxyEnabled bool `yaml:"stream_proxy_enabled"`
-			BackendInK8S       bool `yaml:"backend_in_k8s"`
+			StreamProxyEnabled        bool          `yaml:"stream_proxy_enabled"`
+			BackendInK8S              bool          `yaml:"backend_in_k8s"`
+			ProxyHitSaveBatchInterval time.Duration `yaml:"proxy_hit_save_batch_interval"`
 		} `yaml:"workbench_service"`
 	}
 

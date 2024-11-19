@@ -90,6 +90,26 @@ func (c workbenchStorageLogging) ListAllActiveWorkbenchs(ctx context.Context) ([
 	return res, nil
 }
 
+func (c workbenchStorageLogging) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64) error {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	err := c.next.SaveBatchProxyHit(ctx, proxyHitCountMap)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
 func (c workbenchStorageLogging) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
