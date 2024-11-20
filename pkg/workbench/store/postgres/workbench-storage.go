@@ -3,8 +3,10 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
@@ -97,6 +99,34 @@ WHERE status = 'active';
 	}
 
 	return workbenchs, nil
+}
+
+func (s *WorkbenchStorage) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error {
+	const query = `
+UPDATE public.workbenchs
+SET 
+    accessedat = batch_data.date,
+    accessedcount = accessedcount + batch_data.count,
+	updatedat = NOW()
+FROM (
+    SELECT UNNEST($1::BIGINT[]) AS id, UNNEST($2::TIMESTAMP[]) AS date, UNNEST($3::BIGINT[]) AS count
+) AS batch_data
+WHERE workbenchs.id = batch_data.id
+;
+`
+	ids := make([]uint64, 0, len(proxyHitCountMap))
+	dates := make([]string, 0, len(proxyHitCountMap))
+	counts := make([]uint64, 0, len(proxyHitCountMap))
+
+	for id, count := range proxyHitCountMap {
+
+		ids = append(ids, id)
+		dates = append(dates, proxyHitDateMap[id].Format(time.RFC3339))
+		counts = append(counts, count)
+	}
+
+	_, err := s.db.ExecContext(ctx, query, pq.Array(ids), pq.Array(dates), pq.Array(counts))
+	return err
 }
 
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.

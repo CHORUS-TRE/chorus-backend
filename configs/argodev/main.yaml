@@ -70,6 +70,7 @@ services:
   workbench_service:
     stream_proxy_enabled: true
     backend_in_k8s: true
+    proxy_hit_save_batch_interval: 30s
 
 clients:
   helm_client:

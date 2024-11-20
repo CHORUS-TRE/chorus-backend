@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"sync"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
@@ -16,7 +18,17 @@ import (
 	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
+)
+
+var (
+	workbenchProxyRequest = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "workbench_service_proxy_request",
+		Help: "The total number of request proxied to a workbench via the backend",
+	}, []string{"workbench_id"})
+
+	_ = prometheus.DefaultRegisterer.Register(workbenchProxyRequest)
 )
 
 type Workbencher interface {
@@ -33,6 +45,7 @@ type WorkbenchStore interface {
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
 	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error)
 	ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error)
+	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
@@ -50,23 +63,36 @@ type proxy struct {
 }
 
 type WorkbenchService struct {
-	cfg        config.Config
-	store      WorkbenchStore
-	client     helm.HelmClienter
-	rwMutex    sync.RWMutex
-	proxyCache map[proxyID]*proxy
+	cfg              config.Config
+	store            WorkbenchStore
+	client           helm.HelmClienter
+	proxyRWMutex     sync.RWMutex
+	proxyCache       map[proxyID]*proxy
+	proxyHitMutex    sync.Mutex
+	proxyHitCountMap map[uint64]uint64
+	proxyHitDateMap  map[uint64]time.Time
 }
 
 func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
 	s := &WorkbenchService{
-		cfg:        cfg,
-		store:      store,
-		client:     client,
-		proxyCache: make(map[proxyID]*proxy),
+		cfg:              cfg,
+		store:            store,
+		client:           client,
+		proxyCache:       make(map[proxyID]*proxy),
+		proxyHitCountMap: make(map[uint64]uint64),
+		proxyHitDateMap:  make(map[uint64]time.Time),
 	}
 
 	go func() {
 		s.updateAllWorkbenchs(context.Background())
+	}()
+
+	go func() {
+		for {
+			s.saveBatchProxyHit(context.Background())
+			randomDelayToAvoidCollision := time.Duration(rand.Int64N(int64(10 * time.Second)))
+			time.Sleep(cfg.Services.WorkbenchService.ProxyHitSaveBatchInterval + randomDelayToAvoidCollision)
+		}
 	}()
 
 	return s
@@ -81,6 +107,10 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 
 	for _, workbench := range workbenchs {
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			continue
+		}
 		clientApps := []helm.AppInstance{}
 		for _, app := range apps {
 			clientApps = append(clientApps, helm.AppInstance{
@@ -162,15 +192,15 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	// TODO error handling, port forwarding re-creation, cache eviction, cleaning on cache evit and sig stop
-	s.rwMutex.RLock()
+	s.proxyRWMutex.RLock()
 	if proxy, exists := s.proxyCache[proxyID]; exists {
-		s.rwMutex.RUnlock()
+		s.proxyRWMutex.RUnlock()
 		return proxy, nil
 	}
-	s.rwMutex.RUnlock()
+	s.proxyRWMutex.RUnlock()
 
-	s.rwMutex.Lock()
-	defer s.rwMutex.Unlock()
+	s.proxyRWMutex.Lock()
+	defer s.proxyRWMutex.Unlock()
 
 	var xpraUrl string
 	var port uint16
@@ -233,9 +263,43 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 		return fmt.Errorf("unable to get proxy %v: %w", proxyID, err)
 	}
 
+	go s.addWorkbenchHit(workbenchID)
+
 	proxy.reverseProxy.ServeHTTP(w, r)
 
 	return nil
+}
+
+func (s *WorkbenchService) addWorkbenchHit(workbenchID uint64) {
+	workbenchProxyRequest.WithLabelValues(fmt.Sprintf("workbench%v", workbenchID)).Inc()
+
+	s.proxyHitMutex.Lock()
+	defer s.proxyHitMutex.Unlock()
+
+	if _, ok := s.proxyHitCountMap[workbenchID]; !ok {
+		s.proxyHitCountMap[workbenchID] = 0
+	}
+	s.proxyHitCountMap[workbenchID]++
+	s.proxyHitDateMap[workbenchID] = time.Now()
+}
+
+func (s *WorkbenchService) saveBatchProxyHit(ctx context.Context) {
+	s.proxyHitMutex.Lock()
+	countMapToSave := s.proxyHitCountMap
+	dateMapToSave := s.proxyHitDateMap
+	s.proxyHitCountMap = make(map[uint64]uint64)
+	s.proxyHitDateMap = make(map[uint64]time.Time)
+	s.proxyHitMutex.Unlock()
+
+	err := s.store.SaveBatchProxyHit(ctx, countMapToSave, dateMapToSave)
+	if err != nil {
+		hits := uint64(0)
+		numWorkbenches := len(countMapToSave)
+		for _, count := range countMapToSave {
+			hits += count
+		}
+		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to save batch proxy hit, losing %v hits to %v workbenches", hits, numWorkbenches), zap.Error(err))
+	}
 }
 
 func (s *WorkbenchService) getWorkspaceName(id uint64) string {
