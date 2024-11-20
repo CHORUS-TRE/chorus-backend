@@ -18,7 +18,17 @@ import (
 	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
+)
+
+var (
+	workbenchProxyRequest = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "workbench_service_proxy_request",
+		Help: "The total number of request proxied to a workbench via the backend",
+	}, []string{"workbench_id"})
+
+	_ = prometheus.DefaultRegisterer.Register(workbenchProxyRequest)
 )
 
 type Workbencher interface {
@@ -257,6 +267,8 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 }
 
 func (s *WorkbenchService) addWorkbenchHit(workbenchID uint64) {
+	workbenchProxyRequest.WithLabelValues(fmt.Sprintf("workbench%v", workbenchID)).Inc()
+
 	s.proxyHitMutex.Lock()
 	defer s.proxyHitMutex.Unlock()
 
