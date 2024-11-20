@@ -107,6 +107,10 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 
 	for _, workbench := range workbenchs {
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			continue
+		}
 		clientApps := []helm.AppInstance{}
 		for _, app := range apps {
 			clientApps = append(clientApps, helm.AppInstance{
