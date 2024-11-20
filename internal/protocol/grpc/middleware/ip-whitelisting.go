@@ -85,7 +85,7 @@ func NewIPWhitelister(cfg config.Config) (*IPWhitelister, error) {
 		for i, str := range tenant.IPWhitelist.Subnetworks {
 			_, subnet, err := net.ParseCIDR(str)
 			if err != nil {
-				return nil, fmt.Errorf("unable to parse cidr '%s': %v", str, err)
+				return nil, fmt.Errorf("unable to parse cidr %q: %w", str, err)
 			}
 
 			subnets[i] = subnet

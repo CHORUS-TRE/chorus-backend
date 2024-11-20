@@ -3,14 +3,13 @@ package v1
 import (
 	"context"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
-	"github.com/pkg/errors"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 )
 
 // AuthenticationController is the authentication service controller handler.
@@ -71,7 +70,9 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 	}
 
 	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/")
-	grpc.SetHeader(ctx, header)
+	if err := grpc.SetHeader(ctx, header); err != nil {
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
 
 	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
 }
@@ -96,11 +97,13 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 
 	token, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
 	if err != nil {
-		return nil, errors.Wrap(err, "error callback")
+		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 
 	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/")
-	grpc.SetHeader(ctx, header)
+	if err := grpc.SetHeader(ctx, header); err != nil {
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
 
 	return &chorus.AuthenticateOauthRedirectReply{Result: &chorus.AuthenticateOauthRedirectResult{Token: token}}, nil
 }
