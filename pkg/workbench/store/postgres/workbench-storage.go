@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
@@ -119,7 +120,7 @@ WHERE workbenchs.id = batch_data.id
 		counts = append(counts, count)
 	}
 
-	_, err := s.db.ExecContext(ctx, query, ids, counts)
+	_, err := s.db.ExecContext(ctx, query, pq.Array(ids), pq.Array(counts))
 	return err
 }
 
