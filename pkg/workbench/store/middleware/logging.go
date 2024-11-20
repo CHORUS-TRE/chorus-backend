@@ -90,12 +90,12 @@ func (c workbenchStorageLogging) ListAllActiveWorkbenchs(ctx context.Context) ([
 	return res, nil
 }
 
-func (c workbenchStorageLogging) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64) error {
+func (c workbenchStorageLogging) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.SaveBatchProxyHit(ctx, proxyHitCountMap)
+	err := c.next.SaveBatchProxyHit(ctx, proxyHitCountMap, proxyHitDateMap)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
