@@ -4,10 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/golang-jwt/jwt"
+	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -16,12 +22,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/model"
 	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	userService "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
-	"github.com/pkg/errors"
-
-	"github.com/golang-jwt/jwt"
-	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/oauth2"
 )
 
 // Authenticator defines the authentication service API.
@@ -217,7 +217,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerID string) (string, error) {
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
-		return "", errors.Wrap(&ErrInvalidArgument{}, "unable to find config for provider "+providerID)
+		return "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
 	}
 
 	return oauthConfig.AuthCodeURL(uuid.Next()), nil
@@ -226,7 +226,7 @@ func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerI
 func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, error) {
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
-		return "", errors.Wrap(&ErrInvalidArgument{}, "unable to find config for provider "+providerID)
+		return "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
 	}
 
 	// Verify state (for CSRF protection) - usually, you'd compare this with a value stored in the user's session
@@ -236,19 +236,19 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 	token, err := oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange token: %v", err)
+		return "", fmt.Errorf("failed to exchange token: %w", err)
 	}
 
 	client := oauthConfig.Client(ctx, token)
 
 	mode, err := a.getAuthMode(providerID)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to get mode")
+		return "", fmt.Errorf("unable to get mode: %w", err)
 	}
 
 	userInfoResp, err := client.Get(mode.OpenID.UserInfoURL)
 	if err != nil {
-		return "", fmt.Errorf("failed to get user info: %v", err)
+		return "", fmt.Errorf("failed to get user info: %w", err)
 	}
 	defer userInfoResp.Body.Close()
 
@@ -266,7 +266,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	// var userInfo map[string]string
 	var userInfo OAuthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
-		return "", fmt.Errorf("failed to decode user info response: %v", err)
+		return "", fmt.Errorf("failed to decode user info response: %w", err)
 	}
 
 	user, err := a.store.GetActiveUser(ctx, userInfo.Username, providerID)
@@ -288,12 +288,12 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 		_, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
 		if err != nil {
-			return "", fmt.Errorf("failed to create user: %v", err)
+			return "", fmt.Errorf("failed to create user: %w", err)
 		}
 
 		user, err = a.store.GetActiveUser(ctx, userInfo.Username, providerID)
 		if err != nil {
-			return "", fmt.Errorf("failed to create user: %v", err)
+			return "", fmt.Errorf("failed to create user: %w", err)
 		}
 	}
 

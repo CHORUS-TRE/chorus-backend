@@ -54,7 +54,7 @@ func (u *AppService) GetApp(ctx context.Context, tenantID, appID uint64) (*model
 func (u *AppService) DeleteApp(ctx context.Context, tenantID, appID uint64) error {
 	err := u.store.DeleteApp(ctx, tenantID, appID)
 	if err != nil {
-		return fmt.Errorf("unable to get app %v, %w", appID, err)
+		return fmt.Errorf("unable to get app %v: %w", appID, err)
 	}
 
 	return nil
