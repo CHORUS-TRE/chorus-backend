@@ -29,7 +29,7 @@ type Authenticator interface {
 	Authenticate(ctx context.Context, username, password, totp string) (string, error)
 	GetAuthenticationModes() []model.AuthenticationMode
 	AuthenticateOAuth(ctx context.Context, providerID string) (string, error)
-	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, error)
+	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, string, error)
 }
 
 type Userer interface {
@@ -223,10 +223,10 @@ func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerI
 	return oauthConfig.AuthCodeURL(uuid.Next()), nil
 }
 
-func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, error) {
+func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, string, error) {
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
-		return "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
+		return "", "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
 	}
 
 	// Verify state (for CSRF protection) - usually, you'd compare this with a value stored in the user's session
@@ -236,24 +236,24 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 	token, err := oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange token: %w", err)
+		return "", "", fmt.Errorf("failed to exchange token: %w", err)
 	}
 
 	client := oauthConfig.Client(ctx, token)
 
 	mode, err := a.getAuthMode(providerID)
 	if err != nil {
-		return "", fmt.Errorf("unable to get mode: %w", err)
+		return "", "", fmt.Errorf("unable to get mode: %w", err)
 	}
 
 	userInfoResp, err := client.Get(mode.OpenID.UserInfoURL)
 	if err != nil {
-		return "", fmt.Errorf("failed to get user info: %w", err)
+		return "", "", fmt.Errorf("failed to get user info: %w", err)
 	}
 	defer userInfoResp.Body.Close()
 
 	if userInfoResp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
+		return "", "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
 	}
 
 	type OAuthUser struct {
@@ -266,13 +266,13 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	// var userInfo map[string]string
 	var userInfo OAuthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
-		return "", fmt.Errorf("failed to decode user info response: %w", err)
+		return "", "", fmt.Errorf("failed to decode user info response: %w", err)
 	}
 
 	user, err := a.store.GetActiveUser(ctx, userInfo.Username, providerID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			return "", nil
+			return "", "", nil
 		}
 
 		createUser := &userService.UserReq{
@@ -288,22 +288,28 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 		_, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
 		if err != nil {
-			return "", fmt.Errorf("failed to create user: %w", err)
+			return "", "", fmt.Errorf("failed to create user: %w", err)
 		}
 
 		user, err = a.store.GetActiveUser(ctx, userInfo.Username, providerID)
 		if err != nil {
-			return "", fmt.Errorf("failed to create user: %w", err)
+			return "", "", fmt.Errorf("failed to create user: %w", err)
 		}
 	}
 
 	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime)
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", &ErrUnauthorized{}
+		return "", "", &ErrUnauthorized{}
 	}
 
-	return jwtToken, nil
+	url := ""
+
+	if mode.OpenID.FinalURLFormat != "" {
+		url = fmt.Sprintf(mode.OpenID.FinalURLFormat, jwtToken)
+	}
+
+	return jwtToken, url, nil
 }
 
 func (a *AuthenticationService) getAuthMode(id string) (*config.Mode, error) {

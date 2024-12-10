@@ -95,7 +95,7 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
 	}
 
-	token, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
+	token, url, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -103,6 +103,13 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/")
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
+
+	if url != "" {
+		header := metadata.Pairs("Location", url)
+		if err := grpc.SetHeader(ctx, header); err != nil {
+			return nil, status.Errorf(codes.Internal, "%v", err)
+		}
 	}
 
 	return &chorus.AuthenticateOauthRedirectReply{Result: &chorus.AuthenticateOauthRedirectResult{Token: token}}, nil

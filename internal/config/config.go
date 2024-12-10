@@ -232,6 +232,7 @@ type (
 		AuthorizeURL      string   `yaml:"authorize_url"`
 		TokenURL          string   `yaml:"token_url"`
 		UserInfoURL       string   `yaml:"user_info_url"`
+		FinalURLFormat    string   `yaml:"final_url_format"`
 		LogoutURL         string   `yaml:"logout_url"`
 		UserNameClaim     string   `yaml:"user_name_claim"`
 		ClientID          string   `yaml:"client_id"`
