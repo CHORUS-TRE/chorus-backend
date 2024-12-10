@@ -13,6 +13,8 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" --mount=type=cache,targe
 
 FROM ubuntu:latest
 
+RUN apt update && apt install -y ca-certificates
+
 COPY --from=build /chorus/bin/chorus /chorus/bin/chorus
 
 CMD ["/chorus/bin/chorus", "start", "--config", "/chorus/conf/config.yaml"]
