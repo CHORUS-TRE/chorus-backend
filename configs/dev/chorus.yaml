@@ -39,10 +39,12 @@ services:
     enabled: true
     dev_auth_enabled: true
     modes:
-      - type: internal
+      interal:
+        type: internal
         enabled: true
         public_registration_enabled: true
-      - type: openid
+      keycloak:
+        type: openid
         enabled: true
         openid:
           id: keycloak
@@ -59,7 +61,8 @@ services:
             - profile
             - email
             - roles
-      - type: openid
+      keycloakdev:
+        type: openid
         enabled: true
         openid:
           id: keycloakdev
