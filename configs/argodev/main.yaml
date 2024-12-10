@@ -40,10 +40,12 @@ services:
     enabled: true
     dev_auth_enabled: true
     modes:
-      - type: internal
+      internal:
+        type: internal
         enabled: true
         public_registration_enabled: true
-      - type: openid
+      keycloak:
+        type: openid
         enabled: true
         openid:
           id: keycloak

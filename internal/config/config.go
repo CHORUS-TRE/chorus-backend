@@ -207,9 +207,9 @@ type (
 		} `yaml:"mailer_service"`
 
 		AuthenticationService struct {
-			Enabled        bool   `yaml:"enabled"`
-			DevAuthEnabled bool   `yaml:"dev_auth_enabled"`
-			Modes          []Mode `yaml:"modes"`
+			Enabled        bool            `yaml:"enabled"`
+			DevAuthEnabled bool            `yaml:"dev_auth_enabled"`
+			Modes          map[string]Mode `yaml:"modes"`
 		} `yaml:"authentication_service"`
 
 		WorkbenchService struct {
