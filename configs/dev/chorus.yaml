@@ -54,7 +54,7 @@ services:
           user_info_url: "http://localhost:8080/realms/chorus/protocol/openid-connect/userinfo"
           logout_url: "http://localhost:8080/realms/chorus/protocol/openid-connect/logout?redirect_uri=http://localhost:5000"
           user_name_claim: "preferred_username"
-          final_url_format: "http://localhost:3000/login?token=%s"
+          # final_url_format: "http://localhost:3000/login?token=%s"
           client_id: chorus
           client_secret: "kIakn3wsHHpwxzY5vYicvIqMOyAQeBZv"
           scopes:
@@ -73,7 +73,7 @@ services:
           user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
           logout_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?redirect_uri=http://localhost:5000"
           user_name_claim: "preferred_username"
-          final_url_format: "http://localhost:3000/login?token=%s"
+          # final_url_format: "http://localhost:3000/login?token=%s"
           client_id: chorus
           client_secret: "<keycloak dev chorus secret>"
           scopes:

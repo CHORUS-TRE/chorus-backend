@@ -55,7 +55,7 @@ services:
           user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
           logout_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?redirect_uri=https://backend.dev.chorus-tre.ch"
           user_name_claim: "preferred_username"
-          final_url_format: "https://web-ui.dev.chorus-tre.ch/login?token=%s"
+          # final_url_format: "https://web-ui.dev.chorus-tre.ch/login?token=%s"
           client_id: chorus
           client_secret: "<secret>"
           scopes:
