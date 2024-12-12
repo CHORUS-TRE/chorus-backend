@@ -60,6 +60,8 @@ type ClientService interface {
 
 	AuthenticationServiceAuthenticateOauthRedirect(params *AuthenticationServiceAuthenticateOauthRedirectParams, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthRedirectOK, error)
 
+	AuthenticationServiceAuthenticateOauthRedirect2(params *AuthenticationServiceAuthenticateOauthRedirect2Params, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthRedirect2OK, error)
+
 	AuthenticationServiceGetAuthenticationModes(params *AuthenticationServiceGetAuthenticationModesParams, opts ...ClientOption) (*AuthenticationServiceGetAuthenticationModesOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -179,6 +181,45 @@ func (a *Client) AuthenticationServiceAuthenticateOauthRedirect(params *Authenti
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthRedirectDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuthenticationServiceAuthenticateOauthRedirect2 authenticates redirect using auth 2 0
+
+This endpoint is called by the provider after auth for the backend to retrieve the user profile
+*/
+func (a *Client) AuthenticationServiceAuthenticateOauthRedirect2(params *AuthenticationServiceAuthenticateOauthRedirect2Params, opts ...ClientOption) (*AuthenticationServiceAuthenticateOauthRedirect2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuthenticationServiceAuthenticateOauthRedirect2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuthenticationService_AuthenticateOauthRedirect2",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/authentication/oauth2/{id}/redirect",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuthenticationServiceAuthenticateOauthRedirect2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuthenticationServiceAuthenticateOauthRedirect2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthRedirect2Default)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
