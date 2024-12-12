@@ -227,17 +227,19 @@ type (
 	}
 
 	OpenID struct {
-		ID                string   `yaml:"id"`
-		ChorusBackendHost string   `yaml:"chorus_backend_host"`
-		AuthorizeURL      string   `yaml:"authorize_url"`
-		TokenURL          string   `yaml:"token_url"`
-		UserInfoURL       string   `yaml:"user_info_url"`
-		FinalURLFormat    string   `yaml:"final_url_format"`
-		LogoutURL         string   `yaml:"logout_url"`
-		UserNameClaim     string   `yaml:"user_name_claim"`
-		ClientID          string   `yaml:"client_id"`
-		ClientSecret      string   `yaml:"client_secret"`
-		Scopes            []string `yaml:"scopes"`
+		ID                        string   `yaml:"id"`
+		ChorusBackendHost         string   `yaml:"chorus_backend_host"`
+		EnableFrontendRedirect    bool     `yaml:"enable_frontend_redirect"`
+		ChorusFrontendRedirectURL string   `yaml:"chorus_frontend_redirect_url"`
+		AuthorizeURL              string   `yaml:"authorize_url"`
+		TokenURL                  string   `yaml:"token_url"`
+		UserInfoURL               string   `yaml:"user_info_url"`
+		FinalURLFormat            string   `yaml:"final_url_format"`
+		LogoutURL                 string   `yaml:"logout_url"`
+		UserNameClaim             string   `yaml:"user_name_claim"`
+		ClientID                  string   `yaml:"client_id"`
+		ClientSecret              string   `yaml:"client_secret"`
+		Scopes                    []string `yaml:"scopes"`
 	}
 
 	Job struct {

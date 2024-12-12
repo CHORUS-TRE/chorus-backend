@@ -97,6 +97,12 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 				log.Fatal("openid mode cannot be named internal")
 			}
 
+			redirectURL := mode.OpenID.ChorusBackendHost + "/api/rest/v1/authentication/oauth2/" + mode.OpenID.ID + "/redirect"
+
+			if mode.OpenID.EnableFrontendRedirect {
+				redirectURL = mode.OpenID.ChorusFrontendRedirectURL
+			}
+
 			oauthConfigs[mode.OpenID.ID] = &oauth2.Config{
 				ClientID:     mode.OpenID.ClientID,
 				ClientSecret: mode.OpenID.ClientSecret,
@@ -105,7 +111,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 					TokenURL: mode.OpenID.TokenURL,
 				},
 				// RedirectURL: mode.OpenID.ChorusBackendHost + "/api/rest/v1",
-				RedirectURL: mode.OpenID.ChorusBackendHost + "/api/rest/v1/authentication/oauth2/" + mode.OpenID.ID + "/redirect",
+				RedirectURL: redirectURL,
 				Scopes:      mode.OpenID.Scopes,
 			}
 		}
