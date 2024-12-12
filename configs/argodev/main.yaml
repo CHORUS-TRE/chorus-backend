@@ -51,7 +51,7 @@ services:
           id: keycloak
           chorus_backend_host: "https://backend.dev.chorus-tre.ch"
           enable_frontend_redirect: true
-          chorus_frontend_redirect_url: "http://dev.chorus-tre.ch/oauthredirect"
+          chorus_frontend_redirect_url: "https://dev.chorus-tre.ch/oauthredirect"
           authorize_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
           token_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
           user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
