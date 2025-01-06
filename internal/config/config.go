@@ -56,6 +56,15 @@ type (
 		PrivateKey     string `yaml:"private_key"`
 		PublicKeyFile  string `yaml:"public_key_file"`
 		Salt           string `yaml:"salt"`
+
+		Metrics struct {
+			Enabled        bool `yaml:"enabled"`
+			Authentication struct {
+				Enabled  bool      `yaml:"enabled"`
+				Username string    `yaml:"username"`
+				Password Sensitive `yaml:"password"`
+			} `yaml:"authentication"`
+		} `yaml:"metrics"`
 	}
 
 	// Log bundles several logging instances.

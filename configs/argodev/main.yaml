@@ -14,6 +14,12 @@ daemon:
       enabled: true
   private_key: "{{ .daemon_private_key }}"
   salt: tractor-pessimist5-recolor-dicing-endorse-recipient-puritan-bribe-spotty
+  metrics:
+    enabled: true
+    authentication:
+      enabled: true
+      username: "{{ .metrics_username }}"
+      password: "{{ .metrics_password }}"
 
 storage:
   datastores:
