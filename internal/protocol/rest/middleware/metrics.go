@@ -17,6 +17,7 @@ func AddMetrics(h http.Handler, cfg config.Config) http.Handler {
 			if cfg.Daemon.Metrics.Authentication.Enabled {
 				username, password, ok := r.BasicAuth()
 				if !ok || username != cfg.Daemon.Metrics.Authentication.Username || password != cfg.Daemon.Metrics.Authentication.Password.PlainText() {
+					w.Header().Set("WWW-Authenticate", `Basic realm="metrics"`)
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
 				}
