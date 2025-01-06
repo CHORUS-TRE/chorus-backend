@@ -31,7 +31,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddInstrumenting(handler)
 	handler = middleware.AddCorrelationID(handler)
 	handler = middleware.AddRoot(handler, version, started)
-	handler = middleware.AddMetrics(handler)
+	handler = middleware.AddMetrics(handler, cfg)
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
