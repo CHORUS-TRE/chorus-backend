@@ -1,6 +1,7 @@
 package helm
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -8,15 +9,22 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
 	helmaction "helm.sh/helm/v3/pkg/action"
 	helmchart "helm.sh/helm/v3/pkg/chart"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -29,13 +37,16 @@ type HelmClienter interface {
 	UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
-	DeleteApp(namespace, workbenchName, appName string) error
+	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 	DeleteWorkbench(namespace, workbenchName string) error
 }
 
 type client struct {
-	cfg   config.Config
-	chart *helmchart.Chart
+	cfg           config.Config
+	chart         *helmchart.Chart
+	restConfig    *rest.Config
+	k8sClient     *kubernetes.Clientset
+	dynamicClient *dynamic.DynamicClient
 }
 
 type AppInstance struct {
@@ -79,61 +90,66 @@ func debug(format string, v ...interface{}) {
 func NewClient(cfg config.Config) (*client, error) {
 	chart, err := GetHelmChart()
 	if err != nil {
-		return nil, fmt.Errorf("Error loading Helm chart: %w", err)
+		return nil, fmt.Errorf("error loading Helm chart: %w", err)
+	}
+
+	restConfig, err := getK8sConfig(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("error getting k8s config: %w", err)
+	}
+
+	k8sClient, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating k8s client: %w", err)
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating k8s client: %w", err)
 	}
 
 	c := &client{
-		chart: chart,
-		cfg:   cfg,
+		chart:         chart,
+		cfg:           cfg,
+		restConfig:    restConfig,
+		k8sClient:     k8sClient,
+		dynamicClient: dynamicClient,
 	}
 	return c, nil
 }
 
-func (c *client) getConfig(namespace string) (*helmaction.Configuration, error) {
-	if c.cfg.Clients.HelmClient.KubeConfig != "" {
-		return c.getConfigFromKubeConfig(namespace)
+func getK8sConfig(cfg config.Config) (*rest.Config, error) {
+	if cfg.Clients.HelmClient.KubeConfig != "" {
+		return getK8sConfigFromKubeConfig(cfg)
 	}
-	if c.cfg.Clients.HelmClient.Token != "" {
-		return c.getConfigFromServiceAccount(namespace)
+	if cfg.Clients.HelmClient.Token != "" {
+		return getK8sConfigFromServiceAccount(cfg)
 	}
 
 	return nil, errors.New("no config for helm client found")
 }
 
-func (c *client) getConfigFromKubeConfig(namespace string) (*helmaction.Configuration, error) {
-	config, err := clientcmd.Load(([]byte)(c.cfg.Clients.HelmClient.KubeConfig))
+func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
+	config, err := clientcmd.Load(([]byte)(cfg.Clients.HelmClient.KubeConfig))
 	if err != nil {
 		return nil, fmt.Errorf("error loading kubeconfig: %w", err)
 	}
 
 	clientConfig := clientcmd.NewDefaultClientConfig(*config, &clientcmd.ConfigOverrides{})
 
-	configFlags := &genericclioptions.ConfigFlags{
-		Namespace: &namespace,
+	restConfig, err := clientConfig.ClientConfig()
+	if err != nil {
+		return nil, fmt.Errorf("error getting restconfig: %w", err)
 	}
 
-	configFlags.WrapConfigFn = func(cfg *rest.Config) *rest.Config {
-		clientConfig, err := clientConfig.ClientConfig()
-		if err != nil {
-			fmt.Printf("Error getting client config: %v\n", err)
-			os.Exit(1)
-		}
-		return clientConfig
-	}
-
-	actionConfig := new(helmaction.Configuration)
-	if err := actionConfig.Init(configFlags, namespace, "secret", debug); err != nil {
-		return nil, fmt.Errorf("error initializing Helm configuration: %w", err)
-	}
-
-	return actionConfig, nil
+	return restConfig, nil
 
 }
 
-func (c *client) getConfigFromServiceAccount(namespace string) (*helmaction.Configuration, error) {
-	token := c.cfg.Clients.HelmClient.Token
-	caCert := c.cfg.Clients.HelmClient.CA
-	apiServer := c.cfg.Clients.HelmClient.APIServer
+func getK8sConfigFromServiceAccount(cfg config.Config) (*rest.Config, error) {
+	token := cfg.Clients.HelmClient.Token
+	caCert := cfg.Clients.HelmClient.CA
+	apiServer := cfg.Clients.HelmClient.APIServer
 
 	restConfig := &rest.Config{
 		Host:        apiServer,
@@ -143,39 +159,171 @@ func (c *client) getConfigFromServiceAccount(namespace string) (*helmaction.Conf
 		},
 	}
 
-	configFlags := &genericclioptions.ConfigFlags{
-		Namespace: &namespace,
+	return restConfig, nil
+}
+
+func (c *client) renderTemplate(namespace, workbenchName string, apps []AppInstance) (string, error) {
+	actionConfig := helmaction.Configuration{}
+	client := helmaction.NewInstall(&actionConfig)
+	client.DryRun = true
+	client.ReleaseName = workbenchName
+	client.Namespace = namespace
+	client.ClientOnly = true
+
+	appMaps := []map[string]interface{}{}
+	for _, app := range apps {
+		appMaps = append(appMaps, appToMap(app))
 	}
 
-	configFlags.WrapConfigFn = func(cfg *rest.Config) *rest.Config {
-		return restConfig
+	vals := map[string]interface{}{
+		"namespace": namespace,
+		"name":      workbenchName,
+		"apps":      appMaps,
+	}
+	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
+		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
+		if err != nil {
+			return "", fmt.Errorf("unable to encode registries: %w", err)
+		}
+		vals["imagePullSecret"] = map[string]string{
+			"name":             "image-pull-secret",
+			"dockerConfigJson": dockerConfig,
+		}
 	}
 
-	actionConfig := new(helmaction.Configuration)
-	if err := actionConfig.Init(configFlags, namespace, "secret", debug); err != nil {
-		return nil, fmt.Errorf("error initializing Helm configuration: %w", err)
+	release, err := client.Run(c.chart, vals)
+	if err != nil {
+		return "", fmt.Errorf("error rendering Helm template: %w", err)
 	}
 
-	return actionConfig, nil
+	return release.Manifest, nil
+}
+
+func (c *client) applyManifest(manifest, namespace string) error {
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manifest)), 4096)
+	for {
+		var rawObj map[string]interface{}
+		if err := decoder.Decode(&rawObj); err != nil {
+			break
+		}
+
+		kind, ok := rawObj["kind"].(string)
+		if !ok {
+			continue
+		}
+
+		name, _ := rawObj["metadata"].(map[string]interface{})["name"].(string)
+
+		gvr, err := c.getGroupVersionFromKind(kind)
+		if err != nil {
+			return fmt.Errorf("failed to get gvr from kind - %s", err)
+		}
+
+		if kind == "Namespace" {
+			_, err := c.dynamicClient.Resource(gvr).Get(context.Background(), name, v1.GetOptions{})
+			if k8serrors.IsNotFound(err) {
+				logger.TechLog.Info(context.Background(), "Namespace missing, creating",
+					zap.String("name", name),
+					zap.String("manifest", manifest),
+				)
+
+				_, err := c.dynamicClient.Resource(gvr).Create(context.Background(), &unstructured.Unstructured{Object: rawObj}, v1.CreateOptions{})
+				if err != nil {
+					return fmt.Errorf("error creating namespace: %w", err)
+				}
+			} else if err != nil {
+				return fmt.Errorf("error retrieving namespace: %w", err)
+			}
+			continue
+		}
+
+		existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+		if k8serrors.IsNotFound(err) {
+			logger.TechLog.Info(context.Background(), "Missing resource, creating",
+				zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+				zap.String("manifest", manifest),
+			)
+
+			_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: rawObj}, v1.CreateOptions{})
+			if err != nil {
+				return fmt.Errorf("error creating resource: %w", err)
+			}
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving resource: %w", err)
+		}
+
+		spec, hasSpec := rawObj["spec"]
+		if !hasSpec {
+			continue
+		}
+
+		existingSpec, exists := existing.Object["spec"]
+		if !exists || !hasSpec {
+			return fmt.Errorf("spec field not found in resource kind: %s, name: %s", kind, name)
+		}
+
+		desiredSpecBytes, _ := json.Marshal(spec)
+		existingSpecBytes, _ := json.Marshal(existingSpec)
+
+		patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(existingSpecBytes, desiredSpecBytes, existingSpecBytes)
+		if err != nil {
+			return fmt.Errorf("error calculating patch: %w", err)
+		}
+
+		if len(patch) > 0 && string(patch) != "{}" {
+			updatedSpec := map[string]interface{}{
+				"spec": json.RawMessage(desiredSpecBytes),
+			}
+
+			patch, _ := json.Marshal(updatedSpec)
+
+			logger.TechLog.Info(context.Background(), "Resource not in the correct state, applying patch",
+				zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+				zap.String("manifest", manifest), zap.String("patch", string(patch)),
+			)
+
+			_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
+			if err != nil {
+				return fmt.Errorf("error applying patch: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *client) getGroupVersionFromKind(kindName string) (schema.GroupVersionResource, error) {
+	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(c.restConfig)
+
+	apiResourceLists, err := discoveryClient.ServerPreferredResources()
+	if err != nil {
+		return schema.GroupVersionResource{}, err
+	}
+
+	for _, apiResourceList := range apiResourceLists {
+		for _, resource := range apiResourceList.APIResources {
+			if resource.Kind == kindName {
+				group, version := getGroupVersion(apiResourceList.GroupVersion)
+				return schema.GroupVersionResource{Group: group, Version: version, Resource: resource.Name}, nil
+			}
+		}
+	}
+	return schema.GroupVersionResource{}, nil
+}
+
+func getGroupVersion(groupVersion string) (string, string) {
+	if strings.Contains(groupVersion, "/") {
+		arr := strings.Split(groupVersion, "/")
+		return arr[0], arr[1]
+	}
+	return "", groupVersion
 }
 
 func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error) {
-	helmConfig, err := c.getConfig(namespace)
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to get config: %w", err)
-	}
-
-	config, err := helmConfig.RESTClientGetter.ToRESTConfig()
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to convert to rest config: %w", err)
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to get clienset: %w", err)
-	}
-
-	pods, err := clientset.CoreV1().Pods(namespace).List(context.Background(), v1.ListOptions{
+	pods, err := c.k8sClient.CoreV1().Pods(namespace).List(context.Background(), v1.ListOptions{
 		LabelSelector: fmt.Sprintf("workbench=%s", serviceName),
 	})
 	if err != nil {
@@ -189,13 +337,13 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 	podName := pods.Items[0].Name
 	ports := []string{"0:8080"}
 
-	req := clientset.CoreV1().RESTClient().Post().
+	req := c.k8sClient.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Namespace(namespace).
 		Name(podName).
 		SubResource("portforward")
 
-	transport, upgrader, err := spdy.RoundTripperFor(config)
+	transport, upgrader, err := spdy.RoundTripperFor(c.restConfig)
 	if err != nil {
 		return 0, nil, fmt.Errorf("unable to get spdy round tripper: %w", err)
 	}
@@ -257,148 +405,92 @@ func EncodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, err
 }
 
 func (c *client) CreateWorkbench(namespace, workbenchName string) error {
-	actionConfig, err := c.getConfig(namespace)
+	manifest, err := c.renderTemplate(namespace, workbenchName, []AppInstance{})
 	if err != nil {
-		return fmt.Errorf("Unable to get config: %w", err)
+		return fmt.Errorf("error rendering template: %w", err)
 	}
-
-	install := helmaction.NewInstall(actionConfig)
-	install.CreateNamespace = true
-	install.Namespace = namespace
-	install.ReleaseName = workbenchName
-
-	vals := map[string]interface{}{
-		"name": workbenchName,
-		"apps": []map[string]string{},
-	}
-	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
-		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
-		if err != nil {
-			return fmt.Errorf("Unable to encode registries: %w", err)
-		}
-		vals["imagePullSecret"] = map[string]string{
-			"name":             "image-pull-secret",
-			"dockerConfigJson": dockerConfig,
-		}
-	}
-
-	_, err = install.Run(c.chart, vals)
+	err = c.applyManifest(manifest, namespace)
 	if err != nil {
-		return fmt.Errorf("Failed to install workbench: %w", err)
+		return fmt.Errorf("error applying manifest: %w", err)
 	}
 
 	return nil
 }
 
 func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
-	actionConfig, err := c.getConfig(namespace)
+	manifest, err := c.renderTemplate(namespace, workbenchName, apps)
 	if err != nil {
-		return fmt.Errorf("Unable to get config: %w", err)
+		return fmt.Errorf("error rendering template: %w", err)
 	}
-
-	upgrade := helmaction.NewUpgrade(actionConfig)
-	upgrade.Namespace = namespace
-	upgrade.Install = true
-	upgrade.Force = true
-
-	appMaps := []map[string]interface{}{}
-	for _, app := range apps {
-		appMaps = append(appMaps, appToMap(app))
-	}
-
-	vals := map[string]interface{}{
-		"name": workbenchName,
-		"apps": appMaps,
-	}
-	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
-		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
-		if err != nil {
-			return fmt.Errorf("Unable to encode registries: %w", err)
-		}
-		vals["imagePullSecret"] = map[string]string{
-			"name":             "image-pull-secret",
-			"dockerConfigJson": dockerConfig,
-		}
-	}
-
-	logger.TechLog.Debug(context.Background(), "updating workkbench", zap.Any("vals", vals))
-
-	_, err = upgrade.Run(workbenchName, c.chart, vals)
+	err = c.applyManifest(manifest, namespace)
 	if err != nil {
-		return fmt.Errorf("Failed to upgrade workbench: %w", err)
+		return fmt.Errorf("error applying manifest: %w", err)
 	}
 
 	return nil
 }
 
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	actionConfig, err := c.getConfig(namespace)
-	if err != nil {
-		return fmt.Errorf("Unable to get config: %w", err)
-	}
-
-	get := helmaction.NewGet(actionConfig)
-	release, err := get.Run(workbenchName)
-	if err != nil {
-		return fmt.Errorf("Failed to get release: %w", err)
-	}
-
 	app := appToMap(appInstance)
 
-	vals := release.Config
-	vals["apps"] = append(vals["apps"].([]interface{}), app)
-
-	upgrade := helmaction.NewUpgrade(actionConfig)
-	upgrade.Namespace = namespace
-	_, err = upgrade.Run(workbenchName, c.chart, vals)
+	patch := map[string]interface{}{
+		"op":    "add",
+		"path":  "/apps/-",
+		"value": app,
+	}
+	patchBytes, err := json.Marshal(patch)
 	if err != nil {
-		return fmt.Errorf("Failed to add app to workbench: %w", err)
+		return fmt.Errorf("error marshalling patch: %w", err)
+	}
+
+	gvr, err := c.getGroupVersionFromKind("Workbench")
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("error applying patch: %w", err)
 	}
 
 	return nil
 }
 
-func (c *client) DeleteApp(namespace, workbenchName, appName string) error {
-	actionConfig, err := c.getConfig(namespace)
+func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
+	app := appToMap(appInstance)
+
+	patch := map[string]interface{}{
+		"op":    "remove",
+		"path":  "/apps/-",
+		"value": app,
+	}
+	patchBytes, err := json.Marshal(patch)
 	if err != nil {
-		return fmt.Errorf("Unable to get config: %w", err)
+		return fmt.Errorf("error marshalling patch: %w", err)
 	}
 
-	get := helmaction.NewGet(actionConfig)
-	release, err := get.Run(workbenchName)
+	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
-		return fmt.Errorf("Failed to get release: %w", err)
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
 	}
 
-	vals := release.Config
-	apps := vals["apps"].([]interface{})
-	for i, app := range apps {
-		if app.(map[string]interface{})["name"] == appName {
-			vals["apps"] = append(apps[:i], apps[i+1:]...)
-			break
-		}
-	}
-
-	upgrade := helmaction.NewUpgrade(actionConfig)
-	upgrade.Namespace = namespace
-	_, err = upgrade.Run(workbenchName, c.chart, vals)
+	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
-		return fmt.Errorf("Failed to delete app from workbench: %w", err)
+		return fmt.Errorf("error applying patch: %w", err)
 	}
 
 	return nil
 }
 
 func (c *client) DeleteWorkbench(namespace, workbenchName string) error {
-	actionConfig, err := c.getConfig(namespace)
+	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
-		return fmt.Errorf("Unable to get config: %w", err)
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
 	}
 
-	uninstall := helmaction.NewUninstall(actionConfig)
-	_, err = uninstall.Run(workbenchName)
+	err = c.dynamicClient.Resource(gvr).Namespace(namespace).Delete(context.Background(), workbenchName, v1.DeleteOptions{})
 	if err != nil {
-		return fmt.Errorf("Failed to delete workbench: %w", err)
+		return fmt.Errorf("error deleting workbench: %w", err)
 	}
 
 	return nil

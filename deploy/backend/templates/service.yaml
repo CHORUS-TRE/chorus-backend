@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: service-backend-{{ include "backend.nameid" . }}
   labels:
+    app: service-backend-{{ include "backend.nameid" . }}
     version: {{ .Values.version }}
     nameid: {{ include "backend.nameid" . }}
 spec:

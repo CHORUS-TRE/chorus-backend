@@ -6,6 +6,7 @@ spec:
   imagePullSecrets: 
     - "image-pull-secret"
   apps:
+    {{- if .Values.apps }}
     {{- range .Values.apps }}
     - name: {{ .name }}
       image: {{ .image }}
@@ -13,4 +14,7 @@ spec:
       {{- if .shmSize }}
       shmSize: {{ .shmSize }}
       {{- end }}
+    {{- end }}
+    {{- else }}
+    []
     {{- end }}

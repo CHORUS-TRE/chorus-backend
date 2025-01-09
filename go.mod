@@ -1,6 +1,6 @@
 module github.com/CHORUS-TRE/chorus-backend
 
-go 1.22.5
+go 1.23.4
 
 require (
 	github.com/coocood/freecache v1.2.4
