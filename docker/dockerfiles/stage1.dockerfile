@@ -2,7 +2,7 @@ FROM registry.dip-dev.thehip.app/chorus-ubuntu:latest
 
 USER root
 
-ARG GOLANG_VERSION=1.22.5
+ARG GOLANG_VERSION=1.23.4
 RUN curl -LO https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     rm -rf /usr/local/go && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     rm go${GOLANG_VERSION}.linux-amd64.tar.gz
