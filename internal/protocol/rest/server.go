@@ -12,6 +12,7 @@ import (
 	jwt_go "github.com/golang-jwt/jwt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // InitServer initializes a HTTP-server and returns an empty request multiplexer
@@ -23,13 +24,14 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
 		runtime.WithIncomingHeaderMatcher(newHeaderMatcher(cfg)),
 		runtime.WithOutgoingHeaderMatcher(newOutgoingHeaderMatcher()),
+		runtime.WithForwardResponseOption(responseHeaderMatcher),
 	)
 
 	handler := middleware.AddLogger(logger.TechLog, mux)
 	handler = middleware.AddInstrumenting(handler)
 	handler = middleware.AddCorrelationID(handler)
 	handler = middleware.AddRoot(handler, version, started)
-	handler = middleware.AddMetrics(handler)
+	handler = middleware.AddMetrics(handler, cfg)
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
@@ -68,8 +70,19 @@ func newOutgoingHeaderMatcher() runtime.HeaderMatcherFunc {
 		switch key {
 		case "set-cookie":
 			return key, true
+		case "location":
+			return key, true
 		default:
 			return runtime.DefaultHeaderMatcher(key)
 		}
 	}
+}
+
+func responseHeaderMatcher(ctx context.Context, w http.ResponseWriter, resp protoreflect.ProtoMessage) error {
+	headers := w.Header()
+	if _, ok := headers["Location"]; ok {
+		w.WriteHeader(http.StatusFound)
+	}
+
+	return nil
 }

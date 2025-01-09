@@ -111,7 +111,42 @@ paths:
       tags:
         - AuthenticationService
       security: []
+    post:
+      summary: Authenticate redirect using Auth 2.0
+      description: This endpoint is called by the provider after auth for the backend to retrieve the user profile
+      operationId: AuthenticationService_AuthenticateOauthRedirect2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAuthenticateOauthRedirectReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AuthenticationServiceAuthenticateOauthRedirectBody'
+      tags:
+        - AuthenticationService
+      security: []
 definitions:
+  AuthenticationServiceAuthenticateOauthRedirectBody:
+    type: object
+    properties:
+      state:
+        type: string
+      sessionState:
+        type: string
+      code:
+        type: string
   chorusAuthenticateOauthRedirectReply:
     type: object
     properties:

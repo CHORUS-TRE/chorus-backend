@@ -638,6 +638,50 @@ paths:
       tags:
         - AuthenticationService
       security: []
+    post:
+      summary: Authenticate redirect using Auth 2.0
+      description: This endpoint is called by the provider after auth for the backend to retrieve the user profile
+      operationId: AuthenticationService_AuthenticateOauthRedirect2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAuthenticateOauthRedirectReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AuthenticationServiceAuthenticateOauthRedirectBody'
+      tags:
+        - AuthenticationService
+      security: []
   /api/rest/v1/health:
     get:
       summary: Get health check
@@ -1713,6 +1757,15 @@ paths:
       tags:
         - WorkspaceService
 definitions:
+  AuthenticationServiceAuthenticateOauthRedirectBody:
+    type: object
+    properties:
+      state:
+        type: string
+      sessionState:
+        type: string
+      code:
+        type: string
   UserServiceResetPasswordBody:
     type: object
   chorusApp:

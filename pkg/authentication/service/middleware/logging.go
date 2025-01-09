@@ -72,20 +72,20 @@ func (a authenticationServiceLogging) AuthenticateOAuth(ctx context.Context, id 
 	return res, err
 }
 
-func (a authenticationServiceLogging) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, error) {
+func (a authenticationServiceLogging) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, string, error) {
 	now := time.Now()
 
-	res, err := a.next.OAuthCallback(ctx, providerID, state, sessionState, code)
+	res, url, err := a.next.OAuthCallback(ctx, providerID, state, sessionState, code)
 	if err != nil {
 		a.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, err
+		return res, url, err
 	}
 
 	a.logger.Info(ctx, "request completed",
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, err
+	return res, url, err
 }

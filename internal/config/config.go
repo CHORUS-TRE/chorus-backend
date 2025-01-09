@@ -56,6 +56,15 @@ type (
 		PrivateKey     string `yaml:"private_key"`
 		PublicKeyFile  string `yaml:"public_key_file"`
 		Salt           string `yaml:"salt"`
+
+		Metrics struct {
+			Enabled        bool `yaml:"enabled"`
+			Authentication struct {
+				Enabled  bool      `yaml:"enabled"`
+				Username string    `yaml:"username"`
+				Password Sensitive `yaml:"password"`
+			} `yaml:"authentication"`
+		} `yaml:"metrics"`
 	}
 
 	// Log bundles several logging instances.
@@ -207,9 +216,9 @@ type (
 		} `yaml:"mailer_service"`
 
 		AuthenticationService struct {
-			Enabled        bool   `yaml:"enabled"`
-			DevAuthEnabled bool   `yaml:"dev_auth_enabled"`
-			Modes          []Mode `yaml:"modes"`
+			Enabled        bool            `yaml:"enabled"`
+			DevAuthEnabled bool            `yaml:"dev_auth_enabled"`
+			Modes          map[string]Mode `yaml:"modes"`
 		} `yaml:"authentication_service"`
 
 		WorkbenchService struct {
@@ -227,16 +236,19 @@ type (
 	}
 
 	OpenID struct {
-		ID                string   `yaml:"id"`
-		ChorusBackendHost string   `yaml:"chorus_backend_host"`
-		AuthorizeURL      string   `yaml:"authorize_url"`
-		TokenURL          string   `yaml:"token_url"`
-		UserInfoURL       string   `yaml:"user_info_url"`
-		LogoutURL         string   `yaml:"logout_url"`
-		UserNameClaim     string   `yaml:"user_name_claim"`
-		ClientID          string   `yaml:"client_id"`
-		ClientSecret      string   `yaml:"client_secret"`
-		Scopes            []string `yaml:"scopes"`
+		ID                        string   `yaml:"id"`
+		ChorusBackendHost         string   `yaml:"chorus_backend_host"`
+		EnableFrontendRedirect    bool     `yaml:"enable_frontend_redirect"`
+		ChorusFrontendRedirectURL string   `yaml:"chorus_frontend_redirect_url"`
+		AuthorizeURL              string   `yaml:"authorize_url"`
+		TokenURL                  string   `yaml:"token_url"`
+		UserInfoURL               string   `yaml:"user_info_url"`
+		FinalURLFormat            string   `yaml:"final_url_format"`
+		LogoutURL                 string   `yaml:"logout_url"`
+		UserNameClaim             string   `yaml:"user_name_claim"`
+		ClientID                  string   `yaml:"client_id"`
+		ClientSecret              string   `yaml:"client_secret"`
+		Scopes                    []string `yaml:"scopes"`
 	}
 
 	Job struct {

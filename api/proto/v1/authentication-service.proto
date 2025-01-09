@@ -124,6 +124,10 @@ service AuthenticationService {
     rpc AuthenticateOauthRedirect(AuthenticateOauthRedirectRequest) returns (AuthenticateOauthRedirectReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/authentication/oauth2/{id}/redirect"
+            additional_bindings {
+                post: "/api/rest/v1/authentication/oauth2/{id}/redirect"
+                body: "*"
+            }
         };
         option (public_endpoint) = true;
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

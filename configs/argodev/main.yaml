@@ -14,6 +14,12 @@ daemon:
       enabled: true
   private_key: "{{ .daemon_private_key }}"
   salt: tractor-pessimist5-recolor-dicing-endorse-recipient-puritan-bribe-spotty
+  metrics:
+    enabled: true
+    authentication:
+      enabled: true
+      username: "{{ .metrics_username }}"
+      password: "{{ .metrics_password }}"
 
 storage:
   datastores:
@@ -40,19 +46,24 @@ services:
     enabled: true
     dev_auth_enabled: true
     modes:
-      - type: internal
+      internal:
+        type: internal
         enabled: true
         public_registration_enabled: true
-      - type: openid
+      keycloak:
+        type: openid
         enabled: true
         openid:
           id: keycloak
           chorus_backend_host: "https://backend.dev.chorus-tre.ch"
+          enable_frontend_redirect: true
+          chorus_frontend_redirect_url: "https://dev.chorus-tre.ch/oauthredirect"
           authorize_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
           token_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
           user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
           logout_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?redirect_uri=https://backend.dev.chorus-tre.ch"
           user_name_claim: "preferred_username"
+          # final_url_format: "https://dev.chorus-tre.ch/login?token=%s"
           client_id: chorus
           client_secret: "<secret>"
           scopes:
