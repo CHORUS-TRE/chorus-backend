@@ -25,7 +25,7 @@ pipeline {
           IMAGE_TAG=$(echo -n ${VERSION//[\\/_]/-})
           IMAGE_TAG=$(echo "$IMAGE_TAG" | awk '{print tolower($0)}')
           RELEASE_NAME="${componentName}-$VERSION"
-          RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_]/-})
+          RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_\.]/-})
           RELEASE_NAME=$(echo "$RELEASE_NAME" | awk '{print tolower($0)}')
 
           echo -n $RELEASE_NAME > $WORKSPACE/release_name
@@ -57,7 +57,7 @@ pipeline {
           VERSION=v$MAJOR.$MINOR.$BUILD_ID
           VERSION=$(echo "$VERSION" | awk '{print tolower($0)}')
           RELEASE_NAME="${componentName}-$VERSION"
-          RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_]/-})
+          RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_\.]/-})
           RELEASE_NAME=$(echo "$RELEASE_NAME" | awk '{print tolower($0)}')
           
           echo $VERSION > $WORKSPACE/version
