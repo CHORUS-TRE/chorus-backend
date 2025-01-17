@@ -184,8 +184,10 @@ pipeline {
 
     stage('Tag & deploy') {
       when {
-        branch 'master'
-        branch 'release/v*'
+        anyOf {
+          branch 'master'
+          branch 'release/v*'
+        }
       }
       stages {
         stage('tag') {
