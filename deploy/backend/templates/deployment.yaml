@@ -31,7 +31,7 @@ spec:
           mountPath: /chorus/secrets
         command: ["/chorus/bin/chorus"]
         args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/secrets/secrets.yaml"]
-      {{- if .Values.deployment.postrgresEnabled }}
+      {{- if .Values.deployment.postgresEnabled }}
       - name: postgres
         image: postgres
         ports:

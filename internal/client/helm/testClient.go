@@ -25,7 +25,7 @@ func (c *testClient) CreateAppInstance(namespace, workbenchName string, app AppI
 	return nil
 }
 
-func (c *testClient) DeleteApp(namespace, workbenchName, appName string) error {
+func (c *testClient) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
 	return nil
 }
 
