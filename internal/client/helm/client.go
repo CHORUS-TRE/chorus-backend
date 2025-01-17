@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	helmchart "helm.sh/helm/v3/pkg/chart"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -67,11 +67,9 @@ func appToMap(app AppInstance) map[string]interface{} {
 	return m
 }
 
-func debug(format string, v ...interface{}) {
-	logger.TechLog.Debug(context.Background(), fmt.Sprintf(format, v...))
-}
-
 func NewClient(cfg config.Config) (*client, error) {
+	// clientcmd.SetLogger(&clientcmd.DefaultLogger{Verbosity: 10})
+
 	chart, err := GetHelmChart()
 	if err != nil {
 		return nil, fmt.Errorf("error loading Helm chart: %w", err)
@@ -179,21 +177,50 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
 	app := appToMap(appInstance)
 
-	patch := map[string]interface{}{
-		"op":    "add",
-		"path":  "/apps/-",
-		"value": app,
-	}
-	patchBytes, err := json.Marshal(patch)
-	if err != nil {
-		return fmt.Errorf("error marshalling patch: %w", err)
-	}
-
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
 		return fmt.Errorf("failed to get gvr from kind - %s", err)
 	}
 
+	patch := []map[string]interface{}{
+		{
+			"op":    "add",
+			"path":  "/apps/-",
+			"value": app,
+		},
+	}
+
+	resource, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), workbenchName, v1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to fetch workbench resource: %w", err)
+	}
+
+	// Check if the "apps" field exists
+	unstructuredContent := resource.UnstructuredContent()
+	spec, found, err := unstructured.NestedMap(unstructuredContent, "spec")
+	if err != nil || !found {
+		return fmt.Errorf("failed to retrieve spec: %w", err)
+	}
+
+	_, found = spec["apps"]
+	if !found {
+		fmt.Println("not found")
+		patch = []map[string]interface{}{
+			{
+				"op":    "add",
+				"path":  "/spec/apps",
+				"value": []map[string]interface{}{app},
+			},
+		}
+
+	}
+
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return fmt.Errorf("error marshalling patch: %w", err)
+	}
+
+	fmt.Println("dumping patchBytes", string(patchBytes))
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
 		return fmt.Errorf("error applying patch: %w", err)
@@ -219,6 +246,9 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 	if err != nil {
 		return fmt.Errorf("failed to get gvr from kind - %s", err)
 	}
+
+	fmt.Println("dumping patchBytes")
+	fmt.Println("patchBytes", string(patchBytes))
 
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {

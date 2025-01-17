@@ -42,6 +42,10 @@ func (c *client) renderTemplate(namespace, releaseName string, vals map[string]i
 }
 
 func (c *client) applyManifest(manifest, namespace string) error {
+	logger.TechLog.Debug(context.Background(), "Applying manifest",
+		zap.String("namespace", namespace), zap.String("manifest", manifest),
+	)
+
 	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manifest)), 4096)
 	for {
 		var rawObj map[string]interface{}

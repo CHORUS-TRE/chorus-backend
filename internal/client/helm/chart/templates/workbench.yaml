@@ -9,7 +9,10 @@ spec:
     {{- if .Values.apps }}
     {{- range .Values.apps }}
     - name: {{ .name }}
-      image: {{ .image }}
+      image: 
+        registry: {{ .image.registry }}
+        repository: {{ .image.repository }}
+        tag: {{ .image.tag }}
       version: {{ .version }}
       {{- if .shmSize }}
       shmSize: {{ .shmSize }}
