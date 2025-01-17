@@ -182,9 +182,10 @@ pipeline {
       }
     }
 
-    stage('Master') {
+    stage('Tag & deploy') {
       when {
         branch 'master'
+        branch 'release/v*'
       }
       stages {
         stage('tag') {
@@ -203,7 +204,10 @@ pipeline {
             }
           }
         }
-        stage('Deploy') {
+        stage('Deploy master') {
+          when {
+            branch 'master'
+          }
           steps {
             container(name: 'chorus-ubuntu', shell: '/bin/bash') {
               dir('chorus-dev-ops') {
