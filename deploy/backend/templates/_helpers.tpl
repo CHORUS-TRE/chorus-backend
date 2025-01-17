@@ -35,7 +35,7 @@
         {{- if $file }}
             {{- printf "%s" (.Files.Get "files/main.yaml") }}
         {{- else }}
-            {{- printf "%s" ((.Values.main).yaml) }}
+            {{- printf "%s" .Values.main }}
         {{- end }}
     {{- end }}
 {{- end -}}
