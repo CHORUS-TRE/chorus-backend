@@ -56,25 +56,19 @@ pipeline {
           MINOR=$(echo $stripped | cut -d'.' -f2)
           VERSION=v$MAJOR.$MINOR.$BUILD_ID
           VERSION=$(echo "$VERSION" | awk '{print tolower($0)}')
-          IMAGE_TAG=$(echo -n ${VERSION//[\\/_]/-})
-          IMAGE_TAG=$(echo "$IMAGE_TAG" | awk '{print tolower($0)}')
           RELEASE_NAME="${componentName}-$VERSION"
           RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_\\.]/-})
           RELEASE_NAME=$(echo "$RELEASE_NAME" | awk '{print tolower($0)}')
           
+          echo $VERSION > $WORKSPACE/version
+          echo ${VERSION//\\//-} > $WORKSPACE/image_tag
           echo -n $RELEASE_NAME > $WORKSPACE/release_name
-          echo -n $VERSION > $WORKSPACE/version
-          echo -n $IMAGE_TAG > $WORKSPACE/image_tag
-          
-          echo "VERSION $VERSION"
-          echo "IMAGE_TAG $IMAGE_TAG"
-          echo "JOB_NAME $JOB_NAME"
-          echo "RELEASE_NAME $RELEASE_NAME"
+
+          echo $VERSION
         '''
         script {
           env.VERSION = readFile("$WORKSPACE/version")
           env.IMAGE_TAG = readFile("$WORKSPACE/image_tag")
-          env.RELEASE_NAME = readFile("$WORKSPACE/release_name")
         }
       }
     }
@@ -182,12 +176,9 @@ pipeline {
       }
     }
 
-    stage('Tag & deploy') {
+    stage('Master') {
       when {
-        anyOf {
-          branch 'master'
-          branch 'release/v*'
-        }
+        branch 'master'
       }
       stages {
         stage('tag') {
@@ -206,10 +197,7 @@ pipeline {
             }
           }
         }
-        stage('Deploy master') {
-          when {
-            branch 'master'
-          }
+        stage('Deploy') {
           steps {
             container(name: 'chorus-ubuntu', shell: '/bin/bash') {
               dir('chorus-dev-ops') {

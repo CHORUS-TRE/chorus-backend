@@ -4,6 +4,7 @@ kind: Ingress
 metadata:
   name: ingress-backend-{{ include "backend.nameid" . }}
   annotations:
+    kubernetes.io/ingress.class: "public"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: 20g
