@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
@@ -65,7 +65,7 @@ type proxy struct {
 type WorkbenchService struct {
 	cfg              config.Config
 	store            WorkbenchStore
-	client           helm.HelmClienter
+	client           k8s.K8sClienter
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
 	proxyHitMutex    sync.Mutex
@@ -73,7 +73,7 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:              cfg,
 		store:            store,
@@ -111,9 +111,9 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			continue
 		}
-		clientApps := []helm.AppInstance{}
+		clientApps := []k8s.AppInstance{}
 		for _, app := range apps {
-			clientApps = append(clientApps, helm.AppInstance{
+			clientApps = append(clientApps, k8s.AppInstance{
 				AppName:     utils.ToString(app.AppName),
 				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
 				AppImage:    utils.ToString(app.AppDockerImageName),

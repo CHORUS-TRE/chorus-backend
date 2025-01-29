@@ -23,7 +23,7 @@ func ProvideWorkspace() service.Workspaceer {
 	workspaceOnce.Do(func() {
 		workspace = service.NewWorkspaceService(
 			ProvideWorkspaceStore(),
-			ProvideHelmClient(),
+			ProvideK8sClient(),
 		)
 		workspace = service_mw.Logging(logger.BizLog)(workspace)
 		workspace = service_mw.Validation(ProvideValidator())(workspace)
