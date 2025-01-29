@@ -117,10 +117,10 @@ type (
 	}
 
 	Clients struct {
-		K8sClient K8sClient `yaml:"k8s_client,omitempty"`
+		HelmClient HelmClient `yaml:"helm_client,omitempty"`
 	}
 
-	K8sClient struct {
+	HelmClient struct {
 		KubeConfig string `yaml:"kube_config,omitempty"` // either provide a kubeconfig
 
 		Token     string `yaml:"token,omitempty"`      // either a service account token

@@ -75,9 +75,6 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-serviceMonitor:
-  enabled: false
-
 autoscaling:
   enabled: false
   minReplicas: 1

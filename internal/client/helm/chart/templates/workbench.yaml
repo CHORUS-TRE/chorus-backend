@@ -6,18 +6,11 @@ spec:
   imagePullSecrets: 
     - "image-pull-secret"
   apps:
-    {{- if .Values.apps }}
     {{- range .Values.apps }}
     - name: {{ .name }}
-      image: 
-        registry: {{ .image.registry }}
-        repository: {{ .image.repository }}
-        tag: {{ .image.tag }}
+      image: {{ .image }}
       version: {{ .version }}
       {{- if .shmSize }}
       shmSize: {{ .shmSize }}
       {{- end }}
-    {{- end }}
-    {{- else }}
-    []
     {{- end }}

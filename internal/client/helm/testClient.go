@@ -1,6 +1,6 @@
-package k8s
+package helm
 
-var _ K8sClienter = &testClient{}
+var _ HelmClienter = &testClient{}
 
 type testClient struct{}
 
@@ -25,7 +25,7 @@ func (c *testClient) CreateAppInstance(namespace, workbenchName string, app AppI
 	return nil
 }
 
-func (c *testClient) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
+func (c *testClient) DeleteApp(namespace, workbenchName, appName string) error {
 	return nil
 }
 

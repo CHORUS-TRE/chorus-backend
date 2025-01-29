@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -28,11 +28,11 @@ type AppInstanceStore interface {
 
 type AppInstanceService struct {
 	store  AppInstanceStore
-	client k8s.K8sClienter
+	client helm.HelmClienter
 	apper  service.Apper
 }
 
-func NewAppInstanceService(store AppInstanceStore, client k8s.K8sClienter, apper service.Apper) *AppInstanceService {
+func NewAppInstanceService(store AppInstanceStore, client helm.HelmClienter, apper service.Apper) *AppInstanceService {
 	return &AppInstanceService{
 		store:  store,
 		client: client,
@@ -88,7 +88,7 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
-	clientApp := k8s.AppInstance{
+	clientApp := helm.AppInstance{
 		AppName:     app.Name,
 		AppRegistry: app.DockerImageRegistry,
 		AppImage:    app.DockerImageName,
