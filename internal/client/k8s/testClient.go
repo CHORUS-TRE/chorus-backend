@@ -1,6 +1,6 @@
-package helm
+package k8s
 
-var _ HelmClienter = &testClient{}
+var _ K8sClienter = &testClient{}
 
 type testClient struct{}
 

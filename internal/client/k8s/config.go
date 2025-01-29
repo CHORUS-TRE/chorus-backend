@@ -1,4 +1,4 @@
-package helm
+package k8s
 
 import (
 	"errors"
@@ -10,10 +10,10 @@ import (
 )
 
 func getK8sConfig(cfg config.Config) (*rest.Config, error) {
-	if cfg.Clients.HelmClient.KubeConfig != "" {
+	if cfg.Clients.K8sClient.KubeConfig != "" {
 		return getK8sConfigFromKubeConfig(cfg)
 	}
-	if cfg.Clients.HelmClient.Token != "" {
+	if cfg.Clients.K8sClient.Token != "" {
 		return getK8sConfigFromServiceAccount(cfg)
 	}
 
@@ -21,7 +21,7 @@ func getK8sConfig(cfg config.Config) (*rest.Config, error) {
 }
 
 func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
-	config, err := clientcmd.Load(([]byte)(cfg.Clients.HelmClient.KubeConfig))
+	config, err := clientcmd.Load(([]byte)(cfg.Clients.K8sClient.KubeConfig))
 	if err != nil {
 		return nil, fmt.Errorf("error loading kubeconfig: %w", err)
 	}
@@ -38,9 +38,9 @@ func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
 }
 
 func getK8sConfigFromServiceAccount(cfg config.Config) (*rest.Config, error) {
-	token := cfg.Clients.HelmClient.Token
-	caCert := cfg.Clients.HelmClient.CA
-	apiServer := cfg.Clients.HelmClient.APIServer
+	token := cfg.Clients.K8sClient.Token
+	caCert := cfg.Clients.K8sClient.CA
+	apiServer := cfg.Clients.K8sClient.APIServer
 
 	restConfig := &rest.Config{
 		Host:        apiServer,

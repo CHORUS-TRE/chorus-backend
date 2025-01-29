@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
@@ -27,10 +27,10 @@ type WorkspaceStore interface {
 
 type WorkspaceService struct {
 	store  WorkspaceStore
-	client helm.HelmClienter
+	client k8s.K8sClienter
 }
 
-func NewWorkspaceService(store WorkspaceStore, client helm.HelmClienter) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter) *WorkspaceService {
 	return &WorkspaceService{
 		store:  store,
 		client: client,
@@ -84,7 +84,7 @@ func (u *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		return 0, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
 	}
 
-	// should we do something as we can lazily create namespace with helm if needed..?
+	// should we do something as we can lazily create namespace with k8s if needed..?
 
 	// err = u.client.CreateWorkbench(u.getWorkbenchName(id), u.getWorkbenchName(id))
 	// if err != nil {

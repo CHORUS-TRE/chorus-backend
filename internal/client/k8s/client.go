@@ -1,4 +1,4 @@
-package helm
+package k8s
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-type HelmClienter interface {
+type K8sClienter interface {
 	CreateWorkbench(namespace, workbenchName string) error
 	UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
@@ -111,8 +111,8 @@ func (c *client) renderWorkbenchTemplate(namespace, workbenchName string, apps [
 		"name":      workbenchName,
 		"apps":      appMaps,
 	}
-	if len(c.cfg.Clients.HelmClient.ImagePullSecrets) != 0 {
-		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.HelmClient.ImagePullSecrets)
+	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) != 0 {
+		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
 		if err != nil {
 			return "", fmt.Errorf("unable to encode registries: %w", err)
 		}
