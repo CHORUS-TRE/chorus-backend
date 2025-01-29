@@ -23,7 +23,7 @@ func ProvideAppInstance() service.AppInstanceer {
 	appInstanceOnce.Do(func() {
 		appInstance = service.NewAppInstanceService(
 			ProvideAppInstanceStore(),
-			ProvideHelmClient(),
+			ProvideK8sClient(),
 			ProvideAppService(),
 		)
 		appInstance = service_mw.Logging(logger.BizLog)(appInstance)
