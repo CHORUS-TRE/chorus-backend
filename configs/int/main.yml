@@ -9,6 +9,7 @@ daemon:
   jwt:
     secret: "{{ .jwt_secret }}"
     expiration_time: 259200 # 72h
+    max_refresh_time: 15552000 # 180d
   jobs:
     job_status_gc:
       enabled: true

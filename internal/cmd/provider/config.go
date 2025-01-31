@@ -70,6 +70,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.grpc.max_send_msg_size", 104857600) // 100 MiB
 	v.SetDefault("daemon.tenant_id", 9999999)
 	v.SetDefault("daemon.jwt.expiration_time", 10*time.Minute)
+	v.SetDefault("daemon.jwt.max_refresh_time", 30*24*time.Hour)
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 	v.SetDefault("daemon.pprof_enabled", false)
 	v.SetDefault("daemon.jobs.job_status_gc.enabled", true)

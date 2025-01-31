@@ -11,19 +11,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type authorization struct {
+type Authorization struct {
 	logger          *logger.ContextLogger
 	authorizedRoles []string
 }
 
-func NewAuthorization(logger *logger.ContextLogger, authorizedRoles []string) authorization {
-	return authorization{
+func NewAuthorization(logger *logger.ContextLogger, authorizedRoles []string) Authorization {
+	return Authorization{
 		logger,
 		authorizedRoles,
 	}
 }
 
-func (c authorization) IsAuthenticatedAndAuthorized(ctx context.Context) error {
+func (c Authorization) IsAuthenticatedAndAuthorized(ctx context.Context) error {
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")
@@ -35,7 +35,7 @@ func (c authorization) IsAuthenticatedAndAuthorized(ctx context.Context) error {
 	return nil
 }
 
-func (c authorization) IsAuthenticatedAndAuthorizedWithRoles(ctx context.Context, roles []string) error {
+func (c Authorization) IsAuthenticatedAndAuthorizedWithRoles(ctx context.Context, roles []string) error {
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")
@@ -47,7 +47,7 @@ func (c authorization) IsAuthenticatedAndAuthorizedWithRoles(ctx context.Context
 	return nil
 }
 
-func (c authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims) error {
+func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims) error {
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
@@ -55,7 +55,7 @@ func (c authorization) permissionDenied(ctx context.Context, claims *jwt_model.J
 	return status.Errorf(codes.PermissionDenied, "authorized roles: %v", c.authorizedRoles)
 }
 
-func (c authorization) isAuthorized(roles []string) bool {
+func (c Authorization) isAuthorized(roles []string) bool {
 	for _, r := range roles {
 		for _, authorizedRole := range c.authorizedRoles {
 			if r == authorizedRole {

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 
 	"go.uber.org/zap"
 )

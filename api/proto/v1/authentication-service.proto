@@ -48,6 +48,10 @@ message GetAuthenticationModesRequest {
     
 }
 
+message RefreshTokenRequest {
+    
+}
+
 message GetAuthenticationModesReply {
     repeated AuthenticationMode result = 1;
 }
@@ -105,6 +109,19 @@ service AuthenticationService {
             description: "This endpoint authenticates a user";
             tags: "AuthenticationService";
             security: {}
+        };
+    };
+    
+    rpc RefreshToken(RefreshTokenRequest) returns (AuthenticationReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/authentication/refresh-token"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Refresh token";
+            description: "This endpoint refreshes a user token";
+            tags: "AuthenticationService";
+            
         };
     };
 

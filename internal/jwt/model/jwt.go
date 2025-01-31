@@ -80,6 +80,14 @@ func ExtractUserID(ctx context.Context) (uint64, error) {
 	return claims.ID, nil
 }
 
+func ExtractIssuedAt(ctx context.Context) (int64, error) {
+	claims, ok := ctx.Value(JWTClaimsContextKey).(*JWTClaims)
+	if !ok {
+		return 0, errors.New("malformed jwt-token")
+	}
+	return claims.StandardClaims.IssuedAt, nil
+}
+
 func (c *JWTClaims) Valid() error {
 	if err := c.StandardClaims.Valid(); err != nil {
 		c.logger.Error(c.ctx, "claims are not valid",
