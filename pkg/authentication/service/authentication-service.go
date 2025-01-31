@@ -325,7 +325,6 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	return jwtToken, url, nil
 }
 
-// refresh token
 func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
