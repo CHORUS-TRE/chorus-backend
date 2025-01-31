@@ -129,6 +129,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 		userer:              userer,
 		signingKey:          cfg.Daemon.JWT.Secret.PlainText(),
 		jwtExpirationTime:   cfg.Daemon.JWT.ExpirationTime,
+		maxRefreshTime:      cfg.Daemon.JWT.MaxRefreshTime,
 		daemonEncryptionKey: daemonEncryptionKey,
 		store:               store,
 		oauthConfigs:        oauthConfigs,
@@ -350,6 +351,8 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, error
 	}
 
 	elapsed := time.Since(time.Unix(issuedAt, 0))
+	fmt.Println("elapsed", elapsed)
+	fmt.Println("maxRefreshTime", a.maxRefreshTime)
 	if elapsed > a.maxRefreshTime {
 		return "", status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
 	}
