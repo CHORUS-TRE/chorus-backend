@@ -9,14 +9,14 @@ import (
 )
 
 type notificationControllerAuthorization struct {
-	authorization
+	Authorization
 	next chorus.NotificationServiceServer
 }
 
 func NotificationAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.NotificationServiceServer) chorus.NotificationServiceServer {
 	return func(next chorus.NotificationServiceServer) chorus.NotificationServiceServer {
 		return &notificationControllerAuthorization{
-			authorization: authorization{
+			Authorization: Authorization{
 				logger:          logger,
 				authorizedRoles: authorizedRoles,
 			},

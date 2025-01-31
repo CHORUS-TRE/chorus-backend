@@ -9,17 +9,24 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
 // AuthenticationController is the authentication service controller handler.
 type AuthenticationController struct {
-	authenticator service.Authenticator
+	authenticator             service.Authenticator
+	refreshTokenAuthorization middleware.Authorization
 }
 
 // NewAuthenticationController returns a fresh authentication service controller instance.
 func NewAuthenticationController(authenticator service.Authenticator) AuthenticationController {
-	return AuthenticationController{authenticator: authenticator}
+	return AuthenticationController{
+		authenticator:             authenticator,
+		refreshTokenAuthorization: middleware.NewAuthorization(logger.SecLog, []string{user_model.RoleAuthenticated.String()}),
+	}
 }
 
 func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, req *chorus.GetAuthenticationModesRequest) (*chorus.GetAuthenticationModesReply, error) {
@@ -67,6 +74,25 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 		default:
 			return nil, status.Errorf(codes.Unauthenticated, "%v", err)
 		}
+	}
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/")
+	if err := grpc.SetHeader(ctx, header); err != nil {
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
+
+	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
+}
+
+func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.RefreshTokenRequest) (*chorus.AuthenticationReply, error) {
+	err := a.refreshTokenAuthorization.IsAuthenticatedAndAuthorized(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := a.authenticator.RefreshToken(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "%v", err)
 	}
 
 	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/")

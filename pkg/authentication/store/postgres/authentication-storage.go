@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/model"
+	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -20,13 +20,13 @@ func NewAuthenticationStorage(db *sqlx.DB) *AuthenticationStorage {
 }
 
 // GetActiveUser fetches a user entry from the database that matches the provided username.
-func (s *AuthenticationStorage) GetActiveUser(ctx context.Context, username, source string) (*model.User, error) {
+func (s *AuthenticationStorage) GetActiveUser(ctx context.Context, username, source string) (*userModel.User, error) {
 	const query = `
 SELECT id, tenantid, firstname, lastname, username, source, password, totpsecret, totpenabled
 FROM users
 WHERE username = $1 AND source = $2 AND status = 'active';
 `
-	var u model.User
+	var u userModel.User
 	if err := s.db.GetContext(ctx, &u, query, username, source); err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ WHERE username = $1 AND source = $2 AND status = 'active';
 }
 
 // getRoles fetches all the roles of a given user.
-func (s *AuthenticationStorage) getRoles(ctx context.Context, userID uint64) ([]string, error) {
+func (s *AuthenticationStorage) getRoles(ctx context.Context, userID uint64) ([]userModel.UserRole, error) {
 	const query = `
 SELECT name
 FROM (
@@ -51,7 +51,7 @@ FROM (
   WHERE user_role.userid = $1
 ) AS subquery;
 `
-	var roles []string
+	var roles []userModel.UserRole
 	if err := s.db.SelectContext(ctx, &roles, query, userID); err != nil {
 		return nil, err
 	}

@@ -137,6 +137,28 @@ paths:
       tags:
         - AuthenticationService
       security: []
+  /api/rest/v1/authentication/refresh-token:
+    post:
+      summary: Refresh token
+      description: This endpoint refreshes a user token
+      operationId: AuthenticationService_RefreshToken
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAuthenticationReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusRefreshTokenRequest'
+      tags:
+        - AuthenticationService
 definitions:
   AuthenticationServiceAuthenticateOauthRedirectBody:
     type: object
@@ -213,6 +235,8 @@ definitions:
     properties:
       id:
         type: string
+  chorusRefreshTokenRequest:
+    type: object
   protobufAny:
     type: object
     properties:

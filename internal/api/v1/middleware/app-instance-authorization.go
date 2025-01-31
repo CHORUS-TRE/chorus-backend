@@ -8,14 +8,14 @@ import (
 )
 
 type appInstanceControllerAuthorization struct {
-	authorization
+	Authorization
 	next chorus.AppInstanceServiceServer
 }
 
 func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 	return func(next chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 		return &appInstanceControllerAuthorization{
-			authorization: authorization{
+			Authorization: Authorization{
 				logger:          logger,
 				authorizedRoles: authorizedRoles,
 			},
