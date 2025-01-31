@@ -53,9 +53,9 @@ type AuthenticationStore interface {
 type AuthenticationService struct {
 	cfg                 config.Config
 	userer              Userer
-	signingKey          string // signingKey is the secret key with which JWT-tokens are signed.
-	jwtExpirationTime   int    // jwtExpirationTime is the number of minutes until a JWT-token expires.
-	maxRefreshTime      int
+	signingKey          string        // signingKey is the secret key with which JWT-tokens are signed.
+	jwtExpirationTime   time.Duration // jwtExpirationTime is the number of minutes until a JWT-token expires.
+	maxRefreshTime      time.Duration
 	daemonEncryptionKey *crypto.Secret
 	store               AuthenticationStore // store is the database handler object.
 	oauthConfigs        map[string]*oauth2.Config
@@ -129,6 +129,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 		userer:              userer,
 		signingKey:          cfg.Daemon.JWT.Secret.PlainText(),
 		jwtExpirationTime:   cfg.Daemon.JWT.ExpirationTime,
+		maxRefreshTime:      cfg.Daemon.JWT.MaxRefreshTime,
 		daemonEncryptionKey: daemonEncryptionKey,
 		store:               store,
 		oauthConfigs:        oauthConfigs,
@@ -219,7 +220,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 		}
 	}
 
-	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, 0)
+	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now())
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
 		return "", &ErrUnauthorized{}
@@ -310,7 +311,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		}
 	}
 
-	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, 0)
+	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now())
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
 		return "", "", &ErrUnauthorized{}
@@ -349,12 +350,14 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, error
 		return "", status.Error(codes.InvalidArgument, "could not extract issued at from jwt-token")
 	}
 
-	elapsed := time.Now().Unix() - issuedAt
-	if elapsed > int64(a.maxRefreshTime) {
+	elapsed := time.Since(time.Unix(issuedAt, 0))
+	fmt.Println("elapsed", elapsed)
+	fmt.Println("maxRefreshTime", a.maxRefreshTime)
+	if elapsed > a.maxRefreshTime {
 		return "", status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
 	}
 
-	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, issuedAt)
+	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0))
 	if err != nil {
 		return "", status.Error(codes.Internal, "could not create jwt-token")
 	}
@@ -381,13 +384,13 @@ func verifyPassword(hash, password string) bool {
 }
 
 // createJWTToken generates a fresh JWT token for a given user.
-func createJWTToken(signingKey string, user *userModel.User, expirationTime int, issuedAt int64) (string, error) {
+func createJWTToken(signingKey string, user *userModel.User, expirationTime time.Duration, issuedAt time.Time) (string, error) {
 	roles := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
 		roles[i] = string(r)
 	}
-	if issuedAt == 0 {
-		issuedAt = jwt.TimeFunc().Unix()
+	if issuedAt.IsZero() {
+		issuedAt = time.Now()
 	}
 	claims := CustomClaims{
 		ID:        user.ID,
@@ -398,8 +401,8 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime int,
 		Username:  user.Username,
 		Source:    user.Source,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * time.Duration(expirationTime)).Unix(),
-			IssuedAt:  issuedAt,
+			ExpiresAt: time.Now().Add(expirationTime).Unix(),
+			IssuedAt:  issuedAt.Unix(),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
