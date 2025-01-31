@@ -8,8 +8,8 @@ daemon:
       access_control_max_age: "600"
   jwt:
     secret: eREH6oV#&6bX&zadL%
-    expiration_time: 259200 # 72h
-    max_refresh_time: 15552000 # 180d
+    expiration_time: 72h
+    max_refresh_time: 4320h #180d
   jobs:
     job_status_gc:
       enabled: true

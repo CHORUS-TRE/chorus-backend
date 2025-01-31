@@ -39,9 +39,9 @@ type (
 		} `yaml:"http"`
 
 		JWT struct {
-			Secret         Sensitive `yaml:"secret"`
-			ExpirationTime int       `yaml:"expiration_time"`
-			MaxRefreshTime int       `yaml:"max_refresh_time"`
+			Secret         Sensitive     `yaml:"secret"`
+			ExpirationTime time.Duration `yaml:"expiration_time"`
+			MaxRefreshTime time.Duration `yaml:"max_refresh_time"`
 		} `yaml:"jwt"`
 
 		TOTP struct {
