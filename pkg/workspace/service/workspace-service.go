@@ -48,7 +48,7 @@ func (u *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, 
 func (u *WorkspaceService) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {
 	workspace, err := u.store.GetWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workspace %v: %w", workspace.ID, err)
+		return nil, fmt.Errorf("unable to get workspace %v: %w", workspaceID, err)
 	}
 
 	return workspace, nil
