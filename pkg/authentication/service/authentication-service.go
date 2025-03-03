@@ -30,11 +30,11 @@ import (
 
 // Authenticator defines the authentication service API.
 type Authenticator interface {
-	Authenticate(ctx context.Context, username, password, totp string) (string, error)
-	RefreshToken(ctx context.Context) (string, error)
+	Authenticate(ctx context.Context, username, password, totp string) (string, time.Duration, error)
+	RefreshToken(ctx context.Context) (string, time.Duration, error)
 	GetAuthenticationModes() []model.AuthenticationMode
 	AuthenticateOAuth(ctx context.Context, providerID string) (string, error)
-	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, string, error)
+	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error)
 }
 
 type Userer interface {
@@ -162,35 +162,35 @@ func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationM
 
 // Authenticate verifies whether the user is activated and the provided password is
 // correct. It then returns a fresh JWT token for further API access.
-func (a *AuthenticationService) Authenticate(ctx context.Context, username, password, totp string) (string, error) {
+func (a *AuthenticationService) Authenticate(ctx context.Context, username, password, totp string) (string, time.Duration, error) {
 	user, err := a.store.GetActiveUser(ctx, username, "internal")
 	if err != nil {
 		logger.SecLog.Info(ctx, "user not found", zap.String("username", username))
-		return "", &ErrUnauthorized{}
+		return "", 0, &ErrUnauthorized{}
 	}
 	if user == nil {
-		return "", &ErrUnauthorized{}
+		return "", 0, &ErrUnauthorized{}
 	}
 
 	if user.Source != "internal" {
 		logger.SecLog.Info(ctx, "user from external source attempted internal password authentication", zap.String("username", username), zap.String("source", user.Source))
-		return "", &ErrUnauthorized{}
+		return "", 0, &ErrUnauthorized{}
 	}
 
 	if !verifyPassword(user.Password, password) {
 		logger.SecLog.Info(ctx, "user has entered an invalid password", zap.String("username", username))
-		return "", &ErrUnauthorized{}
+		return "", 0, &ErrUnauthorized{}
 	}
 
 	if user.TotpEnabled && totp == "" {
-		return "", &Err2FARequired{}
+		return "", 0, &Err2FARequired{}
 	}
 
 	if user.TotpEnabled && user.TotpSecret != nil {
 		isTotpValid, err := crypto.VerifyTotp(totp, *user.TotpSecret, a.daemonEncryptionKey)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to verify totp", zap.Error(err))
-			return "", &ErrUnauthorized{}
+			return "", 0, &ErrUnauthorized{}
 		}
 		if !isTotpValid {
 			logger.SecLog.Info(ctx, "user has entered an invalid totp code", zap.String("username", username))
@@ -198,16 +198,16 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 			codes, err := a.userer.GetTotpRecoveryCodes(ctx, user.TenantID, user.ID)
 			if err != nil {
 				logger.TechLog.Error(ctx, "unable to retrieve TOTP recovery code", zap.Error(err), zap.String("username", username))
-				return "", &ErrUnauthorized{}
+				return "", 0, &ErrUnauthorized{}
 			}
 			code, err := crypto.VerifyTotpRecoveryCode(ctx, totp, codes, a.daemonEncryptionKey)
 			if err != nil {
 				logger.TechLog.Error(ctx, "unable to verify totp recovery code", zap.Error(err))
-				return "", &ErrUnauthorized{}
+				return "", 0, &ErrUnauthorized{}
 			}
 			if code == nil {
 				logger.SecLog.Info(ctx, "user has entered an invalid recovery code", zap.String("username", username))
-				return "", &ErrUnauthorized{}
+				return "", 0, &ErrUnauthorized{}
 			}
 
 			if err := a.userer.DeleteTotpRecoveryCode(ctx, &userService.DeleteTotpRecoveryCodeReq{
@@ -215,7 +215,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 				CodeID:   code.ID,
 			}); err != nil {
 				logger.TechLog.Error(ctx, "unable to delete used recovery code", zap.Error(err), zap.String("username", username), zap.Uint64("code", code.ID))
-				return "", &ErrUnauthorized{}
+				return "", 0, &ErrUnauthorized{}
 			}
 		}
 	}
@@ -223,9 +223,9 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now())
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", &ErrUnauthorized{}
+		return "", 0, &ErrUnauthorized{}
 	}
-	return token, nil
+	return token, a.jwtExpirationTime, nil
 }
 
 func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerID string) (string, error) {
@@ -237,10 +237,10 @@ func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerI
 	return oauthConfig.AuthCodeURL(uuid.Next()), nil
 }
 
-func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, string, error) {
+func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error) {
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
-		return "", "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
+		return "", 0, "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
 	}
 
 	// Verify state (for CSRF protection) - usually, you'd compare this with a value stored in the user's session
@@ -250,24 +250,24 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 	token, err := oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to exchange token: %w", err)
+		return "", 0, "", fmt.Errorf("failed to exchange token: %w", err)
 	}
 
 	client := oauthConfig.Client(ctx, token)
 
 	mode, err := a.getAuthMode(providerID)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to get mode: %w", err)
+		return "", 0, "", fmt.Errorf("unable to get mode: %w", err)
 	}
 
 	userInfoResp, err := client.Get(mode.OpenID.UserInfoURL)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to get user info: %w", err)
+		return "", 0, "", fmt.Errorf("failed to get user info: %w", err)
 	}
 	defer userInfoResp.Body.Close()
 
 	if userInfoResp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
+		return "", 0, "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
 	}
 
 	type OAuthUser struct {
@@ -280,13 +280,13 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	// var userInfo map[string]string
 	var userInfo OAuthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
-		return "", "", fmt.Errorf("failed to decode user info response: %w", err)
+		return "", 0, "", fmt.Errorf("failed to decode user info response: %w", err)
 	}
 
 	user, err := a.store.GetActiveUser(ctx, userInfo.Username, providerID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			return "", "", nil
+			return "", 0, "", nil
 		}
 
 		createUser := &userService.UserReq{
@@ -302,19 +302,19 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 		_, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
 		if err != nil {
-			return "", "", fmt.Errorf("failed to create user: %w", err)
+			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
 		}
 
 		user, err = a.store.GetActiveUser(ctx, userInfo.Username, providerID)
 		if err != nil {
-			return "", "", fmt.Errorf("failed to create user: %w", err)
+			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
 		}
 	}
 
 	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now())
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", "", &ErrUnauthorized{}
+		return "", 0, "", &ErrUnauthorized{}
 	}
 
 	url := ""
@@ -323,18 +323,18 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		url = fmt.Sprintf(mode.OpenID.FinalURLFormat, jwtToken)
 	}
 
-	return jwtToken, url, nil
+	return jwtToken, a.jwtExpirationTime, url, nil
 }
 
-func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, error) {
+func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.Duration, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return "", 0, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+		return "", 0, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
 	}
 
 	user, err := a.userer.GetUser(ctx, service.GetUserReq{
@@ -342,27 +342,27 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, error
 		ID:       userID,
 	})
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not get user")
+		return "", 0, status.Error(codes.InvalidArgument, "could not get user")
 	}
 
 	issuedAt, err := jwt_model.ExtractIssuedAt(ctx)
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not extract issued at from jwt-token")
+		return "", 0, status.Error(codes.InvalidArgument, "could not extract issued at from jwt-token")
 	}
 
 	elapsed := time.Since(time.Unix(issuedAt, 0))
 	fmt.Println("elapsed", elapsed)
 	fmt.Println("maxRefreshTime", a.maxRefreshTime)
 	if elapsed > a.maxRefreshTime {
-		return "", status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
+		return "", 0, status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
 	}
 
 	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0))
 	if err != nil {
-		return "", status.Error(codes.Internal, "could not create jwt-token")
+		return "", 0, status.Error(codes.Internal, "could not create jwt-token")
 	}
 
-	return token, nil
+	return token, a.jwtExpirationTime, nil
 }
 
 func (a *AuthenticationService) getAuthMode(id string) (*config.Mode, error) {
