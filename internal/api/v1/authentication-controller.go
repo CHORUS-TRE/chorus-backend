@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -66,7 +67,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials: %v", "empty request")
 	}
 
-	res, err := a.authenticator.Authenticate(ctx, req.Username, req.Password, req.Totp)
+	res, t, err := a.authenticator.Authenticate(ctx, req.Username, req.Password, req.Totp)
 	if err != nil {
 		switch err {
 		case &service.Err2FARequired{}:
@@ -76,7 +77,10 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 		}
 	}
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/")
+	expiresDate := time.Now().Add(t)
+	expires := expiresDate.Format(time.RFC1123)
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/; SameSite=None; Expires="+expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -90,12 +94,15 @@ func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.
 		return nil, err
 	}
 
-	res, err := a.authenticator.RefreshToken(ctx)
+	res, t, err := a.authenticator.RefreshToken(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "%v", err)
 	}
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/")
+	expiresDate := time.Now().Add(t)
+	expires := expiresDate.Format(time.RFC1123)
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/; SameSite=None; Expires="+expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -121,12 +128,15 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
 	}
 
-	token, url, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
+	token, t, url, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/")
+	expiresDate := time.Now().Add(t)
+	expires := expiresDate.Format(time.RFC1123)
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; SameSite=None; Expires="+expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
