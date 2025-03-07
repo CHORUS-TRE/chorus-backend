@@ -1,0 +1,12 @@
+ingress:
+  enabled: true
+  host: "backend.dev.chorus-tre.ch"
+
+service:
+  port: 5000
+
+deployment:
+  postgresEnabled: false
+  serviceAccountName: "backend-service-account"
+
+image: registry.dip-dev.thehip.app/chorus-cicd-chorus:master
