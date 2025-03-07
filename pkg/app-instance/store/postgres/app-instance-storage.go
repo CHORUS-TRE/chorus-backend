@@ -59,7 +59,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
 
 	var id uint64
 	err := s.db.GetContext(ctx, &id, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, appInstance.Status,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, appInstance.Status, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight,
 	)
 	if err != nil {
 		return 0, err
