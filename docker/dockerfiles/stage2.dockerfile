@@ -1,4 +1,4 @@
-FROM registry.dip-dev.thehip.app/chorus-stage1:latest AS build
+FROM harbor.build.chorus-tre.ch/chorus/backend-stage1:latest AS build
 
 # USER chorus
 # COPY --chown=chorus:chorus . /chorus

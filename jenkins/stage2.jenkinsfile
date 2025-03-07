@@ -92,8 +92,8 @@ pipeline {
     // stage('Test') {
     //   agent {
     //     docker {
-    //         image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-    //         registryUrl 'https://registry.dip-dev.thehip.app'
+    //         image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+    //         registryUrl 'https://harbor.build.chorus-tre.ch'
     //         registryCredentialsId 'chorus-registry'
     //         alwaysPull true
     //     }
@@ -127,8 +127,8 @@ pipeline {
             stage('test') {
               agent {
                 docker {
-                    image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-                    registryUrl 'https://registry.dip-dev.thehip.app'
+                    image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+                    registryUrl 'https://harbor.build.chorus-tre.ch'
                     registryCredentialsId 'chorus-registry'
                     alwaysPull true
                     args "-u root"
@@ -197,21 +197,21 @@ pipeline {
             }
           }
         }
-        stage('Deploy') {
-          steps {
-            container(name: 'chorus-ubuntu', shell: '/bin/bash') {
-              dir('chorus-dev-ops') {
-                checkout scm
-                sh """
-                  export env=int
-                  export RELEASE_NAME="${componentName}-int-master"
-                  cd deploy
-                  ./deploy.sh
-                """
-              }
-            }
-          }
-        }
+        // stage('Deploy') {
+        //   steps {
+        //     container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+        //       dir('chorus-dev-ops') {
+        //         checkout scm
+        //         sh """
+        //           export env=int
+        //           export RELEASE_NAME="${componentName}-int-master"
+        //           cd deploy
+        //           ./deploy.sh
+        //         """
+        //       }
+        //     }
+        //   }
+        // }
       }
     }
   }
