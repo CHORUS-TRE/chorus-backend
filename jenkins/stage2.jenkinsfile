@@ -73,14 +73,19 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Test & Build') {
       steps {
         container(name: 'chorus-ubuntu', shell: '/bin/bash') {
           dir('chorus-dev-ops') {
             checkout scm
             sh '''
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
+
+              go test ./...
+
               # golangci-lint run
+              
+              
               cd docker
               ./build-stage2.sh
             '''
