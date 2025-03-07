@@ -1872,6 +1872,20 @@ definitions:
         type: string
       dockerImageTag:
         type: string
+      shmSize:
+        type: string
+      kioskConfigURL:
+        type: string
+      maxCPU:
+        type: string
+      minCPU:
+        type: string
+      maxMemory:
+        type: string
+      minMemory:
+        type: string
+      iconURL:
+        type: string
       createdAt:
         type: string
         format: date-time
@@ -1903,6 +1917,12 @@ definitions:
         format: uint64
       status:
         type: string
+      initialResolutionWidth:
+        type: integer
+        format: int64
+      initialResolutionHeight:
+        type: integer
+        format: int64
       createdAt:
         type: string
         format: date-time

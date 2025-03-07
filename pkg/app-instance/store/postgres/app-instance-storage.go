@@ -23,7 +23,7 @@ func NewAppInstanceStorage(db *sqlx.DB) *AppInstanceStorage {
 
 func (s *AppInstanceStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initial_resolution_width, initial_resolution_height, createdat, updatedat
 			FROM app_instances
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -38,7 +38,7 @@ func (s *AppInstanceStorage) GetAppInstance(ctx context.Context, tenantID uint64
 
 func (s *AppInstanceStorage) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
 	const query = `
-SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, createdat, updatedat
+SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initial_resolution_width, initial_resolution_height, createdat, updatedat
 	FROM app_instances
 WHERE tenantid = $1 AND status != 'deleted';
 `
@@ -53,8 +53,8 @@ WHERE tenantid = $1 AND status != 'deleted';
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.
 func (s *AppInstanceStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error) {
 	const appInstanceQuery = `
-INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id;
+INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, initial_resolution_width, initial_resolution_height, createdat, updatedat)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64

@@ -15,10 +15,21 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
+	InitialResolutionWidth  uint32
+	InitialResolutionHeight uint32
+
 	AppName                *string
 	AppDockerImageRegistry *string
 	AppDockerImageName     *string
 	AppDockerImageTag      *string
+
+	AppShmSize        *string
+	AppKioskConfigURL *string
+	AppMaxCPU         *string
+	AppMinCPU         *string
+	AppMaxMemory      *string
+	AppMinMemory      *string
+	AppIconURL        *string
 
 	Status AppInstanceStatus
 
