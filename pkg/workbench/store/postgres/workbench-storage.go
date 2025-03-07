@@ -64,8 +64,8 @@ SELECT
     ai.workspaceid,
     ai.workbenchid,
     ai.status,
-	ai.initial_resolution_width,
-	ai.initial_resolution_height,
+	ai.initialresolutionwidth,
+	ai.initialresolutionheight,
     ai.createdat,
     ai.updatedat,
 
