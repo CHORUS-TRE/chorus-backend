@@ -69,6 +69,7 @@ pipeline {
         script {
           env.VERSION = readFile("$WORKSPACE/version")
           env.IMAGE_TAG = readFile("$WORKSPACE/image_tag")
+          env.RELEASE_NAME = readFile("$WORKSPACE/release_name")
         }
       }
     }
