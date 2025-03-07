@@ -12,5 +12,5 @@ helm template --namespace "$env" --values ./backend/files/values.yaml --set-stri
 
 echo ""
 echo "deploying..."
-helm upgrade --install --create-namespace --namespace "$env" --values ./backend/files/values.yaml --set-string "aesPassphrase=${!CONFIG_AES_PASSPHRASE_VAR_NAME}" --set-string "version=$IMAGE_TAG" --set-string "image=harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}" "${RELEASE_NAME}" ./backend
+helm upgrade --install --create-namespace --namespace "$env" --values ./backend/files/values.yaml --set-string "aesPassphrase=${!CONFIG_AES_PASSPHRASE_VAR_NAME}" --set-string "version=$DEPLOY_VERSION" --set-string "image=harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}" "${RELEASE_NAME}" ./backend
 echo "done"
