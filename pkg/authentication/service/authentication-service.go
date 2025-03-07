@@ -35,6 +35,7 @@ type Authenticator interface {
 	GetAuthenticationModes() []model.AuthenticationMode
 	AuthenticateOAuth(ctx context.Context, providerID string) (string, error)
 	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error)
+	Logout(ctx context.Context) (string, error)
 }
 
 type Userer interface {
@@ -145,6 +146,9 @@ func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationM
 				Internal: model.Internal{
 					PublicRegistrationEnabled: mode.PublicRegistrationEnabled,
 				},
+				ButtonText: mode.ButtonText,
+				IconURL:    mode.IconURL,
+				Order:      mode.Order,
 			})
 		}
 		if mode.Type == "openid" {
@@ -153,10 +157,15 @@ func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationM
 				OpenID: model.OpenID{
 					ID: mode.OpenID.ID,
 				},
+				ButtonText: mode.ButtonText,
+				IconURL:    mode.IconURL,
+				Order:      mode.Order,
 			})
 		}
-
 	}
+
+	// sort by order
+
 	return res
 }
 
@@ -238,6 +247,15 @@ func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerI
 }
 
 func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error) {
+	mode, err := a.getAuthMode(providerID)
+	if err != nil {
+		return "", 0, "", fmt.Errorf("unable to get mode: %w", err)
+	}
+
+	if mode.Type != "openid" {
+		return "", 0, "", fmt.Errorf("invalid mode: %w", &ErrInvalidArgument{})
+	}
+
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
 		return "", 0, "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
@@ -254,11 +272,6 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	}
 
 	client := oauthConfig.Client(ctx, token)
-
-	mode, err := a.getAuthMode(providerID)
-	if err != nil {
-		return "", 0, "", fmt.Errorf("unable to get mode: %w", err)
-	}
 
 	userInfoResp, err := client.Get(mode.OpenID.UserInfoURL)
 	if err != nil {
@@ -367,6 +380,9 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.
 
 func (a *AuthenticationService) getAuthMode(id string) (*config.Mode, error) {
 	for _, m := range a.cfg.Services.AuthenticationService.Modes {
+		if m.Type == "internal" && id == "internal" {
+			return &m, nil
+		}
 		if m.Type == "openid" && m.OpenID.ID == id {
 			return &m, nil
 		}
@@ -407,4 +423,40 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(signingKey))
+}
+
+func (a *AuthenticationService) Logout(ctx context.Context) (string, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return "", status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return "", status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
+
+	user, err := a.userer.GetUser(ctx, service.GetUserReq{
+		TenantID: tenantID,
+		ID:       userID,
+	})
+	if err != nil {
+		return "", status.Error(codes.InvalidArgument, "could not get user")
+	}
+
+	mode, err := a.getAuthMode(user.Source)
+	if err != nil {
+		logger.SecLog.Error(ctx, "unknown user source, this should not happend, invalid config", zap.String("source", user.Source), zap.Uint64("user_id", user.ID), zap.Uint64("tenant_id", user.TenantID))
+		return "", status.Error(codes.InvalidArgument, "could not get auth mode")
+	}
+
+	switch mode.Type {
+	case "internal":
+		return "", nil
+	case "openid":
+		return mode.OpenID.LogoutURL, nil
+	default:
+		logger.SecLog.Error(ctx, "unknown user source, this should never happend", zap.String("source", user.Source), zap.Uint64("user_id", user.ID), zap.Uint64("tenant_id", user.TenantID))
+		return "", status.Error(codes.InvalidArgument, "unknown source")
+	}
 }

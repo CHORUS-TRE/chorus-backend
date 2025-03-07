@@ -16,6 +16,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
 
+var _ chorus.UserServiceServer = (*UserController)(nil)
+
 // UserController is the user service controller handler.
 type UserController struct {
 	user service.Userer

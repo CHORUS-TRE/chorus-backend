@@ -511,6 +511,46 @@ paths:
       tags:
         - AuthenticationService
       security: []
+  /api/rest/v1/authentication/logout:
+    post:
+      summary: Logout
+      description: This endpoint logs out a user
+      operationId: AuthenticationService_Logout
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusLogoutReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusLogoutRequest'
+      tags:
+        - AuthenticationService
   /api/rest/v1/authentication/modes:
     get:
       summary: Get list of possible way to authenticate
@@ -1898,6 +1938,10 @@ definitions:
         $ref: '#/definitions/chorusInternal'
       openid:
         $ref: '#/definitions/chorusOpenID'
+      ButtonText:
+        type: string
+      IconURL:
+        type: string
   chorusAuthenticationReply:
     type: object
     properties:
@@ -2160,6 +2204,13 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkspace'
+  chorusLogoutReply:
+    type: object
+    properties:
+      redirectURL:
+        type: string
+  chorusLogoutRequest:
+    type: object
   chorusMarkNotificationsAsReadRequest:
     type: object
     properties:

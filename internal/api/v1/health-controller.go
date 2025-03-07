@@ -6,6 +6,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 )
 
+var _ chorus.HealthServiceServer = (*HealthController)(nil)
+
 type HealthController struct{}
 
 func NewHealthController() chorus.HealthServiceServer {

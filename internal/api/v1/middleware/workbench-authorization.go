@@ -7,6 +7,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
+var _ chorus.WorkbenchServiceServer = (*workbenchControllerAuthorization)(nil)
+
 type workbenchControllerAuthorization struct {
 	Authorization
 	next chorus.WorkbenchServiceServer

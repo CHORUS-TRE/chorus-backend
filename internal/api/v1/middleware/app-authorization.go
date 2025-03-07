@@ -7,6 +7,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
+var _ chorus.AppServiceServer = (*appControllerAuthorization)(nil)
+
 type appControllerAuthorization struct {
 	Authorization
 	next chorus.AppServiceServer

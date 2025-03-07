@@ -8,6 +8,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 )
 
+var _ chorus.NotificationServiceServer = (*notificationControllerAuthorization)(nil)
+
 type notificationControllerAuthorization struct {
 	Authorization
 	next chorus.NotificationServiceServer

@@ -234,6 +234,9 @@ type (
 		Enabled                   bool   `yaml:"enabled"`
 		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
 		OpenID                    OpenID `yaml:"openid,omitempty"`
+		ButtonText                string `yaml:"button_text,omitempty"`
+		IconURL                   string `yaml:"icon_url,omitempty"`
+		Order                     uint   `yaml:"order,omitempty"`
 	}
 
 	OpenID struct {

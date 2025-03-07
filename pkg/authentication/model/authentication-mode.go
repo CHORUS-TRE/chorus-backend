@@ -1,9 +1,12 @@
 package model
 
 type AuthenticationMode struct {
-	Type     string
-	Internal Internal
-	OpenID   OpenID
+	Type       string
+	Internal   Internal
+	OpenID     OpenID
+	ButtonText string
+	IconURL    string
+	Order      uint
 }
 
 type Internal struct {

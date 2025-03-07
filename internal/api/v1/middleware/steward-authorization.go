@@ -9,6 +9,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
+var _ chorus.StewardServiceServer = (*stewardControllerAuthorization)(nil)
+
 type stewardControllerAuthorization struct {
 	Authorization
 	next chorus.StewardServiceServer

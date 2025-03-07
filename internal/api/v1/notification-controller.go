@@ -17,6 +17,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/service"
 )
 
+var _ chorus.NotificationServiceServer = (*NotificationController)(nil)
+
 type NotificationController struct {
 	notification service.Notificationer
 }

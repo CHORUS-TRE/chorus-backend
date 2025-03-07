@@ -9,6 +9,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 )
 
+var _ chorus.UserServiceServer = (*userControllerAuthorization)(nil)
+
 type userControllerAuthorization struct {
 	Authorization
 	next chorus.UserServiceServer

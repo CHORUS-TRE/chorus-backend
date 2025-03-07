@@ -12,9 +12,12 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
+
+var _ chorus.AuthenticationServiceServer = (*AuthenticationController)(nil)
 
 // AuthenticationController is the authentication service controller handler.
 type AuthenticationController struct {
@@ -46,6 +49,8 @@ func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, re
 				Internal: &chorus.Internal{
 					PublicRegistrationEnabled: mode.Internal.PublicRegistrationEnabled,
 				},
+				ButtonText: mode.ButtonText,
+				IconURL:    mode.IconURL,
 			})
 		}
 		if mode.Type == "openid" {
@@ -54,6 +59,8 @@ func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, re
 				Openid: &chorus.OpenID{
 					Id: mode.OpenID.ID,
 				},
+				ButtonText: mode.ButtonText,
+				IconURL:    mode.IconURL,
 			})
 		}
 	}
@@ -149,4 +156,30 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 	}
 
 	return &chorus.AuthenticateOauthRedirectReply{Result: &chorus.AuthenticateOauthRedirectResult{Token: token}}, nil
+}
+
+func (a AuthenticationController) Logout(ctx context.Context, req *chorus.LogoutRequest) (*chorus.LogoutReply, error) {
+	err := a.refreshTokenAuthorization.IsAuthenticatedAndAuthorized(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	redirectURL, err := a.authenticator.Logout(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
+
+	header := metadata.Pairs("Set-Cookie", "jwttoken=; Path=/; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
+	if err := grpc.SetHeader(ctx, header); err != nil {
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
+
+	if redirectURL != "" {
+		header := metadata.Pairs("Location", redirectURL)
+		if err := grpc.SetHeader(ctx, header); err != nil {
+			return nil, status.Errorf(codes.Internal, "%v", err)
+		}
+	}
+
+	return &chorus.LogoutReply{RedirectURL: utils.FromString(redirectURL)}, nil
 }

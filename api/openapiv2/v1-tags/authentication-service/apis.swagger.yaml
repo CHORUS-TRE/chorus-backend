@@ -38,6 +38,28 @@ paths:
       tags:
         - AuthenticationService
       security: []
+  /api/rest/v1/authentication/logout:
+    post:
+      summary: Logout
+      description: This endpoint logs out a user
+      operationId: AuthenticationService_Logout
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusLogoutReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusLogoutRequest'
+      tags:
+        - AuthenticationService
   /api/rest/v1/authentication/modes:
     get:
       summary: Get list of possible way to authenticate
@@ -198,6 +220,10 @@ definitions:
         $ref: '#/definitions/chorusInternal'
       openid:
         $ref: '#/definitions/chorusOpenID'
+      ButtonText:
+        type: string
+      IconURL:
+        type: string
   chorusAuthenticationReply:
     type: object
     properties:
@@ -230,6 +256,13 @@ definitions:
     properties:
       publicRegistrationEnabled:
         type: boolean
+  chorusLogoutReply:
+    type: object
+    properties:
+      redirectURL:
+        type: string
+  chorusLogoutRequest:
+    type: object
   chorusOpenID:
     type: object
     properties:

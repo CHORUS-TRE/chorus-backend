@@ -64,6 +64,8 @@ type ClientService interface {
 
 	AuthenticationServiceGetAuthenticationModes(params *AuthenticationServiceGetAuthenticationModesParams, opts ...ClientOption) (*AuthenticationServiceGetAuthenticationModesOK, error)
 
+	AuthenticationServiceLogout(params *AuthenticationServiceLogoutParams, opts ...ClientOption) (*AuthenticationServiceLogoutOK, error)
+
 	AuthenticationServiceRefreshToken(params *AuthenticationServiceRefreshTokenParams, opts ...ClientOption) (*AuthenticationServiceRefreshTokenOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -261,6 +263,45 @@ func (a *Client) AuthenticationServiceGetAuthenticationModes(params *Authenticat
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*AuthenticationServiceGetAuthenticationModesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuthenticationServiceLogout logouts
+
+This endpoint logs out a user
+*/
+func (a *Client) AuthenticationServiceLogout(params *AuthenticationServiceLogoutParams, opts ...ClientOption) (*AuthenticationServiceLogoutOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuthenticationServiceLogoutParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuthenticationService_Logout",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/authentication/logout",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuthenticationServiceLogoutReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuthenticationServiceLogoutOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuthenticationServiceLogoutDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

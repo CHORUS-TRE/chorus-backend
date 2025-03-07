@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var _ service.Authenticator = (*authenticationServiceLogging)(nil)
+
 type authenticationServiceLogging struct {
 	logger *logger.ContextLogger
 	next   service.Authenticator
@@ -107,4 +109,22 @@ func (a authenticationServiceLogging) OAuthCallback(ctx context.Context, provide
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return res, t, url, err
+}
+
+func (a authenticationServiceLogging) Logout(ctx context.Context) (string, error) {
+	now := time.Now()
+
+	res, err := a.next.Logout(ctx)
+	if err != nil {
+		a.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return res, err
+	}
+
+	a.logger.Info(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, err
 }

@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.WorkspaceServiceServer = (*WorkspaceController)(nil)
+
 // WorkspaceController is the workspace service controller handler.
 type WorkspaceController struct {
 	workspace service.Workspaceer

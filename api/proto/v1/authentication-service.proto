@@ -34,6 +34,8 @@ message AuthenticationMode {
     string type  = 1;
     optional Internal internal = 2;
     optional OpenID openid = 3;
+    string ButtonText = 4;
+    string IconURL = 5;
 }
 
 message Internal {
@@ -50,6 +52,14 @@ message GetAuthenticationModesRequest {
 
 message RefreshTokenRequest {
     
+}
+
+message LogoutRequest {
+    
+}
+
+message LogoutReply {
+    optional string redirectURL = 1;
 }
 
 message GetAuthenticationModesReply {
@@ -152,6 +162,18 @@ service AuthenticationService {
             description: "This endpoint is called by the provider after auth for the backend to retrieve the user profile";
             tags: "AuthenticationService";
             security: {}
+        };
+    };
+
+    rpc Logout(LogoutRequest) returns (LogoutReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/authentication/logout"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Logout";
+            description: "This endpoint logs out a user";
+            tags: "AuthenticationService";
         };
     };
 }
