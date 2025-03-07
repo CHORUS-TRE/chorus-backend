@@ -117,3 +117,23 @@ curl -o $DIR/scripts/tools/darwin/bin/kind -L'#' "https://github.com/kubernetes-
 chmod +x $DIR/scripts/tools/darwin/bin/kind
 
 
+echo 
+echo "==> installing jq"
+curl -o $DIR/scripts/tools/linux/bin/jq -L'#' "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64"
+chmod +x $DIR/scripts/tools/linux/bin/jq
+curl -o $DIR/scripts/tools/darwin/bin/jq -L'#' "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-macos-arm64"
+chmod +x $DIR/scripts/tools/darwin/bin/jq
+
+echo
+echo "==> installing helm"
+curl -o $DIR/helm-tmp.targ.gz -L'#' "https://get.helm.sh/helm-v3.7.1-linux-amd64.tar.gz"
+tar xzvf $DIR/helm-tmp.targ.gz
+mv linux-amd64/helm $DIR/scripts/tools/linux/bin
+chmod +x $DIR/scripts/tools/linux/bin/helm
+rm -rf linux-amd64
+curl -o $DIR/helm-tmp.targ.gz -L'#' "https://get.helm.sh/helm-v3.7.1-darwin-arm64.tar.gz"
+tar xzvf $DIR/helm-tmp.targ.gz
+mv darwin-arm64/helm $DIR/scripts/tools/darwin/bin
+chmod +x $DIR/scripts/tools/darwin/bin/helm
+rm -rf darwin-arm64
+rm -f $DIR/helm-tmp.targ.gz

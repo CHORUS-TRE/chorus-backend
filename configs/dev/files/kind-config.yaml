@@ -12,3 +12,10 @@ nodes:
   - |
     kind: ClusterConfiguration 
     certificatesDir: /mnt/kind-pregenerated-certs
+  extraPortMappings:
+  - containerPort: 80
+    hostPort: 41080
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 41443
+    protocol: TCP
