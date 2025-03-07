@@ -1,6 +1,6 @@
 ingress:
   enabled: true
-  host: "backend.dev.chorus-tre.ch"
+  host: "backend.qa.chorus-tre.ch"
 
 service:
   port: 5000
