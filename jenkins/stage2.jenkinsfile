@@ -94,7 +94,7 @@ pipeline {
     //     docker {
     //         image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
     //         registryUrl 'https://harbor.build.chorus-tre.ch'
-    //         registryCredentialsId 'chorus-registry'
+    //         registryCredentialsId 'harbor-build-registry'
     //         alwaysPull true
     //     }
     //   }
@@ -129,7 +129,7 @@ pipeline {
                 docker {
                     image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
                     registryUrl 'https://harbor.build.chorus-tre.ch'
-                    registryCredentialsId 'chorus-registry'
+                    registryCredentialsId 'harbor-build-registry'
                     alwaysPull true
                     args "-u root"
                     // args '-ti --entrypoint /bin/bash'
