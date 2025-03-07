@@ -73,14 +73,19 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Test & Build') {
       steps {
         container(name: 'chorus-ubuntu', shell: '/bin/bash') {
           dir('chorus-dev-ops') {
             checkout scm
             sh '''
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
+
+              go test ./...
+
               # golangci-lint run
+              
+              
               cd docker
               ./build-stage2.sh
             '''
@@ -92,9 +97,9 @@ pipeline {
     // stage('Test') {
     //   agent {
     //     docker {
-    //         image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-    //         registryUrl 'https://registry.dip-dev.thehip.app'
-    //         registryCredentialsId 'chorus-registry'
+    //         image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+    //         registryUrl 'https://harbor.build.chorus-tre.ch'
+    //         registryCredentialsId 'harbor-build-registry'
     //         alwaysPull true
     //     }
     //   }
@@ -127,9 +132,9 @@ pipeline {
             stage('test') {
               agent {
                 docker {
-                    image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-                    registryUrl 'https://registry.dip-dev.thehip.app'
-                    registryCredentialsId 'chorus-registry'
+                    image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+                    registryUrl 'https://harbor.build.chorus-tre.ch'
+                    registryCredentialsId 'harbor-build-registry'
                     alwaysPull true
                     args "-u root"
                     // args '-ti --entrypoint /bin/bash'
@@ -197,21 +202,21 @@ pipeline {
             }
           }
         }
-        stage('Deploy') {
-          steps {
-            container(name: 'chorus-ubuntu', shell: '/bin/bash') {
-              dir('chorus-dev-ops') {
-                checkout scm
-                sh """
-                  export env=int
-                  export RELEASE_NAME="${componentName}-int-master"
-                  cd deploy
-                  ./deploy.sh
-                """
-              }
-            }
-          }
-        }
+        // stage('Deploy') {
+        //   steps {
+        //     container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+        //       dir('chorus-dev-ops') {
+        //         checkout scm
+        //         sh """
+        //           export env=int
+        //           export RELEASE_NAME="${componentName}-int-master"
+        //           cd deploy
+        //           ./deploy.sh
+        //         """
+        //       }
+        //     }
+        //   }
+        // }
       }
     }
   }
