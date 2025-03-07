@@ -20,7 +20,7 @@ func TestDecodeDaemon(t *testing.T) {
 	require.Equal(t, "127.0.0.1", cfg.Daemon.GRPC.Host)
 	require.Equal(t, "5555", cfg.Daemon.GRPC.Port)
 	require.Equal(t, Sensitive("jwt_secret"), cfg.Daemon.JWT.Secret)
-	require.Equal(t, 10, cfg.Daemon.JWT.ExpirationTime)
+	require.Equal(t, 10*time.Second, cfg.Daemon.JWT.ExpirationTime)
 	require.Equal(t, 10, cfg.Daemon.TOTP.NumRecoveryCodes)
 	require.Equal(t, true, cfg.Daemon.PPROFEnabled)
 	require.Equal(t, "True-Client-IP", cfg.Daemon.HTTP.HeaderClientIP)
