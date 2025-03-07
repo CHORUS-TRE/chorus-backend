@@ -39,10 +39,19 @@ type client struct {
 }
 
 type AppInstance struct {
-	AppName     string
+	AppName string
+
 	AppRegistry string
 	AppImage    string
-	AppVersion  string
+	AppTag      string
+
+	ShmSize        string
+	KioskConfigURL string
+	MaxCPU         string
+	MinCPU         string
+	MaxMemory      string
+	MinMemory      string
+	// IconURL        string
 }
 
 func appToMap(app AppInstance) map[string]interface{} {
@@ -50,12 +59,12 @@ func appToMap(app AppInstance) map[string]interface{} {
 		"app":  app.AppName,
 		"name": app.AppName,
 	}
-	if app.AppVersion != "" {
-		m["version"] = app.AppVersion
+	if app.AppTag != "" {
+		m["version"] = app.AppTag
 	}
 
 	if app.AppRegistry != "" {
-		if app.AppVersion == "" {
+		if app.AppTag == "" {
 			m["image"] = map[string]string{
 				"registry":   app.AppRegistry,
 				"repository": app.AppImage,
@@ -64,7 +73,45 @@ func appToMap(app AppInstance) map[string]interface{} {
 			m["image"] = map[string]string{
 				"registry":   app.AppRegistry,
 				"repository": app.AppImage,
-				"tag":        app.AppVersion,
+				"tag":        app.AppTag,
+			}
+		}
+	}
+
+	if app.ShmSize != "" {
+		m["shmSize"] = app.ShmSize
+	}
+	if app.KioskConfigURL != "" {
+		m["kioskConfig"] = map[string]string{
+			"url": app.KioskConfigURL,
+		}
+	}
+	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" {
+		m["resources"] = map[string]map[string]string{}
+		if app.MaxCPU != "" {
+			m["resources"].(map[string]map[string]string)["limits"] = map[string]string{
+				"cpu": app.MaxCPU,
+			}
+		}
+		if app.MinCPU != "" {
+			m["resources"].(map[string]map[string]string)["requests"] = map[string]string{
+				"cpu": app.MinCPU,
+			}
+		}
+		if app.MaxMemory != "" {
+			if _, ok := m["resources"]; !ok {
+				m["resources"] = map[string]map[string]string{}
+			}
+			m["resources"].(map[string]map[string]string)["limits"] = map[string]string{
+				"memory": app.MaxMemory,
+			}
+		}
+		if app.MinMemory != "" {
+			if _, ok := m["resources"]; !ok {
+				m["resources"] = map[string]map[string]string{}
+			}
+			m["resources"].(map[string]map[string]string)["requests"] = map[string]string{
+				"memory": app.MinMemory,
 			}
 		}
 	}

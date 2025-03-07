@@ -172,6 +172,12 @@ definitions:
         format: uint64
       status:
         type: string
+      initialResolutionWidth:
+        type: integer
+        format: int64
+      initialResolutionHeight:
+        type: integer
+        format: int64
       createdAt:
         type: string
         format: date-time
