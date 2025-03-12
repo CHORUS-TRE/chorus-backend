@@ -35,7 +35,11 @@
         {{- if $file }}
             {{- printf "%s" (.Files.Get "files/main.yaml") }}
         {{- else }}
-            {{- printf "%s" (((.Values.main).yaml) | default .Values.main) }}
+            {{- if kindIs "map" .Values.main }}
+                {{- printf "%s" (((.Values.main).yaml) | default .Values.main) }}
+            {{- else }}
+                {{- printf "%s" (.Values.main | default "") }}
+            {{- end }}
         {{- end }}
     {{- end }}
 {{- end -}}
