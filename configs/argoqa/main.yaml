@@ -8,7 +8,8 @@ daemon:
       access_control_max_age: "600"
   jwt:
     secret: "{{ .jwt_secret }}"
-    expiration_time: 259200 # 72h
+    expiration_time: 72h
+    max_refresh_time: 4320h #180d
   jobs:
     job_status_gc:
       enabled: true
@@ -55,6 +56,7 @@ services:
         enabled: true
         button_text: "Login with Keycloak"
         icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+        order: 1
         openid:
           id: keycloak
           chorus_backend_host: "https://backend.qa.chorus-tre.ch"
