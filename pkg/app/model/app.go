@@ -20,6 +20,14 @@ type App struct {
 	DockerImageName     string
 	DockerImageTag      string
 
+	ShmSize        string
+	KioskConfigURL string
+	MaxCPU         string
+	MinCPU         string
+	MaxMemory      string
+	MinMemory      string
+	IconURL        string
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time

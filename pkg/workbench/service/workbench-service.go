@@ -114,10 +114,18 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 		clientApps := []k8s.AppInstance{}
 		for _, app := range apps {
 			clientApps = append(clientApps, k8s.AppInstance{
-				AppName:     utils.ToString(app.AppName),
+				AppName: utils.ToString(app.AppName),
+
 				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
 				AppImage:    utils.ToString(app.AppDockerImageName),
-				AppVersion:  utils.ToString(app.AppDockerImageTag),
+				AppTag:      utils.ToString(app.AppDockerImageTag),
+
+				ShmSize:        utils.ToString(app.AppShmSize),
+				KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
+				MaxCPU:         utils.ToString(app.AppMaxCPU),
+				MinCPU:         utils.ToString(app.AppMinCPU),
+				MaxMemory:      utils.ToString(app.AppMaxMemory),
+				MinMemory:      utils.ToString(app.AppMinMemory),
 			})
 		}
 

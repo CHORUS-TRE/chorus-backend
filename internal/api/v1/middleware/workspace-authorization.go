@@ -7,15 +7,17 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
+var _ chorus.WorkspaceServiceServer = (*workspaceControllerAuthorization)(nil)
+
 type workspaceControllerAuthorization struct {
-	authorization
+	Authorization
 	next chorus.WorkspaceServiceServer
 }
 
 func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 	return func(next chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 		return &workspaceControllerAuthorization{
-			authorization: authorization{
+			Authorization: Authorization{
 				logger:          logger,
 				authorizedRoles: authorizedRoles,
 			},

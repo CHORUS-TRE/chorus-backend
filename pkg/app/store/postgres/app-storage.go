@@ -24,7 +24,7 @@ func NewAppStorage(db *sqlx.DB) *AppStorage {
 
 func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error) {
 	const query = `
-		SELECT id, tenantid, userid, name, description, status, dockerimageregistry, dockerimagename, dockerimagetag, createdat, updatedat
+		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "iconurl", createdat, updatedat
 			FROM apps
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -39,7 +39,7 @@ func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) 
 
 func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
 	const query = `
-SELECT id, tenantid, userid, name, description, status, dockerimageregistry, dockerimagename, dockerimagetag, createdat, updatedat
+SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "iconurl", createdat, updatedat
 	FROM apps
 WHERE tenantid = $1 AND status != 'deleted';
 `
@@ -54,13 +54,13 @@ WHERE tenantid = $1 AND status != 'deleted';
 // CreateApp saves the provided app object in the database 'apps' table.
 func (s *AppStorage) CreateApp(ctx context.Context, tenantID uint64, app *model.App) (uint64, error) {
 	const appQuery = `
-INSERT INTO apps (tenantid, userid, name, description, status, dockerimageregistry, dockerimagename, dockerimagetag, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
+INSERT INTO apps (tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "iconurl", createdat, updatedat)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64
 	err := s.db.GetContext(ctx, &id, appQuery,
-		tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageRegistry, app.DockerImageName, app.DockerImageTag,
+		tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.KioskConfigURL, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.IconURL,
 	)
 	if err != nil {
 		return 0, err
@@ -72,12 +72,13 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
 func (s *AppStorage) UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (err error) {
 	const appUpdateQuery = `
 		UPDATE apps
-		SET name = $3, description = $4, status = $5, updatedat = NOW()
+		SET name = $3, description = $4, status = $5, dockerimagename = $6, dockerimagetag = $7, dockerimageregistry = $8, shmsize = $9, kioskconfigurl = $10, maxcpu = $11, mincpu = $12, maxmemory = $13, minmemory = $14, iconurl = $15,
+		updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2;
 	`
 
 	// Update User
-	rows, err := s.db.ExecContext(ctx, appUpdateQuery, tenantID, app.ID, app.Name, app.Description, app.Status)
+	rows, err := s.db.ExecContext(ctx, appUpdateQuery, tenantID, app.ID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.KioskConfigURL, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.IconURL)
 	if err != nil {
 		return err
 	}

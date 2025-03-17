@@ -9,15 +9,17 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
+var _ chorus.StewardServiceServer = (*stewardControllerAuthorization)(nil)
+
 type stewardControllerAuthorization struct {
-	authorization
+	Authorization
 	next chorus.StewardServiceServer
 }
 
 func StewardAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.StewardServiceServer) chorus.StewardServiceServer {
 	return func(next chorus.StewardServiceServer) chorus.StewardServiceServer {
 		return &stewardControllerAuthorization{
-			authorization: authorization{
+			Authorization: Authorization{
 				logger:          logger,
 				authorizedRoles: authorizedRoles,
 			},

@@ -35,14 +35,35 @@ type ChorusApp struct {
 	// docker image tag
 	DockerImageTag string `json:"dockerImageTag,omitempty"`
 
+	// icon URL
+	IconURL string `json:"iconURL,omitempty"`
+
 	// id
 	ID string `json:"id,omitempty"`
+
+	// kiosk config URL
+	KioskConfigURL string `json:"kioskConfigURL,omitempty"`
+
+	// max CPU
+	MaxCPU string `json:"maxCPU,omitempty"`
+
+	// max memory
+	MaxMemory string `json:"maxMemory,omitempty"`
+
+	// min CPU
+	MinCPU string `json:"minCPU,omitempty"`
+
+	// min memory
+	MinMemory string `json:"minMemory,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
 
 	// pretty name
 	PrettyName string `json:"prettyName,omitempty"`
+
+	// shm size
+	ShmSize string `json:"shmSize,omitempty"`
 
 	// status
 	Status string `json:"status,omitempty"`

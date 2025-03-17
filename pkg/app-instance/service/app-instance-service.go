@@ -89,10 +89,20 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
 	clientApp := k8s.AppInstance{
-		AppName:     app.Name,
+		AppName: app.Name,
+
 		AppRegistry: app.DockerImageRegistry,
 		AppImage:    app.DockerImageName,
-		AppVersion:  app.DockerImageTag,
+		AppTag:      app.DockerImageTag,
+
+		ShmSize:        app.ShmSize,
+		KioskConfigURL: app.KioskConfigURL,
+		MaxCPU:         app.MaxCPU,
+		MinCPU:         app.MinCPU,
+		MaxMemory:      app.MaxMemory,
+		MinMemory:      app.MinMemory,
+		// IconURL:        app.IconURL,
+
 	}
 
 	err = s.client.CreateAppInstance(wsName, wbName, clientApp)

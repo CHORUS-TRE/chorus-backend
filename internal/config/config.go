@@ -39,8 +39,9 @@ type (
 		} `yaml:"http"`
 
 		JWT struct {
-			Secret         Sensitive `yaml:"secret"`
-			ExpirationTime int       `yaml:"expiration_time"`
+			Secret         Sensitive     `yaml:"secret"`
+			ExpirationTime time.Duration `yaml:"expiration_time"`
+			MaxRefreshTime time.Duration `yaml:"max_refresh_time"`
 		} `yaml:"jwt"`
 
 		TOTP struct {
@@ -233,6 +234,9 @@ type (
 		Enabled                   bool   `yaml:"enabled"`
 		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
 		OpenID                    OpenID `yaml:"openid,omitempty"`
+		ButtonText                string `yaml:"button_text,omitempty"`
+		IconURL                   string `yaml:"icon_url,omitempty"`
+		Order                     uint   `yaml:"order,omitempty"`
 	}
 
 	OpenID struct {

@@ -64,12 +64,23 @@ SELECT
     ai.workspaceid,
     ai.workbenchid,
     ai.status,
+	ai.initialresolutionwidth,
+	ai.initialresolutionheight,
     ai.createdat,
     ai.updatedat,
+
 	a.name as AppName,
     a.dockerimageregistry as AppDockerImageRegistry,
     a.dockerimagename as AppDockerImageName,
-    a.dockerimagetag as AppDockerImageTag
+    a.dockerimagetag as AppDockerImageTag,
+	a.shmsize as AppShmSize,
+	a.kioskconfigurl as AppKioskConfigURL,
+	a.maxcpu as AppMaxCPU,
+	a.mincpu as AppMinCPU,
+	a.maxmemory as AppMaxMemory,
+	a.minmemory as AppMinMemory,
+	a.iconurl as AppIconURL
+
 FROM 
     app_instances ai
 JOIN 

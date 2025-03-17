@@ -32,8 +32,17 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 
 		Status: status,
 
-		DockerImageName: app.DockerImageName,
-		DockerImageTag:  app.DockerImageTag,
+		DockerImageName:     app.DockerImageName,
+		DockerImageTag:      app.DockerImageTag,
+		DockerImageRegistry: app.DockerImageRegistry,
+
+		ShmSize:        app.ShmSize,
+		KioskConfigURL: app.KioskConfigURL,
+		MaxCPU:         app.MaxCPU,
+		MinCPU:         app.MinCPU,
+		MaxMemory:      app.MaxMemory,
+		MinMemory:      app.MinMemory,
+		IconURL:        app.IconURL,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
@@ -61,8 +70,17 @@ func AppFromBusiness(app *model.App) (*chorus.App, error) {
 
 		Status: app.Status.String(),
 
-		DockerImageName: app.DockerImageName,
-		DockerImageTag:  app.DockerImageTag,
+		DockerImageName:     app.DockerImageName,
+		DockerImageTag:      app.DockerImageTag,
+		DockerImageRegistry: app.DockerImageRegistry,
+
+		ShmSize:        app.ShmSize,
+		KioskConfigURL: app.KioskConfigURL,
+		MaxCPU:         app.MaxCPU,
+		MinCPU:         app.MinCPU,
+		MaxMemory:      app.MaxMemory,
+		MinMemory:      app.MinMemory,
+		IconURL:        app.IconURL,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

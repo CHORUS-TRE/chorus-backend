@@ -27,20 +27,24 @@ pipeline {
           RELEASE_NAME="${componentName}-$VERSION"
           RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_\\.]/-})
           RELEASE_NAME=$(echo "$RELEASE_NAME" | awk '{print tolower($0)}')
+          DEPLOY_VERSION=$IMAGE_TAG
 
           echo -n $RELEASE_NAME > $WORKSPACE/release_name
           echo -n $VERSION > $WORKSPACE/version
           echo -n $IMAGE_TAG > $WORKSPACE/image_tag
-          
+          echo -n $DEPLOY_VERSION > $WORKSPACE/deploy_version
+
           echo "VERSION $VERSION"
           echo "IMAGE_TAG $IMAGE_TAG"
           echo "JOB_NAME $JOB_NAME"
           echo "RELEASE_NAME $RELEASE_NAME"
+          echo "DEPLOY_VERSION $DEPLOY_VERSION"
         '''
         script {
           env.VERSION = readFile("$WORKSPACE/version")
           env.IMAGE_TAG = readFile("$WORKSPACE/image_tag")
           env.RELEASE_NAME = readFile("$WORKSPACE/release_name")
+          env.DEPLOY_VERSION = readFile("$WORKSPACE/deploy_version")
         }
       }
     }
@@ -56,31 +60,46 @@ pipeline {
           MINOR=$(echo $stripped | cut -d'.' -f2)
           VERSION=v$MAJOR.$MINOR.$BUILD_ID
           VERSION=$(echo "$VERSION" | awk '{print tolower($0)}')
+          IMAGE_TAG=$(echo -n ${VERSION//[\\/_]/-})
+          IMAGE_TAG=$(echo "$IMAGE_TAG" | awk '{print tolower($0)}')
           RELEASE_NAME="${componentName}-$VERSION"
           RELEASE_NAME=$(echo -n ${RELEASE_NAME//[\\/_\\.]/-})
           RELEASE_NAME=$(echo "$RELEASE_NAME" | awk '{print tolower($0)}')
+          DEPLOY_VERSION=$RELEASE_NAME
           
-          echo $VERSION > $WORKSPACE/version
-          echo ${VERSION//\\//-} > $WORKSPACE/image_tag
           echo -n $RELEASE_NAME > $WORKSPACE/release_name
-
-          echo $VERSION
+          echo -n $VERSION > $WORKSPACE/version
+          echo -n $IMAGE_TAG > $WORKSPACE/image_tag
+          echo -n $DEPLOY_VERSION > $WORKSPACE/deploy_version
+          
+          echo "VERSION $VERSION"
+          echo "IMAGE_TAG $IMAGE_TAG"
+          echo "JOB_NAME $JOB_NAME"
+          echo "RELEASE_NAME $RELEASE_NAME"
+          echo "DEPLOY_VERSION $DEPLOY_VERSION"
         '''
         script {
           env.VERSION = readFile("$WORKSPACE/version")
           env.IMAGE_TAG = readFile("$WORKSPACE/image_tag")
+          env.RELEASE_NAME = readFile("$WORKSPACE/release_name")
+          env.DEPLOY_VERSION = readFile("$WORKSPACE/deploy_version")
         }
       }
     }
 
-    stage('Build') {
+    stage('Test & Build') {
       steps {
         container(name: 'chorus-ubuntu', shell: '/bin/bash') {
           dir('chorus-dev-ops') {
             checkout scm
             sh '''
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
+
+              go test ./...
+
               # golangci-lint run
+              
+              
               cd docker
               ./build-stage2.sh
             '''
@@ -92,9 +111,9 @@ pipeline {
     // stage('Test') {
     //   agent {
     //     docker {
-    //         image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-    //         registryUrl 'https://registry.dip-dev.thehip.app'
-    //         registryCredentialsId 'chorus-registry'
+    //         image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+    //         registryUrl 'https://harbor.build.chorus-tre.ch'
+    //         registryCredentialsId 'harbor-build-registry'
     //         alwaysPull true
     //     }
     //   }
@@ -127,9 +146,9 @@ pipeline {
             stage('test') {
               agent {
                 docker {
-                    image "registry.dip-dev.thehip.app/chorus-cicd-chorus:${IMAGE_TAG}"
-                    registryUrl 'https://registry.dip-dev.thehip.app'
-                    registryCredentialsId 'chorus-registry'
+                    image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+                    registryUrl 'https://harbor.build.chorus-tre.ch'
+                    registryCredentialsId 'harbor-build-registry'
                     alwaysPull true
                     args "-u root"
                     // args '-ti --entrypoint /bin/bash'
@@ -176,9 +195,12 @@ pipeline {
       }
     }
 
-    stage('Master') {
+    stage('Tag & deploy') {
       when {
-        branch 'master'
+        anyOf {
+          branch 'master'
+          branch 'release/v*'
+        }
       }
       stages {
         stage('tag') {
@@ -197,21 +219,24 @@ pipeline {
             }
           }
         }
-        stage('Deploy') {
-          steps {
-            container(name: 'chorus-ubuntu', shell: '/bin/bash') {
-              dir('chorus-dev-ops') {
-                checkout scm
-                sh """
-                  export env=int
-                  export RELEASE_NAME="${componentName}-int-master"
-                  cd deploy
-                  ./deploy.sh
-                """
-              }
-            }
-          }
-        }
+        // stage('Deploy master') {
+        //   when {
+        //     branch 'master'
+        //   }
+        //   steps {
+        //     container(name: 'chorus-ubuntu', shell: '/bin/bash') {
+        //       dir('chorus-dev-ops') {
+        //         checkout scm
+        //         sh """
+        //           export env=int
+        //           export RELEASE_NAME="${componentName}-int-master"
+        //           cd deploy
+        //           ./deploy.sh
+        //         """
+        //       }
+        //     }
+        //   }
+        // }
       }
     }
   }

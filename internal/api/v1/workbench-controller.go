@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.WorkbenchServiceServer = (*WorkbenchController)(nil)
+
 // WorkbenchController is the workbench service controller handler.
 type WorkbenchController struct {
 	workbench service.Workbencher

@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.StewardServiceServer = (*StewardController)(nil)
+
 type StewardController struct {
 	stewarder service.Stewarder
 }

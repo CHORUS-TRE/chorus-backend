@@ -13,6 +13,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.AppInstanceServiceServer = (*AppInstanceController)(nil)
+
 // AppInstanceController is the appInstance service controller handler.
 type AppInstanceController struct {
 	appInstance service.AppInstanceer
