@@ -5,13 +5,13 @@ networking:
   apiServerPort: 41491
 nodes:
 - role: control-plane
-  extraMounts:
-  - hostPath: configs/dev/files/kind-pregenerated-certs
-    containerPath: /mnt/kind-pregenerated-certs
-  kubeadmConfigPatches:
-  - |
-    kind: ClusterConfiguration 
-    certificatesDir: /mnt/kind-pregenerated-certs
+  # extraMounts:
+  # - hostPath: configs/dev/files/kind-pregenerated-certs
+  #   containerPath: /mnt/kind-pregenerated-certs
+  # kubeadmConfigPatches:
+  # - |
+  #   kind: ClusterConfiguration 
+  #   certificatesDir: /mnt/kind-pregenerated-certs
   extraPortMappings:
   - containerPort: 80
     hostPort: 41080

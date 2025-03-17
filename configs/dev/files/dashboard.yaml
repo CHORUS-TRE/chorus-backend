@@ -336,17 +336,23 @@ metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
   annotations:
-    kubernetes.io/ingress.class: "public"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    #kubernetes.io/ingress.class: "public"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    # nginx.ingress.kubernetes.io/configuration-snippet: |
+    #   proxy_set_header Accept-Encoding "";
+    #   sub_filter '<base href="/">' '<base href="/dashboard/">';
+    #   sub_filter '</head>' '<base href="/dashboard/"></head>';
+    #   sub_filter_once on;
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
   - http:
       paths:
-      - path: /dashboard
+      - path: /
         pathType: Prefix
         backend:
           service:
             name: kubernetes-dashboard
             port:
-              number: 8000
+              number: 443
