@@ -72,7 +72,7 @@ SELECT
 	a.name as AppName,
     a.dockerimageregistry as AppDockerImageRegistry,
     a.dockerimagename as AppDockerImageName,
-    a.dockerimagetag as AppDockerImageTag
+    a.dockerimagetag as AppDockerImageTag,
 	a.shmsize as AppShmSize,
 	a.kioskconfigurl as AppKioskConfigURL,
 	a.maxcpu as AppMaxCPU,

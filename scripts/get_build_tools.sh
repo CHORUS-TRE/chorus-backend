@@ -111,9 +111,9 @@ chmod +x $DIR/scripts/tools/darwin/bin/kubectl
 
 echo
 echo "==> installing kind"
-curl -o $DIR/scripts/tools/linux/bin/kind -L'#' "https://github.com/kubernetes-sigs/kind/releases/download/v0.23.0/kind-linux-amd64"
+curl -o $DIR/scripts/tools/linux/bin/kind -L'#' "https://github.com/kubernetes-sigs/kind/releases/download/v0.27.0/kind-linux-amd64"
 chmod +x $DIR/scripts/tools/linux/bin/kind
-curl -o $DIR/scripts/tools/darwin/bin/kind -L'#' "https://github.com/kubernetes-sigs/kind/releases/download/v0.23.0/kind-darwin-arm64"
+curl -o $DIR/scripts/tools/darwin/bin/kind -L'#' "https://github.com/kubernetes-sigs/kind/releases/download/v0.27.0/kind-darwin-arm64"
 chmod +x $DIR/scripts/tools/darwin/bin/kind
 
 
