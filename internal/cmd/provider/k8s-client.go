@@ -21,7 +21,7 @@ func ProvideK8sClient() k8s.K8sClienter {
 			var err error
 			k8sClient, err = k8s.NewClient(cfg)
 			if err != nil {
-				logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to provide k8s cleint: '%v'", err))
+				logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to provide k8s client: '%v'", err))
 			}
 		}
 	})

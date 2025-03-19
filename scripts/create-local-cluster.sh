@@ -25,6 +25,16 @@ for cluster in $clusters; do
   fi
 done
 
+# pull local image controller
+echo "Pulling dependencies"
+echo "Login to harbor.dev.chorus-tre.ch"
+read -s -p "Password of robot\$chorus-dev: " pw
+docker login harbor.dev.chorus-tre.ch -u robot\$chorus-dev -p $pw
+docker pull harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8
+# docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8 controller:latest
+docker pull harbor.dev.chorus-tre.ch/apps/xpra-server:latest
+docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:latest registry.build.chorus-tre.ch/apps/xpra-server
+
 if [ $exists -eq 1 ]; then
     echo "Cluster chorus already exist, skipping create..."
 else
@@ -32,28 +42,26 @@ else
     sleep 10
 fi
 
+kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8 --name chorus
+kind load docker-image registry.build.chorus-tre.ch/apps/xpra-server:latest --name chorus
+
 kubectl apply -f configs/dev/files/deploy-ingress-nginx.yaml
 
 rm -rf workbench-operator
 git clone git@github.com:CHORUS-TRE/workbench-operator.git
 cd workbench-operator
-make installdry OUT=tmp-workbench-crd.yaml
-cp tmp-workbench-crd.yaml ..
+# make installdry OUT=tmp-workbench-crd.yaml
+# cp tmp-workbench-crd.yaml ..
+# cd ..
+
+# # create workbench CRD
+# kubectl apply -f tmp-workbench-crd.yaml
+# rm tmp-workbench-crd.yaml
+echo "" > config/prometheus/monitor.yaml
+export IMG="harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8"
+make build-installer
+kubectl apply -f dist/install.yaml
 cd ..
-
-# create workbench CRD
-kubectl apply -f tmp-workbench-crd.yaml
-rm tmp-workbench-crd.yaml
-
-### TODO clean
-
-# pull local image controller
-# docker login registry.build.chorus-tre.ch 
-# docker pull registry.build.chorus-tre.ch/backend/workbench-controller:latest
-# docker tag registry.build.chorus-tre.ch/backend/workbench-controller:latest controller:latest
-# docker pull registry.build.chorus-tre.ch/xpra-server:latest
-# kind load docker-image controller:latest --name chorus
-# kind load docker-image registry.build.chorus-tre.ch/xpra-server:latest --name chorus
 
 rm -rf tmpoperator
 mkdir tmpoperator && cd tmpoperator
@@ -83,7 +91,7 @@ kubectl wait --for=condition=ready pod $POD_NAME -n ingress-nginx --timeout=60s
 kubectl apply -f configs/dev/files/dashboard.yaml
 
 cd "$DIR"
-kubectl apply -n system -f internal/client/helm/chart/roles.yaml
+kubectl apply -n system -f internal/client/k8s/chart/roles.yaml
 
 kubectl create serviceaccount admin-sa -n kube-system
 kubectl create clusterrolebinding admin-sa-binding --clusterrole=cluster-admin --serviceaccount=kube-system:admin-sa
@@ -92,15 +100,19 @@ token=$(kubectl create token admin-sa --duration 525600m -n kube-system)
 echo "$token" > configs/dev/files/token.txt
 api_server="https://127.0.0.1:41491"
 ca=$(kubectl get cm kube-root-ca.crt -o jsonpath="{['data']['ca\.crt']}")
-ca_ident=$(echo $ca | awk '{print "      "$0}')
+ca_ident=$(echo "$ca" | awk '{print "      "$0}')
 
 cat <<EOF >configs/dev/files/kind.yaml
 clients:
-  helm_client:
+  k8s_client:
     ca: |
 $ca_ident
     token: $token
     api_server: $api_server
+    image_pull_secrets:
+      - registry: "harbor.dev.chorus-tre.ch"
+        username: "robot\$chorus-dev"
+        password: "$pw"
 EOF
 
 echo ""
