@@ -32,8 +32,8 @@ read -s -p "Password of robot\$chorus-dev: " pw
 docker login harbor.dev.chorus-tre.ch -u robot\$chorus-dev -p $pw
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9
 docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 controller:latest
-docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:latest
-docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:latest registry.build.chorus-tre.ch/apps/xpra-server:latest
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
+docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
 
 
 if [ $exists -eq 1 ]; then
@@ -45,7 +45,7 @@ else
 fi
 
 kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 --name chorus
-kind load docker-image registry.build.chorus-tre.ch/apps/xpra-server:latest --name chorus
+kind load docker-image harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 --name chorus
 
 kubectl apply -f configs/dev/files/deploy-ingress-nginx.yaml
 
@@ -107,6 +107,7 @@ ca_ident=$(echo "$ca" | awk '{print "      "$0}')
 cat <<EOF >configs/dev/files/kind.yaml
 clients:
   k8s_client:
+    server_version: "6.2.3-2"
     ca: |
 $ca_ident
     token: $token

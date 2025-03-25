@@ -153,11 +153,17 @@ func (c *client) renderWorkbenchTemplate(namespace, workbenchName string, apps [
 		appMaps = append(appMaps, appToMap(app))
 	}
 
+	serverMap := map[string]string{
+		"version": c.cfg.Clients.K8sClient.ServerVersion,
+	}
+
 	vals := map[string]interface{}{
 		"namespace": namespace,
 		"name":      workbenchName,
 		"apps":      appMaps,
+		"server":    serverMap,
 	}
+
 	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) != 0 {
 		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
 		if err != nil {

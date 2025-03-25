@@ -101,6 +101,9 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
 
+	// Clients
+	v.SetDefault("clients.k8s_client.server_version", "latest")
+
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")
 	v.SetDefault("log.loggers.stdout_technical.enabled", true)
