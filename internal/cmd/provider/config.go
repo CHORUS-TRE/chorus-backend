@@ -104,6 +104,11 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Clients
 	v.SetDefault("clients.k8s_client.server_version", "latest")
 
+	// Steward
+	v.SetDefault("steward.tenant.enabled", false)
+	v.SetDefault("steward.user.enabled", false)
+	v.SetDefault("steward.workspace.enabled", false)
+
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")
 	v.SetDefault("log.loggers.stdout_technical.enabled", true)
