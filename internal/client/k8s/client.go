@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	helmchart "helm.sh/helm/v3/pkg/chart"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +28,6 @@ type K8sClienter interface {
 
 type client struct {
 	cfg           config.Config
-	chart         *helmchart.Chart
 	restConfig    *rest.Config
 	k8sClient     *kubernetes.Clientset
 	dynamicClient *dynamic.DynamicClient
@@ -49,71 +47,6 @@ type AppInstance struct {
 	MaxMemory      string
 	MinMemory      string
 	// IconURL        string
-}
-
-func appToMap(app AppInstance) map[string]interface{} {
-	m := map[string]interface{}{
-		"app":  app.AppName,
-		"name": app.AppName,
-	}
-	if app.AppTag != "" {
-		m["version"] = app.AppTag
-	}
-
-	if app.AppRegistry != "" {
-		if app.AppTag == "" {
-			m["image"] = map[string]string{
-				"registry":   app.AppRegistry,
-				"repository": app.AppImage,
-			}
-		} else {
-			m["image"] = map[string]string{
-				"registry":   app.AppRegistry,
-				"repository": app.AppImage,
-				"tag":        app.AppTag,
-			}
-		}
-	}
-
-	if app.ShmSize != "" {
-		m["shmSize"] = app.ShmSize
-	}
-	if app.KioskConfigURL != "" {
-		m["kioskConfig"] = map[string]string{
-			"url": app.KioskConfigURL,
-		}
-	}
-	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" {
-		m["resources"] = map[string]map[string]string{}
-		if app.MaxCPU != "" {
-			m["resources"].(map[string]map[string]string)["limits"] = map[string]string{
-				"cpu": app.MaxCPU,
-			}
-		}
-		if app.MinCPU != "" {
-			m["resources"].(map[string]map[string]string)["requests"] = map[string]string{
-				"cpu": app.MinCPU,
-			}
-		}
-		if app.MaxMemory != "" {
-			if _, ok := m["resources"]; !ok {
-				m["resources"] = map[string]map[string]string{}
-			}
-			m["resources"].(map[string]map[string]string)["limits"] = map[string]string{
-				"memory": app.MaxMemory,
-			}
-		}
-		if app.MinMemory != "" {
-			if _, ok := m["resources"]; !ok {
-				m["resources"] = map[string]map[string]string{}
-			}
-			m["resources"].(map[string]map[string]string)["requests"] = map[string]string{
-				"memory": app.MinMemory,
-			}
-		}
-	}
-
-	return m
 }
 
 func appToApp(app AppInstance) WorkbenchApp {
@@ -183,11 +116,6 @@ func appToApp(app AppInstance) WorkbenchApp {
 func NewClient(cfg config.Config) (*client, error) {
 	// clientcmd.SetLogger(&clientcmd.DefaultLogger{Verbosity: 10})
 
-	chart, err := GetHelmChart()
-	if err != nil {
-		return nil, fmt.Errorf("error loading Helm chart: %w", err)
-	}
-
 	restConfig, err := getK8sConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error getting k8s config: %w", err)
@@ -204,7 +132,6 @@ func NewClient(cfg config.Config) (*client, error) {
 	}
 
 	c := &client{
-		chart:         chart,
 		cfg:           cfg,
 		restConfig:    restConfig,
 		k8sClient:     k8sClient,
@@ -213,42 +140,11 @@ func NewClient(cfg config.Config) (*client, error) {
 	return c, nil
 }
 
-func (c *client) renderWorkbenchTemplate(namespace, workbenchName string, apps []AppInstance) (string, error) {
-	appMaps := []map[string]interface{}{}
-	for _, app := range apps {
-		appMaps = append(appMaps, appToMap(app))
-	}
-
-	serverMap := map[string]string{
-		"version": c.cfg.Clients.K8sClient.ServerVersion,
-	}
-
-	vals := map[string]interface{}{
-		"namespace": namespace,
-		"name":      workbenchName,
-		"apps":      appMaps,
-		"server":    serverMap,
-	}
-
-	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) != 0 {
-		dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
-		if err != nil {
-			return "", fmt.Errorf("unable to encode registries: %w", err)
-		}
-		vals["imagePullSecret"] = map[string]string{
-			"name":             c.cfg.Clients.K8sClient.ImagePullSecretName,
-			"dockerConfigJson": dockerConfig,
-		}
-	}
-
-	return c.renderTemplate(namespace, workbenchName, vals)
-}
-
 func (c *client) makeWorkbench(namespace, workbenchName string, apps []AppInstance) (Workbench, error) {
 	workbench := Workbench{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Workbench",
-			APIVersion: "chorus.ch/v1",
+			APIVersion: "default.chorus-tre.ch/v1alpha1",
 		},
 		ObjectMeta: v1.ObjectMeta{
 			Name:      workbenchName,
@@ -344,7 +240,7 @@ func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInst
 }
 
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := appToMap(appInstance)
+	app := appToApp(appInstance)
 
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
@@ -376,9 +272,10 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 		fmt.Println("not found")
 		patch = []map[string]interface{}{
 			{
-				"op":    "add",
-				"path":  "/spec/apps",
-				"value": []map[string]interface{}{app},
+				"op":   "add",
+				"path": "/spec/apps",
+				// "value": []map[string]interface{}{app},
+				"value": app,
 			},
 		}
 
@@ -399,7 +296,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 }
 
 func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := appToMap(appInstance)
+	app := appToApp(appInstance)
 
 	patch := map[string]interface{}{
 		"op":    "remove",

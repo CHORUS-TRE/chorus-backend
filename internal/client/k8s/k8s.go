@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,211 +12,16 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
-	helmaction "helm.sh/helm/v3/pkg/action"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 )
-
-func (c *client) renderTemplate(namespace, releaseName string, vals map[string]interface{}) (string, error) {
-	actionConfig := helmaction.Configuration{}
-	client := helmaction.NewInstall(&actionConfig)
-	client.DryRun = true
-	client.ReleaseName = releaseName
-	client.Namespace = namespace
-	client.ClientOnly = true
-
-	release, err := client.Run(c.chart, vals)
-	if err != nil {
-		return "", fmt.Errorf("error rendering Helm template: %w", err)
-	}
-
-	return release.Manifest, nil
-}
-
-func (c *client) applyManifest(manifest, namespace string) error {
-	logger.TechLog.Debug(context.Background(), "Applying manifest",
-		zap.String("namespace", namespace), zap.String("manifest", manifest),
-	)
-
-	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(manifest)), 4096)
-	for {
-		var rawObj map[string]interface{}
-		if err := decoder.Decode(&rawObj); err != nil {
-			break
-		}
-
-		kind, ok := rawObj["kind"].(string)
-		if !ok {
-			continue
-		}
-
-		name, _ := rawObj["metadata"].(map[string]interface{})["name"].(string)
-
-		gvr, err := c.getGroupVersionFromKind(kind)
-		if err != nil {
-			return fmt.Errorf("failed to get gvr from kind - %s", err)
-		}
-
-		if kind == "Namespace" {
-			_, err := c.dynamicClient.Resource(gvr).Get(context.Background(), name, v1.GetOptions{})
-			if k8serrors.IsNotFound(err) {
-				logger.TechLog.Info(context.Background(), "Namespace missing, creating",
-					zap.String("name", name),
-					zap.String("manifest", manifest),
-				)
-
-				_, err := c.dynamicClient.Resource(gvr).Create(context.Background(), &unstructured.Unstructured{Object: rawObj}, v1.CreateOptions{})
-				if err != nil {
-					return fmt.Errorf("error creating namespace: %w", err)
-				}
-			} else if err != nil {
-				return fmt.Errorf("error retrieving namespace: %w", err)
-			}
-			continue
-		}
-
-		existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
-		if k8serrors.IsNotFound(err) {
-			logger.TechLog.Info(context.Background(), "Missing resource, creating",
-				zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
-				zap.String("manifest", manifest),
-			)
-
-			_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: rawObj}, v1.CreateOptions{})
-			if err != nil {
-				return fmt.Errorf("error creating resource: %w", err)
-			}
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error retrieving resource: %w", err)
-		}
-
-		spec, hasSpec := rawObj["spec"]
-		if !hasSpec {
-			continue
-		}
-
-		existingSpec, exists := existing.Object["spec"]
-		if !exists || !hasSpec {
-			return fmt.Errorf("spec field not found in resource kind: %s, name: %s", kind, name)
-		}
-
-		desiredSpecBytes, _ := json.Marshal(spec)
-		existingSpecBytes, _ := json.Marshal(existingSpec)
-
-		patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(existingSpecBytes, desiredSpecBytes, existingSpecBytes)
-		if err != nil {
-			return fmt.Errorf("error calculating patch: %w", err)
-		}
-
-		if len(patch) > 0 && string(patch) != "{}" {
-			updatedSpec := map[string]interface{}{
-				"spec": json.RawMessage(desiredSpecBytes),
-			}
-
-			patch, _ := json.Marshal(updatedSpec)
-
-			logger.TechLog.Info(context.Background(), "Resource not in the correct state, applying patch",
-				zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
-				zap.String("manifest", manifest), zap.String("patch", string(patch)),
-			)
-
-			_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
-			if err != nil {
-				return fmt.Errorf("error applying patch: %w", err)
-			}
-		}
-	}
-
-	return nil
-}
-
-// func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
-// 	logger.TechLog.Debug(context.Background(), "syncing workbench",
-// 		zap.String("namespace", namespace), zap.Any("workbench", workbench),
-// 	)
-
-// 	kind := "Workbench"
-// 	name := workbench.Name
-
-// 	gvr, err := c.getGroupVersionFromKind(kind)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to get gvr from kind - %s", err)
-// 	}
-
-// 	rawSpecs, err := c.interfaceToMapInterface(workbench.Spec)
-// 	if err != nil {
-// 		return fmt.Errorf("error converting spec to map: %w", err)
-// 	}
-
-// 	existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
-// 	if k8serrors.IsNotFound(err) {
-// 		logger.TechLog.Info(context.Background(), "Missing resource, creating",
-// 			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
-// 		)
-
-// 		_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: rawSpecs}, v1.CreateOptions{})
-// 		if err != nil {
-// 			return fmt.Errorf("error creating resource: %w", err)
-// 		}
-// 		return nil
-// 	}
-// 	if err != nil {
-// 		return fmt.Errorf("error retrieving resource: %w", err)
-// 	}
-
-// 	existingSpec, exists := existing.Object["spec"]
-// 	if !exists {
-// 		return fmt.Errorf("spec field not found in resource kind: %s, name: %s", kind, name)
-// 	}
-
-// 	desiredSpecBytes, err := json.Marshal(workbench.Spec)
-// 	if err != nil {
-// 		return fmt.Errorf("error marshalling desired spec: %w", err)
-// 	}
-// 	existingSpecBytes, err := json.Marshal(existingSpec)
-// 	if err != nil {
-// 		return fmt.Errorf("error marshalling existing spec: %w", err)
-// 	}
-
-// 	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(existingSpecBytes, desiredSpecBytes, existingSpecBytes)
-// 	if err != nil {
-// 		return fmt.Errorf("error calculating patch: %w", err)
-// 	}
-
-// 	if len(patch) > 0 && string(patch) != "{}" {
-// 		updatedSpec := map[string]interface{}{
-// 			"spec": json.RawMessage(desiredSpecBytes),
-// 		}
-
-// 		patch, err := json.Marshal(updatedSpec)
-// 		if err != nil {
-// 			return fmt.Errorf("error marshalling patch: %w", err)
-// 		}
-
-// 		logger.TechLog.Info(context.Background(), "Resource not in the correct state, applying patch",
-// 			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
-// 			zap.String("patch", string(patch)),
-// 		)
-
-// 		_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
-// 		if err != nil {
-// 			return fmt.Errorf("error applying patch: %w", err)
-// 		}
-// 	}
-
-// 	return nil
-// }
 
 func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
 	logger.TechLog.Debug(context.Background(), "syncing workbench",
@@ -226,10 +31,22 @@ func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
 	kind := "Workbench"
 	name := workbench.Name
 
-	return c.syncResource(workbench.Spec, kind, name, namespace)
+	err := c.syncNamespace(namespace)
+	if err != nil {
+		return fmt.Errorf("error syncing namespace: %w", err)
+	}
+
+	err = c.syncImagePullSecret(namespace)
+	if err != nil {
+		// TODO fix
+		// return fmt.Errorf("error syncing image pull secret: %w", err)
+		fmt.Println("error syncing image pull secret: %w", err)
+	}
+
+	return c.syncResource(workbench, kind, name, namespace, "spec")
 }
 
-func (c *client) syncResource(spec interface{}, kind, name, namespace string) error {
+func (c *client) syncResource(spec interface{}, kind, name, namespace, specFieldName string) error {
 	logger.TechLog.Debug(context.Background(), "syncing resource",
 		zap.String("namespace", namespace), zap.Any("kind", kind),
 	)
@@ -243,6 +60,8 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace string) er
 	if err != nil {
 		return fmt.Errorf("error converting spec to map: %w", err)
 	}
+
+	fmt.Println("rawSpecs", rawSpecs)
 
 	existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
 	if k8serrors.IsNotFound(err) {
@@ -260,9 +79,9 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace string) er
 		return fmt.Errorf("error retrieving resource: %w", err)
 	}
 
-	existingSpec, exists := existing.Object["spec"]
+	existingSpec, exists := existing.Object[specFieldName]
 	if !exists {
-		return fmt.Errorf("spec field not found in resource kind: %s, name: %s", kind, name)
+		return fmt.Errorf(specFieldName+" field not found in resource kind: %s, name: %s", kind, name)
 	}
 
 	desiredSpecBytes, err := json.Marshal(spec)
@@ -281,7 +100,7 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace string) er
 
 	if len(patch) > 0 && string(patch) != "{}" {
 		updatedSpec := map[string]interface{}{
-			"spec": json.RawMessage(desiredSpecBytes),
+			specFieldName: json.RawMessage(desiredSpecBytes),
 		}
 
 		patch, err := json.Marshal(updatedSpec)
@@ -349,6 +168,8 @@ func (c *client) syncImagePullSecret(namespace string) error {
 		return fmt.Errorf("unable to encode registries: %w", err)
 	}
 
+	dockerConfigBase64 := base64.StdEncoding.EncodeToString([]byte(dockerConfig))
+
 	spec := map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Secret",
@@ -357,11 +178,11 @@ func (c *client) syncImagePullSecret(namespace string) error {
 		},
 		"type": "kubernetes.io/dockerconfigjson",
 		"data": map[string]interface{}{
-			".dockerconfigjson": dockerConfig,
+			".dockerconfigjson": dockerConfigBase64,
 		},
 	}
 
-	return c.syncResource(spec, "Secret", secretName, namespace)
+	return c.syncResource(spec, "Secret", secretName, namespace, "data")
 }
 
 func (c *client) interfaceToMapInterface(i interface{}) (map[string]interface{}, error) {
