@@ -30,20 +30,21 @@ echo "Pulling dependencies"
 echo "Login to harbor.dev.chorus-tre.ch"
 read -s -p "Password of robot\$chorus-dev: " pw
 docker login harbor.dev.chorus-tre.ch -u robot\$chorus-dev -p $pw
-docker pull harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8
-# docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8 controller:latest
-docker pull harbor.dev.chorus-tre.ch/apps/xpra-server:latest
-docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:latest registry.build.chorus-tre.ch/apps/xpra-server
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9
+docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 controller:latest
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
+docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
 
 if [ $exists -eq 1 ]; then
     echo "Cluster chorus already exist, skipping create..."
 else
+    echo "Creating cluster chorus..."
     kind create cluster --name chorus --config configs/dev/files/kind-config.yaml
     sleep 10
 fi
 
-kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8 --name chorus
-kind load docker-image registry.build.chorus-tre.ch/apps/xpra-server:latest --name chorus
+kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 --name chorus
+kind load docker-image harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 --name chorus
 
 kubectl apply -f configs/dev/files/deploy-ingress-nginx.yaml
 
@@ -58,7 +59,7 @@ cd workbench-operator
 # kubectl apply -f tmp-workbench-crd.yaml
 # rm tmp-workbench-crd.yaml
 echo "" > config/prometheus/monitor.yaml
-export IMG="harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.8"
+export IMG="harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9"
 make build-installer
 kubectl apply -f dist/install.yaml
 cd ..
@@ -105,6 +106,7 @@ ca_ident=$(echo "$ca" | awk '{print "      "$0}')
 cat <<EOF >configs/dev/files/kind.yaml
 clients:
   k8s_client:
+    server_version: "6.2.3-2"
     ca: |
 $ca_ident
     token: $token

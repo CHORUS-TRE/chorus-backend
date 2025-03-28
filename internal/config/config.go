@@ -129,6 +129,8 @@ type (
 		APIServer string `yaml:"api_server,omitempty"` // and service account api server
 
 		ImagePullSecrets []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
+
+		ServerVersion string `yaml:"server_version,omitempty"`
 	}
 
 	ImagePullSecret struct {
