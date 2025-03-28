@@ -103,6 +103,7 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Clients
 	v.SetDefault("clients.k8s_client.server_version", "latest")
+	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")
 
 	// Steward
 	v.SetDefault("steward.tenant.enabled", false)

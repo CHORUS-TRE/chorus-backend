@@ -25,11 +25,27 @@ for cluster in $clusters; do
   fi
 done
 
+# search first password in /home/$USER/.docker/config.json
+# if not found, ask for password
+if [ -f /home/$USER/.docker/config.json ]; then
+    json=$(cat /home/$USER/.docker/config.json)
+    auth=$(echo -n $json | jq -r '.auths["harbor.dev.chorus-tre.ch"].auth')
+    if [ "$auth" == "null" ]; then
+        read -s -p "Password of robot\$chorus-dev: " pw
+        user="robot\$chorus-dev"
+    else
+        user=$(echo $auth | base64 -d | cut -d: -f1)
+        pw=$(echo $auth | base64 -d | cut -d: -f2)
+    fi
+else
+    read -s -p "Password of robot\$chorus-dev: " pw
+fi
+
 # pull local image controller
 echo "Pulling dependencies"
 echo "Login to harbor.dev.chorus-tre.ch"
-read -s -p "Password of robot\$chorus-dev: " pw
-docker login harbor.dev.chorus-tre.ch -u robot\$chorus-dev -p $pw
+# read -s -p "Password of robot\$chorus-dev: " pw
+docker login harbor.dev.chorus-tre.ch -u "$user" -p "$pw"
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9
 docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 controller:latest
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2

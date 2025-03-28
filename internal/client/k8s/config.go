@@ -17,7 +17,7 @@ func getK8sConfig(cfg config.Config) (*rest.Config, error) {
 		return getK8sConfigFromServiceAccount(cfg)
 	}
 
-	return nil, errors.New("no config for helm client found")
+	return nil, errors.New("no config for k8s client found")
 }
 
 func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
