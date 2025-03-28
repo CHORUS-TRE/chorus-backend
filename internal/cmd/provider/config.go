@@ -103,6 +103,7 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Clients
 	v.SetDefault("clients.k8s_client.server_version", "latest")
+	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")
 
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")

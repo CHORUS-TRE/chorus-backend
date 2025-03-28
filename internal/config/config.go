@@ -128,7 +128,8 @@ type (
 		CA        string `yaml:"ca,omitempty"`         // and service account ca
 		APIServer string `yaml:"api_server,omitempty"` // and service account api server
 
-		ImagePullSecrets []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
+		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
+		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
 
 		ServerVersion string `yaml:"server_version,omitempty"`
 	}

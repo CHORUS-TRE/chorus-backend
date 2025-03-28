@@ -141,6 +141,242 @@ func (c *client) applyManifest(manifest, namespace string) error {
 	return nil
 }
 
+// func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
+// 	logger.TechLog.Debug(context.Background(), "syncing workbench",
+// 		zap.String("namespace", namespace), zap.Any("workbench", workbench),
+// 	)
+
+// 	kind := "Workbench"
+// 	name := workbench.Name
+
+// 	gvr, err := c.getGroupVersionFromKind(kind)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to get gvr from kind - %s", err)
+// 	}
+
+// 	rawSpecs, err := c.interfaceToMapInterface(workbench.Spec)
+// 	if err != nil {
+// 		return fmt.Errorf("error converting spec to map: %w", err)
+// 	}
+
+// 	existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+// 	if k8serrors.IsNotFound(err) {
+// 		logger.TechLog.Info(context.Background(), "Missing resource, creating",
+// 			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+// 		)
+
+// 		_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: rawSpecs}, v1.CreateOptions{})
+// 		if err != nil {
+// 			return fmt.Errorf("error creating resource: %w", err)
+// 		}
+// 		return nil
+// 	}
+// 	if err != nil {
+// 		return fmt.Errorf("error retrieving resource: %w", err)
+// 	}
+
+// 	existingSpec, exists := existing.Object["spec"]
+// 	if !exists {
+// 		return fmt.Errorf("spec field not found in resource kind: %s, name: %s", kind, name)
+// 	}
+
+// 	desiredSpecBytes, err := json.Marshal(workbench.Spec)
+// 	if err != nil {
+// 		return fmt.Errorf("error marshalling desired spec: %w", err)
+// 	}
+// 	existingSpecBytes, err := json.Marshal(existingSpec)
+// 	if err != nil {
+// 		return fmt.Errorf("error marshalling existing spec: %w", err)
+// 	}
+
+// 	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(existingSpecBytes, desiredSpecBytes, existingSpecBytes)
+// 	if err != nil {
+// 		return fmt.Errorf("error calculating patch: %w", err)
+// 	}
+
+// 	if len(patch) > 0 && string(patch) != "{}" {
+// 		updatedSpec := map[string]interface{}{
+// 			"spec": json.RawMessage(desiredSpecBytes),
+// 		}
+
+// 		patch, err := json.Marshal(updatedSpec)
+// 		if err != nil {
+// 			return fmt.Errorf("error marshalling patch: %w", err)
+// 		}
+
+// 		logger.TechLog.Info(context.Background(), "Resource not in the correct state, applying patch",
+// 			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+// 			zap.String("patch", string(patch)),
+// 		)
+
+// 		_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
+// 		if err != nil {
+// 			return fmt.Errorf("error applying patch: %w", err)
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
+	logger.TechLog.Debug(context.Background(), "syncing workbench",
+		zap.String("namespace", namespace), zap.Any("workbench", workbench),
+	)
+
+	kind := "Workbench"
+	name := workbench.Name
+
+	return c.syncResource(workbench.Spec, kind, name, namespace)
+}
+
+func (c *client) syncResource(spec interface{}, kind, name, namespace string) error {
+	logger.TechLog.Debug(context.Background(), "syncing resource",
+		zap.String("namespace", namespace), zap.Any("kind", kind),
+	)
+
+	gvr, err := c.getGroupVersionFromKind(kind)
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	rawSpecs, err := c.interfaceToMapInterface(spec)
+	if err != nil {
+		return fmt.Errorf("error converting spec to map: %w", err)
+	}
+
+	existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+	if k8serrors.IsNotFound(err) {
+		logger.TechLog.Info(context.Background(), "Missing resource, creating",
+			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+		)
+
+		_, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: rawSpecs}, v1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating resource: %w", err)
+		}
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving resource: %w", err)
+	}
+
+	existingSpec, exists := existing.Object["spec"]
+	if !exists {
+		return fmt.Errorf("spec field not found in resource kind: %s, name: %s", kind, name)
+	}
+
+	desiredSpecBytes, err := json.Marshal(spec)
+	if err != nil {
+		return fmt.Errorf("error marshalling desired spec: %w", err)
+	}
+	existingSpecBytes, err := json.Marshal(existingSpec)
+	if err != nil {
+		return fmt.Errorf("error marshalling existing spec: %w", err)
+	}
+
+	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(existingSpecBytes, desiredSpecBytes, existingSpecBytes)
+	if err != nil {
+		return fmt.Errorf("error calculating patch: %w", err)
+	}
+
+	if len(patch) > 0 && string(patch) != "{}" {
+		updatedSpec := map[string]interface{}{
+			"spec": json.RawMessage(desiredSpecBytes),
+		}
+
+		patch, err := json.Marshal(updatedSpec)
+		if err != nil {
+			return fmt.Errorf("error marshalling patch: %w", err)
+		}
+
+		logger.TechLog.Info(context.Background(), "Resource not in the correct state, applying patch",
+			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+			zap.String("patch", string(patch)),
+		)
+
+		_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
+		if err != nil {
+			return fmt.Errorf("error applying patch: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (c *client) syncNamespace(namespace string) error {
+	gvr, err := c.getGroupVersionFromKind("Namespace")
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	_, err = c.dynamicClient.Resource(gvr).Get(context.Background(), namespace, v1.GetOptions{})
+	if k8serrors.IsNotFound(err) {
+		logger.TechLog.Info(context.Background(), "Namespace missing, creating",
+			zap.String("namespace", namespace),
+		)
+
+		rawObj := map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "Namespace",
+			"metadata": map[string]interface{}{
+				"name": namespace,
+			},
+		}
+
+		_, err := c.dynamicClient.Resource(gvr).Create(context.Background(), &unstructured.Unstructured{Object: rawObj}, v1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating namespace: %w", err)
+		}
+
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving namespace: %w", err)
+	}
+
+	return nil
+}
+
+func (c *client) syncImagePullSecret(namespace string) error {
+	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) == 0 {
+		return nil
+	}
+
+	secretName := c.cfg.Clients.K8sClient.ImagePullSecretName
+
+	dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
+	if err != nil {
+		return fmt.Errorf("unable to encode registries: %w", err)
+	}
+
+	spec := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Secret",
+		"metadata": map[string]interface{}{
+			"name": secretName,
+		},
+		"type": "kubernetes.io/dockerconfigjson",
+		"data": map[string]interface{}{
+			".dockerconfigjson": dockerConfig,
+		},
+	}
+
+	return c.syncResource(spec, "Secret", secretName, namespace)
+}
+
+func (c *client) interfaceToMapInterface(i interface{}) (map[string]interface{}, error) {
+	raw, err := json.Marshal(i)
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]interface{}
+	err = json.Unmarshal(raw, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *client) getGroupVersionFromKind(kindName string) (schema.GroupVersionResource, error) {
 	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(c.restConfig)
 
