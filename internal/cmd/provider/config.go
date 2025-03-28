@@ -101,9 +101,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
 
-	// Clients
-	v.SetDefault("clients.k8s_client.server_version", "latest")
-
 	// Steward
 	v.SetDefault("steward.tenant.enabled", false)
 	v.SetDefault("steward.user.enabled", false)

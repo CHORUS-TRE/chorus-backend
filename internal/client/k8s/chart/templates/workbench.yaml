@@ -5,10 +5,6 @@ metadata:
 spec:
   imagePullSecrets: 
     - "image-pull-secret"
-  {{- if .Values.server }}
-  server:
-    version: {{ .Values.server.version }}
-  {{- end }}
   apps:
     {{- if .Values.apps }}
     {{- range .Values.apps }}

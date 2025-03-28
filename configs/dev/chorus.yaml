@@ -109,7 +109,6 @@ services:
 
 # clients:
 #   k8s_client:
-#     server_version: "6.2.3-2"
 #     kube_config: |
 #       apiVersion: v1
 #       clusters:
