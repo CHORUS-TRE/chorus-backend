@@ -310,5 +310,5 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 }
 
 func (c *client) DeleteWorkbench(namespace, workbenchName string) error {
-	return c.deleteResource(namespace, workbenchName, "Workbench")
+	return c.deleteResource(namespace, "Workbench", workbenchName)
 }
