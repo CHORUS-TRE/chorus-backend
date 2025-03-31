@@ -196,19 +196,6 @@ func EncodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, err
 	return string(jsonData), nil
 }
 
-// func (c *client) CreateWorkbench(namespace, workbenchName string) error {
-// 	manifest, err := c.renderWorkbenchTemplate(namespace, workbenchName, []AppInstance{})
-// 	if err != nil {
-// 		return fmt.Errorf("error rendering template: %w", err)
-// 	}
-// 	err = c.applyManifest(manifest, namespace)
-// 	if err != nil {
-// 		return fmt.Errorf("error applying manifest: %w", err)
-// 	}
-
-// 	return nil
-// }
-
 func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	workbench, err := c.makeWorkbench(namespace, workbenchName, []AppInstance{})
 	if err != nil {
@@ -218,18 +205,6 @@ func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	return c.syncWorkbench(workbench, namespace)
 }
 
-// func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
-// 	manifest, err := c.renderWorkbenchTemplate(namespace, workbenchName, apps)
-// 	if err != nil {
-// 		return fmt.Errorf("error rendering template: %w", err)
-// 	}
-// 	err = c.applyManifest(manifest, namespace)
-// 	if err != nil {
-// 		return fmt.Errorf("error applying manifest: %w", err)
-// 	}
-
-//		return nil
-//	}
 func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
 	workbench, err := c.makeWorkbench(namespace, workbenchName, apps)
 	if err != nil {
