@@ -9,6 +9,14 @@ func NewTestClient() *testClient {
 	return c
 }
 
+func (c *testClient) CreateWorkspace(namespace string) error {
+	return nil
+}
+
+func (c *testClient) DeleteWorkspace(namespace string) error {
+	return nil
+}
+
 func (c *testClient) CreateWorkbench(namespace, workbenchName string) error {
 	return nil
 }

@@ -18,6 +18,8 @@ import (
 )
 
 type K8sClienter interface {
+	CreateWorkspace(namespace string) error
+	DeleteWorkspace(namespace string) error
 	CreateWorkbench(namespace, workbenchName string) error
 	UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
@@ -196,6 +198,14 @@ func EncodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, err
 	return string(jsonData), nil
 }
 
+func (c *client) CreateWorkspace(namespace string) error {
+	return c.syncNamespace(namespace)
+}
+
+func (c *client) DeleteWorkspace(namespace string) error {
+	return c.deleteNamespace(namespace)
+}
+
 func (c *client) CreateWorkbench(namespace, workbenchName string) error {
 	workbench, err := c.makeWorkbench(namespace, workbenchName, []AppInstance{})
 	if err != nil {
@@ -300,15 +310,5 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 }
 
 func (c *client) DeleteWorkbench(namespace, workbenchName string) error {
-	gvr, err := c.getGroupVersionFromKind("Workbench")
-	if err != nil {
-		return fmt.Errorf("failed to get gvr from kind - %s", err)
-	}
-
-	err = c.dynamicClient.Resource(gvr).Namespace(namespace).Delete(context.Background(), workbenchName, v1.DeleteOptions{})
-	if err != nil {
-		return fmt.Errorf("error deleting workbench: %w", err)
-	}
-
-	return nil
+	return c.deleteResource(namespace, workbenchName, "Workbench")
 }

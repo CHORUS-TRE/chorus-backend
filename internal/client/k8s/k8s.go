@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
@@ -21,6 +22,10 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
+)
+
+const (
+	DEFAULT_POLL_INTERVAL = 500 * time.Millisecond
 )
 
 func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
@@ -154,6 +159,95 @@ func (c *client) syncNamespace(namespace string) error {
 	}
 
 	return nil
+}
+
+func (c *client) deleteNamespace(namespace string) error {
+	gvr, err := c.getGroupVersionFromKind("Namespace")
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	_, err = c.dynamicClient.Resource(gvr).Get(context.Background(), namespace, v1.GetOptions{})
+	if k8serrors.IsNotFound(err) {
+		logger.TechLog.Info(context.Background(), "Namespace already deleted",
+			zap.String("namespace", namespace),
+		)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving namespace: %w", err)
+	}
+	logger.TechLog.Info(context.Background(), "Deleting namespace",
+		zap.String("namespace", namespace),
+	)
+
+	err = c.dynamicClient.Resource(gvr).Delete(context.Background(), namespace, v1.DeleteOptions{})
+	if err != nil {
+		return fmt.Errorf("error deleting namespace: %w", err)
+	}
+
+	// Wait for the namespace to be deleted
+	for {
+		_, err = c.dynamicClient.Resource(gvr).Get(context.Background(), namespace, v1.GetOptions{})
+		if k8serrors.IsNotFound(err) {
+			logger.TechLog.Info(context.Background(), "Namespace deleted",
+				zap.String("namespace", namespace),
+			)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving namespace: %w", err)
+		}
+		logger.TechLog.Info(context.Background(), "Waiting for namespace to be deleted",
+			zap.String("namespace", namespace),
+		)
+		time.Sleep(DEFAULT_POLL_INTERVAL)
+	}
+}
+
+func (c *client) deleteResource(namespace, kind, name string) error {
+	gvr, err := c.getGroupVersionFromKind(kind)
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+	if k8serrors.IsNotFound(err) {
+		logger.TechLog.Info(context.Background(), "Resource already deleted",
+			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+		)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error retrieving resource: %w", err)
+	}
+	logger.TechLog.Info(context.Background(), "Deleting resource",
+		zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+	)
+
+	err = c.dynamicClient.Resource(gvr).Namespace(namespace).Delete(context.Background(), name, v1.DeleteOptions{})
+	if err != nil {
+		return fmt.Errorf("error deleting resource: %w", err)
+	}
+
+	// Wait for the resource to be deleted
+	for {
+		_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
+		if k8serrors.IsNotFound(err) {
+			logger.TechLog.Info(context.Background(), "Resource deleted",
+				zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+			)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving resource: %w", err)
+		}
+
+		logger.TechLog.Info(context.Background(), "Waiting for resource to be deleted",
+			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+		)
+		time.Sleep(DEFAULT_POLL_INTERVAL)
+	}
 }
 
 func (c *client) syncImagePullSecret(namespace string) error {

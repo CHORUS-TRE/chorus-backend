@@ -18,6 +18,7 @@ import (
 	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
+	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -44,7 +45,7 @@ type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
 	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error)
-	ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error)
+	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
@@ -99,41 +100,54 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 }
 
 func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.ListAllActiveWorkbenchs(ctx)
+	workbenchs, err := s.store.ListAllWorkbenches(ctx)
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to query workbenchs", zap.Error(err))
 		return
 	}
 
 	for _, workbench := range workbenchs {
-		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
-		if err != nil {
-			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-			continue
-		}
-		clientApps := []k8s.AppInstance{}
-		for _, app := range apps {
-			clientApps = append(clientApps, k8s.AppInstance{
-				AppName: utils.ToString(app.AppName),
+		fmt.Println("debug range workbench", workbench.ID, workbench.Status)
+		if workbench.Status == model.WorkbenchActive {
 
-				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
-				AppImage:    utils.ToString(app.AppDockerImageName),
-				AppTag:      utils.ToString(app.AppDockerImageTag),
+			apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+				continue
+			}
+			clientApps := []k8s.AppInstance{}
+			for _, app := range apps {
+				clientApps = append(clientApps, k8s.AppInstance{
+					AppName: utils.ToString(app.AppName),
 
-				ShmSize:        utils.ToString(app.AppShmSize),
-				KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
-				MaxCPU:         utils.ToString(app.AppMaxCPU),
-				MinCPU:         utils.ToString(app.AppMinCPU),
-				MaxMemory:      utils.ToString(app.AppMaxMemory),
-				MinMemory:      utils.ToString(app.AppMinMemory),
-			})
-		}
+					AppRegistry: utils.ToString(app.AppDockerImageRegistry),
+					AppImage:    utils.ToString(app.AppDockerImageName),
+					AppTag:      utils.ToString(app.AppDockerImageTag),
 
-		namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbench.ID)
+					ShmSize:        utils.ToString(app.AppShmSize),
+					KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
+					MaxCPU:         utils.ToString(app.AppMaxCPU),
+					MinCPU:         utils.ToString(app.AppMinCPU),
+					MaxMemory:      utils.ToString(app.AppMaxMemory),
+					MinMemory:      utils.ToString(app.AppMinMemory),
+				})
+			}
 
-		err = s.client.UpdateWorkbench(namespace, workbenchName, clientApps)
-		if err != nil {
-			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
+
+			err = s.client.UpdateWorkbench(namespace, workbenchName, clientApps)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			}
+		} else if workbench.Status == model.WorkbenchDeleted {
+			err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to delete workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			} else {
+				logger.TechLog.Debug(ctx, "deleted workbench", zap.Uint64("workbenchID", workbench.ID))
+			}
+		} else {
+			logger.TechLog.Debug(ctx, "skipping workbench update", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)))
 		}
 	}
 }
@@ -166,7 +180,7 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
-	err = s.client.DeleteWorkbench(s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbenchID))
+	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
 		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
@@ -188,7 +202,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
 
-	namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(id)
+	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
 
 	err = s.client.CreateWorkbench(namespace, workbenchName)
 	if err != nil {
@@ -259,7 +273,7 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
 	}
 
-	namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbenchID)
+	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)
 
 	proxyID := proxyID{
 		namespace: namespace,
@@ -308,11 +322,4 @@ func (s *WorkbenchService) saveBatchProxyHit(ctx context.Context) {
 		}
 		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to save batch proxy hit, losing %v hits to %v workbenches", hits, numWorkbenches), zap.Error(err))
 	}
-}
-
-func (s *WorkbenchService) getWorkspaceName(id uint64) string {
-	return fmt.Sprintf("workspace%v", id)
-}
-func (s *WorkbenchService) getWorkbenchName(id uint64) string {
-	return fmt.Sprintf("workbench%v", id)
 }

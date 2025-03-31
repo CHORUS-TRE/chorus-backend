@@ -37,12 +37,22 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 	return &workspace, nil
 }
 
-func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workspace, error) {
-	const query = `
+func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination, allowDeleted bool) ([]*model.Workspace, error) {
+	query := `
 SELECT id, tenantid, userid, name, shortname, description, status, createdat, updatedat
 	FROM workspaces
-WHERE tenantid = $1 AND status != 'deleted';
+WHERE
 `
+	if tenantID != 0 {
+		query += " tenantid = $1"
+	} else {
+		query += " $1 = $1"
+	}
+
+	if !allowDeleted {
+		query += " AND status != 'deleted';"
+	}
+
 	var workspaces []*model.Workspace
 	if err := s.db.SelectContext(ctx, &workspaces, query, tenantID); err != nil {
 		return nil, err
