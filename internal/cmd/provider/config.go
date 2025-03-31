@@ -100,15 +100,13 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
+	v.SetDefault("services.steward.tenant.enabled", false)
+	v.SetDefault("services.steward.user.enabled", false)
+	v.SetDefault("services.steward.workspace.enabled", false)
 
 	// Clients
 	v.SetDefault("clients.k8s_client.server_version", "latest")
 	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")
-
-	// Steward
-	v.SetDefault("steward.tenant.enabled", false)
-	v.SetDefault("steward.user.enabled", false)
-	v.SetDefault("steward.workspace.enabled", false)
 
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")

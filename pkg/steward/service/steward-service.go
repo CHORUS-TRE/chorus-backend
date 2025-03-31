@@ -34,9 +34,9 @@ type Stewarder interface {
 }
 
 type StewardService struct {
-	conf     config.Config
-	tenanter Tenanter
-	userer   Userer
+	conf        config.Config
+	tenanter    Tenanter
+	userer      Userer
 	workspaceer Workspaceer
 }
 
@@ -46,27 +46,27 @@ const DEFAULT_WORKSPACE_ID = 1
 
 func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer, worspaceer Workspaceer) *StewardService {
 	stewardService := &StewardService{
-		conf:     conf,
-		tenanter: tenanter,
-		userer:   userer,
+		conf:        conf,
+		tenanter:    tenanter,
+		userer:      userer,
 		workspaceer: worspaceer,
 	}
 
-	if conf.Steward.Tenant.Enabled {
+	if conf.Services.Steward.Tenant.Enabled {
 		// Initialize default tenant if it does not exist
-		if err := stewardService._InitializeDefaultTenant(context.Background()); err != nil {
+		if err := stewardService.InitializeDefaultTenant(context.Background()); err != nil {
 			fmt.Println(err)
 		}
 
-		if conf.Steward.User.Enabled {
+		if conf.Services.Steward.User.Enabled {
 			// Create new tenant user with specified roles
-			if err := stewardService._InitializeDefaultUser(context.Background()); err != nil {
+			if err := stewardService.InitializeDefaultUser(context.Background()); err != nil {
 				fmt.Println(err)
 			}
 
-			if conf.Steward.Workspace.Enabled {
+			if conf.Services.Steward.Workspace.Enabled {
 				// Create new tenant workspace
-				if err := stewardService._InitializeDefaultWorkspace(context.Background()); err != nil {
+				if err := stewardService.InitializeDefaultWorkspace(context.Background()); err != nil {
 					fmt.Println(err)
 				}
 			}
@@ -76,8 +76,7 @@ func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer, wor
 	return stewardService
 }
 
-
-func (s *StewardService) _InitializeDefaultTenant(ctx context.Context) error {
+func (s *StewardService) InitializeDefaultTenant(ctx context.Context) error {
 	if _, err := s.tenanter.GetTenant(ctx, DEFAULT_TENANT_ID); err != nil {
 		if err := s.InitializeNewTenant(ctx, DEFAULT_TENANT_ID); err != nil {
 			return fmt.Errorf("unable to initialize default tenant %v: %v", DEFAULT_TENANT_ID, err)
@@ -91,11 +90,11 @@ func (s *StewardService) _InitializeDefaultTenant(ctx context.Context) error {
 	return nil
 }
 
-func (s *StewardService) _InitializeDefaultUser(ctx context.Context) error {
+func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
 
 	if _, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: DEFAULT_TENANT_ID, ID: DEFAULT_USER_ID}); err != nil {
 		// Map roles from config to UserRole array
-		roles, err := user_model.ToUserRoles(s.conf.Steward.User.Roles)
+		roles, err := user_model.ToUserRoles(s.conf.Services.Steward.User.Roles)
 		if err != nil {
 			return fmt.Errorf("unable to map roles: %v", err)
 		}
@@ -104,17 +103,17 @@ func (s *StewardService) _InitializeDefaultUser(ctx context.Context) error {
 		_, err = s.userer.CreateUser(ctx, user_service.CreateUserReq{
 			TenantID: DEFAULT_TENANT_ID,
 			User: &user_service.UserReq{
-				ID:       	DEFAULT_USER_ID,
-				FirstName: 	s.conf.Steward.User.Username,
-				LastName:  	"default",
-				Username: 	s.conf.Steward.User.Username,
-				Source:   	"internal",
-				Password: 	s.conf.Steward.User.Password,
-				Status:   	user_model.UserActive,
-				Roles:    	roles,
+				ID:        DEFAULT_USER_ID,
+				FirstName: s.conf.Services.Steward.User.Username,
+				LastName:  "default",
+				Username:  s.conf.Services.Steward.User.Username,
+				Source:    "internal",
+				Password:  s.conf.Services.Steward.User.Password,
+				Status:    user_model.UserActive,
+				Roles:     roles,
 			},
 		})
-		
+
 		if err != nil {
 			return fmt.Errorf("unable to create default user %v: %v", DEFAULT_USER_ID, err)
 		} else {
@@ -127,17 +126,17 @@ func (s *StewardService) _InitializeDefaultUser(ctx context.Context) error {
 	return nil
 }
 
-func (s *StewardService) _InitializeDefaultWorkspace(ctx context.Context) error {
+func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
 	if _, err := s.workspaceer.GetWorkspace(ctx, DEFAULT_TENANT_ID, DEFAULT_WORKSPACE_ID); err != nil {
 		// Create default workspace
 		_, err = s.workspaceer.CreateWorkspace(ctx, &workspace_model.Workspace{
-			ID: DEFAULT_WORKSPACE_ID,
-			UserID: DEFAULT_USER_ID,
-			TenantID: DEFAULT_TENANT_ID,
-			Name: s.conf.Steward.Workspace.Name,
-			ShortName: fmt.Sprintf("ws-%d", DEFAULT_WORKSPACE_ID),
-			Description: fmt.Sprintf("Default workspace for user %v", s.conf.Steward.User.Username),
-			Status: workspace_model.WorkspaceActive,
+			ID:          DEFAULT_WORKSPACE_ID,
+			UserID:      DEFAULT_USER_ID,
+			TenantID:    DEFAULT_TENANT_ID,
+			Name:        s.conf.Services.Steward.Workspace.Name,
+			ShortName:   fmt.Sprintf("ws-%d", DEFAULT_WORKSPACE_ID),
+			Description: fmt.Sprintf("Default workspace for user %v", s.conf.Services.Steward.User.Username),
+			Status:      workspace_model.WorkspaceActive,
 		})
 
 		if err != nil {

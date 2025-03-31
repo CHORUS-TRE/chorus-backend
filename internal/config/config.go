@@ -15,7 +15,6 @@ type (
 		Tenants   map[uint64]Tenant   `yaml:"tenants"`
 		Workflows map[string]Workflow `yaml:"workflows,omitempty"`
 		Services  Services            `yaml:"services"`
-		Steward   Steward             `yaml:"steward"`
 	}
 
 	// Daemon holds the GRPC and HTTP server settings.
@@ -231,6 +230,24 @@ type (
 			BackendInK8S              bool          `yaml:"backend_in_k8s"`
 			ProxyHitSaveBatchInterval time.Duration `yaml:"proxy_hit_save_batch_interval"`
 		} `yaml:"workbench_service"`
+
+		Steward struct {
+			Tenant struct {
+				Enabled bool `yaml:"enabled"`
+			} `yaml:"tenant"`
+
+			User struct {
+				Enabled  bool     `yaml:"enabled"`
+				Username string   `yaml:"username"`
+				Password string   `yaml:"password"`
+				Roles    []string `yaml:"roles"`
+			} `yaml:"user"`
+
+			Workspace struct {
+				Enabled bool   `yaml:"enabled"`
+				Name    string `yaml:"name"`
+			} `yaml:"workspace"`
+		} `yaml:"steward"`
 	}
 
 	Mode struct {
@@ -264,23 +281,5 @@ type (
 		Timeout  time.Duration          `yaml:"timeout"`
 		Interval time.Duration          `yaml:"interval"`
 		Options  map[string]interface{} `yaml:"options"`
-	}
-
-	Steward struct {
-		Tenant struct {
-			Enabled bool `yaml:"enabled"`
-		} `yaml:"tenant"`
-
-		User struct {
-			Enabled  bool     `yaml:"enabled"`
-			Username string   `yaml:"username"`
-			Password string   `yaml:"password"`
-			Roles    []string `yaml:"roles"`
-		} `yaml:"user"`
-
-		Workspace struct {
-			Enabled bool   `yaml:"enabled"`
-			Name    string `yaml:"name"`
-		} `yaml:"workspace"`
 	}
 )
