@@ -98,11 +98,10 @@ WHERE
 	return appInstances, nil
 }
 
-func (s *WorkbenchStorage) ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error) {
+func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
 SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, createdat, updatedat
-	FROM workbenchs
-WHERE status = 'active';
+	FROM workbenchs;
 `
 	var workbenchs []*model.Workbench
 	if err := s.db.SelectContext(ctx, &workbenchs, query); err != nil {

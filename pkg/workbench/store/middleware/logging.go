@@ -69,12 +69,12 @@ func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, 
 	return res, nil
 }
 
-func (c workbenchStorageLogging) ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error) {
+func (c workbenchStorageLogging) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.ListAllActiveWorkbenchs(ctx)
+	res, err := c.next.ListAllWorkbenches(ctx)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

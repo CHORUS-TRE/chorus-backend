@@ -24,6 +24,14 @@ type Workbench struct {
 	DeletedAt *time.Time
 }
 
+func (s Workbench) GetClusterName() string {
+	return GetWorkbenchClusterName(s.ID)
+}
+
+func GetWorkbenchClusterName(id uint64) string {
+	return fmt.Sprintf("workbench%v", id)
+}
+
 // WorkbenchStatus represents the status of a workbench.
 type WorkbenchStatus string
 
