@@ -235,7 +235,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 	patch := []map[string]interface{}{
 		{
 			"op":    "add",
-			"path":  "/apps/-",
+			"path":  "/spec/apps/-",
 			"value": app,
 		},
 	}
@@ -260,7 +260,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 				"op":   "add",
 				"path": "/spec/apps",
 				// "value": []map[string]interface{}{app},
-				"value": app,
+				"value": []interface{}{app},
 			},
 		}
 
