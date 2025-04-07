@@ -29,6 +29,7 @@ echo "--- getting protoc-gen-openapiv2 ---"
 curl -L -o scripts/tools/linux/bin/protoc-gen-openapiv2 https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v2.20.0/protoc-gen-openapiv2-v2.20.0-linux-x86_64
 curl -L -o scripts/tools/darwin/bin/protoc-gen-openapiv2 https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v2.20.0/protoc-gen-openapiv2-v2.20.0-darwin-arm64
 chmod u+x scripts/tools/linux/bin/protoc-gen-openapiv2
+chmod u+x scripts/tools/darwin/bin/protoc-gen-openapiv2
 
 
 # echo
