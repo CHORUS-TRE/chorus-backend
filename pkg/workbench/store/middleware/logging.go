@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
@@ -48,7 +47,7 @@ func (c workbenchStorageLogging) ListWorkbenchs(ctx context.Context, tenantID ui
 	return res, nil
 }
 
-func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error) {
+func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
@@ -69,12 +68,12 @@ func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, 
 	return res, nil
 }
 
-func (c workbenchStorageLogging) ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error) {
+func (c workbenchStorageLogging) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.ListAllActiveWorkbenchs(ctx)
+	res, err := c.next.ListAllWorkbenches(ctx)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -190,4 +189,107 @@ func (c workbenchStorageLogging) CreateWorkbench(ctx context.Context, tenantID u
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return workbenchId, nil
+}
+
+func (c workbenchStorageLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	res, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithCountField(len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workbenchStorageLogging) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	res, err := c.next.GetAppInstance(ctx, tenantID, appInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithAppInstanceIDField(appInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithAppInstanceIDField(appInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workbenchStorageLogging) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithAppInstanceIDField(appInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+	c.logger.Debug(ctx, "request completed",
+		logger.WithAppInstanceIDField(appInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c workbenchStorageLogging) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.UpdateAppInstance(ctx, tenantID, appInstance)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithAppInstanceIDField(appInstance.ID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+	c.logger.Debug(ctx, "request completed",
+		logger.WithAppInstanceIDField(appInstance.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c workbenchStorageLogging) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	appInstanceId, err := c.next.CreateAppInstance(ctx, tenantID, appInstance)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return 0, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithAppInstanceIDField(appInstanceId),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return appInstanceId, nil
 }

@@ -23,6 +23,11 @@ type UserController struct {
 	user service.Userer
 }
 
+// NewUserController returns a fresh admin service controller instance.
+func NewUserController(user service.Userer) UserController {
+	return UserController{user: user}
+}
+
 func (c UserController) GetUserMe(ctx context.Context, empty *empty.Empty) (*chorus.GetUserMeReply, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
@@ -142,11 +147,6 @@ func (c UserController) DeleteUser(ctx context.Context, req *chorus.DeleteUserRe
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteUser': %v", err.Error())
 	}
 	return &chorus.DeleteUserReply{Result: &chorus.DeleteUserResult{}}, nil
-}
-
-// NewUserController returns a fresh admin service controller instance.
-func NewUserController(user service.Userer) UserController {
-	return UserController{user: user}
 }
 
 // GetUsers extracts the retrieved users from the service and inserts them into a reply object.

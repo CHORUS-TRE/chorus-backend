@@ -5,12 +5,23 @@ metadata:
 spec:
   imagePullSecrets: 
     - "image-pull-secret"
+  {{- if .Values.server }}
+  server:
+    version: {{ .Values.server.version }}
+  {{- end }}
   apps:
+    {{- if .Values.apps }}
     {{- range .Values.apps }}
     - name: {{ .name }}
-      image: {{ .image }}
+      image: 
+        registry: {{ .image.registry }}
+        repository: {{ .image.repository }}
+        tag: {{ .image.tag }}
       version: {{ .version }}
       {{- if .shmSize }}
       shmSize: {{ .shmSize }}
       {{- end }}
+    {{- end }}
+    {{- else }}
+    []
     {{- end }}

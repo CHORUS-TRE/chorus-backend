@@ -1,7 +1,7 @@
 daemon:
   title: "chorus"
   http:
-    host: localhost
+    host: 0.0.0.0
     port: 5000
     headers:
       access_control_allow_origin: "*"
@@ -108,7 +108,8 @@ services:
     proxy_hit_save_batch_interval: 30s
 
 # clients:
-#   helm_client:
+#   k8s_client:
+#     server_version: "6.2.3-2"
 #     kube_config: |
 #       apiVersion: v1
 #       clusters:

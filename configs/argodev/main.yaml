@@ -91,7 +91,7 @@ services:
     proxy_hit_save_batch_interval: 30s
 
 clients:
-  helm_client:
+  k8s_client:
     ca: "{{ .service_account_secret_ca }}"
     token: "{{ .service_account_secret_token }}"
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
