@@ -45,7 +45,7 @@ func (c *client) syncWorkbench(tenantID uint64, workbench Workbench, namespace s
 	if err != nil {
 		// TODO fix
 		// return fmt.Errorf("error syncing image pull secret: %w", err)
-		fmt.Println("error syncing image pull secret: %w", err)
+		logger.TechLog.Error(context.Background(), "error syncing image pull secret: %w", zap.Error(err))
 	}
 
 	return c.syncResource(workbench, kind, name, namespace, "spec")
@@ -66,7 +66,10 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace, specField
 		return fmt.Errorf("error converting spec to map: %w", err)
 	}
 
-	fmt.Println("rawSpecs", rawSpecs)
+	logger.TechLog.Debug(context.Background(), "syncing resource raw specs",
+		zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+		zap.Any("spec", rawSpecs),
+	)
 
 	existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
 	if k8serrors.IsNotFound(err) {

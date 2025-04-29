@@ -10,6 +10,8 @@ import (
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"go.uber.org/zap"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -87,37 +89,37 @@ func (c *client) watch() {
 
 	// namespaceGvr, err := c.getGroupVersionFromKind("Namespace")
 	// if err != nil {
-	// 	fmt.Println("Error getting GVR for namespace:", err)
+	// 	logger.TechLog.Error(context.Background(), "Error getting GVR for namespace:", zap.Error(err))
 	// 	return
 	// }
 	// namespaceInformer := factory.ForResource(namespaceGvr).Informer()
 	// namespaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 	// 	AddFunc: func(obj interface{}) {
-	// 		fmt.Println("Watcher event: added namespace:")
+	// 		logger.TechLog.Info(context.Background(), "Watcher event: added namespace:")
 	// 		namespace, err := EventInterfaceToNamespace(obj)
 	// 		if err != nil {
-	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
 	// 			return
 	// 		}
 	// 	},
 	// 	UpdateFunc: func(oldObj, newObj interface{}) {
-	// 		fmt.Println("Watcher event: updated namespace:")
+	// 		logger.TechLog.Info(context.Background(), "Watcher event: updated namespace:")
 	// 		newNamespace, err := EventInterfaceToNamespace(newObj)
 	// 		if err != nil {
-	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
 	// 			return
 	// 		}
 	// 		oldNamespace, err := EventInterfaceToNamespace(oldObj)
 	// 		if err != nil {
-	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
 	// 			return
 	// 		}
 	// 	},
 	// 	DeleteFunc: func(obj interface{}) {
-	// 		fmt.Println("Watcher event: deleted namespace:")
+	// 		logger.TechLog.Info(context.Background(), "Watcher event: deleted namespace:")
 	// 		namespace, err := EventInterfaceToNamespace(obj)
 	// 		if err != nil {
-	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
 	// 			return
 	// 		}
 	// 	},
@@ -125,73 +127,73 @@ func (c *client) watch() {
 
 	workbenchGvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
-		fmt.Println("Error getting GVR for Workbench:", err)
+		logger.TechLog.Error(context.Background(), "Error getting GVR for Workbench", zap.Error(err))
 		return
 	}
 	workbenchInformer := factory.ForResource(workbenchGvr).Informer()
 	workbenchInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			fmt.Println("Watcher event: added workbench:")
+			logger.TechLog.Debug(context.Background(), "added workbench", zap.Any("workbench", obj))
 			workbench, err := EventInterfaceToWorkbench(obj)
 			if err != nil {
-				fmt.Println("Error converting to Workbench:", err)
+				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
 				return
 			}
 			if c.onNewWorkbench != nil {
 				if err := c.onNewWorkbench(workbench); err != nil {
-					fmt.Println("Error handling new workbench:", err)
+					logger.TechLog.Error(context.Background(), "Error handling new workbench:", zap.Error(err))
 				}
 			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			fmt.Println("Watcher event: updated workbench:")
+			logger.TechLog.Debug(context.Background(), "updated workbench", zap.Any("newWorkbench", newObj), zap.Any("oldWorkbench", oldObj))
 			newWorkbench, err := EventInterfaceToWorkbench(newObj)
 			if err != nil {
-				fmt.Println("Error converting to Workbench:", err)
+				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
 				return
 			}
 			oldWorkbench, err := EventInterfaceToWorkbench(oldObj)
 			if err != nil {
-				fmt.Println("Error converting to Workbench:", err)
+				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
 				return
 			}
 			if c.onUpdateWorkbench != nil {
 				if err := c.onUpdateWorkbench(oldWorkbench, newWorkbench); err != nil {
-					fmt.Println("Error handling updated workbench:", err)
+					logger.TechLog.Error(context.Background(), "Error handling updated workbench:", zap.Error(err))
 				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			fmt.Println("Watcher event: deleted workbench:")
+			logger.TechLog.Debug(context.Background(), "deleted workbench", zap.Any("workbench", obj))
 			workbench, err := EventInterfaceToWorkbench(obj)
 			if err != nil {
-				fmt.Println("Error converting to Workbench:", err)
+				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
 				return
 			}
 			if c.onDeleteWorkbench != nil {
 				if err := c.onDeleteWorkbench(workbench); err != nil {
-					fmt.Println("Error handling deleted workbench:", err)
+					logger.TechLog.Error(context.Background(), "Error handling deleted workbench:", zap.Error(err))
 				}
 			}
 		},
 	})
 
-	fmt.Println("Starting informers...")
+	logger.TechLog.Info(context.Background(), "Starting informers...")
 	stopCh := make(chan struct{})
 	factory.Start(stopCh)
 	factory.WaitForCacheSync(stopCh)
 
-	fmt.Println("Informers started and caches synced.")
+	logger.TechLog.Info(context.Background(), "Informers started and caches synced.")
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt)
 	<-ch
-	fmt.Println("Received interrupt signal, shutting down informers...")
+	logger.TechLog.Info(context.Background(), "Received interrupt signal, shutting down informers...")
 	close(stopCh)
 
-	fmt.Println("Stopping informers...")
+	logger.TechLog.Info(context.Background(), "Stopping informers...")
 	factory.Shutdown()
-	fmt.Println("Informers stopped.")
+	logger.TechLog.Info(context.Background(), "Informers stopped.")
 }
 
 func (c *client) WatchOnNewWorkbench(handler func(workbench *Workbench) error) error {
@@ -323,7 +325,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 
 	_, found = spec["apps"]
 	if !found {
-		fmt.Println("not found")
+		logger.TechLog.Info(context.Background(), "not found")
 		patch = []map[string]interface{}{
 			{
 				"op":   "add",
@@ -340,7 +342,8 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 		return fmt.Errorf("error marshalling patch: %w", err)
 	}
 
-	fmt.Println("dumping patchBytes", string(patchBytes))
+	logger.TechLog.Debug(context.Background(), "create app instance update patchBytes", zap.String("patchBytes", string(patchBytes)))
+
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
 		return fmt.Errorf("error applying patch: %w", err)
@@ -397,7 +400,7 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 		return fmt.Errorf("error marshalling patch: %w", err)
 	}
 
-	fmt.Println("dumping patchBytes delete appInstance", string(patchBytes))
+	logger.TechLog.Debug(context.Background(), "delete app instance patchBytes", zap.String("patchBytes", string(patchBytes)))
 
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
