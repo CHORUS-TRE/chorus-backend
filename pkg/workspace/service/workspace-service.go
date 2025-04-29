@@ -61,7 +61,7 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 			}()
 		} else {
 			go func() {
-				if err := s.client.CreateWorkspace(model.GetWorkspaceClusterName(workspace.ID)); err != nil {
+				if err := s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(workspace.ID)); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to create workspace %v: %v", workspace.ID, err))
 				}
 			}()
@@ -116,7 +116,7 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		return 0, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
 	}
 
-	err = s.client.CreateWorkspace(model.GetWorkspaceClusterName(id))
+	err = s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(id))
 	if err != nil {
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workspace.ID, err)
 	}

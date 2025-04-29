@@ -118,6 +118,7 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 			clientApps := []k8s.AppInstance{}
 			for _, app := range apps {
 				clientApps = append(clientApps, k8s.AppInstance{
+					ID:      app.ID,
 					AppName: utils.ToString(app.AppName),
 
 					AppRegistry: utils.ToString(app.AppDockerImageRegistry),
@@ -135,7 +136,7 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 
 			namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-			err = s.client.UpdateWorkbench(namespace, workbenchName, clientApps)
+			err = s.client.UpdateWorkbench(workbench.TenantID, namespace, workbenchName, clientApps)
 			if err != nil {
 				logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			}
@@ -204,7 +205,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
 
-	err = s.client.CreateWorkbench(namespace, workbenchName)
+	err = s.client.CreateWorkbench(workbench.TenantID, namespace, workbenchName)
 	if err != nil {
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}

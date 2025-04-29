@@ -9,7 +9,7 @@ func NewTestClient() *testClient {
 	return c
 }
 
-func (c *testClient) CreateWorkspace(namespace string) error {
+func (c *testClient) CreateWorkspace(tenantID uint64, namespace string) error {
 	return nil
 }
 
@@ -17,11 +17,11 @@ func (c *testClient) DeleteWorkspace(namespace string) error {
 	return nil
 }
 
-func (c *testClient) CreateWorkbench(namespace, workbenchName string) error {
+func (c *testClient) CreateWorkbench(tenantID uint64, namespace, workbenchName string) error {
 	return nil
 }
 
-func (c *testClient) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
+func (c *testClient) UpdateWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) error {
 	return nil
 }
 

@@ -132,6 +132,11 @@ type (
 		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
 
 		ServerVersion string `yaml:"server_version,omitempty"`
+
+		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
+
+		DefaultRegistry   string `yaml:"default_registry,omitempty"`
+		DefaultRepository string `yaml:"default_repository,omitempty"`
 	}
 
 	ImagePullSecret struct {

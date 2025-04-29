@@ -5,23 +5,28 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
+	"gopkg.in/yaml.v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/dynamic/dynamicinformer"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 )
 
 type K8sClienter interface {
-	CreateWorkspace(namespace string) error
+	CreateWorkspace(tenantID uint64, namespace string) error
 	DeleteWorkspace(namespace string) error
-	CreateWorkbench(namespace, workbenchName string) error
-	UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error
+	CreateWorkbench(tenantID uint64, namespace, workbenchName string) error
+	UpdateWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
@@ -33,86 +38,8 @@ type client struct {
 	restConfig    *rest.Config
 	k8sClient     *kubernetes.Clientset
 	dynamicClient *dynamic.DynamicClient
-}
-
-type AppInstance struct {
-	AppName string
-
-	AppRegistry string
-	AppImage    string
-	AppTag      string
-
-	ShmSize        string
-	KioskConfigURL string
-	MaxCPU         string
-	MinCPU         string
-	MaxMemory      string
-	MinMemory      string
-	// IconURL        string
-}
-
-func appToApp(app AppInstance) WorkbenchApp {
-	w := WorkbenchApp{
-		Name: app.AppName,
-	}
-
-	if app.AppTag != "" {
-		w.Version = app.AppTag
-	}
-
-	if app.AppRegistry != "" {
-		if app.AppTag == "" {
-			w.Image = &Image{
-				Registry:   app.AppRegistry,
-				Repository: app.AppImage,
-			}
-		} else {
-			w.Image = &Image{
-				Registry:   app.AppRegistry,
-				Repository: app.AppImage,
-				Tag:        app.AppTag,
-			}
-		}
-	}
-
-	if app.ShmSize != "" {
-		shmSize := resource.MustParse(app.ShmSize)
-		w.ShmSize = &shmSize
-	}
-	if app.KioskConfigURL != "" {
-		w.KioskConfig = &KioskConfig{
-			URL: app.KioskConfigURL,
-		}
-	}
-
-	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" {
-		w.Resources = &corev1.ResourceRequirements{}
-		if app.MaxCPU != "" {
-			w.Resources.Limits = corev1.ResourceList{
-				"cpu": resource.MustParse(app.MaxCPU),
-			}
-		}
-		if app.MinCPU != "" {
-			if w.Resources.Requests == nil {
-				w.Resources.Requests = corev1.ResourceList{}
-			}
-			w.Resources.Requests["cpu"] = resource.MustParse(app.MinCPU)
-		}
-		if app.MaxMemory != "" {
-			if w.Resources.Limits == nil {
-				w.Resources.Limits = corev1.ResourceList{}
-			}
-			w.Resources.Limits["memory"] = resource.MustParse(app.MaxMemory)
-		}
-		if app.MinMemory != "" {
-			if w.Resources.Requests == nil {
-				w.Resources.Requests = corev1.ResourceList{}
-			}
-			w.Resources.Requests["memory"] = resource.MustParse(app.MinMemory)
-		}
-	}
-
-	return w
+	gvrCache      map[string]schema.GroupVersionResource
+	gvrCacheLock  sync.Mutex
 }
 
 func NewClient(cfg config.Config) (*client, error) {
@@ -138,11 +65,131 @@ func NewClient(cfg config.Config) (*client, error) {
 		restConfig:    restConfig,
 		k8sClient:     k8sClient,
 		dynamicClient: dynamicClient,
+		gvrCache:      make(map[string]schema.GroupVersionResource),
 	}
+
+	if cfg.Clients.K8sClient.IsWatcher {
+		go c.watch()
+	}
+
 	return c, nil
 }
 
-func (c *client) makeWorkbench(namespace, workbenchName string, apps []AppInstance) (Workbench, error) {
+func (c *client) watch() {
+	factory := dynamicinformer.NewDynamicSharedInformerFactory(c.dynamicClient, 0)
+
+	namespaceGvr, err := c.getGroupVersionFromKind("Namespace")
+	if err != nil {
+		fmt.Println("Error getting GVR for namespace:", err)
+		return
+	}
+	namespaceInformer := factory.ForResource(namespaceGvr).Informer()
+	namespaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			fmt.Println("Watcher event: added namespace:")
+			namespace, err := EventInterfaceToNamespace(obj)
+			if err != nil {
+				fmt.Println("Error converting to Namespace:", err)
+				return
+			}
+			dumpUnstructured(namespace)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			fmt.Println("Watcher event: updated namespace:")
+			newNamespace, err := EventInterfaceToNamespace(newObj)
+			if err != nil {
+				fmt.Println("Error converting to Namespace:", err)
+				return
+			}
+			oldNamespace, err := EventInterfaceToNamespace(oldObj)
+			if err != nil {
+				fmt.Println("Error converting to Namespace:", err)
+				return
+			}
+			dumpUnstructured(newNamespace)
+			dumpUnstructured(oldNamespace)
+		},
+		DeleteFunc: func(obj interface{}) {
+			fmt.Println("Watcher event: deleted namespace:")
+			namespace, err := EventInterfaceToNamespace(obj)
+			if err != nil {
+				fmt.Println("Error converting to Namespace:", err)
+				return
+			}
+			dumpUnstructured(namespace)
+		},
+	})
+
+	workbenchGvr, err := c.getGroupVersionFromKind("Workbench")
+	if err != nil {
+		fmt.Println("Error getting GVR for Workbench:", err)
+		return
+	}
+	workbenchInformer := factory.ForResource(workbenchGvr).Informer()
+	workbenchInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			fmt.Println("Watcher event: added workbench:")
+			workbench, err := EventInterfaceToWorkbench(obj)
+			if err != nil {
+				fmt.Println("Error converting to Workbench:", err)
+				return
+			}
+			dumpUnstructured(workbench)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			fmt.Println("Watcher event: updated workbench:")
+			newWorkbench, err := EventInterfaceToWorkbench(newObj)
+			if err != nil {
+				fmt.Println("Error converting to Workbench:", err)
+				return
+			}
+			oldWorkbench, err := EventInterfaceToWorkbench(oldObj)
+			if err != nil {
+				fmt.Println("Error converting to Workbench:", err)
+				return
+			}
+			dumpUnstructured(newWorkbench)
+			dumpUnstructured(oldWorkbench)
+		},
+		DeleteFunc: func(obj interface{}) {
+			fmt.Println("Watcher event: deleted workbench:")
+			workbench, err := EventInterfaceToWorkbench(obj)
+			if err != nil {
+				fmt.Println("Error converting to Workbench:", err)
+				return
+			}
+			dumpUnstructured(workbench)
+		},
+	})
+
+	fmt.Println("Starting informers...")
+	stopCh := make(chan struct{})
+	factory.Start(stopCh)
+	factory.WaitForCacheSync(stopCh)
+
+	fmt.Println("Informers started and caches synced.")
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt)
+	<-ch
+	fmt.Println("Received interrupt signal, shutting down informers...")
+	close(stopCh)
+
+	fmt.Println("Stopping informers...")
+	factory.Shutdown()
+	fmt.Println("Informers stopped.")
+}
+
+func dumpUnstructured(obj interface{}) {
+	yamlData, err := yaml.Marshal(obj)
+	if err != nil {
+		fmt.Println("Error marshalling object to YAML:", err)
+		return
+	}
+	fmt.Println(string(yamlData))
+}
+
+func (c *client) makeWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) (Workbench, error) {
 	workbench := Workbench{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Workbench",
@@ -151,6 +198,10 @@ func (c *client) makeWorkbench(namespace, workbenchName string, apps []AppInstan
 		ObjectMeta: v1.ObjectMeta{
 			Name:      workbenchName,
 			Namespace: namespace,
+			Labels: map[string]string{
+				"chorus-tre.ch/created-by": "chorus-backend",
+				"chorus-tre.ch/tenant-id":  fmt.Sprintf("%d", tenantID),
+			},
 		},
 		Spec: WorkbenchSpec{
 			Apps: []WorkbenchApp{},
@@ -158,7 +209,7 @@ func (c *client) makeWorkbench(namespace, workbenchName string, apps []AppInstan
 	}
 
 	for _, app := range apps {
-		workbenchApp := appToApp(app)
+		workbenchApp := c.appToApp(app)
 		workbench.Spec.Apps = append(workbench.Spec.Apps, workbenchApp)
 	}
 
@@ -198,34 +249,34 @@ func EncodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, err
 	return string(jsonData), nil
 }
 
-func (c *client) CreateWorkspace(namespace string) error {
-	return c.syncNamespace(namespace)
+func (c *client) CreateWorkspace(tenantID uint64, namespace string) error {
+	return c.syncNamespace(tenantID, namespace)
 }
 
 func (c *client) DeleteWorkspace(namespace string) error {
 	return c.deleteNamespace(namespace)
 }
 
-func (c *client) CreateWorkbench(namespace, workbenchName string) error {
-	workbench, err := c.makeWorkbench(namespace, workbenchName, []AppInstance{})
+func (c *client) CreateWorkbench(tenantID uint64, namespace, workbenchName string) error {
+	workbench, err := c.makeWorkbench(tenantID, namespace, workbenchName, []AppInstance{})
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(workbench, namespace)
+	return c.syncWorkbench(tenantID, workbench, namespace)
 }
 
-func (c *client) UpdateWorkbench(namespace, workbenchName string, apps []AppInstance) error {
-	workbench, err := c.makeWorkbench(namespace, workbenchName, apps)
+func (c *client) UpdateWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) error {
+	workbench, err := c.makeWorkbench(tenantID, namespace, workbenchName, apps)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(workbench, namespace)
+	return c.syncWorkbench(tenantID, workbench, namespace)
 }
 
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := appToApp(appInstance)
+	app := c.appToApp(appInstance)
 
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
@@ -281,7 +332,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 }
 
 func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := appToApp(appInstance)
+	app := c.appToApp(appInstance)
 
 	patch := map[string]interface{}{
 		"op":    "remove",

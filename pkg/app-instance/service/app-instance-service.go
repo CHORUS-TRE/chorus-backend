@@ -58,9 +58,27 @@ func (s *AppInstanceService) GetAppInstance(ctx context.Context, tenantID, appIn
 }
 
 func (s *AppInstanceService) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
-	err := s.store.DeleteAppInstance(ctx, tenantID, appInstanceID)
+	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
 		return fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+	}
+
+	err = s.store.DeleteAppInstance(ctx, tenantID, appInstanceID)
+	if err != nil {
+		return fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+	}
+
+	clientApp, err := s.getK8sAppInstance(appInstance.TenantID, appInstance.AppID)
+	if err != nil {
+		return fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
+	}
+
+	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
+	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
+
+	err = s.client.DeleteAppInstance(wsName, wbName, clientApp)
+	if err != nil {
+		return fmt.Errorf("unable to delete k8s app instance %v: %w", appInstance.ID, err)
 	}
 
 	return nil
@@ -80,15 +98,30 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 		return 0, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
 	}
 
-	app, err := s.apper.GetApp(ctx, appInstance.TenantID, appInstance.AppID)
-	if err != nil {
-		return 0, fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
-	}
-
 	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
+	clientApp, err := s.getK8sAppInstance(appInstance.TenantID, appInstance.AppID)
+	if err != nil {
+		return 0, fmt.Errorf("unable to get app %v: %w", id, err)
+	}
+
+	err = s.client.CreateAppInstance(wsName, wbName, clientApp)
+	if err != nil {
+		return 0, fmt.Errorf("unable to create app instance %v: %w", id, err)
+	}
+
+	return id, nil
+}
+
+func (s *AppInstanceService) getK8sAppInstance(tenantID, appID uint64) (k8s.AppInstance, error) {
+	app, err := s.apper.GetApp(context.Background(), tenantID, appID)
+	if err != nil {
+		return k8s.AppInstance{}, fmt.Errorf("unable to get app %v: %w", appID, err)
+	}
+
 	clientApp := k8s.AppInstance{
+		ID:      appID,
 		AppName: app.Name,
 
 		AppRegistry: app.DockerImageRegistry,
@@ -101,16 +134,9 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 		MinCPU:         app.MinCPU,
 		MaxMemory:      app.MaxMemory,
 		MinMemory:      app.MinMemory,
-		// IconURL:        app.IconURL,
-
 	}
 
-	err = s.client.CreateAppInstance(wsName, wbName, clientApp)
-	if err != nil {
-		return 0, fmt.Errorf("unable to create app instance %v: %w", id, err)
-	}
-
-	return id, nil
+	return clientApp, nil
 }
 
 func (s *AppInstanceService) getWorkspaceName(id uint64) string {
