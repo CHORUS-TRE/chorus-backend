@@ -12,13 +12,13 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	jsonpatch "github.com/evanphx/json-patch"
 	"go.uber.org/zap"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
@@ -28,15 +28,15 @@ const (
 	DEFAULT_POLL_INTERVAL = 500 * time.Millisecond
 )
 
-func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
+func (c *client) syncWorkbench(tenantID uint64, workbench Workbench, namespace string) error {
 	logger.TechLog.Debug(context.Background(), "syncing workbench",
-		zap.String("namespace", namespace), zap.Any("workbench", workbench),
+		zap.String("namespace", namespace), zap.Any("workbench", workbench), zap.Uint64("tenantID", tenantID),
 	)
 
 	kind := "Workbench"
 	name := workbench.Name
 
-	err := c.syncNamespace(namespace)
+	err := c.syncNamespace(tenantID, namespace)
 	if err != nil {
 		return fmt.Errorf("error syncing namespace: %w", err)
 	}
@@ -45,7 +45,7 @@ func (c *client) syncWorkbench(workbench Workbench, namespace string) error {
 	if err != nil {
 		// TODO fix
 		// return fmt.Errorf("error syncing image pull secret: %w", err)
-		fmt.Println("error syncing image pull secret: %w", err)
+		logger.TechLog.Error(context.Background(), "error syncing image pull secret: %w", zap.Error(err))
 	}
 
 	return c.syncResource(workbench, kind, name, namespace, "spec")
@@ -66,7 +66,10 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace, specField
 		return fmt.Errorf("error converting spec to map: %w", err)
 	}
 
-	fmt.Println("rawSpecs", rawSpecs)
+	logger.TechLog.Debug(context.Background(), "syncing resource raw specs",
+		zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
+		zap.Any("spec", rawSpecs),
+	)
 
 	existing, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), name, v1.GetOptions{})
 	if k8serrors.IsNotFound(err) {
@@ -89,7 +92,7 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace, specField
 		return fmt.Errorf(specFieldName+" field not found in resource kind: %s, name: %s", kind, name)
 	}
 
-	desiredSpecBytes, err := json.Marshal(spec)
+	desiredSpecBytes, err := json.Marshal(rawSpecs[specFieldName])
 	if err != nil {
 		return fmt.Errorf("error marshalling desired spec: %w", err)
 	}
@@ -98,7 +101,7 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace, specField
 		return fmt.Errorf("error marshalling existing spec: %w", err)
 	}
 
-	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(existingSpecBytes, desiredSpecBytes, existingSpecBytes)
+	patch, err := jsonpatch.CreateMergePatch(existingSpecBytes, desiredSpecBytes)
 	if err != nil {
 		return fmt.Errorf("error calculating patch: %w", err)
 	}
@@ -127,7 +130,7 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace, specField
 	return nil
 }
 
-func (c *client) syncNamespace(namespace string) error {
+func (c *client) syncNamespace(tenantID uint64, namespace string) error {
 	gvr, err := c.getGroupVersionFromKind("Namespace")
 	if err != nil {
 		return fmt.Errorf("failed to get gvr from kind - %s", err)
@@ -144,6 +147,10 @@ func (c *client) syncNamespace(namespace string) error {
 			"kind":       "Namespace",
 			"metadata": map[string]interface{}{
 				"name": namespace,
+				"labels": map[string]interface{}{
+					"chorus-tre.ch/created-by": "chorus-backend",
+					"chorus-tre.ch/tenant-id":  fmt.Sprintf("%d", tenantID),
+				},
 			},
 		}
 
@@ -293,6 +300,12 @@ func (c *client) interfaceToMapInterface(i interface{}) (map[string]interface{},
 }
 
 func (c *client) getGroupVersionFromKind(kindName string) (schema.GroupVersionResource, error) {
+	c.gvrCacheLock.Lock()
+	defer c.gvrCacheLock.Unlock()
+	if cachedGvr, ok := c.gvrCache[kindName]; ok {
+		return cachedGvr, nil
+	}
+
 	discoveryClient := discovery.NewDiscoveryClientForConfigOrDie(c.restConfig)
 
 	apiResourceLists, err := discoveryClient.ServerPreferredResources()
@@ -304,10 +317,13 @@ func (c *client) getGroupVersionFromKind(kindName string) (schema.GroupVersionRe
 		for _, resource := range apiResourceList.APIResources {
 			if resource.Kind == kindName {
 				group, version := getGroupVersion(apiResourceList.GroupVersion)
-				return schema.GroupVersionResource{Group: group, Version: version, Resource: resource.Name}, nil
+				gvr := schema.GroupVersionResource{Group: group, Version: version, Resource: resource.Name}
+				c.gvrCache[kindName] = gvr
+				return gvr, nil
 			}
 		}
 	}
+
 	return schema.GroupVersionResource{}, nil
 }
 

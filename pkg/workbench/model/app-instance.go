@@ -15,6 +15,10 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
+	K8sState  K8sAppInstanceState
+	K8sStatus K8sAppInstanceStatus
+	Status    AppInstanceStatus
+
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
 
@@ -31,12 +35,28 @@ type AppInstance struct {
 	AppMinMemory      *string
 	AppIconURL        *string
 
-	Status AppInstanceStatus
-
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 }
+
+type K8sAppInstanceState string
+
+const (
+	K8sAppInstanceStateRunning K8sAppInstanceState = "Running"
+	K8sAppInstanceStateStopped K8sAppInstanceState = "Stopped"
+	K8sAppInstanceStateKilled  K8sAppInstanceState = "Killed"
+)
+
+type K8sAppInstanceStatus string
+
+const (
+	K8sAppInstanceStatusUnknown     K8sAppInstanceStatus = "Unknown"
+	K8sAppInstanceStatusRunning     K8sAppInstanceStatus = "Running"
+	K8sAppInstanceStatusComplete    K8sAppInstanceStatus = "Complete"
+	K8sAppInstanceStatusProgressing K8sAppInstanceStatus = "Progressing"
+	K8sAppInstanceStatusFailed      K8sAppInstanceStatus = "Failed"
+)
 
 // AppInstanceStatus represents the status of an app instance.
 type AppInstanceStatus string

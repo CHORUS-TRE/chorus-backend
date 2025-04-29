@@ -364,8 +364,6 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.
 	}
 
 	elapsed := time.Since(time.Unix(issuedAt, 0))
-	fmt.Println("elapsed", elapsed)
-	fmt.Println("maxRefreshTime", a.maxRefreshTime)
 	if elapsed > a.maxRefreshTime {
 		return "", 0, status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/service"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,9 +15,14 @@ import (
 
 var _ chorus.AppInstanceServiceServer = (*AppInstanceController)(nil)
 
+// NewAppInstanceController returns a fresh admin service controller instance.
+func NewAppInstanceController(workbencher service.Workbencher) AppInstanceController {
+	return AppInstanceController{workbencher: workbencher}
+}
+
 // AppInstanceController is the appInstance service controller handler.
 type AppInstanceController struct {
-	appInstance service.AppInstanceer
+	workbencher service.Workbencher
 }
 
 func (c AppInstanceController) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
@@ -30,7 +35,7 @@ func (c AppInstanceController) GetAppInstance(ctx context.Context, req *chorus.G
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	appInstance, err := c.appInstance.GetAppInstance(ctx, tenantID, req.Id)
+	appInstance, err := c.workbencher.GetAppInstance(ctx, tenantID, req.Id)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetAppInstance': %v", err.Error())
 	}
@@ -60,7 +65,7 @@ func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *choru
 
 	appInstance.TenantID = tenantID
 
-	err = c.appInstance.UpdateAppInstance(ctx, appInstance)
+	err = c.workbencher.UpdateAppInstance(ctx, appInstance)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateAppInstance': %v", err.Error())
 	}
@@ -77,16 +82,11 @@ func (c AppInstanceController) DeleteAppInstance(ctx context.Context, req *choru
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	err = c.appInstance.DeleteAppInstance(ctx, tenantID, req.Id)
+	err = c.workbencher.DeleteAppInstance(ctx, tenantID, req.Id)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteAppInstance': %v", err.Error())
 	}
 	return &chorus.DeleteAppInstanceReply{Result: &chorus.DeleteAppInstanceResult{}}, nil
-}
-
-// NewAppInstanceController returns a fresh admin service controller instance.
-func NewAppInstanceController(appInstance service.AppInstanceer) AppInstanceController {
-	return AppInstanceController{appInstance: appInstance}
 }
 
 // ListAppInstances extracts the retrieved appInstances from the service and inserts them into a reply object.
@@ -102,7 +102,7 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.appInstance.ListAppInstances(ctx, tenantID, pagination)
+	res, err := c.workbencher.ListAppInstances(ctx, tenantID, pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListAppInstances': %v", err.Error())
 	}
@@ -142,7 +142,7 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 	appInstance.TenantID = tenantID
 	appInstance.UserID = userID
 
-	res, err := c.appInstance.CreateAppInstance(ctx, appInstance)
+	res, err := c.workbencher.CreateAppInstance(ctx, appInstance)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateAppInstance': %v", err.Error())
 	}

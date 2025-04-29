@@ -20,6 +20,11 @@ type WorkbenchController struct {
 	workbench service.Workbencher
 }
 
+// NewWorkbenchController returns a fresh admin service controller instance.
+func NewWorkbenchController(workbench service.Workbencher) WorkbenchController {
+	return WorkbenchController{workbench: workbench}
+}
+
 func (c WorkbenchController) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -82,11 +87,6 @@ func (c WorkbenchController) DeleteWorkbench(ctx context.Context, req *chorus.De
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteWorkbench': %v", err.Error())
 	}
 	return &chorus.DeleteWorkbenchReply{Result: &chorus.DeleteWorkbenchResult{}}, nil
-}
-
-// NewWorkbenchController returns a fresh admin service controller instance.
-func NewWorkbenchController(workbench service.Workbencher) WorkbenchController {
-	return WorkbenchController{workbench: workbench}
 }
 
 // ListWorkbenchs extracts the retrieved workbenchs from the service and inserts them into a reply object.
