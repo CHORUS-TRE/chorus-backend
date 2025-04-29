@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	"gopkg.in/yaml.v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -31,6 +30,10 @@ type K8sClienter interface {
 	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 	DeleteWorkbench(namespace, workbenchName string) error
+
+	WatchOnNewWorkbench(func(workbench *Workbench) error) error
+	WatchOnUpdateWorkbench(func(oldWorkbench, newWorkbench *Workbench) error) error
+	WatchOnDeleteWorkbench(func(workbench *Workbench) error) error
 }
 
 type client struct {
@@ -40,6 +43,10 @@ type client struct {
 	dynamicClient *dynamic.DynamicClient
 	gvrCache      map[string]schema.GroupVersionResource
 	gvrCacheLock  sync.Mutex
+
+	onNewWorkbench    func(workbench *Workbench) error
+	onUpdateWorkbench func(oldWorkbench, newWorkbench *Workbench) error
+	onDeleteWorkbench func(workbench *Workbench) error
 }
 
 func NewClient(cfg config.Config) (*client, error) {
@@ -78,47 +85,43 @@ func NewClient(cfg config.Config) (*client, error) {
 func (c *client) watch() {
 	factory := dynamicinformer.NewDynamicSharedInformerFactory(c.dynamicClient, 0)
 
-	namespaceGvr, err := c.getGroupVersionFromKind("Namespace")
-	if err != nil {
-		fmt.Println("Error getting GVR for namespace:", err)
-		return
-	}
-	namespaceInformer := factory.ForResource(namespaceGvr).Informer()
-	namespaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			fmt.Println("Watcher event: added namespace:")
-			namespace, err := EventInterfaceToNamespace(obj)
-			if err != nil {
-				fmt.Println("Error converting to Namespace:", err)
-				return
-			}
-			dumpUnstructured(namespace)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			fmt.Println("Watcher event: updated namespace:")
-			newNamespace, err := EventInterfaceToNamespace(newObj)
-			if err != nil {
-				fmt.Println("Error converting to Namespace:", err)
-				return
-			}
-			oldNamespace, err := EventInterfaceToNamespace(oldObj)
-			if err != nil {
-				fmt.Println("Error converting to Namespace:", err)
-				return
-			}
-			dumpUnstructured(newNamespace)
-			dumpUnstructured(oldNamespace)
-		},
-		DeleteFunc: func(obj interface{}) {
-			fmt.Println("Watcher event: deleted namespace:")
-			namespace, err := EventInterfaceToNamespace(obj)
-			if err != nil {
-				fmt.Println("Error converting to Namespace:", err)
-				return
-			}
-			dumpUnstructured(namespace)
-		},
-	})
+	// namespaceGvr, err := c.getGroupVersionFromKind("Namespace")
+	// if err != nil {
+	// 	fmt.Println("Error getting GVR for namespace:", err)
+	// 	return
+	// }
+	// namespaceInformer := factory.ForResource(namespaceGvr).Informer()
+	// namespaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	// 	AddFunc: func(obj interface{}) {
+	// 		fmt.Println("Watcher event: added namespace:")
+	// 		namespace, err := EventInterfaceToNamespace(obj)
+	// 		if err != nil {
+	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			return
+	// 		}
+	// 	},
+	// 	UpdateFunc: func(oldObj, newObj interface{}) {
+	// 		fmt.Println("Watcher event: updated namespace:")
+	// 		newNamespace, err := EventInterfaceToNamespace(newObj)
+	// 		if err != nil {
+	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			return
+	// 		}
+	// 		oldNamespace, err := EventInterfaceToNamespace(oldObj)
+	// 		if err != nil {
+	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			return
+	// 		}
+	// 	},
+	// 	DeleteFunc: func(obj interface{}) {
+	// 		fmt.Println("Watcher event: deleted namespace:")
+	// 		namespace, err := EventInterfaceToNamespace(obj)
+	// 		if err != nil {
+	// 			fmt.Println("Error converting to Namespace:", err)
+	// 			return
+	// 		}
+	// 	},
+	// })
 
 	workbenchGvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
@@ -134,7 +137,11 @@ func (c *client) watch() {
 				fmt.Println("Error converting to Workbench:", err)
 				return
 			}
-			dumpUnstructured(workbench)
+			if c.onNewWorkbench != nil {
+				if err := c.onNewWorkbench(workbench); err != nil {
+					fmt.Println("Error handling new workbench:", err)
+				}
+			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			fmt.Println("Watcher event: updated workbench:")
@@ -148,8 +155,11 @@ func (c *client) watch() {
 				fmt.Println("Error converting to Workbench:", err)
 				return
 			}
-			dumpUnstructured(newWorkbench)
-			dumpUnstructured(oldWorkbench)
+			if c.onUpdateWorkbench != nil {
+				if err := c.onUpdateWorkbench(oldWorkbench, newWorkbench); err != nil {
+					fmt.Println("Error handling updated workbench:", err)
+				}
+			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			fmt.Println("Watcher event: deleted workbench:")
@@ -158,7 +168,11 @@ func (c *client) watch() {
 				fmt.Println("Error converting to Workbench:", err)
 				return
 			}
-			dumpUnstructured(workbench)
+			if c.onDeleteWorkbench != nil {
+				if err := c.onDeleteWorkbench(workbench); err != nil {
+					fmt.Println("Error handling deleted workbench:", err)
+				}
+			}
 		},
 	})
 
@@ -180,13 +194,17 @@ func (c *client) watch() {
 	fmt.Println("Informers stopped.")
 }
 
-func dumpUnstructured(obj interface{}) {
-	yamlData, err := yaml.Marshal(obj)
-	if err != nil {
-		fmt.Println("Error marshalling object to YAML:", err)
-		return
-	}
-	fmt.Println(string(yamlData))
+func (c *client) WatchOnNewWorkbench(handler func(workbench *Workbench) error) error {
+	c.onNewWorkbench = handler
+	return nil
+}
+func (c *client) WatchOnUpdateWorkbench(handler func(oldWorkbench, newWorkbench *Workbench) error) error {
+	c.onUpdateWorkbench = handler
+	return nil
+}
+func (c *client) WatchOnDeleteWorkbench(handler func(workbench *Workbench) error) error {
+	c.onDeleteWorkbench = handler
+	return nil
 }
 
 func (c *client) makeWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) (Workbench, error) {

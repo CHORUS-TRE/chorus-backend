@@ -9,6 +9,18 @@ func NewTestClient() *testClient {
 	return c
 }
 
+func (c *testClient) WatchOnNewWorkbench(func(workbench *Workbench) error) error {
+	return nil
+}
+
+func (c *testClient) WatchOnUpdateWorkbench(func(newWorkbench, oldWorkbench *Workbench) error) error {
+	return nil
+}
+
+func (c *testClient) WatchOnDeleteWorkbench(func(workbench *Workbench) error) error {
+	return nil
+}
+
 func (c *testClient) CreateWorkspace(tenantID uint64, namespace string) error {
 	return nil
 }
