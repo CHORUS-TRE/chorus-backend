@@ -227,7 +227,7 @@ func (c *client) makeWorkbench(tenantID uint64, namespace, workbenchName string,
 	}
 
 	for _, app := range apps {
-		workbenchApp := c.appToApp(app)
+		workbenchApp := c.appInstanceToWorkbenchApp(app)
 		workbench.Spec.Apps = append(workbench.Spec.Apps, workbenchApp)
 	}
 
@@ -294,7 +294,7 @@ func (c *client) UpdateWorkbench(tenantID uint64, namespace, workbenchName strin
 }
 
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := c.appToApp(appInstance)
+	app := c.appInstanceToWorkbenchApp(appInstance)
 
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
@@ -350,7 +350,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 }
 
 func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := c.appToApp(appInstance)
+	app := c.appInstanceToWorkbenchApp(appInstance)
 
 	// Fetch the current workbench
 	gvr, err := c.getGroupVersionFromKind("Workbench")

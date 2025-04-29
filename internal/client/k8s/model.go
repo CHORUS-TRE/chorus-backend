@@ -20,6 +20,9 @@ type AppInstance struct {
 	AppImage    string
 	AppTag      string
 
+	K8sState  string
+	K8sStatus string
+
 	ShmSize        string
 	KioskConfigURL string
 	MaxCPU         string
@@ -29,7 +32,7 @@ type AppInstance struct {
 	// IconURL        string
 }
 
-func (c *client) appToApp(app AppInstance) WorkbenchApp {
+func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	w := WorkbenchApp{
 		Name: fmt.Sprintf("%s%v", appInstanceNamePrefix, app.ID),
 	}
@@ -95,6 +98,48 @@ func (c *client) appToApp(app AppInstance) WorkbenchApp {
 	}
 
 	return w
+}
+
+func (c *client) workbenchAppToAppInstance(w WorkbenchApp) AppInstance {
+	app := AppInstance{
+		AppName: w.Name,
+	}
+
+	if w.Image != nil {
+		app.AppRegistry = w.Image.Registry
+		app.AppImage = w.Image.Repository
+		app.AppTag = w.Image.Tag
+	}
+
+	app.K8sState = string(w.State)
+
+	if w.ShmSize != nil {
+		app.ShmSize = w.ShmSize.String()
+	}
+	if w.KioskConfig != nil {
+		app.KioskConfigURL = w.KioskConfig.URL
+	}
+
+	if w.Resources != nil {
+		if w.Resources.Limits != nil {
+			if cpu, ok := w.Resources.Limits["cpu"]; ok {
+				app.MaxCPU = cpu.String()
+			}
+			if memory, ok := w.Resources.Limits["memory"]; ok {
+				app.MaxMemory = memory.String()
+			}
+		}
+		if w.Resources.Requests != nil {
+			if cpu, ok := w.Resources.Requests["cpu"]; ok {
+				app.MinCPU = cpu.String()
+			}
+			if memory, ok := w.Resources.Requests["memory"]; ok {
+				app.MinMemory = memory.String()
+			}
+		}
+	}
+
+	return app
 }
 
 type WorkbenchAppState string
