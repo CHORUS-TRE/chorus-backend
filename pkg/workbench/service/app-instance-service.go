@@ -5,42 +5,11 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
-type AppInstanceer interface {
-	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
-	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error)
-	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error
-	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
-}
-
-type AppInstanceStore interface {
-	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
-	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
-	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
-	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
-}
-
-type AppInstanceService struct {
-	store  AppInstanceStore
-	client k8s.K8sClienter
-	apper  service.Apper
-}
-
-func NewAppInstanceService(store AppInstanceStore, client k8s.K8sClienter, apper service.Apper) *AppInstanceService {
-	return &AppInstanceService{
-		store:  store,
-		client: client,
-		apper:  apper,
-	}
-}
-
-func (s *AppInstanceService) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
+func (s *WorkbenchService) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
 	appInstances, err := s.store.ListAppInstances(ctx, tenantID, pagination)
 	if err != nil {
 		return nil, fmt.Errorf("unable to query appInstances: %w", err)
@@ -48,7 +17,7 @@ func (s *AppInstanceService) ListAppInstances(ctx context.Context, tenantID uint
 	return appInstances, nil
 }
 
-func (s *AppInstanceService) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
+func (s *WorkbenchService) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
@@ -57,7 +26,7 @@ func (s *AppInstanceService) GetAppInstance(ctx context.Context, tenantID, appIn
 	return appInstance, nil
 }
 
-func (s *AppInstanceService) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
 	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
 		return fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
@@ -84,7 +53,7 @@ func (s *AppInstanceService) DeleteAppInstance(ctx context.Context, tenantID, ap
 	return nil
 }
 
-func (s *AppInstanceService) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
 	if err := s.store.UpdateAppInstance(ctx, appInstance.TenantID, appInstance); err != nil {
 		return fmt.Errorf("unable to update appInstance %v: %w", appInstance.ID, err)
 	}
@@ -92,7 +61,7 @@ func (s *AppInstanceService) UpdateAppInstance(ctx context.Context, appInstance 
 	return nil
 }
 
-func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
 	id, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
 	if err != nil {
 		return 0, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
@@ -114,7 +83,7 @@ func (s *AppInstanceService) CreateAppInstance(ctx context.Context, appInstance 
 	return id, nil
 }
 
-func (s *AppInstanceService) getK8sAppInstance(tenantID, appID uint64) (k8s.AppInstance, error) {
+func (s *WorkbenchService) getK8sAppInstance(tenantID, appID uint64) (k8s.AppInstance, error) {
 	app, err := s.apper.GetApp(context.Background(), tenantID, appID)
 	if err != nil {
 		return k8s.AppInstance{}, fmt.Errorf("unable to get app %v: %w", appID, err)
@@ -139,10 +108,10 @@ func (s *AppInstanceService) getK8sAppInstance(tenantID, appID uint64) (k8s.AppI
 	return clientApp, nil
 }
 
-func (s *AppInstanceService) getWorkspaceName(id uint64) string {
+func (s *WorkbenchService) getWorkspaceName(id uint64) string {
 	return fmt.Sprintf("workspace%v", id)
 }
 
-func (s *AppInstanceService) getWorkbenchName(id uint64) string {
+func (s *WorkbenchService) getWorkbenchName(id uint64) string {
 	return fmt.Sprintf("workbench%v", id)
 }

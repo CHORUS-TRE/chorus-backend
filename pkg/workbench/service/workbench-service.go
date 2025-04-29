@@ -15,7 +15,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
-	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
+	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
@@ -39,17 +39,29 @@ type Workbencher interface {
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
+
+	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
+	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error)
+	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error
+	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
 }
 
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
-	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error)
+	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error)
 	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
+
+	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
+	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
+	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
+	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
 }
 
 type proxyID struct {
@@ -64,9 +76,12 @@ type proxy struct {
 }
 
 type WorkbenchService struct {
-	cfg              config.Config
-	store            WorkbenchStore
-	client           k8s.K8sClienter
+	cfg    config.Config
+	store  WorkbenchStore
+	client k8s.K8sClienter
+
+	apper app_service.Apper
+
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
 	proxyHitMutex    sync.Mutex
@@ -74,11 +89,14 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper) *WorkbenchService {
 	s := &WorkbenchService{
-		cfg:              cfg,
-		store:            store,
-		client:           client,
+		cfg:    cfg,
+		store:  store,
+		client: client,
+
+		apper: apper,
+
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),
 		proxyHitDateMap:  make(map[uint64]time.Time),

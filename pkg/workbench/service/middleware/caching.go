@@ -77,3 +77,43 @@ func (c *Caching) UpdateWorkbench(ctx context.Context, workbench *model.Workbenc
 func (c *Caching) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
 	return c.next.CreateWorkbench(ctx, workbench)
 }
+
+func (c *Caching) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) (reply []*model.AppInstance, err error) {
+	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
+	reply = []*model.AppInstance{}
+
+	if ok := entry.Get(ctx, &reply); !ok {
+		reply, err = c.next.ListAppInstances(ctx, tenantID, pagination)
+		if err == nil {
+			entry.Set(ctx, defaultCacheExpiration, reply)
+		}
+	}
+
+	return
+}
+
+func (c *Caching) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (reply *model.AppInstance, err error) {
+	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithUint64(appInstanceID))
+	reply = &model.AppInstance{}
+
+	if ok := entry.Get(ctx, &reply); !ok {
+		reply, err = c.next.GetAppInstance(ctx, tenantID, appInstanceID)
+		if err == nil {
+			entry.Set(ctx, defaultCacheExpiration, reply)
+		}
+	}
+
+	return
+}
+
+func (c *Caching) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+	return c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
+}
+
+func (c *Caching) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+	return c.next.UpdateAppInstance(ctx, appInstance)
+}
+
+func (c *Caching) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+	return c.next.CreateAppInstance(ctx, appInstance)
+}
