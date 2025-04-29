@@ -126,49 +126,76 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 
 	for _, workbench := range workbenchs {
 		fmt.Println("debug range workbench", workbench.ID, workbench.Status)
-		if workbench.Status == model.WorkbenchActive {
-
-			apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
-			if err != nil {
-				logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-				continue
-			}
-			clientApps := []k8s.AppInstance{}
-			for _, app := range apps {
-				clientApps = append(clientApps, k8s.AppInstance{
-					ID:      app.ID,
-					AppName: utils.ToString(app.AppName),
-
-					AppRegistry: utils.ToString(app.AppDockerImageRegistry),
-					AppImage:    utils.ToString(app.AppDockerImageName),
-					AppTag:      utils.ToString(app.AppDockerImageTag),
-
-					ShmSize:        utils.ToString(app.AppShmSize),
-					KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
-					MaxCPU:         utils.ToString(app.AppMaxCPU),
-					MinCPU:         utils.ToString(app.AppMinCPU),
-					MaxMemory:      utils.ToString(app.AppMaxMemory),
-					MinMemory:      utils.ToString(app.AppMinMemory),
-				})
-			}
-
-			namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
-
-			err = s.client.UpdateWorkbench(workbench.TenantID, namespace, workbenchName, clientApps)
-			if err != nil {
-				logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-			}
-		} else if workbench.Status == model.WorkbenchDeleted {
-			err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
-			if err != nil {
-				logger.TechLog.Error(ctx, "unable to delete workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-			} else {
-				logger.TechLog.Debug(ctx, "deleted workbench", zap.Uint64("workbenchID", workbench.ID))
-			}
-		} else {
-			logger.TechLog.Debug(ctx, "skipping workbench update", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)))
+		err := s.syncWorkbench(ctx, workbench)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			continue
 		}
 	}
+}
+
+func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, workbenchID uint64) error {
+	workbench, err := s.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+	}
+
+	err = s.syncWorkbench(ctx, workbench)
+	if err != nil {
+		return fmt.Errorf("unable to sync workbench %v: %w", workbenchID, err)
+	}
+	return nil
+}
+
+func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.Workbench) error {
+	if workbench.Status == model.WorkbenchActive {
+
+		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			return err
+		}
+		clientApps := []k8s.AppInstance{}
+		for _, app := range apps {
+			clientApps = append(clientApps, k8s.AppInstance{
+				ID:      app.ID,
+				AppName: utils.ToString(app.AppName),
+
+				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
+				AppImage:    utils.ToString(app.AppDockerImageName),
+				AppTag:      utils.ToString(app.AppDockerImageTag),
+
+				ShmSize:        utils.ToString(app.AppShmSize),
+				KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
+				MaxCPU:         utils.ToString(app.AppMaxCPU),
+				MinCPU:         utils.ToString(app.AppMinCPU),
+				MaxMemory:      utils.ToString(app.AppMaxMemory),
+				MinMemory:      utils.ToString(app.AppMinMemory),
+			})
+		}
+
+		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
+
+		err = s.client.UpdateWorkbench(workbench.TenantID, namespace, workbenchName, clientApps)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			return err
+		}
+
+		return nil
+	} else if workbench.Status == model.WorkbenchDeleted {
+		err := s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to delete workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			return err
+		}
+
+		logger.TechLog.Debug(ctx, "deleted workbench", zap.Uint64("workbenchID", workbench.ID))
+		return nil
+	}
+
+	logger.TechLog.Debug(ctx, "skipping workbench update", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)))
+	return nil
 }
 
 func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {

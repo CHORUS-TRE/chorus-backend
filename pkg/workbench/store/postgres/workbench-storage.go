@@ -86,7 +86,8 @@ JOIN
     apps a ON ai.appid = a.id
 WHERE 
     ai.workbenchid = $1 
-    AND ai.status != 'deleted';
+    AND ai.status != 'deleted'
+ORDER BY ai.createdat ASC;
 ;
 `
 	var appInstances []*model.AppInstance

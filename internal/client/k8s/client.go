@@ -334,23 +334,52 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
 	app := c.appToApp(appInstance)
 
-	patch := map[string]interface{}{
-		"op":    "remove",
-		"path":  "/apps/-",
-		"value": app,
-	}
-	patchBytes, err := json.Marshal(patch)
-	if err != nil {
-		return fmt.Errorf("error marshalling patch: %w", err)
-	}
-
+	// Fetch the current workbench
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
 		return fmt.Errorf("failed to get gvr from kind - %s", err)
 	}
 
-	fmt.Println("dumping patchBytes")
-	fmt.Println("patchBytes", string(patchBytes))
+	workbench, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), workbenchName, v1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get workbench: %w", err)
+	}
+
+	// Find the index
+	apps, found, err := unstructured.NestedSlice(workbench.Object, "spec", "apps")
+	if err != nil || !found {
+		return fmt.Errorf("apps field not found: %w", err)
+	}
+
+	indexToRemove := -1
+	for i, a := range apps {
+		appMap, ok := a.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if appMap["name"] == app.Name {
+			indexToRemove = i
+			break
+		}
+	}
+
+	if indexToRemove == -1 {
+		return fmt.Errorf("app instance %s not found", app.Name)
+	}
+
+	patch := []map[string]interface{}{
+		{
+			"op":   "remove",
+			"path": fmt.Sprintf("/spec/apps/%d", indexToRemove),
+		},
+	}
+
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return fmt.Errorf("error marshalling patch: %w", err)
+	}
+
+	fmt.Println("dumping patchBytes delete appInstance", string(patchBytes))
 
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
