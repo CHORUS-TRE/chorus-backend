@@ -78,6 +78,8 @@ SELECT
 	a.mincpu as AppMinCPU,
 	a.maxmemory as AppMaxMemory,
 	a.minmemory as AppMinMemory,
+	a.maxephemeralstorage as AppMaxEphemeralStorage,
+	a.minephemeralstorage as AppMinEphemeralStorage,
 	a.iconurl as AppIconURL
 
 FROM 
