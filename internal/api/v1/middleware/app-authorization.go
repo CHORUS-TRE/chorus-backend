@@ -7,15 +7,17 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
+var _ chorus.AppServiceServer = (*appControllerAuthorization)(nil)
+
 type appControllerAuthorization struct {
-	authorization
+	Authorization
 	next chorus.AppServiceServer
 }
 
 func AppAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.AppServiceServer) chorus.AppServiceServer {
 	return func(next chorus.AppServiceServer) chorus.AppServiceServer {
 		return &appControllerAuthorization{
-			authorization: authorization{
+			Authorization: Authorization{
 				logger:          logger,
 				authorizedRoles: authorizedRoles,
 			},

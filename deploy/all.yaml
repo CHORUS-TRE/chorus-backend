@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: chorus-cicd-chorus
-        image: registry.dip-dev.thehip.app/chorus-cicd-chorus:latest
+        image: harbor.build.chorus-tre.ch/chorus/backend:latest
         ports:
         - containerPort: 3001
       imagePullSecrets:

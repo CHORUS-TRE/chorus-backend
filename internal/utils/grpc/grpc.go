@@ -19,13 +19,13 @@ func ErrorCode(err error) codes.Code {
 	}
 
 	// Find the root cause.
-	var cause error
+	cause := err
 	for {
-		if c := errors.Unwrap(err); c != nil {
-			cause = c
-		} else {
+		next := errors.Unwrap(cause)
+		if next == nil {
 			break
 		}
+		cause = next
 	}
 
 	switch cause.(type) {

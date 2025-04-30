@@ -11,13 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/helm"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
-	app_instance_model "github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
+	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
+	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -38,17 +39,29 @@ type Workbencher interface {
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
+
+	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
+	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error)
+	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error
+	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
 }
 
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
-	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*app_instance_model.AppInstance, error)
-	ListAllActiveWorkbenchs(ctx context.Context) ([]*model.Workbench, error)
+	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error)
+	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
+
+	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
+	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
+	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
+	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
 }
 
 type proxyID struct {
@@ -63,9 +76,12 @@ type proxy struct {
 }
 
 type WorkbenchService struct {
-	cfg              config.Config
-	store            WorkbenchStore
-	client           helm.HelmClienter
+	cfg    config.Config
+	store  WorkbenchStore
+	client k8s.K8sClienter
+
+	apper app_service.Apper
+
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
 	proxyHitMutex    sync.Mutex
@@ -73,11 +89,14 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.HelmClienter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper) *WorkbenchService {
 	s := &WorkbenchService{
-		cfg:              cfg,
-		store:            store,
-		client:           client,
+		cfg:    cfg,
+		store:  store,
+		client: client,
+
+		apper: apper,
+
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),
 		proxyHitDateMap:  make(map[uint64]time.Time),
@@ -99,35 +118,85 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client helm.He
 }
 
 func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.ListAllActiveWorkbenchs(ctx)
+	workbenchs, err := s.store.ListAllWorkbenches(ctx)
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to query workbenchs", zap.Error(err))
 		return
 	}
 
 	for _, workbench := range workbenchs {
+		go func(workbench *model.Workbench) {
+			logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
+			err := s.syncWorkbench(ctx, workbench)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			}
+		}(workbench)
+	}
+}
+
+func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, workbenchID uint64) error {
+	workbench, err := s.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+	}
+
+	err = s.syncWorkbench(ctx, workbench)
+	if err != nil {
+		return fmt.Errorf("unable to sync workbench %v: %w", workbenchID, err)
+	}
+	return nil
+}
+
+func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.Workbench) error {
+	if workbench.Status == model.WorkbenchActive {
+
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-			continue
+			return err
 		}
-		clientApps := []helm.AppInstance{}
+		clientApps := []k8s.AppInstance{}
 		for _, app := range apps {
-			clientApps = append(clientApps, helm.AppInstance{
-				AppName:     utils.ToString(app.AppName),
+			clientApps = append(clientApps, k8s.AppInstance{
+				ID:      app.ID,
+				AppName: utils.ToString(app.AppName),
+
 				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
 				AppImage:    utils.ToString(app.AppDockerImageName),
-				AppVersion:  utils.ToString(app.AppDockerImageTag),
+				AppTag:      utils.ToString(app.AppDockerImageTag),
+
+				ShmSize:        utils.ToString(app.AppShmSize),
+				KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
+				MaxCPU:         utils.ToString(app.AppMaxCPU),
+				MinCPU:         utils.ToString(app.AppMinCPU),
+				MaxMemory:      utils.ToString(app.AppMaxMemory),
+				MinMemory:      utils.ToString(app.AppMinMemory),
 			})
 		}
 
-		namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbench.ID)
+		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(namespace, workbenchName, clientApps)
+		err = s.client.UpdateWorkbench(workbench.TenantID, namespace, workbenchName, clientApps)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			return err
 		}
+
+		return nil
+	} else if workbench.Status == model.WorkbenchDeleted {
+		err := s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to delete workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			return err
+		}
+
+		logger.TechLog.Debug(ctx, "deleted workbench", zap.Uint64("workbenchID", workbench.ID))
+		return nil
 	}
+
+	logger.TechLog.Debug(ctx, "skipping workbench update", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)))
+	return nil
 }
 
 func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
@@ -158,7 +227,7 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
-	err = s.client.DeleteWorkbench(s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbenchID))
+	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
 		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
@@ -180,9 +249,9 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
 
-	namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(id)
+	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
 
-	err = s.client.CreateWorkbench(namespace, workbenchName)
+	err = s.client.CreateWorkbench(workbench.TenantID, namespace, workbenchName)
 	if err != nil {
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
@@ -251,7 +320,7 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
 	}
 
-	namespace, workbenchName := s.getWorkspaceName(workbench.WorkspaceID), s.getWorkbenchName(workbenchID)
+	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)
 
 	proxyID := proxyID{
 		namespace: namespace,
@@ -300,11 +369,4 @@ func (s *WorkbenchService) saveBatchProxyHit(ctx context.Context) {
 		}
 		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to save batch proxy hit, losing %v hits to %v workbenches", hits, numWorkbenches), zap.Error(err))
 	}
-}
-
-func (s *WorkbenchService) getWorkspaceName(id uint64) string {
-	return fmt.Sprintf("workspace%v", id)
-}
-func (s *WorkbenchService) getWorkbenchName(id uint64) string {
-	return fmt.Sprintf("workbench%v", id)
 }

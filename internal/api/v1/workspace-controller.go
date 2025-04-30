@@ -13,9 +13,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.WorkspaceServiceServer = (*WorkspaceController)(nil)
+
 // WorkspaceController is the workspace service controller handler.
 type WorkspaceController struct {
 	workspace service.Workspaceer
+}
+
+// NewWorkspaceController returns a fresh admin service controller instance.
+func NewWorkspaceController(workspace service.Workspaceer) WorkspaceController {
+	return WorkspaceController{workspace: workspace}
 }
 
 func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
@@ -80,11 +87,6 @@ func (c WorkspaceController) DeleteWorkspace(ctx context.Context, req *chorus.De
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteWorkspace': %v", err.Error())
 	}
 	return &chorus.DeleteWorkspaceReply{Result: &chorus.DeleteWorkspaceResult{}}, nil
-}
-
-// NewWorkspaceController returns a fresh admin service controller instance.
-func NewWorkspaceController(workspace service.Workspaceer) WorkspaceController {
-	return WorkspaceController{workspace: workspace}
 }
 
 // ListWorkspaces extracts the retrieved workspaces from the service and inserts them into a reply object.

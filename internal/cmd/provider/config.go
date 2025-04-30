@@ -69,7 +69,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.grpc.max_recv_msg_size", 10485760)  // 10 MiB
 	v.SetDefault("daemon.grpc.max_send_msg_size", 104857600) // 100 MiB
 	v.SetDefault("daemon.tenant_id", 9999999)
-	v.SetDefault("daemon.jwt.expiration_time", 10*time.Minute)
+	v.SetDefault("daemon.jwt.expiration_time", "24h")
+	v.SetDefault("daemon.jwt.max_refresh_time", "720h") // 30 days
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 	v.SetDefault("daemon.pprof_enabled", false)
 	v.SetDefault("daemon.jobs.job_status_gc.enabled", true)
@@ -99,6 +100,13 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
+
+	// Clients
+	v.SetDefault("clients.k8s_client.is_watcher", false)
+	v.SetDefault("clients.k8s_client.server_version", "latest")
+	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")
+	v.SetDefault("clients.k8s_client.default_registry", "harbor.dev.chorus-tre.ch")
+	v.SetDefault("clients.k8s_client.default_repository", "apps")
 
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")

@@ -16,9 +16,16 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
 
+var _ chorus.UserServiceServer = (*UserController)(nil)
+
 // UserController is the user service controller handler.
 type UserController struct {
 	user service.Userer
+}
+
+// NewUserController returns a fresh admin service controller instance.
+func NewUserController(user service.Userer) UserController {
+	return UserController{user: user}
 }
 
 func (c UserController) GetUserMe(ctx context.Context, empty *empty.Empty) (*chorus.GetUserMeReply, error) {
@@ -140,11 +147,6 @@ func (c UserController) DeleteUser(ctx context.Context, req *chorus.DeleteUserRe
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteUser': %v", err.Error())
 	}
 	return &chorus.DeleteUserReply{Result: &chorus.DeleteUserResult{}}, nil
-}
-
-// NewUserController returns a fresh admin service controller instance.
-func NewUserController(user service.Userer) UserController {
-	return UserController{user: user}
 }
 
 // GetUsers extracts the retrieved users from the service and inserts them into a reply object.

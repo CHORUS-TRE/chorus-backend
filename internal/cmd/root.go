@@ -22,8 +22,9 @@ const (
 )
 
 const (
-	configDevPath     = "./configs/dev"
-	configDevFilename = "chorus"
+	configDevPath         = "./configs/dev"
+	configDevOverridePath = "./configs/dev/files/kind.yaml"
+	configDevFilename     = "chorus"
 )
 
 var configFilename = ""
@@ -76,6 +77,12 @@ func initConfig() {
 	} else {
 		viper.AddConfigPath(configDevPath)
 		viper.SetConfigName(configDevFilename)
+
+		if configOverrideFilename == "" {
+			if _, err := os.Stat(configDevOverridePath); err == nil {
+				configOverrideFilename = configDevOverridePath
+			}
+		}
 	}
 
 	if err := viper.ReadInConfig(); err == nil {

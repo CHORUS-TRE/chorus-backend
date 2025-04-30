@@ -80,7 +80,6 @@ func GetMigration(storageType string) (map[string]string, string, error) {
 	switch storageType {
 	case POSTGRES:
 		migrations, err := getMigration("postgres")
-		fmt.Println("migrations", migrations)
 		if err != nil {
 			return nil, "", err
 		}

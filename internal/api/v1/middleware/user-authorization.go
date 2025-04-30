@@ -9,15 +9,17 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 )
 
+var _ chorus.UserServiceServer = (*userControllerAuthorization)(nil)
+
 type userControllerAuthorization struct {
-	authorization
+	Authorization
 	next chorus.UserServiceServer
 }
 
 func UserAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.UserServiceServer) chorus.UserServiceServer {
 	return func(next chorus.UserServiceServer) chorus.UserServiceServer {
 		return &userControllerAuthorization{
-			authorization: authorization{
+			Authorization: Authorization{
 				logger:          logger,
 				authorizedRoles: authorizedRoles,
 			},

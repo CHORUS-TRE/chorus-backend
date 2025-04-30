@@ -18,6 +18,13 @@ message App {
     string dockerImageName = 8;
     string dockerImageTag = 9;
 
+    string shmSize = 13;
+    string kioskConfigURL = 14;
+    string maxCPU = 15;
+    string minCPU = 16;
+    string maxMemory = 17;
+    string minMemory = 18;
+    string iconURL = 19;    
 
     google.protobuf.Timestamp createdAt = 10;
     google.protobuf.Timestamp updatedAt = 11;

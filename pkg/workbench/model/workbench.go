@@ -17,11 +17,20 @@ type Workbench struct {
 	ShortName   string
 	Description string
 
-	Status WorkbenchStatus
+	K8sStatus K8sWorkbenchStatus
+	Status    WorkbenchStatus
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+}
+
+func (s Workbench) GetClusterName() string {
+	return GetWorkbenchClusterName(s.ID)
+}
+
+func GetWorkbenchClusterName(id uint64) string {
+	return fmt.Sprintf("workbench%v", id)
 }
 
 // WorkbenchStatus represents the status of a workbench.
@@ -36,6 +45,14 @@ const (
 func (s WorkbenchStatus) String() string {
 	return string(s)
 }
+
+type K8sWorkbenchStatus string
+
+const (
+	K8sWorkbenchStatusRunning     K8sWorkbenchStatus = "Running"
+	K8sWorkbenchStatusProgressing K8sWorkbenchStatus = "Progressing"
+	K8sWorkbenchStatusFailed      K8sWorkbenchStatus = "Failed"
+)
 
 func ToWorkbenchStatus(status string) (WorkbenchStatus, error) {
 	switch status {

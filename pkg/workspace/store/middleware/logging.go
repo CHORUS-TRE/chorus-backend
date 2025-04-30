@@ -26,12 +26,12 @@ func Logging(logger *logger.ContextLogger) func(service.WorkspaceStore) service.
 	}
 }
 
-func (c workspaceStorageLogging) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workspace, error) {
+func (c workspaceStorageLogging) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination, allowDeleted bool) ([]*model.Workspace, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.ListWorkspaces(ctx, tenantID, pagination)
+	res, err := c.next.ListWorkspaces(ctx, tenantID, pagination, allowDeleted)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

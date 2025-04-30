@@ -8,7 +8,7 @@ daemon:
     port: 5555
   jwt:
     secret: jwt_secret
-    expiration_time: 10
+    expiration_time: 10s
   totp:
     num_recovery_codes: 10
   pprof_enabled: true

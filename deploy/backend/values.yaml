@@ -6,7 +6,7 @@ nameOverride: "chorus"
 
 aesPassphrase: ""
 
-image: registry.dip-dev.thehip.app/chorus-cicd-chorus:latest
+image: harbor.build.chorus-tre.ch/chorus/backend:latest
 
 version: master
 
@@ -74,6 +74,9 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+serviceMonitor:
+  enabled: false
 
 autoscaling:
   enabled: false

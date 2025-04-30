@@ -10,8 +10,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.StewardServiceServer = (*StewardController)(nil)
+
 type StewardController struct {
 	stewarder service.Stewarder
+}
+
+func NewStewardController(stewarder service.Stewarder) StewardController {
+	return StewardController{stewarder: stewarder}
 }
 
 func (s StewardController) InitializeTenant(ctx context.Context, req *chorus.InitializeTenantRequest) (*empty.Empty, error) {
@@ -24,8 +30,4 @@ func (s StewardController) InitializeTenant(ctx context.Context, req *chorus.Ini
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 	return &empty.Empty{}, nil
-}
-
-func NewStewardController(stewarder service.Stewarder) StewardController {
-	return StewardController{stewarder: stewarder}
 }

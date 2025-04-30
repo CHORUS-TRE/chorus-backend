@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func buildAuthorization(roles ...string) authorization {
-	return authorization{authorizedRoles: roles}
+func buildAuthorization(roles ...string) Authorization {
+	return Authorization{authorizedRoles: roles}
 }
 
 func TestIsAuthorized(t *testing.T) {

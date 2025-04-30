@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/app-instance/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
 func AppInstanceToBusiness(appInstance *chorus.AppInstance) (*model.AppInstance, error) {
@@ -32,6 +32,9 @@ func AppInstanceToBusiness(appInstance *chorus.AppInstance) (*model.AppInstance,
 
 		Status: status,
 
+		InitialResolutionWidth:  appInstance.InitialResolutionWidth,
+		InitialResolutionHeight: appInstance.InitialResolutionHeight,
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
@@ -57,6 +60,9 @@ func AppInstanceFromBusiness(appInstance *model.AppInstance) (*chorus.AppInstanc
 		WorkbenchId: appInstance.WorkbenchID,
 
 		Status: appInstance.Status.String(),
+
+		InitialResolutionWidth:  appInstance.InitialResolutionWidth,
+		InitialResolutionHeight: appInstance.InitialResolutionHeight,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

@@ -173,6 +173,20 @@ definitions:
         type: string
       dockerImageTag:
         type: string
+      shmSize:
+        type: string
+      kioskConfigURL:
+        type: string
+      maxCPU:
+        type: string
+      minCPU:
+        type: string
+      maxMemory:
+        type: string
+      minMemory:
+        type: string
+      iconURL:
+        type: string
       createdAt:
         type: string
         format: date-time

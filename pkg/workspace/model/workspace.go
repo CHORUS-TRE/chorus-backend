@@ -23,6 +23,14 @@ type Workspace struct {
 	DeletedAt *time.Time
 }
 
+func (s Workspace) GetClusterName() string {
+	return GetWorkspaceClusterName(s.ID)
+}
+
+func GetWorkspaceClusterName(id uint64) string {
+	return fmt.Sprintf("workspace%v", id)
+}
+
 // WorkspaceStatus represents the status of a workspace.
 type WorkspaceStatus string
 

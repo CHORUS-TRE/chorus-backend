@@ -1,4 +1,4 @@
-FROM registry.dip-dev.thehip.app/chorus-ubuntu:latest
+FROM harbor.build.chorus-tre.ch/chorus/backend-ubuntu:latest
 
 USER root
 

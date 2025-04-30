@@ -39,8 +39,9 @@ type (
 		} `yaml:"http"`
 
 		JWT struct {
-			Secret         Sensitive `yaml:"secret"`
-			ExpirationTime int       `yaml:"expiration_time"`
+			Secret         Sensitive     `yaml:"secret"`
+			ExpirationTime time.Duration `yaml:"expiration_time"`
+			MaxRefreshTime time.Duration `yaml:"max_refresh_time"`
 		} `yaml:"jwt"`
 
 		TOTP struct {
@@ -117,17 +118,25 @@ type (
 	}
 
 	Clients struct {
-		HelmClient HelmClient `yaml:"helm_client,omitempty"`
+		K8sClient K8sClient `yaml:"k8s_client,omitempty"`
 	}
 
-	HelmClient struct {
+	K8sClient struct {
 		KubeConfig string `yaml:"kube_config,omitempty"` // either provide a kubeconfig
 
 		Token     string `yaml:"token,omitempty"`      // either a service account token
 		CA        string `yaml:"ca,omitempty"`         // and service account ca
 		APIServer string `yaml:"api_server,omitempty"` // and service account api server
 
-		ImagePullSecrets []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
+		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
+		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
+
+		ServerVersion string `yaml:"server_version,omitempty"`
+
+		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
+
+		DefaultRegistry   string `yaml:"default_registry,omitempty"`
+		DefaultRepository string `yaml:"default_repository,omitempty"`
 	}
 
 	ImagePullSecret struct {
@@ -233,6 +242,9 @@ type (
 		Enabled                   bool   `yaml:"enabled"`
 		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
 		OpenID                    OpenID `yaml:"openid,omitempty"`
+		ButtonText                string `yaml:"button_text,omitempty"`
+		IconURL                   string `yaml:"icon_url,omitempty"`
+		Order                     uint   `yaml:"order,omitempty"`
 	}
 
 	OpenID struct {

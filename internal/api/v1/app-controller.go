@@ -13,9 +13,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var _ chorus.AppServiceServer = (*AppController)(nil)
+
 // AppController is the app service controller handler.
 type AppController struct {
 	app service.Apper
+}
+
+// NewAppController returns a fresh admin service controller instance.
+func NewAppController(app service.Apper) AppController {
+	return AppController{app: app}
 }
 
 func (c AppController) GetApp(ctx context.Context, req *chorus.GetAppRequest) (*chorus.GetAppReply, error) {
@@ -80,11 +87,6 @@ func (c AppController) DeleteApp(ctx context.Context, req *chorus.DeleteAppReque
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteApp': %v", err.Error())
 	}
 	return &chorus.DeleteAppReply{Result: &chorus.DeleteAppResult{}}, nil
-}
-
-// NewAppController returns a fresh admin service controller instance.
-func NewAppController(app service.Apper) AppController {
-	return AppController{app: app}
 }
 
 // ListApps extracts the retrieved apps from the service and inserts them into a reply object.
