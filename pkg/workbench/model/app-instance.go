@@ -50,6 +50,19 @@ const (
 	K8sAppInstanceStateKilled  K8sAppInstanceState = "Killed"
 )
 
+func (s K8sAppInstanceState) ToStatus() AppInstanceStatus {
+	switch s {
+	case K8sAppInstanceStateRunning:
+		return AppInstanceActive
+	case K8sAppInstanceStateStopped:
+		return AppInstanceInactive
+	case K8sAppInstanceStateKilled:
+		return AppInstanceDeleted
+	default:
+		return AppInstanceActive
+	}
+}
+
 type K8sAppInstanceStatus string
 
 const (

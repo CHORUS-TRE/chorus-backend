@@ -61,6 +61,7 @@ type WorkbenchStore interface {
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
 	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
 	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
+	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
 	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
 }
 
@@ -114,7 +115,41 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		}
 	}()
 
+	s.SetClientWatchers()
+
 	return s
+}
+
+func (s *WorkbenchService) SetClientWatchers() {
+	watcher := func(namespace, workbenchName string, tenantID uint64, apps []k8s.AppInstance) error {
+		logger.TechLog.Debug(context.Background(), "new/update workbench", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("apps", apps))
+
+		appInstances := make([]*model.AppInstance, 0, len(apps))
+		for _, app := range apps {
+			k8sState := model.K8sAppInstanceState(app.K8sState)
+			appInstance := &model.AppInstance{
+				ID: app.ID,
+
+				Status:    k8sState.ToStatus(),
+				K8sState:  k8sState,
+				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
+			}
+			appInstances = append(appInstances, appInstance)
+		}
+
+		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("appInstances", appInstances))
+
+		err := s.store.UpdateAppInstances(context.Background(), tenantID, appInstances)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("apps", apps), zap.Error(err))
+			return err
+		}
+
+		return nil
+	}
+
+	s.client.WatchOnNewWorkbench(watcher)
+	s.client.WatchOnUpdateWorkbench(watcher)
 }
 
 func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {

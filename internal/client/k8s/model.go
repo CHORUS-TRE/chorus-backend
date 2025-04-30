@@ -1,8 +1,12 @@
 package k8s
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -118,8 +122,17 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	return w
 }
 
-func (c *client) workbenchAppToAppInstance(w WorkbenchApp) AppInstance {
+func (c *client) workbenchAppToAppInstance(w WorkbenchApp) (AppInstance, error) {
+	idStr := w.Name[len(appInstanceNamePrefix):]
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "failed to parse app instance ID", zap.Any("workbenchApp", w), zap.Error(err))
+		err = fmt.Errorf("failed to parse app instance ID %s: %w", idStr, err)
+		return AppInstance{}, err
+	}
+
 	app := AppInstance{
+		ID:      id,
 		AppName: w.Name,
 	}
 
@@ -163,7 +176,7 @@ func (c *client) workbenchAppToAppInstance(w WorkbenchApp) AppInstance {
 		}
 	}
 
-	return app
+	return app, nil
 }
 
 type WorkbenchAppState string

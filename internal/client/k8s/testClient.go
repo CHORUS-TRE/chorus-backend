@@ -9,15 +9,15 @@ func NewTestClient() *testClient {
 	return c
 }
 
-func (c *testClient) WatchOnNewWorkbench(func(workbench *Workbench) error) error {
+func (c *testClient) WatchOnNewWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
 	return nil
 }
 
-func (c *testClient) WatchOnUpdateWorkbench(func(newWorkbench, oldWorkbench *Workbench) error) error {
+func (c *testClient) WatchOnUpdateWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
 	return nil
 }
 
-func (c *testClient) WatchOnDeleteWorkbench(func(workbench *Workbench) error) error {
+func (c *testClient) WatchOnDeleteWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
 	return nil
 }
 

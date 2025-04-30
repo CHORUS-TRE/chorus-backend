@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -112,10 +114,37 @@ func (s *WorkbenchService) getK8sAppInstance(tenantID, appID, appInstanceID uint
 	return clientApp, nil
 }
 
+func (s *WorkbenchService) getIDWithPrefix(prefix, name string) (uint64, error) {
+	re, err := regexp.Compile("^" + prefix + "([0-9]+)$")
+	if err != nil {
+		return 0, fmt.Errorf("unable to compile regex: %w", err)
+	}
+
+	matches := re.FindStringSubmatch(name)
+	if len(matches) != 2 {
+		return 0, fmt.Errorf("no match found for regex with prefix %q in name %q", prefix, name)
+	}
+
+	id, err := strconv.ParseUint(matches[1], 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse id: %w", err)
+	}
+
+	return id, nil
+}
+
 func (s *WorkbenchService) getWorkspaceName(id uint64) string {
 	return fmt.Sprintf("workspace%v", id)
 }
 
+func (s *WorkbenchService) getWorkspaceID(name string) (uint64, error) {
+	return s.getIDWithPrefix("workspace", name)
+}
+
 func (s *WorkbenchService) getWorkbenchName(id uint64) string {
 	return fmt.Sprintf("workbench%v", id)
+}
+
+func (s *WorkbenchService) getWorkbenchID(name string) (uint64, error) {
+	return s.getIDWithPrefix("workbench", name)
 }
