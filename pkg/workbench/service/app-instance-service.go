@@ -122,7 +122,7 @@ func (s *WorkbenchService) getIDWithPrefix(prefix, name string) (uint64, error) 
 
 	matches := re.FindStringSubmatch(name)
 	if len(matches) != 2 {
-		return 0, fmt.Errorf("unable to match regex: %w", err)
+		return 0, fmt.Errorf("no match found for regex with prefix %q in name %q", prefix, name)
 	}
 
 	id, err := strconv.ParseUint(matches[1], 10, 64)
