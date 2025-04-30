@@ -51,7 +51,6 @@ docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 controller:l
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
 docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
 
-
 if [ $exists -eq 1 ]; then
     echo "Cluster chorus already exist, skipping create..."
 else

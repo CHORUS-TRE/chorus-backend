@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 
@@ -41,20 +42,26 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	query := `
 SELECT id, tenantid, userid, name, shortname, description, status, createdat, updatedat
 	FROM workspaces
-WHERE
 `
+
+	conditions := []string{}
+	arguments := []interface{}{}
+
 	if tenantID != 0 {
-		query += " tenantid = $1"
-	} else {
-		query += " $1 = $1"
+		conditions = append(conditions, "tenantid = $1")
+		arguments = append(arguments, tenantID)
 	}
 
 	if !allowDeleted {
-		query += " AND status != 'deleted';"
+		conditions = append(conditions, "status != 'deleted'")
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
 	var workspaces []*model.Workspace
-	if err := s.db.SelectContext(ctx, &workspaces, query, tenantID); err != nil {
+	if err := s.db.SelectContext(ctx, &workspaces, query, arguments...); err != nil {
 		return nil, err
 	}
 
