@@ -125,12 +125,13 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 	}
 
 	for _, workbench := range workbenchs {
-		logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
-		err := s.syncWorkbench(ctx, workbench)
-		if err != nil {
-			logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-			continue
-		}
+		go func(workbench *model.Workbench) {
+			logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
+			err := s.syncWorkbench(ctx, workbench)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			}
+		}(workbench)
 	}
 }
 
