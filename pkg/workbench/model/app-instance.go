@@ -27,13 +27,15 @@ type AppInstance struct {
 	AppDockerImageName     *string
 	AppDockerImageTag      *string
 
-	AppShmSize        *string
-	AppKioskConfigURL *string
-	AppMaxCPU         *string
-	AppMinCPU         *string
-	AppMaxMemory      *string
-	AppMinMemory      *string
-	AppIconURL        *string
+	AppShmSize             *string
+	AppKioskConfigURL      *string
+	AppMaxCPU              *string
+	AppMinCPU              *string
+	AppMaxMemory           *string
+	AppMinMemory           *string
+	AppMaxEphemeralStorage *string
+	AppMinEphemeralStorage *string
+	AppIconURL             *string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

@@ -166,12 +166,14 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 				AppImage:    utils.ToString(app.AppDockerImageName),
 				AppTag:      utils.ToString(app.AppDockerImageTag),
 
-				ShmSize:        utils.ToString(app.AppShmSize),
-				KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
-				MaxCPU:         utils.ToString(app.AppMaxCPU),
-				MinCPU:         utils.ToString(app.AppMinCPU),
-				MaxMemory:      utils.ToString(app.AppMaxMemory),
-				MinMemory:      utils.ToString(app.AppMinMemory),
+				ShmSize:             utils.ToString(app.AppShmSize),
+				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
+				MaxCPU:              utils.ToString(app.AppMaxCPU),
+				MinCPU:              utils.ToString(app.AppMinCPU),
+				MaxMemory:           utils.ToString(app.AppMaxMemory),
+				MinMemory:           utils.ToString(app.AppMinMemory),
+				MaxEphemeralStorage: utils.ToString(app.AppMaxEphemeralStorage),
+				MinEphemeralStorage: utils.ToString(app.AppMinEphemeralStorage),
 			})
 		}
 

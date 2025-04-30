@@ -99,12 +99,14 @@ func (s *WorkbenchService) getK8sAppInstance(tenantID, appID, appInstanceID uint
 		AppImage:    app.DockerImageName,
 		AppTag:      app.DockerImageTag,
 
-		ShmSize:        app.ShmSize,
-		KioskConfigURL: app.KioskConfigURL,
-		MaxCPU:         app.MaxCPU,
-		MinCPU:         app.MinCPU,
-		MaxMemory:      app.MaxMemory,
-		MinMemory:      app.MinMemory,
+		ShmSize:             app.ShmSize,
+		KioskConfigURL:      app.KioskConfigURL,
+		MaxCPU:              app.MaxCPU,
+		MinCPU:              app.MinCPU,
+		MaxMemory:           app.MaxMemory,
+		MinMemory:           app.MinMemory,
+		MaxEphemeralStorage: app.MaxEphemeralStorage,
+		MinEphemeralStorage: app.MinEphemeralStorage,
 	}
 
 	return clientApp, nil
