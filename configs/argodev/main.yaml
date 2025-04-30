@@ -92,6 +92,7 @@ services:
 
 clients:
   k8s_client:
+    is_watcher: true
     ca: "{{ .service_account_secret_ca }}"
     token: "{{ .service_account_secret_token }}"
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
