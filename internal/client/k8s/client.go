@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
@@ -23,6 +24,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+var _ = K8sClienter(&client{})
+
 type K8sClienter interface {
 	CreateWorkspace(tenantID uint64, namespace string) error
 	DeleteWorkspace(namespace string) error
@@ -33,9 +36,9 @@ type K8sClienter interface {
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 	DeleteWorkbench(namespace, workbenchName string) error
 
-	WatchOnNewWorkbench(func(workbench *Workbench) error) error
-	WatchOnUpdateWorkbench(func(oldWorkbench, newWorkbench *Workbench) error) error
-	WatchOnDeleteWorkbench(func(workbench *Workbench) error) error
+	WatchOnNewWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error
+	WatchOnUpdateWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error
+	WatchOnDeleteWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error
 }
 
 type client struct {
@@ -46,9 +49,9 @@ type client struct {
 	gvrCache      map[string]schema.GroupVersionResource
 	gvrCacheLock  sync.Mutex
 
-	onNewWorkbench    func(workbench *Workbench) error
-	onUpdateWorkbench func(oldWorkbench, newWorkbench *Workbench) error
-	onDeleteWorkbench func(workbench *Workbench) error
+	onNewWorkbench    func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error
+	onUpdateWorkbench func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error
+	onDeleteWorkbench func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error
 }
 
 func NewClient(cfg config.Config) (*client, error) {
@@ -134,44 +137,45 @@ func (c *client) watch() {
 	workbenchInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			logger.TechLog.Debug(context.Background(), "added workbench", zap.Any("workbench", obj))
-			workbench, err := EventInterfaceToWorkbench(obj)
+
+			namespaceName, workbenchName, tenantID, apps, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(obj)
 			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
+				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
 				return
 			}
+
 			if c.onNewWorkbench != nil {
-				if err := c.onNewWorkbench(workbench); err != nil {
+				if err := c.onNewWorkbench(namespaceName, workbenchName, tenantID, apps); err != nil {
 					logger.TechLog.Error(context.Background(), "Error handling new workbench:", zap.Error(err))
 				}
 			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			logger.TechLog.Debug(context.Background(), "updated workbench", zap.Any("newWorkbench", newObj), zap.Any("oldWorkbench", oldObj))
-			newWorkbench, err := EventInterfaceToWorkbench(newObj)
+
+			namespaceName, workbenchName, tenantID, apps, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(newObj)
 			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
+				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
 				return
 			}
-			oldWorkbench, err := EventInterfaceToWorkbench(oldObj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
-				return
-			}
+
 			if c.onUpdateWorkbench != nil {
-				if err := c.onUpdateWorkbench(oldWorkbench, newWorkbench); err != nil {
+				if err := c.onUpdateWorkbench(namespaceName, workbenchName, tenantID, apps); err != nil {
 					logger.TechLog.Error(context.Background(), "Error handling updated workbench:", zap.Error(err))
 				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			logger.TechLog.Debug(context.Background(), "deleted workbench", zap.Any("workbench", obj))
-			workbench, err := EventInterfaceToWorkbench(obj)
+
+			namespaceName, workbenchName, tenantID, apps, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(obj)
 			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Workbench:", zap.Error(err))
+				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
 				return
 			}
+
 			if c.onDeleteWorkbench != nil {
-				if err := c.onDeleteWorkbench(workbench); err != nil {
+				if err := c.onDeleteWorkbench(namespaceName, workbenchName, tenantID, apps); err != nil {
 					logger.TechLog.Error(context.Background(), "Error handling deleted workbench:", zap.Error(err))
 				}
 			}
@@ -196,15 +200,39 @@ func (c *client) watch() {
 	logger.TechLog.Info(context.Background(), "Informers stopped.")
 }
 
-func (c *client) WatchOnNewWorkbench(handler func(workbench *Workbench) error) error {
+func (c *client) eventInterfaceToNamespaceWorkbenchTenantApps(obj interface{}) (string, string, uint64, []AppInstance, error) {
+	workbench, err := EventInterfaceToWorkbench(obj)
+	if err != nil {
+		return "", "", 0, nil, fmt.Errorf("error converting to Workbench: %w", err)
+	}
+
+	apps := make([]AppInstance, 0, len(workbench.Spec.Apps))
+	for _, app := range workbench.Spec.Apps {
+		appInstance, err := c.workbenchAppToAppInstance(app)
+		if err != nil {
+			return "", "", 0, nil, fmt.Errorf("error converting to AppInstance: %w", err)
+		}
+		apps = append(apps, appInstance)
+	}
+
+	tenantIDStr := workbench.Labels["chorus-tre.ch/tenant-id"]
+	tenantID, err := strconv.ParseUint(tenantIDStr, 10, 64)
+	if err != nil {
+		return "", "", 0, nil, fmt.Errorf("error parsing tenant ID: %w", err)
+	}
+
+	return workbench.Namespace, workbench.Name, tenantID, apps, nil
+}
+
+func (c *client) WatchOnNewWorkbench(handler func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
 	c.onNewWorkbench = handler
 	return nil
 }
-func (c *client) WatchOnUpdateWorkbench(handler func(oldWorkbench, newWorkbench *Workbench) error) error {
+func (c *client) WatchOnUpdateWorkbench(handler func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
 	c.onUpdateWorkbench = handler
 	return nil
 }
-func (c *client) WatchOnDeleteWorkbench(handler func(workbench *Workbench) error) error {
+func (c *client) WatchOnDeleteWorkbench(handler func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
 	c.onDeleteWorkbench = handler
 	return nil
 }

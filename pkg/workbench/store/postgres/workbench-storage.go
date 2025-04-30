@@ -255,12 +255,11 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
 func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (err error) {
 	const appInstanceUpdateQuery = `
 		UPDATE app_instances
-		SET status = $3, updatedat = NOW()
+		SET status = $3, k8sstate = $4, k8sstatus = $5, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2;
 	`
 
-	// Update User
-	rows, err := s.db.ExecContext(ctx, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status)
+	rows, err := s.db.ExecContext(ctx, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus)
 	if err != nil {
 		return err
 	}
@@ -274,6 +273,16 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 	}
 
 	return err
+}
+
+func (s *WorkbenchStorage) UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) (err error) {
+	var errAcc error
+	for _, appInstance := range appInstances {
+		if err := s.UpdateAppInstance(ctx, tenantID, appInstance); err != nil {
+			errAcc = fmt.Errorf("%w: failed to update appInstance %d: %w", errAcc, appInstance.ID, err)
+		}
+	}
+	return errAcc
 }
 
 func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error {
