@@ -224,13 +224,13 @@ func (c *client) makeWorkbench(tenantID uint64, namespace, workbenchName string,
 			},
 		},
 		Spec: WorkbenchSpec{
-			Apps: []WorkbenchApp{},
+			Apps: map[string]WorkbenchApp{},
 		},
 	}
 
 	for _, app := range apps {
 		workbenchApp := c.appInstanceToWorkbenchApp(app)
-		workbench.Spec.Apps = append(workbench.Spec.Apps, workbenchApp)
+		workbench.Spec.Apps[app.UID()] = workbenchApp
 	}
 
 	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) != 0 {
@@ -353,45 +353,16 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 }
 
 func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := c.appInstanceToWorkbenchApp(appInstance)
 
-	// Fetch the current workbench
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
 		return fmt.Errorf("failed to get gvr from kind - %s", err)
 	}
 
-	workbench, err := c.dynamicClient.Resource(gvr).Namespace(namespace).Get(context.Background(), workbenchName, v1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get workbench: %w", err)
-	}
-
-	// Find the index
-	apps, found, err := unstructured.NestedSlice(workbench.Object, "spec", "apps")
-	if err != nil || !found {
-		return fmt.Errorf("apps field not found: %w", err)
-	}
-
-	indexToRemove := -1
-	for i, a := range apps {
-		appMap, ok := a.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		if appMap["name"] == app.Name {
-			indexToRemove = i
-			break
-		}
-	}
-
-	if indexToRemove == -1 {
-		return fmt.Errorf("app instance %s not found", app.Name)
-	}
-
 	patch := []map[string]interface{}{
 		{
 			"op":   "remove",
-			"path": fmt.Sprintf("/spec/apps/%d", indexToRemove),
+			"path": fmt.Sprintf("/spec/apps/%s", appInstance.UID()),
 		},
 	}
 

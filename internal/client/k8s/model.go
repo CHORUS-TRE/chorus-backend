@@ -32,9 +32,13 @@ type AppInstance struct {
 	// IconURL        string
 }
 
+func (a AppInstance) UID() string {
+	return fmt.Sprintf("%s%v", appInstanceNamePrefix, a.ID)
+}
+
 func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	w := WorkbenchApp{
-		Name: fmt.Sprintf("%s%v", appInstanceNamePrefix, app.ID),
+		Name: app.UID(),
 	}
 
 	if app.AppTag != "" {
@@ -171,10 +175,10 @@ type WorkbenchApp struct {
 	KioskConfig *KioskConfig                 `json:"kioskConfig,omitempty"`
 }
 type WorkbenchSpec struct {
-	Server           WorkbenchServer `json:"server,omitempty"`
-	Apps             []WorkbenchApp  `json:"apps,omitempty"`
-	ServiceAccount   string          `json:"serviceAccountName,omitempty"`
-	ImagePullSecrets []string        `json:"imagePullSecrets,omitempty"`
+	Server           WorkbenchServer         `json:"server,omitempty"`
+	Apps             map[string]WorkbenchApp `json:"apps,omitempty"`
+	ServiceAccount   string                  `json:"serviceAccountName,omitempty"`
+	ImagePullSecrets []string                `json:"imagePullSecrets,omitempty"`
 }
 
 type WorkbenchStatusAppStatus string
@@ -206,8 +210,8 @@ type WorkbenchStatusApp struct {
 }
 
 type WorkbenchStatus struct {
-	Server WorkbenchStatusServer `json:"server"`
-	Apps   []WorkbenchStatusApp  `json:"apps,omitempty"`
+	Server WorkbenchStatusServer         `json:"server"`
+	Apps   map[string]WorkbenchStatusApp `json:"apps,omitempty"`
 }
 
 type Workbench struct {
