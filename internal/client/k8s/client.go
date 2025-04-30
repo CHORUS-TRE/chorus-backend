@@ -329,9 +329,9 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 		patch = []map[string]interface{}{
 			{
 				"op":   "add",
-				"path": "/spec/apps/" + appInstance.UID(),
+				"path": "/spec/apps",
 				// "value": []map[string]interface{}{app},
-				"value": []interface{}{app},
+				"value": map[string]interface{}{appInstance.UID(): app},
 			},
 		}
 
@@ -346,7 +346,7 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
-		return fmt.Errorf("error applying patch: %w", err)
+		return fmt.Errorf("error applying patch create appInstance (%s): %w", string(patchBytes), err)
 	}
 
 	return nil
@@ -375,7 +375,7 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
-		return fmt.Errorf("error applying patch: %w", err)
+		return fmt.Errorf("error applying patch delete app instance (%s): %w", string(patchBytes), err)
 	}
 
 	return nil
