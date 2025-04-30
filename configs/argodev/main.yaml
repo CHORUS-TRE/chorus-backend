@@ -27,7 +27,7 @@ storage:
     chorus:
       type: postgres
       migration_table_name: tt_migrations
-      host: chorus-dev-backend-db
+      host: chorus-dev-backend-db-postgresql
       port: 5432
       username: chorus-dev-user
       password: '{{ .postgres_password }}'
