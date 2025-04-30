@@ -27,12 +27,14 @@ type AppInstance struct {
 	K8sState  string
 	K8sStatus string
 
-	ShmSize        string
-	KioskConfigURL string
-	MaxCPU         string
-	MinCPU         string
-	MaxMemory      string
-	MinMemory      string
+	ShmSize             string
+	KioskConfigURL      string
+	MaxCPU              string
+	MinCPU              string
+	MaxMemory           string
+	MinMemory           string
+	MaxEphemeralStorage string
+	MinEphemeralStorage string
 	// IconURL        string
 }
 
@@ -77,7 +79,7 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 		}
 	}
 
-	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" {
+	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" || app.MaxEphemeralStorage != "" || app.MinEphemeralStorage != "" {
 		w.Resources = &corev1.ResourceRequirements{}
 		if app.MaxCPU != "" {
 			if w.Resources.Limits == nil {
@@ -102,6 +104,18 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 				w.Resources.Requests = corev1.ResourceList{}
 			}
 			w.Resources.Requests["memory"] = resource.MustParse(app.MinMemory)
+		}
+		if app.MaxEphemeralStorage != "" {
+			if w.Resources.Limits == nil {
+				w.Resources.Limits = corev1.ResourceList{}
+			}
+			w.Resources.Limits["ephemeral-storage"] = resource.MustParse(app.MaxEphemeralStorage)
+		}
+		if app.MinEphemeralStorage != "" {
+			if w.Resources.Requests == nil {
+				w.Resources.Requests = corev1.ResourceList{}
+			}
+			w.Resources.Requests["ephemeral-storage"] = resource.MustParse(app.MinEphemeralStorage)
 		}
 	}
 
@@ -145,6 +159,9 @@ func (c *client) workbenchAppToAppInstance(w WorkbenchApp) (AppInstance, error) 
 			if memory, ok := w.Resources.Limits["memory"]; ok {
 				app.MaxMemory = memory.String()
 			}
+			if ephemeralStorage, ok := w.Resources.Limits["ephemeral-storage"]; ok {
+				app.MaxEphemeralStorage = ephemeralStorage.String()
+			}
 		}
 		if w.Resources.Requests != nil {
 			if cpu, ok := w.Resources.Requests["cpu"]; ok {
@@ -152,6 +169,9 @@ func (c *client) workbenchAppToAppInstance(w WorkbenchApp) (AppInstance, error) 
 			}
 			if memory, ok := w.Resources.Requests["memory"]; ok {
 				app.MinMemory = memory.String()
+			}
+			if ephemeralStorage, ok := w.Resources.Requests["ephemeral-storage"]; ok {
+				app.MinEphemeralStorage = ephemeralStorage.String()
 			}
 		}
 	}
