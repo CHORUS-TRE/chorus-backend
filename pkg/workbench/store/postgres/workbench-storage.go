@@ -278,13 +278,13 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 }
 
 func (s *WorkbenchStorage) UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) (err error) {
-	var errAcc error
+	var errAcc []error
 	for _, appInstance := range appInstances {
 		if err := s.UpdateAppInstance(ctx, tenantID, appInstance); err != nil {
-			errAcc = fmt.Errorf("%w: failed to update appInstance %d: %w", errAcc, appInstance.ID, err)
+			errAcc = append(errAcc, fmt.Errorf("failed to update appInstance %d: %w", appInstance.ID, err))
 		}
 	}
-	return errAcc
+	return errors.Join(errAcc...)
 }
 
 func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error {
