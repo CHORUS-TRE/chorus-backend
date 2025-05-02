@@ -1,8 +1,12 @@
 package k8s
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,18 +27,24 @@ type AppInstance struct {
 	K8sState  string
 	K8sStatus string
 
-	ShmSize        string
-	KioskConfigURL string
-	MaxCPU         string
-	MinCPU         string
-	MaxMemory      string
-	MinMemory      string
+	ShmSize             string
+	KioskConfigURL      string
+	MaxCPU              string
+	MinCPU              string
+	MaxMemory           string
+	MinMemory           string
+	MaxEphemeralStorage string
+	MinEphemeralStorage string
 	// IconURL        string
+}
+
+func (a AppInstance) UID() string {
+	return fmt.Sprintf("%s%v", appInstanceNamePrefix, a.ID)
 }
 
 func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	w := WorkbenchApp{
-		Name: fmt.Sprintf("%s%v", appInstanceNamePrefix, app.ID),
+		Name: app.UID(),
 	}
 
 	if app.AppTag != "" {
@@ -69,7 +79,7 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 		}
 	}
 
-	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" {
+	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" || app.MaxEphemeralStorage != "" || app.MinEphemeralStorage != "" {
 		w.Resources = &corev1.ResourceRequirements{}
 		if app.MaxCPU != "" {
 			if w.Resources.Limits == nil {
@@ -95,13 +105,34 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 			}
 			w.Resources.Requests["memory"] = resource.MustParse(app.MinMemory)
 		}
+		if app.MaxEphemeralStorage != "" {
+			if w.Resources.Limits == nil {
+				w.Resources.Limits = corev1.ResourceList{}
+			}
+			w.Resources.Limits["ephemeral-storage"] = resource.MustParse(app.MaxEphemeralStorage)
+		}
+		if app.MinEphemeralStorage != "" {
+			if w.Resources.Requests == nil {
+				w.Resources.Requests = corev1.ResourceList{}
+			}
+			w.Resources.Requests["ephemeral-storage"] = resource.MustParse(app.MinEphemeralStorage)
+		}
 	}
 
 	return w
 }
 
-func (c *client) workbenchAppToAppInstance(w WorkbenchApp) AppInstance {
+func (c *client) workbenchAppToAppInstance(w WorkbenchApp) (AppInstance, error) {
+	idStr := w.Name[len(appInstanceNamePrefix):]
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "failed to parse app instance ID", zap.Any("workbenchApp", w), zap.Error(err))
+		err = fmt.Errorf("failed to parse app instance ID %s: %w", idStr, err)
+		return AppInstance{}, err
+	}
+
 	app := AppInstance{
+		ID:      id,
 		AppName: w.Name,
 	}
 
@@ -128,6 +159,9 @@ func (c *client) workbenchAppToAppInstance(w WorkbenchApp) AppInstance {
 			if memory, ok := w.Resources.Limits["memory"]; ok {
 				app.MaxMemory = memory.String()
 			}
+			if ephemeralStorage, ok := w.Resources.Limits["ephemeral-storage"]; ok {
+				app.MaxEphemeralStorage = ephemeralStorage.String()
+			}
 		}
 		if w.Resources.Requests != nil {
 			if cpu, ok := w.Resources.Requests["cpu"]; ok {
@@ -136,10 +170,13 @@ func (c *client) workbenchAppToAppInstance(w WorkbenchApp) AppInstance {
 			if memory, ok := w.Resources.Requests["memory"]; ok {
 				app.MinMemory = memory.String()
 			}
+			if ephemeralStorage, ok := w.Resources.Requests["ephemeral-storage"]; ok {
+				app.MinEphemeralStorage = ephemeralStorage.String()
+			}
 		}
 	}
 
-	return app
+	return app, nil
 }
 
 type WorkbenchAppState string
@@ -171,10 +208,10 @@ type WorkbenchApp struct {
 	KioskConfig *KioskConfig                 `json:"kioskConfig,omitempty"`
 }
 type WorkbenchSpec struct {
-	Server           WorkbenchServer `json:"server,omitempty"`
-	Apps             []WorkbenchApp  `json:"apps,omitempty"`
-	ServiceAccount   string          `json:"serviceAccountName,omitempty"`
-	ImagePullSecrets []string        `json:"imagePullSecrets,omitempty"`
+	Server           WorkbenchServer         `json:"server,omitempty"`
+	Apps             map[string]WorkbenchApp `json:"apps,omitempty"`
+	ServiceAccount   string                  `json:"serviceAccountName,omitempty"`
+	ImagePullSecrets []string                `json:"imagePullSecrets,omitempty"`
 }
 
 type WorkbenchStatusAppStatus string
@@ -206,8 +243,8 @@ type WorkbenchStatusApp struct {
 }
 
 type WorkbenchStatus struct {
-	Server WorkbenchStatusServer `json:"server"`
-	Apps   []WorkbenchStatusApp  `json:"apps,omitempty"`
+	Server WorkbenchStatusServer         `json:"server"`
+	Apps   map[string]WorkbenchStatusApp `json:"apps,omitempty"`
 }
 
 type Workbench struct {

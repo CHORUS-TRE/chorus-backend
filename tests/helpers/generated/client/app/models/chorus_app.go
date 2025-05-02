@@ -47,11 +47,17 @@ type ChorusApp struct {
 	// max CPU
 	MaxCPU string `json:"maxCPU,omitempty"`
 
+	// max ephemeral storage
+	MaxEphemeralStorage string `json:"maxEphemeralStorage,omitempty"`
+
 	// max memory
 	MaxMemory string `json:"maxMemory,omitempty"`
 
 	// min CPU
 	MinCPU string `json:"minCPU,omitempty"`
+
+	// min ephemeral storage
+	MinEphemeralStorage string `json:"minEphemeralStorage,omitempty"`
 
 	// min memory
 	MinMemory string `json:"minMemory,omitempty"`

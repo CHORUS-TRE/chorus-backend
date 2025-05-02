@@ -27,7 +27,7 @@ storage:
     chorus:
       type: postgres
       migration_table_name: tt_migrations
-      host: chorus-dev-backend-postgresql
+      host: chorus-dev-backend-db-postgresql
       port: 5432
       username: chorus-dev-user
       password: '{{ .postgres_password }}'
@@ -92,6 +92,7 @@ services:
 
 clients:
   k8s_client:
+    is_watcher: true
     ca: "{{ .service_account_secret_ca }}"
     token: "{{ .service_account_secret_token }}"
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443

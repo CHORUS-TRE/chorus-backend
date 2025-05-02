@@ -61,6 +61,7 @@ type WorkbenchStore interface {
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
 	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
 	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
+	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
 	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
 }
 
@@ -114,7 +115,41 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		}
 	}()
 
+	s.SetClientWatchers()
+
 	return s
+}
+
+func (s *WorkbenchService) SetClientWatchers() {
+	watcher := func(namespace, workbenchName string, tenantID uint64, apps []k8s.AppInstance) error {
+		logger.TechLog.Debug(context.Background(), "new/update workbench", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("apps", apps))
+
+		appInstances := make([]*model.AppInstance, 0, len(apps))
+		for _, app := range apps {
+			k8sState := model.K8sAppInstanceState(app.K8sState)
+			appInstance := &model.AppInstance{
+				ID: app.ID,
+
+				Status:    k8sState.ToStatus(),
+				K8sState:  k8sState,
+				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
+			}
+			appInstances = append(appInstances, appInstance)
+		}
+
+		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("appInstances", appInstances))
+
+		err := s.store.UpdateAppInstances(context.Background(), tenantID, appInstances)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("apps", apps), zap.Error(err))
+			return err
+		}
+
+		return nil
+	}
+
+	s.client.WatchOnNewWorkbench(watcher)
+	s.client.WatchOnUpdateWorkbench(watcher)
 }
 
 func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
@@ -125,12 +160,13 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 	}
 
 	for _, workbench := range workbenchs {
-		logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
-		err := s.syncWorkbench(ctx, workbench)
-		if err != nil {
-			logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
-			continue
-		}
+		go func(workbench *model.Workbench) {
+			logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
+			err := s.syncWorkbench(ctx, workbench)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			}
+		}(workbench)
 	}
 }
 
@@ -165,12 +201,14 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 				AppImage:    utils.ToString(app.AppDockerImageName),
 				AppTag:      utils.ToString(app.AppDockerImageTag),
 
-				ShmSize:        utils.ToString(app.AppShmSize),
-				KioskConfigURL: utils.ToString(app.AppKioskConfigURL),
-				MaxCPU:         utils.ToString(app.AppMaxCPU),
-				MinCPU:         utils.ToString(app.AppMinCPU),
-				MaxMemory:      utils.ToString(app.AppMaxMemory),
-				MinMemory:      utils.ToString(app.AppMinMemory),
+				ShmSize:             utils.ToString(app.AppShmSize),
+				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
+				MaxCPU:              utils.ToString(app.AppMaxCPU),
+				MinCPU:              utils.ToString(app.AppMinCPU),
+				MaxMemory:           utils.ToString(app.AppMaxMemory),
+				MinMemory:           utils.ToString(app.AppMinMemory),
+				MaxEphemeralStorage: utils.ToString(app.AppMaxEphemeralStorage),
+				MinEphemeralStorage: utils.ToString(app.AppMinEphemeralStorage),
 			})
 		}
 

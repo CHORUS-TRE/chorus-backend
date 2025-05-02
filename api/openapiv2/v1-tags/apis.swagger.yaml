@@ -1884,6 +1884,10 @@ definitions:
         type: string
       minMemory:
         type: string
+      maxEphemeralStorage:
+        type: string
+      minEphemeralStorage:
+        type: string
       iconURL:
         type: string
       createdAt:

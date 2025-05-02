@@ -24,7 +24,9 @@ message App {
     string minCPU = 16;
     string maxMemory = 17;
     string minMemory = 18;
-    string iconURL = 19;    
+    string maxEphemeralStorage = 20;
+    string minEphemeralStorage = 21;
+    string iconURL = 19;
 
     google.protobuf.Timestamp createdAt = 10;
     google.protobuf.Timestamp updatedAt = 11;
