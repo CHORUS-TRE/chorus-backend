@@ -253,7 +253,7 @@ func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
+		return nil, fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	return workbench, nil
@@ -262,7 +262,7 @@ func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.store.DeleteWorkbench(ctx, tenantID, workbenchID)
@@ -289,7 +289,7 @@ func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model
 func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
 	id, err := s.store.CreateWorkbench(ctx, workbench.TenantID, workbench)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
+		return 0, fmt.Errorf("unable to create workbench: %w", err)
 	}
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
@@ -365,7 +365,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)
