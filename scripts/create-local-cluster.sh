@@ -48,8 +48,8 @@ echo "Login to harbor.dev.chorus-tre.ch"
 docker login harbor.dev.chorus-tre.ch -u "$user" -p "$pw"
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9
 docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 controller:latest
-docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
-docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-3
+docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-3 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-3
 
 if [ $exists -eq 1 ]; then
     echo "Cluster chorus already exist, skipping create..."
@@ -60,7 +60,7 @@ else
 fi
 
 kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 --name chorus
-kind load docker-image harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-2 --name chorus
+kind load docker-image harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-3 --name chorus
 
 kubectl apply -f configs/dev/files/deploy-ingress-nginx.yaml
 
@@ -123,7 +123,7 @@ cat <<EOF >configs/dev/files/kind.yaml
 clients:
   k8s_client:
     is_watcher: true
-    server_version: "6.2.3-2"
+    server_version: "6.2.3-3"
     ca: |
 $ca_ident
     token: $token
