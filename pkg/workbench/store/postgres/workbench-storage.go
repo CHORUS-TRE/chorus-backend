@@ -27,7 +27,7 @@ func NewWorkbenchStorage(db *sqlx.DB) *WorkbenchStorage {
 
 func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	const query = `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, intialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 			FROM workbenchs
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -42,7 +42,7 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 
 func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
 	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, intialresolutionwidth, initialresolutionheight, createdat, updatedat
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs
 WHERE tenantid = $1 AND status != 'deleted';
 `
@@ -103,7 +103,7 @@ ORDER BY ai.createdat ASC;
 
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, intialresolutionwidth, initialresolutionheight, createdat, updatedat
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs;
 `
 	var workbenchs []*model.Workbench
@@ -145,7 +145,7 @@ WHERE workbenchs.id = batch_data.id
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
 	const workbenchQuery = `
-INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, status, intialresolutionwidth, initialresolutionheight, createdat, updatedat)
+INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat)
 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id;
 	`
 
