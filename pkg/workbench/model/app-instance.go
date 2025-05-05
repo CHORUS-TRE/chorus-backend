@@ -63,6 +63,10 @@ func (s K8sAppInstanceState) ToStatus() AppInstanceStatus {
 	}
 }
 
+func (s K8sAppInstanceState) String() string {
+	return string(s)
+}
+
 type K8sAppInstanceStatus string
 
 const (
@@ -72,6 +76,10 @@ const (
 	K8sAppInstanceStatusProgressing K8sAppInstanceStatus = "Progressing"
 	K8sAppInstanceStatusFailed      K8sAppInstanceStatus = "Failed"
 )
+
+func (s K8sAppInstanceStatus) String() string {
+	return string(s)
+}
 
 // AppInstanceStatus represents the status of an app instance.
 type AppInstanceStatus string

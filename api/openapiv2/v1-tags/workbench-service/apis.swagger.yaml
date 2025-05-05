@@ -249,6 +249,12 @@ definitions:
         type: string
       status:
         type: string
+      initialResolutionWidth:
+        type: integer
+        format: int64
+      initialResolutionHeight:
+        type: integer
+        format: int64
       appInsanceIds:
         type: array
         items:

@@ -29,8 +29,8 @@ var _ = K8sClienter(&client{})
 type K8sClienter interface {
 	CreateWorkspace(tenantID uint64, namespace string) error
 	DeleteWorkspace(namespace string) error
-	CreateWorkbench(tenantID uint64, namespace, workbenchName string) error
-	UpdateWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) error
+	CreateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error
+	UpdateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
@@ -207,12 +207,21 @@ func (c *client) eventInterfaceToNamespaceWorkbenchTenantApps(obj interface{}) (
 	}
 
 	apps := make([]AppInstance, 0, len(workbench.Spec.Apps))
-	for _, app := range workbench.Spec.Apps {
+	appsMap := make(map[string]*AppInstance, len(workbench.Spec.Apps))
+	for k, app := range workbench.Spec.Apps {
 		appInstance, err := c.workbenchAppToAppInstance(app)
 		if err != nil {
 			return "", "", 0, nil, fmt.Errorf("error converting to AppInstance: %w", err)
 		}
-		apps = append(apps, appInstance)
+		appsMap[k] = &appInstance
+	}
+
+	for k, app := range workbench.Status.Apps {
+		appsMap[k].K8sStatus = string(app.Status)
+	}
+
+	for _, app := range appsMap {
+		apps = append(apps, *app)
 	}
 
 	tenantIDStr := workbench.Labels["chorus-tre.ch/tenant-id"]
@@ -237,26 +246,30 @@ func (c *client) WatchOnDeleteWorkbench(handler func(namespace, workbenchName st
 	return nil
 }
 
-func (c *client) makeWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) (Workbench, error) {
+func (c *client) makeWorkbench(tenantID uint64, req MakeWorkbenchRequest) (Workbench, error) {
 	workbench := Workbench{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Workbench",
 			APIVersion: "default.chorus-tre.ch/v1alpha1",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      workbenchName,
-			Namespace: namespace,
+			Name:      req.WorkbenchName,
+			Namespace: req.Namespace,
 			Labels: map[string]string{
 				"chorus-tre.ch/created-by": "chorus-backend",
 				"chorus-tre.ch/tenant-id":  fmt.Sprintf("%d", tenantID),
 			},
 		},
 		Spec: WorkbenchSpec{
+			Server: WorkbenchServer{
+				InitialResolutionWidth:  int(req.InitialResolutionWidth),
+				InitialResolutionHeight: int(req.InitialResolutionHeight),
+			},
 			Apps: map[string]WorkbenchApp{},
 		},
 	}
 
-	for _, app := range apps {
+	for _, app := range req.Apps {
 		workbenchApp := c.appInstanceToWorkbenchApp(app)
 		workbench.Spec.Apps[app.UID()] = workbenchApp
 	}
@@ -305,22 +318,30 @@ func (c *client) DeleteWorkspace(namespace string) error {
 	return c.deleteNamespace(namespace)
 }
 
-func (c *client) CreateWorkbench(tenantID uint64, namespace, workbenchName string) error {
-	workbench, err := c.makeWorkbench(tenantID, namespace, workbenchName, []AppInstance{})
-	if err != nil {
-		return fmt.Errorf("error creating workbench: %w", err)
-	}
-
-	return c.syncWorkbench(tenantID, workbench, namespace)
+type MakeWorkbenchRequest struct {
+	Namespace               string
+	WorkbenchName           string
+	InitialResolutionWidth  uint32
+	InitialResolutionHeight uint32
+	Apps                    []AppInstance
 }
 
-func (c *client) UpdateWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) error {
-	workbench, err := c.makeWorkbench(tenantID, namespace, workbenchName, apps)
+func (c *client) CreateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error {
+	workbench, err := c.makeWorkbench(tenantID, req)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(tenantID, workbench, namespace)
+	return c.syncWorkbench(tenantID, workbench, req.Namespace)
+}
+
+func (c *client) UpdateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error {
+	workbench, err := c.makeWorkbench(tenantID, req)
+	if err != nil {
+		return fmt.Errorf("error creating workbench: %w", err)
+	}
+
+	return c.syncWorkbench(tenantID, workbench, req.Namespace)
 }
 
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {

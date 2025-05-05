@@ -17,6 +17,9 @@ type Workbench struct {
 	ShortName   string
 	Description string
 
+	InitialResolutionWidth  uint32
+	InitialResolutionHeight uint32
+
 	K8sStatus K8sWorkbenchStatus
 	Status    WorkbenchStatus
 

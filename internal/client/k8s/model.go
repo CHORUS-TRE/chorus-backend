@@ -188,7 +188,9 @@ const (
 )
 
 type WorkbenchServer struct {
-	Version string `json:"version,omitempty"`
+	InitialResolutionWidth  int    `json:"initialResolutionWidth,omitempty"`
+	InitialResolutionHeight int    `json:"initialResolutionHeight,omitempty"`
+	Version                 string `json:"version,omitempty"`
 }
 type Image struct {
 	Registry   string `json:"registry"`

@@ -29,11 +29,11 @@ func (c *testClient) DeleteWorkspace(namespace string) error {
 	return nil
 }
 
-func (c *testClient) CreateWorkbench(tenantID uint64, namespace, workbenchName string) error {
+func (c *testClient) CreateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error {
 	return nil
 }
 
-func (c *testClient) UpdateWorkbench(tenantID uint64, namespace, workbenchName string, apps []AppInstance) error {
+func (c *testClient) UpdateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error {
 	return nil
 }
 
