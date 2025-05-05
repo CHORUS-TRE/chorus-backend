@@ -32,6 +32,9 @@ func WorkbenchToBusiness(workbench *chorus.Workbench) (*model.Workbench, error) 
 		ShortName:   workbench.ShortName,
 		Description: workbench.Description,
 
+		InitialResolutionWidth:  workbench.InitialResolutionWidth,
+		InitialResolutionHeight: workbench.InitialResolutionHeight,
+
 		Status: status,
 
 		CreatedAt: ca,
@@ -59,6 +62,9 @@ func WorkbenchFromBusiness(workbench *model.Workbench) (*chorus.Workbench, error
 		Name:        workbench.Name,
 		ShortName:   workbench.ShortName,
 		Description: workbench.Description,
+
+		InitialResolutionWidth:  workbench.InitialResolutionWidth,
+		InitialResolutionHeight: workbench.InitialResolutionHeight,
 
 		Status: workbench.Status.String(),
 

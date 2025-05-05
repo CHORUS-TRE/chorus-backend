@@ -15,10 +15,12 @@ message AppInstance {
     uint64 workbenchId = 6;
     
     string status = 7;
+    string k8sStatus = 8;
+    string k8sState = 9;
 
-    uint32 initialResolutionWidth = 8;
-    uint32 initialResolutionHeight = 9;
+    uint32 initialResolutionWidth = 10;
+    uint32 initialResolutionHeight = 11;
     
-    google.protobuf.Timestamp createdAt = 10;
-    google.protobuf.Timestamp updatedAt = 11;
+    google.protobuf.Timestamp createdAt = 12;
+    google.protobuf.Timestamp updatedAt = 13;
 }

@@ -214,7 +214,13 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(workbench.TenantID, namespace, workbenchName, clientApps)
+		err = s.client.UpdateWorkbench(workbench.TenantID, k8s.MakeWorkbenchRequest{
+			Namespace:               namespace,
+			WorkbenchName:           workbenchName,
+			Apps:                    clientApps,
+			InitialResolutionWidth:  workbench.InitialResolutionWidth,
+			InitialResolutionHeight: workbench.InitialResolutionHeight,
+		})
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			return err
@@ -288,7 +294,12 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
 
-	err = s.client.CreateWorkbench(workbench.TenantID, namespace, workbenchName)
+	err = s.client.CreateWorkbench(workbench.TenantID, k8s.MakeWorkbenchRequest{
+		Namespace:               namespace,
+		WorkbenchName:           workbenchName,
+		InitialResolutionWidth:  workbench.InitialResolutionWidth,
+		InitialResolutionHeight: workbench.InitialResolutionHeight,
+	})
 	if err != nil {
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}

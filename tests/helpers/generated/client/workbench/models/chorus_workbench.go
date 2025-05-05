@@ -35,6 +35,12 @@ type ChorusWorkbench struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// initial resolution height
+	InitialResolutionHeight int64 `json:"initialResolutionHeight,omitempty"`
+
+	// initial resolution width
+	InitialResolutionWidth int64 `json:"initialResolutionWidth,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 
