@@ -146,7 +146,7 @@ WHERE workbenchs.id = batch_data.id
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
 	const workbenchQuery = `
 INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64
