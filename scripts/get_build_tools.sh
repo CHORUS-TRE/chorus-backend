@@ -14,20 +14,20 @@ mkdir -p scripts/tools/darwin/bin
 echo
 echo "--- getting protoc ---"
 PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-curl -LO $PB_REL/download/v27.2/protoc-27.2-linux-x86_64.zip
-unzip -o protoc-27.2-linux-x86_64.zip -d protoc-27.2-linux-x86_64
-cp protoc-27.2-linux-x86_64/bin/protoc scripts/tools/linux/bin
-rm -rf protoc-27.2-linux-x86_64*
-curl -LO $PB_REL/download/v27.2/protoc-27.2-osx-universal_binary.zip 
-unzip -o protoc-27.2-osx-universal_binary.zip -d protoc-27.2-osx-universal_binary
-cp protoc-27.2-osx-universal_binary/bin/protoc scripts/tools/darwin/bin
-rm -rf protoc-27.2-osx-universal_binary*
+curl -LO $PB_REL/download/v30.2/protoc-30.2-linux-x86_64.zip
+unzip -o protoc-30.2-linux-x86_64.zip -d protoc-30.2-linux-x86_64
+cp protoc-30.2-linux-x86_64/bin/protoc scripts/tools/linux/bin
+rm -rf protoc-30.2-linux-x86_64*
+curl -LO $PB_REL/download/v30.2/protoc-30.2-osx-universal_binary.zip 
+unzip -o protoc-30.2-osx-universal_binary.zip -d protoc-30.2-osx-universal_binary
+cp protoc-30.2-osx-universal_binary/bin/protoc scripts/tools/darwin/bin
+rm -rf protoc-30.2-osx-universal_binary*
 
 
 echo
 echo "--- getting protoc-gen-openapiv2 ---"
-curl -L -o scripts/tools/linux/bin/protoc-gen-openapiv2 https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v2.20.0/protoc-gen-openapiv2-v2.20.0-linux-x86_64
-curl -L -o scripts/tools/darwin/bin/protoc-gen-openapiv2 https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v2.20.0/protoc-gen-openapiv2-v2.20.0-darwin-arm64
+curl -L -o scripts/tools/linux/bin/protoc-gen-openapiv2 https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v2.26.3/protoc-gen-openapiv2-v2.26.3-linux-x86_64
+curl -L -o scripts/tools/darwin/bin/protoc-gen-openapiv2 https://github.com/grpc-ecosystem/grpc-gateway/releases/download/v2.26.3/protoc-gen-openapiv2-v2.26.3-darwin-arm64
 chmod u+x scripts/tools/linux/bin/protoc-gen-openapiv2
 chmod u+x scripts/tools/darwin/bin/protoc-gen-openapiv2
 
@@ -55,7 +55,7 @@ rm -rf protobuf
 
 echo
 echo "==> Installing protoc-gen-grpc-gateway:"
-git clone -c advice.detachedHead=false --branch v2.20.0 https://github.com/grpc-ecosystem/grpc-gateway.git
+git clone -c advice.detachedHead=false --branch v2.26.3 https://github.com/grpc-ecosystem/grpc-gateway.git
 cd grpc-gateway/protoc-gen-grpc-gateway
 for GOOS in darwin linux; do
   export GOOS=$GOOS
