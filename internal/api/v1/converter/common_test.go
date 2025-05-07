@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/require"
+	timestamp "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestToProtoTimestamp(t *testing.T) {

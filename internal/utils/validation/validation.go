@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/pagination"
 
 	val "github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
@@ -53,10 +52,6 @@ func NewValidator() *val.Validate {
 		logger.TechLog.Fatal(context.Background(), "unable to register validator 'ltetomorrowutc'", zap.Error(err))
 	}
 
-	if err := v.RegisterValidation("cursorData", crossValidateCursorData, true); err != nil {
-		logger.TechLog.Logger.Fatal("unable to register validator 'cursorData'", logger.WithErrorField(err))
-	}
-
 	return v
 }
 
@@ -74,24 +69,4 @@ func ltetomorrowutc(fl val.FieldLevel) bool {
 	t := fl.Field().Interface().(time.Time)
 	d := time.Now().UTC().Add(48 * time.Hour).Truncate(24 * time.Hour)
 	return t.Before(d) || t.Equal(d)
-}
-
-func crossValidateCursorData(fl val.FieldLevel) bool {
-	cursorDataField := fl.Field()
-	pageRequest, ok := fl.Parent().Field(0).Interface().(pagination.PageRequest)
-	if !ok {
-		return false
-	}
-
-	// Previous and next page cannot be requested if it's the first request
-	if cursorDataField.IsNil() {
-		if pageRequest == pagination.PagePrevious {
-			return false
-		}
-		if pageRequest == pagination.PageNext {
-			return false
-		}
-	}
-
-	return true
 }
