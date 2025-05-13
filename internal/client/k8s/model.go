@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
@@ -92,7 +93,7 @@ func (a AppInstance) UID() string {
 
 func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	w := WorkbenchApp{
-		Name: app.UID(),
+		Name: fmt.Sprintf("%s-%v", app.AppName, app.ID),
 	}
 
 	if app.AppTag != "" {
@@ -171,7 +172,7 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 }
 
 func (c *client) workbenchAppToAppInstance(w WorkbenchApp) (AppInstance, error) {
-	idStr := w.Name[len(appInstanceNamePrefix):]
+	idStr := w.Name[strings.LastIndex((w.Name), "-")+1:]
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		logger.TechLog.Error(context.Background(), "failed to parse app instance ID", zap.Any("workbenchApp", w), zap.Error(err))
