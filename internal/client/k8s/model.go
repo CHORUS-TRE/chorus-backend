@@ -92,7 +92,7 @@ func (a AppInstance) UID() string {
 	return fmt.Sprintf("%s%v", appInstanceNamePrefix, a.ID)
 }
 
-func (a AppInstance) SanitizedName() string {
+func (a AppInstance) SanitizedAppName() string {
 	name := strings.ToLower(a.AppName)
 	re := regexp.MustCompile("[^a-z0-9-]")
 	name = re.ReplaceAllString(name, "-")
@@ -107,7 +107,7 @@ func (a AppInstance) SanitizedName() string {
 
 func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	w := WorkbenchApp{
-		Name: fmt.Sprintf("%s-%v", app.SanitizedName(), app.ID),
+		Name: fmt.Sprintf("%s-%v", app.SanitizedAppName(), app.ID),
 	}
 
 	if app.AppTag != "" {
