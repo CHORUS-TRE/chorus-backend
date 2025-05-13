@@ -253,6 +253,24 @@ func (c workbenchStorageLogging) DeleteAppInstance(ctx context.Context, tenantID
 	return nil
 }
 
+func (c workbenchStorageLogging) DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.DeleteAppInstances(ctx, tenantID, appInstanceIDs)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+	c.logger.Debug(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
 func (c workbenchStorageLogging) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()

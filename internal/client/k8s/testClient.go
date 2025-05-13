@@ -9,15 +9,15 @@ func NewTestClient() *testClient {
 	return c
 }
 
-func (c *testClient) WatchOnNewWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
+func (c *testClient) WatchOnNewWorkbench(func(workbench Workbench) error) error {
 	return nil
 }
 
-func (c *testClient) WatchOnUpdateWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
+func (c *testClient) WatchOnUpdateWorkbench(func(workbench Workbench) error) error {
 	return nil
 }
 
-func (c *testClient) WatchOnDeleteWorkbench(func(namespace, workbenchName string, tenantID uint64, apps []AppInstance) error) error {
+func (c *testClient) WatchOnDeleteWorkbench(func(workbench Workbench) error) error {
 	return nil
 }
 
@@ -29,11 +29,11 @@ func (c *testClient) DeleteWorkspace(namespace string) error {
 	return nil
 }
 
-func (c *testClient) CreateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error {
+func (c *testClient) CreateWorkbench(req MakeWorkbenchRequest) error {
 	return nil
 }
 
-func (c *testClient) UpdateWorkbench(tenantID uint64, req MakeWorkbenchRequest) error {
+func (c *testClient) UpdateWorkbench(req MakeWorkbenchRequest) error {
 	return nil
 }
 

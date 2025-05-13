@@ -28,7 +28,7 @@ const (
 	DEFAULT_POLL_INTERVAL = 500 * time.Millisecond
 )
 
-func (c *client) syncWorkbench(tenantID uint64, workbench Workbench, namespace string) error {
+func (c *client) syncWorkbench(tenantID uint64, workbench K8sWorkbench, namespace string) error {
 	logger.TechLog.Debug(context.Background(), "syncing workbench",
 		zap.String("namespace", namespace), zap.Any("workbench", workbench), zap.Uint64("tenantID", tenantID),
 	)
