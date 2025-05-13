@@ -17,7 +17,7 @@ import (
 type Workbench struct {
 	Namespace               string
 	TenantID                uint64
-	WorkbenchName           string
+	Name                    string
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
 	Status                  string
@@ -52,7 +52,7 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	workbench := Workbench{
 		TenantID:                tenantID,
 		Namespace:               wb.Namespace,
-		WorkbenchName:           wb.Name,
+		Name:                    wb.Name,
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
 		Status:                  string(wb.Status.Server.Status),

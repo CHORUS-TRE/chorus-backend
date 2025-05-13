@@ -232,7 +232,7 @@ func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 			APIVersion: "default.chorus-tre.ch/v1alpha1",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      req.WorkbenchName,
+			Name:      req.Name,
 			Namespace: req.Namespace,
 			Labels: map[string]string{
 				"chorus-tre.ch/created-by": "chorus-backend",
