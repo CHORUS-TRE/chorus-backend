@@ -3,6 +3,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -91,9 +92,22 @@ func (a AppInstance) UID() string {
 	return fmt.Sprintf("%s%v", appInstanceNamePrefix, a.ID)
 }
 
+func (a AppInstance) SanitizedAppName() string {
+	name := strings.ToLower(a.AppName)
+	re := regexp.MustCompile("[^a-z0-9-]")
+	name = re.ReplaceAllString(name, "-")
+	name = strings.Trim(name, "-")
+
+	if name == "" {
+		name = "unknown-app"
+	}
+
+	return name
+}
+
 func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 	w := WorkbenchApp{
-		Name: fmt.Sprintf("%s-%v", app.AppName, app.ID),
+		Name: fmt.Sprintf("%s-%v", app.SanitizedAppName(), app.ID),
 	}
 
 	if app.AppTag != "" {
