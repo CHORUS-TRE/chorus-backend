@@ -14,6 +14,54 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+type Workbench struct {
+	Namespace               string
+	TenantID                uint64
+	WorkbenchName           string
+	InitialResolutionWidth  uint32
+	InitialResolutionHeight uint32
+	Status                  string
+	Apps                    []AppInstance
+}
+
+func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
+	apps := make([]AppInstance, 0, len(wb.Spec.Apps))
+	appsMap := make(map[string]*AppInstance, len(wb.Spec.Apps))
+	for k, app := range wb.Spec.Apps {
+		appInstance, err := c.workbenchAppToAppInstance(app)
+		if err != nil {
+			return Workbench{}, fmt.Errorf("error converting to AppInstance: %w", err)
+		}
+		appsMap[k] = &appInstance
+	}
+
+	for k, app := range wb.Status.Apps {
+		appsMap[k].K8sStatus = string(app.Status)
+	}
+
+	for _, app := range appsMap {
+		apps = append(apps, *app)
+	}
+
+	tenantIDStr := wb.Labels["chorus-tre.ch/tenant-id"]
+	tenantID, err := strconv.ParseUint(tenantIDStr, 10, 64)
+	if err != nil {
+		return Workbench{}, fmt.Errorf("error parsing tenant ID: %w", err)
+	}
+
+	workbench := Workbench{
+		TenantID:                tenantID,
+		Namespace:               wb.Namespace,
+		WorkbenchName:           wb.Name,
+		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
+		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
+		Status:                  string(wb.Status.Server.Status),
+		Apps:                    apps,
+	}
+
+	return workbench, nil
+}
+
 const appInstanceNamePrefix = "app-instance-"
 
 type AppInstance struct {
@@ -249,7 +297,7 @@ type WorkbenchStatus struct {
 	Apps   map[string]WorkbenchStatusApp `json:"apps,omitempty"`
 }
 
-type Workbench struct {
+type K8sWorkbench struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              WorkbenchSpec   `json:"spec,omitempty"`
@@ -259,7 +307,7 @@ type Workbench struct {
 type WorkbenchList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Workbench `json:"items"`
+	Items           []K8sWorkbench `json:"items"`
 }
 
 type Namespace struct {
@@ -269,7 +317,7 @@ type Namespace struct {
 	Status            corev1.NamespaceStatus `json:"status,omitempty"`
 }
 
-func EventInterfaceToWorkbench(a any) (*Workbench, error) {
+func EventInterfaceToWorkbench(a any) (*K8sWorkbench, error) {
 	u, ok := a.(*unstructured.Unstructured)
 	if !ok {
 		return nil, fmt.Errorf("expected unstructured.Unstructured, got %T", a)
@@ -277,8 +325,8 @@ func EventInterfaceToWorkbench(a any) (*Workbench, error) {
 	return UnstructuredToWorkbench(u)
 }
 
-func UnstructuredToWorkbench(u *unstructured.Unstructured) (*Workbench, error) {
-	var wb Workbench
+func UnstructuredToWorkbench(u *unstructured.Unstructured) (*K8sWorkbench, error) {
+	var wb K8sWorkbench
 	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &wb)
 	if err != nil {
 		return nil, err

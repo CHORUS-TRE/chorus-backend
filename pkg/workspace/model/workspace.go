@@ -31,6 +31,15 @@ func GetWorkspaceClusterName(id uint64) string {
 	return fmt.Sprintf("workspace%v", id)
 }
 
+func GetIDFromClusterName(clusterName string) (uint64, error) {
+	var id uint64
+	_, err := fmt.Sscanf(clusterName, "workspace%v", &id)
+	if err != nil {
+		return 0, fmt.Errorf("unable to get workspace ID from cluster name %s: %w", clusterName, err)
+	}
+	return id, nil
+}
+
 // WorkspaceStatus represents the status of a workspace.
 type WorkspaceStatus string
 
