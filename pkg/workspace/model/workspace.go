@@ -33,7 +33,7 @@ func GetWorkspaceClusterName(id uint64) string {
 
 func GetIDFromClusterName(clusterName string) (uint64, error) {
 	var id uint64
-	_, err := fmt.Sscanf(clusterName, "workspace%v", &id)
+	_, err := fmt.Sscanf(clusterName, "workspace%d", &id)
 	if err != nil {
 		return 0, fmt.Errorf("unable to get workspace ID from cluster name %s: %w", clusterName, err)
 	}
