@@ -124,7 +124,7 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 }
 
 func (c *client) workbenchAppToAppInstance(w WorkbenchApp) (AppInstance, error) {
-	idStr := strings.Split(w.Name, "-")[1]
+	idStr := w.Name[strings.LastIndex((w.Name), "-")+1:]
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		logger.TechLog.Error(context.Background(), "failed to parse app instance ID", zap.Any("workbenchApp", w), zap.Error(err))
