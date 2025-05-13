@@ -63,6 +63,7 @@ type WorkbenchStore interface {
 	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
 	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
 	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
+	DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error
 }
 
 type proxyID struct {
@@ -154,7 +155,8 @@ func (s *WorkbenchService) SetClientWatchers() {
 			workbench.Status = model.WorkbenchDeleted
 		}
 
-		appInstances := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
+		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
+		appInstanceIDsToDelete := []uint64{}
 		for _, app := range k8sWorkbench.Apps {
 			k8sState := model.K8sAppInstanceState(app.K8sState)
 			appInstance := &model.AppInstance{
@@ -164,15 +166,27 @@ func (s *WorkbenchService) SetClientWatchers() {
 				K8sState:  k8sState,
 				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
 			}
-			appInstances = append(appInstances, appInstance)
+
+			appInstancesToUpdate = append(appInstancesToUpdate, appInstance)
+			if appInstance.K8sStatus == model.K8sAppInstanceStatusComplete {
+				appInstanceIDsToDelete = append(appInstanceIDsToDelete, appInstance.ID)
+			}
 		}
 
-		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.WorkbenchName), zap.Any("appInstances", appInstances))
+		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.WorkbenchName), zap.Any("appInstances", appInstancesToUpdate))
 
-		err = s.store.UpdateAppInstances(context.Background(), k8sWorkbench.TenantID, appInstances)
+		err = s.store.UpdateAppInstances(context.Background(), k8sWorkbench.TenantID, appInstancesToUpdate)
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.WorkbenchName), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
 			return err
+		}
+
+		if len(appInstanceIDsToDelete) != 0 {
+			err = s.store.DeleteAppInstances(context.Background(), k8sWorkbench.TenantID, appInstanceIDsToDelete)
+			if err != nil {
+				logger.TechLog.Error(context.Background(), "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.WorkbenchName), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
+				return err
+			}
 		}
 
 		return nil

@@ -312,3 +312,13 @@ func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint6
 
 	return nil
 }
+
+func (s *WorkbenchStorage) DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error {
+	var errAcc []error
+	for _, appInstanceID := range appInstanceIDs {
+		if err := s.DeleteAppInstance(ctx, tenantID, appInstanceID); err != nil {
+			errAcc = append(errAcc, fmt.Errorf("failed to delete appInstance %d: %w", appInstanceID, err))
+		}
+	}
+	return errors.Join(errAcc...)
+}
