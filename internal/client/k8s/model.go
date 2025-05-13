@@ -94,15 +94,15 @@ func (a AppInstance) UID() string {
 
 func (a AppInstance) SanitizedName() string {
 	name := strings.ToLower(a.AppName)
-    re := regexp.MustCompile("[^a-z0-9-]")
-    name = re.ReplaceAllString(name, "-")
-    name = strings.Trim(name, "-")
+	re := regexp.MustCompile("[^a-z0-9-]")
+	name = re.ReplaceAllString(name, "-")
+	name = strings.Trim(name, "-")
 
-    if name == "" {
-        name = "unknown-app"
-    }
+	if name == "" {
+		name = "unknown-app"
+	}
 
-    return name
+	return name
 }
 
 func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
