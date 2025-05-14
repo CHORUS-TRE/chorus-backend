@@ -94,12 +94,15 @@ func (a AppInstance) UID() string {
 
 func (a AppInstance) SanitizedAppName() string {
 	name := strings.ToLower(a.AppName)
-	re := regexp.MustCompile("[^a-z0-9-]")
+	re := regexp.MustCompile("[^a-z0-9]+")
 	name = re.ReplaceAllString(name, "-")
+	if len(name) > 15 {
+		name = name[:15]
+	}
 	name = strings.Trim(name, "-")
 
 	if name == "" {
-		name = "unknown-app"
+		name = "unknown"
 	}
 
 	return name
