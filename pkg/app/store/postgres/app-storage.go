@@ -24,7 +24,7 @@ func NewAppStorage(db *sqlx.DB) *AppStorage {
 
 func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error) {
 	const query = `
-		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "iconurl", createdat, updatedat
+		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat
 			FROM apps
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -39,7 +39,7 @@ func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) 
 
 func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
 	const query = `
-SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "iconurl", createdat, updatedat
+SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat
 	FROM apps
 WHERE tenantid = $1 AND status != 'deleted';
 `

@@ -172,6 +172,10 @@ definitions:
         format: uint64
       status:
         type: string
+      k8sStatus:
+        type: string
+      k8sState:
+        type: string
       initialResolutionWidth:
         type: integer
         format: int64

@@ -28,7 +28,7 @@ type App struct {
 	MinMemory           string
 	MaxEphemeralStorage string
 	MinEphemeralStorage string
-	IconURL string
+	IconURL             string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

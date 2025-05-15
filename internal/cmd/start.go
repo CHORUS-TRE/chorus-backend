@@ -169,9 +169,6 @@ func registerHTTPEndpoints(ctx context.Context, mux *runtime.ServeMux, grpcHostP
 			logger.TechLog.Fatal(ctx, "failed to register http authentication handler", logger.WithErrorField(err))
 		}
 	}
-	if err := chorus.RegisterAttachmentServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
-		logger.TechLog.Fatal(ctx, "failed to register http attachment handler", logger.WithErrorField(err))
-	}
 	if err := chorus.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 		logger.TechLog.Fatal(ctx, "failed to register http user handler", logger.WithErrorField(err))
 	}

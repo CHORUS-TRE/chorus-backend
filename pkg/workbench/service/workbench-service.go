@@ -63,6 +63,7 @@ type WorkbenchStore interface {
 	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
 	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
 	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
+	DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error
 }
 
 type proxyID struct {
@@ -121,11 +122,42 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 }
 
 func (s *WorkbenchService) SetClientWatchers() {
-	watcher := func(namespace, workbenchName string, tenantID uint64, apps []k8s.AppInstance) error {
-		logger.TechLog.Debug(context.Background(), "new/update workbench", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("apps", apps))
+	watcher := func(k8sWorkbench k8s.Workbench) error {
+		logger.TechLog.Debug(context.Background(), "new/update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps))
 
-		appInstances := make([]*model.AppInstance, 0, len(apps))
-		for _, app := range apps {
+		workbenchID, err := model.GetIDFromClusterName(k8sWorkbench.Name)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "unable to get workbench ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			return fmt.Errorf("unable to get workbench ID from cluster name %s: %w", k8sWorkbench.Name, err)
+		}
+
+		workspaceID, err := workspace_model.GetIDFromClusterName(k8sWorkbench.Namespace)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "unable to get namespace ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			return fmt.Errorf("unable to get namespace ID from cluster name %s: %w", k8sWorkbench.Namespace, err)
+		}
+
+		workbench := &model.Workbench{
+			ID:                      workbenchID,
+			TenantID:                k8sWorkbench.TenantID,
+			WorkspaceID:             workspaceID,
+			InitialResolutionWidth:  k8sWorkbench.InitialResolutionWidth,
+			InitialResolutionHeight: k8sWorkbench.InitialResolutionHeight,
+			K8sStatus:               model.K8sWorkbenchStatus(k8sWorkbench.Status),
+		}
+
+		switch k8sWorkbench.Status {
+		case string(k8s.WorkbenchStatusServerStatusRunning):
+			workbench.Status = model.WorkbenchActive
+		case string(k8s.WorkbenchStatusServerStatusProgressing):
+			workbench.Status = model.WorkbenchActive
+		case string(k8s.WorkbenchStatusServerStatusFailed):
+			workbench.Status = model.WorkbenchDeleted
+		}
+
+		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
+		appInstanceIDsToDelete := []uint64{}
+		for _, app := range k8sWorkbench.Apps {
 			k8sState := model.K8sAppInstanceState(app.K8sState)
 			appInstance := &model.AppInstance{
 				ID: app.ID,
@@ -134,15 +166,27 @@ func (s *WorkbenchService) SetClientWatchers() {
 				K8sState:  k8sState,
 				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
 			}
-			appInstances = append(appInstances, appInstance)
+
+			appInstancesToUpdate = append(appInstancesToUpdate, appInstance)
+			if appInstance.K8sStatus == model.K8sAppInstanceStatusComplete {
+				appInstanceIDsToDelete = append(appInstanceIDsToDelete, appInstance.ID)
+			}
 		}
 
-		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("appInstances", appInstances))
+		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstances", appInstancesToUpdate))
 
-		err := s.store.UpdateAppInstances(context.Background(), tenantID, appInstances)
+		err = s.store.UpdateAppInstances(context.Background(), k8sWorkbench.TenantID, appInstancesToUpdate)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", namespace), zap.String("workbenchName", workbenchName), zap.Any("apps", apps), zap.Error(err))
+			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
 			return err
+		}
+
+		if len(appInstanceIDsToDelete) != 0 {
+			err = s.store.DeleteAppInstances(context.Background(), k8sWorkbench.TenantID, appInstanceIDsToDelete)
+			if err != nil {
+				logger.TechLog.Error(context.Background(), "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
+				return err
+			}
 		}
 
 		return nil
@@ -214,7 +258,14 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(workbench.TenantID, namespace, workbenchName, clientApps)
+		err = s.client.UpdateWorkbench(k8s.MakeWorkbenchRequest{
+			TenantID:                workbench.TenantID,
+			Namespace:               namespace,
+			Name:                    workbenchName,
+			Apps:                    clientApps,
+			InitialResolutionWidth:  workbench.InitialResolutionWidth,
+			InitialResolutionHeight: workbench.InitialResolutionHeight,
+		})
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to update workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			return err
@@ -247,7 +298,7 @@ func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
+		return nil, fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	return workbench, nil
@@ -256,7 +307,7 @@ func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.store.DeleteWorkbench(ctx, tenantID, workbenchID)
@@ -283,12 +334,18 @@ func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model
 func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
 	id, err := s.store.CreateWorkbench(ctx, workbench.TenantID, workbench)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
+		return 0, fmt.Errorf("unable to create workbench: %w", err)
 	}
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
 
-	err = s.client.CreateWorkbench(workbench.TenantID, namespace, workbenchName)
+	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
+		TenantID:                workbench.TenantID,
+		Namespace:               namespace,
+		Name:                    workbenchName,
+		InitialResolutionWidth:  workbench.InitialResolutionWidth,
+		InitialResolutionHeight: workbench.InitialResolutionHeight,
+	})
 	if err != nil {
 		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
@@ -354,7 +411,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbench.ID, err)
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)

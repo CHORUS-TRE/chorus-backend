@@ -1921,6 +1921,10 @@ definitions:
         format: uint64
       status:
         type: string
+      k8sStatus:
+        type: string
+      k8sState:
+        type: string
       initialResolutionWidth:
         type: integer
         format: int64
@@ -2452,6 +2456,12 @@ definitions:
         type: string
       status:
         type: string
+      initialResolutionWidth:
+        type: integer
+        format: int64
+      initialResolutionHeight:
+        type: integer
+        format: int64
       appInsanceIds:
         type: array
         items:

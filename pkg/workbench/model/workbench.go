@@ -17,6 +17,9 @@ type Workbench struct {
 	ShortName   string
 	Description string
 
+	InitialResolutionWidth  uint32
+	InitialResolutionHeight uint32
+
 	K8sStatus K8sWorkbenchStatus
 	Status    WorkbenchStatus
 
@@ -31,6 +34,15 @@ func (s Workbench) GetClusterName() string {
 
 func GetWorkbenchClusterName(id uint64) string {
 	return fmt.Sprintf("workbench%v", id)
+}
+
+func GetIDFromClusterName(clusterName string) (uint64, error) {
+	var id uint64
+	_, err := fmt.Sscanf(clusterName, "workbench%v", &id)
+	if err != nil {
+		return 0, fmt.Errorf("unable to get workbench ID from cluster name %s: %w", clusterName, err)
+	}
+	return id, nil
 }
 
 // WorkbenchStatus represents the status of a workbench.
