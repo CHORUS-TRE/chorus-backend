@@ -42,7 +42,6 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	query := `
 SELECT id, tenantid, userid, name, shortname, description, status, createdat, updatedat
 	FROM workspaces
-WHERE deletedat IS NULL
 `
 
 	conditions := []string{}
@@ -54,7 +53,7 @@ WHERE deletedat IS NULL
 	}
 
 	if !allowDeleted {
-		conditions = append(conditions, "status != 'deleted'")
+		conditions = append(conditions, "status != 'deleted'", "deletedat IS NULL")
 	}
 
 	if len(conditions) > 0 {
