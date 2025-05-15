@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	appCacheSize           = 100 * 1024 * 1024 // Max 100MiB stored in memory
+	appCacheSize           = 300 * 1024 * 1024 // Max 300MiB stored in memory
+	shortCacheExpiration   = 1
 	defaultCacheExpiration = 5
 	longCacheExpiration    = 60
 )
@@ -53,7 +54,7 @@ func (c *Caching) GetApp(ctx context.Context, tenantID, appID uint64) (reply *mo
 	if ok := entry.Get(ctx, &reply); !ok {
 		reply, err = c.next.GetApp(ctx, tenantID, appID)
 		if err == nil {
-			entry.Set(ctx, defaultCacheExpiration, reply)
+			entry.Set(ctx, shortCacheExpiration, reply)
 		}
 	}
 
