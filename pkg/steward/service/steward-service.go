@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -77,77 +79,91 @@ func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer, wor
 }
 
 func (s *StewardService) InitializeDefaultTenant(ctx context.Context) error {
-	if _, err := s.tenanter.GetTenant(ctx, DEFAULT_TENANT_ID); err != nil {
-		if err := s.InitializeNewTenant(ctx, DEFAULT_TENANT_ID); err != nil {
-			return fmt.Errorf("unable to initialize default tenant %v: %v", DEFAULT_TENANT_ID, err)
-		} else {
-			fmt.Println("default tenant initialized")
-		}
-	} else {
+	_, err := s.tenanter.GetTenant(ctx, DEFAULT_TENANT_ID)
+	if err == nil {
 		fmt.Println("default tenant already exists")
+		return nil
+	}
+	
+	if !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("unable to get default tenant %v: %w", DEFAULT_TENANT_ID, err)
 	}
 
+	// Create default tenant
+	initErr := s.InitializeNewTenant(ctx, DEFAULT_TENANT_ID)
+	if initErr != nil {
+		return fmt.Errorf("unable to initialize default tenant %v: %w", DEFAULT_TENANT_ID, initErr)
+	}
+
+	fmt.Println("default tenant successfully initialized")
 	return nil
 }
 
 func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
-
-	if _, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: DEFAULT_TENANT_ID, ID: DEFAULT_USER_ID}); err != nil {
-		// Map roles from config to UserRole array
-		roles, err := user_model.ToUserRoles(s.conf.Services.Steward.User.Roles)
-		if err != nil {
-			return fmt.Errorf("unable to map roles: %v", err)
-		}
-
-		// Create default user
-		_, err = s.userer.CreateUser(ctx, user_service.CreateUserReq{
-			TenantID: DEFAULT_TENANT_ID,
-			User: &user_service.UserReq{
-				ID:        DEFAULT_USER_ID,
-				FirstName: s.conf.Services.Steward.User.Username,
-				LastName:  "default",
-				Username:  s.conf.Services.Steward.User.Username,
-				Source:    "internal",
-				Password:  s.conf.Services.Steward.User.Password,
-				Status:    user_model.UserActive,
-				Roles:     roles,
-			},
-		})
-
-		if err != nil {
-			return fmt.Errorf("unable to create default user %v: %v", DEFAULT_USER_ID, err)
-		} else {
-			fmt.Println("default user initialized")
-		}
-	} else {
+	_, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: DEFAULT_TENANT_ID, ID: DEFAULT_USER_ID})
+	if err == nil {
 		fmt.Println("default user already exists")
+		return nil
 	}
 
+	if !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("unable to get default user %v: %w", DEFAULT_USER_ID, err)
+	}
+
+	// Map roles from config to UserRole array
+	roles, roleErr := user_model.ToUserRoles(s.conf.Services.Steward.User.Roles)
+	if roleErr != nil {
+		return fmt.Errorf("unable to map user roles: %w", roleErr)
+	}
+
+	// Create default user
+	_, createErr := s.userer.CreateUser(ctx, user_service.CreateUserReq{
+		TenantID: DEFAULT_TENANT_ID,
+		User: &user_service.UserReq{
+			ID:        DEFAULT_USER_ID,
+			FirstName: s.conf.Services.Steward.User.Username,
+			LastName:  "default",
+			Username:  s.conf.Services.Steward.User.Username,
+			Source:    "internal",
+			Password:  s.conf.Services.Steward.User.Password,
+			Status:    user_model.UserActive,
+			Roles:     roles,
+		},
+	})
+	if createErr != nil {
+		return fmt.Errorf("unable to initialize default user %v: %w", DEFAULT_USER_ID, createErr)
+	}
+
+	fmt.Println("default user successfully initialized")
 	return nil
 }
 
 func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
-	if _, err := s.workspaceer.GetWorkspace(ctx, DEFAULT_TENANT_ID, DEFAULT_WORKSPACE_ID); err != nil {
-		// Create default workspace
-		_, err = s.workspaceer.CreateWorkspace(ctx, &workspace_model.Workspace{
-			ID:          DEFAULT_WORKSPACE_ID,
-			UserID:      DEFAULT_USER_ID,
-			TenantID:    DEFAULT_TENANT_ID,
-			Name:        s.conf.Services.Steward.Workspace.Name,
-			ShortName:   fmt.Sprintf("ws-%d", DEFAULT_WORKSPACE_ID),
-			Description: fmt.Sprintf("Default workspace for user %v", s.conf.Services.Steward.User.Username),
-			Status:      workspace_model.WorkspaceActive,
-		})
-
-		if err != nil {
-			return fmt.Errorf("unable to create default workspace %v: %v", DEFAULT_WORKSPACE_ID, err)
-		} else {
-			fmt.Println("default workspace initialized")
-		}
-	} else {
+	_, err := s.workspaceer.GetWorkspace(ctx, DEFAULT_TENANT_ID, DEFAULT_WORKSPACE_ID)
+	if err == nil {
 		fmt.Println("default workspace already exists")
+		return nil
 	}
 
+	if !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("unable to get default workspace %v: %w", DEFAULT_WORKSPACE_ID, err)
+	}
+
+	// Create default workspace
+	_, createErr := s.workspaceer.CreateWorkspace(ctx, &workspace_model.Workspace{
+		ID:          DEFAULT_WORKSPACE_ID,
+		UserID:      DEFAULT_USER_ID,
+		TenantID:    DEFAULT_TENANT_ID,
+		Name:        s.conf.Services.Steward.Workspace.Name,
+		ShortName:   fmt.Sprintf("ws-%d", DEFAULT_WORKSPACE_ID),
+		Description: fmt.Sprintf("Default workspace for user %v", s.conf.Services.Steward.User.Username),
+		Status:      workspace_model.WorkspaceActive,
+	})
+	if createErr != nil {
+		return fmt.Errorf("unable to create default workspace %v: %w", DEFAULT_WORKSPACE_ID, createErr)
+	}
+
+	fmt.Println("default workspace successfully initialized")
 	return nil
 }
 
