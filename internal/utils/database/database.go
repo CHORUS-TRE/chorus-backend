@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/jmoiron/sqlx"
@@ -103,4 +104,34 @@ func (db *wrappedDB) ExecContext(ctx context.Context, query string, args ...any)
 func (db *wrappedDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
 	logger.TechLog.Debug(ctx, "executing query", zap.String("query", query))
 	return db.DB.SelectContext(ctx, dest, query, args...)
+}
+
+func GetQueryParam[T any](param string, query map[string][]string, target *[]T) error {
+	if param == "" {
+		return fmt.Errorf("param cannot be empty")
+	}
+
+	if query == nil {
+		return fmt.Errorf("query cannot be nil")
+	}
+
+	if target == nil {
+		return fmt.Errorf("target cannot be nil")
+	}
+
+	if _, ok := query[param]; !ok {
+		return fmt.Errorf("param %s not found in query", param)
+	}
+
+	*target = make([]T, len(query[param]))
+	for i, value := range query[param] {
+		var t T
+		_, err := fmt.Sscanf(value, "%v", &t)
+		if err != nil {
+			return fmt.Errorf("failed to parse value %s: %w", value, err)
+		}
+		(*target)[i] = t
+	}
+
+	return nil
 }

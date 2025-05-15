@@ -2,6 +2,7 @@ package converter
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -91,9 +92,28 @@ func PaginationToBusiness(aPagination *chorus.PaginationQuery) model.Pagination 
 	if aPagination == nil {
 		return model.Pagination{}
 	}
+
+	query := make(map[string][]string)
+
+	for _, q := range aPagination.Query {
+		eqIndex := strings.Index(q, "=")
+
+		if eqIndex == -1 {
+			continue
+		}
+
+		key := q[:eqIndex]
+
+		valuesStr := q[eqIndex+1:]
+		values := strings.Split(valuesStr, ",")
+
+		query[key] = values
+	}
+
 	return model.Pagination{
 		Offset: uint64(aPagination.Offset),
 		Limit:  uint64(aPagination.Limit),
 		Sort:   SortToBusiness(aPagination.Sort),
+		Query:  query,
 	}
 }

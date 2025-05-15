@@ -41,13 +41,26 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 }
 
 func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
-	const query = `
+	var query = `
 SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs
-WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
+WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
 `
+
+	args := []interface{}{tenantID}
+
+	var workspaceIDs []uint64
+	err := database.GetQueryParam("workspace_id", pagination.Query, &workspaceIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get workspaceId from query: %w", err)
+	}
+	if len(workspaceIDs) != 0 {
+		query += " AND workspaceid IN $2"
+		args = append(args, pq.Array(workspaceIDs))
+	}
+
 	var workbenchs []*model.Workbench
-	if err := s.db.SelectContext(ctx, &workbenchs, query, tenantID); err != nil {
+	if err := s.db.SelectContext(ctx, &workbenchs, query, args...); err != nil {
 		return nil, err
 	}
 

@@ -25,7 +25,12 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 message ListWorkbenchsRequest {
-    PaginationQuery pagination = 1;
+    PaginationQuery pagination = 1 [
+        (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+            description: "List of filters available on the query";
+            // example: "workspace_id=1,2"
+        }
+    ];
 }
 message ListWorkbenchsReply {
     repeated Workbench result = 1;
