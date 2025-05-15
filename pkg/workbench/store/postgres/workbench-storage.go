@@ -167,7 +167,7 @@ func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64,
 	const workbenchUpdateQuery = `
 		UPDATE workbenchs
 		SET status = $3, description = $4, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
+		WHERE tenantid = $1 AND id = $2;
 	`
 
 	// Update User
@@ -262,7 +262,7 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 	const appInstanceUpdateQuery = `
 		UPDATE app_instances
 		SET status = $3, k8sstate = $4, k8sstatus = $5, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
+		WHERE tenantid = $1 AND id = $2;
 	`
 
 	rows, err := s.db.ExecContext(ctx, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus)
