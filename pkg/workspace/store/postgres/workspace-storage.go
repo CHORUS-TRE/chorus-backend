@@ -27,7 +27,7 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 	const query = `
 		SELECT id, tenantid, userid, name, shortname, description, status, createdat, updatedat
 			FROM workspaces
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	var workspace model.Workspace
@@ -53,7 +53,7 @@ SELECT id, tenantid, userid, name, shortname, description, status, createdat, up
 	}
 
 	if !allowDeleted {
-		conditions = append(conditions, "status != 'deleted'")
+		conditions = append(conditions, "status != 'deleted'", "deletedat IS NULL")
 	}
 
 	if len(conditions) > 0 {
@@ -90,7 +90,7 @@ func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64,
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
 		SET status = $3, description = $4, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	// Update User
@@ -115,7 +115,7 @@ func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64,
 		UPDATE workspaces	SET 
 			(status, name, updatedat, deletedat) = 
 			($3, concat(name, $4::TEXT), NOW(), NOW())
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	rows, err := s.db.ExecContext(ctx, query, tenantID, workspaceID, model.WorkspaceDeleted.String(), "-"+uuid.Next())

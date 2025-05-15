@@ -29,7 +29,7 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 	const query = `
 		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 			FROM workbenchs
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	var workbench model.Workbench
@@ -44,7 +44,7 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 	const query = `
 SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs
-WHERE tenantid = $1 AND status != 'deleted';
+WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
 `
 	var workbenchs []*model.Workbench
 	if err := s.db.SelectContext(ctx, &workbenchs, query, tenantID); err != nil {
@@ -90,6 +90,7 @@ JOIN
 WHERE 
     ai.workbenchid = $1 
     AND ai.status != 'deleted'
+	AND ai.deletedat IS NULL
 ORDER BY ai.createdat ASC;
 ;
 `
@@ -104,7 +105,8 @@ ORDER BY ai.createdat ASC;
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
 SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-	FROM workbenchs;
+	FROM workbenchs
+WHERE deletedat IS NULL;
 `
 	var workbenchs []*model.Workbench
 	if err := s.db.SelectContext(ctx, &workbenchs, query); err != nil {
@@ -165,7 +167,7 @@ func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64,
 	const workbenchUpdateQuery = `
 		UPDATE workbenchs
 		SET status = $3, description = $4, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	// Update User
@@ -190,7 +192,7 @@ func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64,
 		UPDATE workbenchs	SET 
 			(status, name, updatedat, deletedat) = 
 			($3, concat(name, $4::TEXT), NOW(), NOW())
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	rows, err := s.db.ExecContext(ctx, query, tenantID, workbenchID, model.WorkbenchDeleted.String(), "-"+uuid.Next())
@@ -213,7 +215,7 @@ func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, 
 	const query = `
 		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 			FROM app_instances
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	var appInstance model.AppInstance
@@ -228,7 +230,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 	const query = `
 SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM app_instances
-WHERE tenantid = $1 AND status != 'deleted';
+WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
 `
 	var appInstances []*model.AppInstance
 	if err := s.db.SelectContext(ctx, &appInstances, query, tenantID); err != nil {
@@ -260,7 +262,7 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 	const appInstanceUpdateQuery = `
 		UPDATE app_instances
 		SET status = $3, k8sstate = $4, k8sstatus = $5, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	rows, err := s.db.ExecContext(ctx, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus)
@@ -294,7 +296,7 @@ func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint6
 		UPDATE app_instances SET 
 			(status, updatedat, deletedat) = 
 			($3, NOW(), NOW())
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	rows, err := s.db.ExecContext(ctx, query, tenantID, appInstanceID, model.AppInstanceDeleted.String())
@@ -311,4 +313,14 @@ func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint6
 	}
 
 	return nil
+}
+
+func (s *WorkbenchStorage) DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error {
+	var errAcc []error
+	for _, appInstanceID := range appInstanceIDs {
+		if err := s.DeleteAppInstance(ctx, tenantID, appInstanceID); err != nil {
+			errAcc = append(errAcc, fmt.Errorf("failed to delete appInstance %d: %w", appInstanceID, err))
+		}
+	}
+	return errors.Join(errAcc...)
 }
