@@ -89,12 +89,12 @@ VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id;
 func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (err error) {
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
-		SET status = $3, description = $4, updatedat = NOW()
+		SET name = $3, shortname = $4, description = $5, status = $6, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	// Update User
-	rows, err := s.db.ExecContext(ctx, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Status, workspace.Description)
+	rows, err := s.db.ExecContext(ctx, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status)
 	if err != nil {
 		return err
 	}
