@@ -15,8 +15,6 @@ spec:
     metadata:
       labels:
         app: deployment-backend-{{ include "backend.nameid" . }}
-      annotations:
-        timestamp: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }}
     spec:
       containers:
       - name: deployment-backend-{{ include "backend.nameid" . }}
