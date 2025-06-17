@@ -84,7 +84,7 @@ func (s *StewardService) InitializeDefaultTenant(ctx context.Context) error {
 		fmt.Println("default tenant already exists")
 		return nil
 	}
-	
+
 	if !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("unable to get default tenant %v: %w", DEFAULT_TENANT_ID, err)
 	}
