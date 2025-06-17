@@ -27,8 +27,8 @@ done
 
 # search first password in /home/$USER/.docker/config.json
 # if not found, ask for password
-if [ -f /home/$USER/.docker/config.json ]; then
-    json=$(cat /home/$USER/.docker/config.json)
+if [ -f ~/.docker/config.json ]; then
+    json=$(cat ~/.docker/config.json)
     auth=$(echo -n $json | jq -r '.auths["harbor.dev.chorus-tre.ch"].auth')
     if [ "$auth" == "null" ]; then
         read -s -p "Password of robot\$chorus-dev: " pw
