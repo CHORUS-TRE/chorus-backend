@@ -166,12 +166,12 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id;
 func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (err error) {
 	const workbenchUpdateQuery = `
 		UPDATE workbenchs
-		SET status = $3, description = $4, updatedat = NOW()
+		SET status = $3, k8sstatus= $4, description = $5, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2;
 	`
 
 	// Update User
-	rows, err := s.db.ExecContext(ctx, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.Description)
+	rows, err := s.db.ExecContext(ctx, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.K8sStatus, workbench.Description)
 	if err != nil {
 		return err
 	}
