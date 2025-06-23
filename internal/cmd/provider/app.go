@@ -22,7 +22,7 @@ var app service.Apper
 func ProvideAppService() service.Apper {
 	appOnce.Do(func() {
 		app = service.NewAppService(
-			ProvideAppStore(),
+			ProvideAppStore(), ProvideK8sClient(),
 		)
 		app = service_mw.Logging(logger.BizLog)(app)
 		app = service_mw.Validation(ProvideValidator())(app)

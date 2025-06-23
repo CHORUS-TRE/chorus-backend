@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 )
@@ -25,12 +26,14 @@ type AppStore interface {
 }
 
 type AppService struct {
-	store AppStore
+	store  AppStore
+	client k8s.K8sClienter
 }
 
-func NewAppService(store AppStore) *AppService {
+func NewAppService(store AppStore, client k8s.K8sClienter) *AppService {
 	return &AppService{
-		store: store,
+		store:  store,
+		client: client,
 	}
 }
 
@@ -72,6 +75,12 @@ func (u *AppService) CreateApp(ctx context.Context, app *model.App) (uint64, err
 	id, err := u.store.CreateApp(ctx, app.TenantID, app)
 	if err != nil {
 		return 0, fmt.Errorf("unable to create app %v: %w", app.Name, err)
+	}
+
+	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
+	err = u.client.PrePullImageOnAllNodes(dockerImage)
+	if err != nil {
+		return 0, fmt.Errorf("unable to pre-pull image %v: %w", dockerImage, err)
 	}
 
 	return id, nil
