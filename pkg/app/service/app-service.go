@@ -68,6 +68,12 @@ func (u *AppService) UpdateApp(ctx context.Context, app *model.App) error {
 		return fmt.Errorf("unable to update app %v: %w", app.ID, err)
 	}
 
+	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
+	err := u.client.PrePullImageOnAllNodes(dockerImage)
+	if err != nil {
+		return fmt.Errorf("unable to pre-pull image %v: %w", dockerImage, err)
+	}
+
 	return nil
 }
 
