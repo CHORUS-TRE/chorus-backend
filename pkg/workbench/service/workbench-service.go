@@ -173,6 +173,13 @@ func (s *WorkbenchService) SetClientWatchers() {
 			}
 		}
 
+		logger.TechLog.Debug(context.Background(), "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
+		err = s.store.UpdateWorkbench(context.Background(), k8sWorkbench.TenantID, workbench)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
+			return err
+		}
+
 		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstances", appInstancesToUpdate))
 
 		err = s.store.UpdateAppInstances(context.Background(), k8sWorkbench.TenantID, appInstancesToUpdate)
