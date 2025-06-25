@@ -66,6 +66,10 @@ const (
 	K8sWorkbenchStatusFailed      K8sWorkbenchStatus = "Failed"
 )
 
+func (s K8sWorkbenchStatus) String() string {
+	return string(s)
+}
+
 func ToWorkbenchStatus(status string) (WorkbenchStatus, error) {
 	switch status {
 	case WorkbenchActive.String():
@@ -76,5 +80,18 @@ func ToWorkbenchStatus(status string) (WorkbenchStatus, error) {
 		return WorkbenchDeleted, nil
 	default:
 		return "", fmt.Errorf("unexpected WorkbenchStatus: %s", status)
+	}
+}
+
+func ToK8sWorkbenchStatus(status string) (K8sWorkbenchStatus, error) {
+	switch status {
+	case K8sWorkbenchStatusRunning.String():
+		return K8sWorkbenchStatusRunning, nil
+	case K8sWorkbenchStatusProgressing.String():
+		return K8sWorkbenchStatusProgressing, nil
+	case K8sWorkbenchStatusFailed.String():
+		return K8sWorkbenchStatusFailed, nil
+	default:
+		return "", fmt.Errorf("unexpected K8sWorkbenchStatus: %s", status)
 	}
 }
