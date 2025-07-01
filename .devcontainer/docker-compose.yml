@@ -1,4 +1,5 @@
 version: '3'
+name: chorus-backend-dev-container
 services:
   # chorus:
   #   build:

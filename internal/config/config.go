@@ -235,6 +235,24 @@ type (
 			BackendInK8S              bool          `yaml:"backend_in_k8s"`
 			ProxyHitSaveBatchInterval time.Duration `yaml:"proxy_hit_save_batch_interval"`
 		} `yaml:"workbench_service"`
+
+		Steward struct {
+			Tenant struct {
+				Enabled bool `yaml:"enabled"`
+			} `yaml:"tenant"`
+
+			User struct {
+				Enabled  bool     `yaml:"enabled"`
+				Username string   `yaml:"username"`
+				Password string   `yaml:"password"`
+				Roles    []string `yaml:"roles"`
+			} `yaml:"user"`
+
+			Workspace struct {
+				Enabled bool   `yaml:"enabled"`
+				Name    string `yaml:"name"`
+			} `yaml:"workspace"`
+		} `yaml:"steward"`
 	}
 
 	Mode struct {
