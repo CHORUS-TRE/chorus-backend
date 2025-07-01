@@ -249,6 +249,8 @@ definitions:
         type: string
       status:
         type: string
+      k8sStatus:
+        type: string
       initialResolutionWidth:
         type: integer
         format: int64

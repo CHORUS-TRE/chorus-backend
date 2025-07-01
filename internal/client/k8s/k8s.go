@@ -14,7 +14,9 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	jsonpatch "github.com/evanphx/json-patch"
 	"go.uber.org/zap"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -392,4 +394,48 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 	port := forwardedPorts[0]
 
 	return port.Local, stopChan, nil
+}
+
+func (c *client) PrePullImageOnAllNodes(image string) error {
+	err := c.syncImagePullSecret("default")
+	if err != nil {
+		return fmt.Errorf("failed to sync image pull secret: %w", err)
+	}
+
+	nodeList, err := c.k8sClient.CoreV1().Nodes().List(context.Background(), v1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list nodes: %w", err)
+	}
+
+	for _, node := range nodeList.Items {
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: "prepull-",
+				Namespace:    "default",
+			},
+			Spec: corev1.PodSpec{
+				NodeName:      node.Name,
+				RestartPolicy: corev1.RestartPolicyNever,
+				Containers: []corev1.Container{
+					{
+						Name:    "puller",
+						Image:   image,
+						Command: []string{"bash", "-c", "exit"},
+					},
+				},
+				ImagePullSecrets: []corev1.LocalObjectReference{
+					{
+						Name: c.cfg.Clients.K8sClient.ImagePullSecretName,
+					},
+				},
+			},
+		}
+
+		_, err := c.k8sClient.CoreV1().Pods("default").Create(context.Background(), pod, v1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to create pod on node %s: %w", node.Name, err)
+		}
+	}
+
+	return nil
 }

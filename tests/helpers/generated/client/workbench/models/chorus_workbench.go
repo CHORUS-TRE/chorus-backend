@@ -41,6 +41,9 @@ type ChorusWorkbench struct {
 	// initial resolution width
 	InitialResolutionWidth int64 `json:"initialResolutionWidth,omitempty"`
 
+	// k8s status
+	K8sStatus string `json:"k8sStatus,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 

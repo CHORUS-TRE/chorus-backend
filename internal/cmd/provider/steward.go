@@ -36,6 +36,7 @@ func ProvideStewardService() service.Stewarder {
 			ProvideConfig(),
 			ProvideTenanter(),
 			ProvideUser(),
+			ProvideWorkspace(),
 		)
 	})
 
