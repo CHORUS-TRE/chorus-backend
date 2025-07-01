@@ -35,6 +35,8 @@ type K8sClienter interface {
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 	DeleteWorkbench(namespace, workbenchName string) error
 
+	PrePullImageOnAllNodes(image string) error
+
 	WatchOnNewWorkbench(func(workbench Workbench) error) error
 	WatchOnUpdateWorkbench(func(workbench Workbench) error) error
 	WatchOnDeleteWorkbench(func(workbench Workbench) error) error

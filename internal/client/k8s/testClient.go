@@ -52,3 +52,7 @@ func (c *testClient) DeleteAppInstance(namespace, workbenchName string, appInsta
 func (c *testClient) DeleteWorkbench(namespace, workbenchName string) error {
 	return nil
 }
+
+func (c *testClient) PrePullImageOnAllNodes(image string) error {
+	return nil
+}
