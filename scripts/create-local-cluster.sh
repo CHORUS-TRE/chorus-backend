@@ -47,9 +47,9 @@ echo "Login to harbor.dev.chorus-tre.ch"
 # read -s -p "Password of robot\$chorus-dev: " pw
 docker login harbor.dev.chorus-tre.ch -u "$user" -p "$pw"
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16
-docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16 controller:latest
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.3-2
-docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.3-2 harbor.dev.chorus-tre.ch/apps/xpra-server:6.3-2
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/vscode:1.93.1-5
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/trcanonymizer:1.1.0-4
 
 if [ $exists -eq 1 ]; then
     echo "Cluster chorus already exist, skipping create..."
