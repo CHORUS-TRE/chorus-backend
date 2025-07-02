@@ -2500,6 +2500,8 @@ definitions:
         type: string
       status:
         type: string
+      isMain:
+        type: boolean
       appInsanceIds:
         type: array
         items:
