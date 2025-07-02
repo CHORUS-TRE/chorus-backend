@@ -33,6 +33,8 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 
 		Status: status,
 
+		IsMain: workspace.IsMain,
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
@@ -59,6 +61,8 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 		Description: workspace.Description,
 
 		Status: workspace.Status.String(),
+
+		IsMain: workspace.IsMain,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

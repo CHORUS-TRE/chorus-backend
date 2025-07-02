@@ -18,6 +18,8 @@ type Workspace struct {
 
 	Status WorkspaceStatus
 
+	IsMain bool
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
