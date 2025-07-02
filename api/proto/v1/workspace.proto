@@ -14,10 +14,11 @@ message Workspace {
     string shortName = 5;
     string description = 6;
     string status = 7;
+    bool isMain = 8;
 
-    repeated uint64 appInsanceIds = 8;
-    repeated uint64 appInstances = 9;
+    repeated uint64 appInsanceIds = 9;
+    repeated uint64 appInstances = 10;
     
-    google.protobuf.Timestamp createdAt = 10;
-    google.protobuf.Timestamp updatedAt = 11;
+    google.protobuf.Timestamp createdAt = 11;
+    google.protobuf.Timestamp updatedAt = 12;
 }

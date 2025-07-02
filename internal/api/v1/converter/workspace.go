@@ -16,10 +16,6 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
-	status, err := model.ToWorkspaceStatus(workspace.Status)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert workspace status: %w", err)
-	}
 
 	return &model.Workspace{
 		ID: workspace.Id,
@@ -31,7 +27,7 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
 
-		Status: status,
+		IsMain: workspace.IsMain,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
@@ -59,6 +55,8 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 		Description: workspace.Description,
 
 		Status: workspace.Status.String(),
+
+		IsMain: workspace.IsMain,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
