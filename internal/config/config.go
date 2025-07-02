@@ -242,10 +242,10 @@ type (
 			} `yaml:"tenant"`
 
 			User struct {
-				Enabled  bool     `yaml:"enabled"`
-				Username string   `yaml:"username"`
-				Password string   `yaml:"password"`
-				Roles    []string `yaml:"roles"`
+				Enabled  bool      `yaml:"enabled"`
+				Username string    `yaml:"username"`
+				Password Sensitive `yaml:"password"`
+				Roles    []string  `yaml:"roles"`
 			} `yaml:"user"`
 
 			Workspace struct {
