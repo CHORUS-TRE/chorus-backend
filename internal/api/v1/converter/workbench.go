@@ -16,14 +16,6 @@ func WorkbenchToBusiness(workbench *chorus.Workbench) (*model.Workbench, error) 
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
-	status, err := model.ToWorkbenchStatus(workbench.Status)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert workbench status: %w", err)
-	}
-	k8sStatus, err := model.ToK8sWorkbenchStatus(workbench.K8SStatus)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert k8s workbench status: %w", err)
-	}
 
 	return &model.Workbench{
 		ID: workbench.Id,
@@ -38,9 +30,6 @@ func WorkbenchToBusiness(workbench *chorus.Workbench) (*model.Workbench, error) 
 
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
 		InitialResolutionHeight: workbench.InitialResolutionHeight,
-
-		Status:    status,
-		K8sStatus: k8sStatus,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
