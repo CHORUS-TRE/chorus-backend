@@ -60,6 +60,9 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
+	// Add sorting by ismain and createdat by default
+	query += " ORDER BY ismain DESC, createdat DESC"
+
 	var workspaces []*model.Workspace
 	if err := s.db.SelectContext(ctx, &workspaces, query, arguments...); err != nil {
 		return nil, err
