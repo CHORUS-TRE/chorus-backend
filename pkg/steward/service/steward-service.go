@@ -125,7 +125,7 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
 			LastName:  "default",
 			Username:  s.conf.Services.Steward.User.Username,
 			Source:    "internal",
-			Password:  s.conf.Services.Steward.User.Password,
+			Password:  s.conf.Services.Steward.User.Password.PlainText(),
 			Status:    user_model.UserActive,
 			Roles:     roles,
 		},

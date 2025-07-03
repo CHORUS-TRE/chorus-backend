@@ -101,6 +101,27 @@ func TestDecodeLog(t *testing.T) {
 	require.True(t, l.GraylogAuthorizeSelfSignedCertificate)
 }
 
+func TestDecodeSteward(t *testing.T) {
+	cfg := config(t)
+
+	// Services
+	s := cfg.Services.Steward
+
+	// Tenant Steward
+	require.True(t, s.Tenant.Enabled)
+
+	// User Steward
+	require.True(t, s.User.Enabled)
+	require.Equal(t, "chorus", s.User.Username)
+	require.Equal(t, Sensitive("password"), s.User.Password)
+	require.Len(t, s.User.Roles, 1)
+	require.Equal(t, "authenticated", s.User.Roles[0])
+
+	// Workspace Steward
+	require.True(t, s.Workspace.Enabled)
+	require.Equal(t, "Home workspace", s.Workspace.Name)
+}
+
 func TestDecodeTenants(t *testing.T) {
 	cfg := config(t)
 	require.Len(t, cfg.Tenants, 1)
