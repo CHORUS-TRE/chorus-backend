@@ -47,7 +47,7 @@ echo "Login to harbor.dev.chorus-tre.ch"
 # read -s -p "Password of robot\$chorus-dev: " pw
 docker login harbor.dev.chorus-tre.ch -u "$user" -p "$pw"
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16
-docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.9 controller:latest
+docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16 controller:latest
 docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4
 docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4
 
