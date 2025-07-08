@@ -17,9 +17,8 @@ message User {
     repeated string roles = 8;
 
     bool totpEnabled = 9;
+    bool passwordChanged = 10;
 
-    google.protobuf.Timestamp createdAt = 10;
-    google.protobuf.Timestamp updatedAt = 11;
-
-    bool passwordChanged = 12;
+    google.protobuf.Timestamp createdAt = 11;
+    google.protobuf.Timestamp updatedAt = 12;
 }

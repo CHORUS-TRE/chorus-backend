@@ -2425,14 +2425,14 @@ definitions:
           type: string
       totpEnabled:
         type: boolean
+      passwordChanged:
+        type: boolean
       createdAt:
         type: string
         format: date-time
       updatedAt:
         type: string
         format: date-time
-      passwordChanged:
-        type: boolean
   chorusWorkbench:
     type: object
     properties:
