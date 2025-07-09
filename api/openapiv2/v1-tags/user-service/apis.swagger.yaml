@@ -19,12 +19,12 @@ paths:
     get:
       summary: List users
       description: This endpoint returns a list of users
-      operationId: UserService_GetUsers
+      operationId: UserService_ListUsers
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusGetUsersReply'
+            $ref: '#/definitions/chorusListUsersReply'
         default:
           description: An unexpected error response.
           schema:
@@ -49,7 +49,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUser'
+            $ref: '#/definitions/chorusCreateUserRequest'
       tags:
         - UserService
       security: []
@@ -229,18 +229,23 @@ paths:
 definitions:
   UserServiceResetPasswordBody:
     type: object
+    title: Reset Password
   chorusCreateUserReply:
     type: object
     properties:
       result:
         $ref: '#/definitions/chorusCreateUserResult'
+  chorusCreateUserRequest:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
     title: Create Users
   chorusCreateUserResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      user:
+        $ref: '#/definitions/chorusUser'
   chorusDeleteUserReply:
     type: object
     properties:
@@ -271,7 +276,6 @@ definitions:
     properties:
       me:
         $ref: '#/definitions/chorusUser'
-    title: Get User (me)
   chorusGetUserReply:
     type: object
     properties:
@@ -282,10 +286,16 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/chorusUser'
-  chorusGetUsersReply:
+  chorusListUsersReply:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListUsersResult'
+        title: PaginationResult pagination = 2; // Uncomment if pagination is needed
+  chorusListUsersResult:
+    type: object
+    properties:
+      users:
         type: array
         items:
           type: object
@@ -343,6 +353,9 @@ definitions:
     title: Update User
   chorusUpdateUserResult:
     type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
   chorusUser:
     type: object
     properties:

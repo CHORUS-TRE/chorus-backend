@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusUpdatePasswordReply chorus update password reply
+// ChorusListUsersReply chorus list users reply
 //
-// swagger:model chorusUpdatePasswordReply
-type ChorusUpdatePasswordReply struct {
+// swagger:model chorusListUsersReply
+type ChorusListUsersReply struct {
 
-	// result
-	Result *ChorusUpdateUserResult `json:"result,omitempty"`
+	// PaginationResult pagination = 2; // Uncomment if pagination is needed
+	Result *ChorusListUsersResult `json:"result,omitempty"`
 }
 
-// Validate validates this chorus update password reply
-func (m *ChorusUpdatePasswordReply) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus list users reply
+func (m *ChorusListUsersReply) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateResult(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusUpdatePasswordReply) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusUpdatePasswordReply) validateResult(formats strfmt.Registry) error {
+func (m *ChorusListUsersReply) validateResult(formats strfmt.Registry) error {
 	if swag.IsZero(m.Result) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusUpdatePasswordReply) validateResult(formats strfmt.Registry) erro
 	return nil
 }
 
-// ContextValidate validate this chorus update password reply based on the context it is used
-func (m *ChorusUpdatePasswordReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus list users reply based on the context it is used
+func (m *ChorusListUsersReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateResult(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusUpdatePasswordReply) ContextValidate(ctx context.Context, formats
 	return nil
 }
 
-func (m *ChorusUpdatePasswordReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusListUsersReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Result != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusUpdatePasswordReply) contextValidateResult(ctx context.Context, f
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusUpdatePasswordReply) MarshalBinary() ([]byte, error) {
+func (m *ChorusListUsersReply) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusUpdatePasswordReply) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusUpdatePasswordReply) UnmarshalBinary(b []byte) error {
-	var res ChorusUpdatePasswordReply
+func (m *ChorusListUsersReply) UnmarshalBinary(b []byte) error {
+	var res ChorusListUsersReply
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

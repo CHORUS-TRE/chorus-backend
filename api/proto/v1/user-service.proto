@@ -4,7 +4,6 @@ option go_package = ".;chorus";
 
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
-import "google/protobuf/empty.proto";
 
 import "user.proto";
 import "public_endpoint.proto";
@@ -25,32 +24,36 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 };
 
 // Get Users
-message GetUsersRequest {
+message ListUsersRequest {
     // XXX: Maybe allow some filtering queries or batch sizes.
 }
-message GetUsersReply {
-    repeated User result = 1;
+message ListUsersReply {
+    ListUsersResult result = 1;
+}
+message ListUsersResult {
+    repeated User users = 1;
 }
 
 // Get User (by id)
 message GetUserRequest {
     uint64 id = 1;
 }
-
-message GetUserResult {
-    User user = 1;
-}
 message GetUserReply {
     GetUserResult result = 1;
 }
-
-// Get User (me)
-message GetUserMeResult {
-    User me = 1;
+message GetUserResult {
+    User user = 1;
 }
 
+// Get User (me)
+message GetUserMeRequest {
+    // No fields needed, this is for the authenticated user
+}
 message GetUserMeReply {
     GetUserMeResult result = 1;
+}
+message GetUserMeResult {
+    User me = 1;
 }
 
 // Update User Password
@@ -58,79 +61,73 @@ message UpdatePasswordRequest {
     string currentPassword = 1;
     string newPassword = 2;
 }
-
 message UpdatePasswordReply {
     UpdateUserResult result = 1;
 }
-
 message UpdatePasswordResult {}
 
 // Create Users
+message CreateUserRequest {
+    User user = 1;
+}
 message CreateUserReply {
     CreateUserResult result = 1;
 }
 message CreateUserResult {
-    uint64 id = 1;
+    User user = 1;
 }
 
 // Update User
 message UpdateUserRequest {
     User user = 1;
 }
-
-message UpdateUserResult {}
-
 message UpdateUserReply {
     UpdateUserResult result = 1;
 }
+message UpdateUserResult {
+    User user = 1;
+}
+
 
 // Delete User
 message DeleteUserRequest {
     uint64  id = 1;
 }
-
-message DeleteUserResult {}
-
 message DeleteUserReply {
     DeleteUserResult result = 1;
 }
+message DeleteUserResult {}
 
 // Enable TOTP
 message EnableTotpRequest {
     string totp = 1;
 }
-
-message EnableTotpResult {}
-
 message EnableTotpReply {
     EnableTotpResult result = 1;
 }
+message EnableTotpResult {}
 
 // Reset TOTP
 message ResetTotpRequest {
     string password = 1;
 }
-
+message ResetTotpReply {
+    ResetTotpResult result = 1;
+}
 message ResetTotpResult {
     string totpSecret = 1;
     repeated string totpRecoveryCodes = 2;
 }
 
-message ResetTotpReply {
-    ResetTotpResult result = 1;
-}
-
 // Reset Password
-
 message ResetPasswordRequest {
     uint64 id = 1;
 }
-
-message ResetPasswordResult {}
-
 message ResetPasswordReply {
     ResetPasswordResult result = 1;
 }
+message ResetPasswordResult {}
+
 
 service UserService {
     rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordReply) {
@@ -145,7 +142,7 @@ service UserService {
         };
     };
 
-    rpc EnableTotp (EnableTotpRequest) returns (EnableTotpReply) {
+    rpc EnableTotp(EnableTotpRequest) returns (EnableTotpReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/users/me/totp/enable"
             body: "*"
@@ -157,7 +154,7 @@ service UserService {
         };
     };
 
-    rpc ResetTotp (ResetTotpRequest) returns (ResetTotpReply) {
+    rpc ResetTotp(ResetTotpRequest) returns (ResetTotpReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/users/me/totp/reset"
             body: "*"
@@ -169,7 +166,7 @@ service UserService {
         };
     };
 
-    rpc GetUsers(GetUsersRequest) returns (GetUsersReply) {
+    rpc ListUsers(ListUsersRequest) returns (ListUsersReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/users"
         };
@@ -215,7 +212,7 @@ service UserService {
         };
     };
 
-    rpc GetUserMe(google.protobuf.Empty) returns (GetUserMeReply) {
+    rpc GetUserMe(GetUserMeRequest) returns (GetUserMeReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/users/me"
         };
@@ -237,7 +234,7 @@ service UserService {
         };
     };
 
-    rpc CreateUser(User) returns (CreateUserReply) {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/users"
             body: "*"
