@@ -27,7 +27,7 @@ func NewWorkbenchStorage(db *sqlx.DB) *WorkbenchStorage {
 
 func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	const query = `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 			FROM workbenchs
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -42,7 +42,7 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 
 func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
 	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs
 WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
 `
@@ -104,7 +104,7 @@ ORDER BY ai.createdat ASC;
 
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs
 WHERE deletedat IS NULL;
 `
@@ -147,14 +147,13 @@ WHERE workbenchs.id = batch_data.id
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
 	const workbenchQuery = `
-INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id;
+INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, k8sstatus, createdat, updatedat)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64
 	err := s.db.GetContext(ctx, &id, workbenchQuery,
-		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.Status,
-		workbench.InitialResolutionWidth, workbench.InitialResolutionHeight,
+		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.InitialResolutionWidth, workbench.InitialResolutionHeight, workbench.Status, workbench.K8sStatus,
 	)
 	if err != nil {
 		return 0, err
