@@ -32,6 +32,7 @@ func NewAuthenticationController(authenticator service.Authenticator, cfg config
 	return AuthenticationController{
 		authenticator:             authenticator,
 		refreshTokenAuthorization: middleware.NewAuthorization(logger.SecLog, []string{user_model.RoleAuthenticated.String()}),
+		cfg:                       cfg,
 	}
 }
 
