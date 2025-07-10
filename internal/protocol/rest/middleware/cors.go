@@ -49,7 +49,7 @@ func isOriginInAllowedList(origin string, allowedOrigins []string) bool {
 	}
 
 	for _, allowedOrigin := range allowedOrigins {
-		if len(allowedOrigin) >= len(origin) && origin[:len(allowedOrigin)] == allowedOrigin {
+		if len(allowedOrigin) <= len(origin) && origin[:len(allowedOrigin)] == allowedOrigin {
 			return true
 		}
 	}

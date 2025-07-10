@@ -13,6 +13,7 @@ func TestIsOriginInAllowedList(t *testing.T) {
 		{"http://example.com", []string{"http://example.com"}, true},
 		{"http://example.com", []string{"http://example.org"}, false},
 		{"http://example.com/abc/def", []string{"http://example.com", "http://example.org"}, true},
+		{"http://example.com", []string{"http://exaaaaample.org"}, false},
 		{"", []string{"http://example.com"}, false},
 	}
 
