@@ -4,7 +4,11 @@ daemon:
     host: localhost
     port: 5000
     headers:
-      access_control_allow_origin: "*"
+      access_control_allow_origin: 
+        - "http://localhost:3000"
+        - "https://dip-dev.thehip.app"
+        - "https://frontend.dip-dev.thehip.app"
+      access_control_allow_origin_wildcard: true
       access_control_max_age: "600"
       cookie_domain: ".dip-dev.thehip.app"
   jwt:

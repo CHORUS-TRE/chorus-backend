@@ -4,7 +4,9 @@ daemon:
     host: 0.0.0.0
     port: 5000
     headers:
-      access_control_allow_origin: "*"
+      access_control_allow_origins: 
+        - "http://localhost:3000"
+      access_control_allow_origin_wildcard: true
       access_control_max_age: "600"
       cookie_domain: "localhost"
   jwt:
