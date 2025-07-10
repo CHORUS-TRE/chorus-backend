@@ -33,6 +33,7 @@ type (
 			Headers        struct {
 				AccessControlAllowOrigin string `yaml:"access_control_allow_origin"`
 				AccessControlMaxAge      string `yaml:"access_control_max_age"`
+				CookieDomain             string `yaml:"cookie_domain"`
 			} `yaml:"headers"`
 			MaxCallRecvMsgSize int `yaml:"max_call_recv_msg_size"`
 			MaxCallSendMsgSize int `yaml:"max_call_send_msg_size"`
@@ -242,10 +243,10 @@ type (
 			} `yaml:"tenant"`
 
 			User struct {
-				Enabled  bool     `yaml:"enabled"`
-				Username string   `yaml:"username"`
-				Password string   `yaml:"password"`
-				Roles    []string `yaml:"roles"`
+				Enabled  bool      `yaml:"enabled"`
+				Username string    `yaml:"username"`
+				Password Sensitive `yaml:"password"`
+				Roles    []string  `yaml:"roles"`
 			} `yaml:"user"`
 
 			Workspace struct {

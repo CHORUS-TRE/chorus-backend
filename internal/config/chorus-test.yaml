@@ -78,6 +78,20 @@ log:
       graylogbulkreceiving: true                            # Must be aligned with the "Enable Bulk Receiving" option of the graylog Input
       graylogauthorizeselfsignedcertificate: true           # For TLS/HTTPS, skip certificate authority signature
 
+services:
+  steward:
+    tenant:
+      enabled: true
+    user:
+      enabled: true
+      username: chorus
+      password: "password"
+      roles:
+        - authenticated
+    workspace:
+      enabled: true
+      name: "Home workspace"
+
 tenants:
   88888:
     ip_whitelist:
