@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"slices"
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
@@ -13,13 +12,13 @@ import (
 // AddCORS returns a new http.Handler that allows Cross Origin Resoruce Sharing.
 func AddCORS(h http.Handler, cfg config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.URL.Scheme + "://" + r.Host
+		origin := r.Header.Get("Origin")
 
 		logger.TechLog.Debug(r.Context(), "Add CORS",
 			zap.String("origin", origin), zap.String("method", r.Method), zap.String("path", r.URL.Path),
 		)
 
-		if slices.Contains(cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins, origin) {
+		if isOriginInAllowedList(origin, cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins) {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		} else if cfg.Daemon.HTTP.Headers.AccessControlAllowOriginWildcard {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -42,4 +41,18 @@ func AddCORS(h http.Handler, cfg config.Config) http.Handler {
 		}
 		h.ServeHTTP(w, r)
 	})
+}
+
+func isOriginInAllowedList(origin string, allowedOrigins []string) bool {
+	if origin == "" {
+		return false
+	}
+
+	for _, allowedOrigin := range allowedOrigins {
+		if origin[:len(allowedOrigin)] == allowedOrigin {
+			return true
+		}
+	}
+
+	return false
 }
