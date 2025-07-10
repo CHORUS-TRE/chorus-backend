@@ -45,6 +45,7 @@ spec:
       serviceAccountName: backend-service-account-{{ include "backend.nameid" . }}
       imagePullSecrets:
       - name: registry-auth
+      - name: regcred
       volumes:
       - name: backend-config
         secret:
