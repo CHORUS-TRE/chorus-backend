@@ -12,6 +12,7 @@ import (
 	jwt_go "github.com/golang-jwt/jwt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -21,7 +22,11 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				EmitUnpopulated: true,
+			},
+		}),
 		runtime.WithIncomingHeaderMatcher(newHeaderMatcher(cfg)),
 		runtime.WithOutgoingHeaderMatcher(newOutgoingHeaderMatcher()),
 		runtime.WithForwardResponseOption(responseHeaderMatcher),
