@@ -7,6 +7,5 @@ service:
 
 deployment:
   postgresEnabled: false
-  serviceAccountName: "backend-service-account"
 
 image: harbor.build.chorus-tre.ch/chorus/backend:master
