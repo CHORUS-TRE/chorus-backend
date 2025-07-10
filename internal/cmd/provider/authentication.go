@@ -34,7 +34,7 @@ var authenticationController v1.AuthenticationController
 
 func ProvideAuthenticationController() v1.AuthenticationController {
 	authenticationControllerOnce.Do(func() {
-		authenticationController = v1.NewAuthenticationController(ProvideAuthenticator())
+		authenticationController = v1.NewAuthenticationController(ProvideAuthenticator(), ProvideConfig())
 	})
 	return authenticationController
 }
