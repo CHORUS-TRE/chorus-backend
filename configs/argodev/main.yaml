@@ -6,6 +6,7 @@ daemon:
     headers:
       access_control_allow_origin: "*"
       access_control_max_age: "600"
+      coookie_domain: ".dev.chorus-tre.ch"
   jwt:
     secret: "{{ .jwt_secret }}"
     expiration_time: 72h
