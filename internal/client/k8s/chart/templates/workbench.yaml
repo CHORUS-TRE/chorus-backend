@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.name }}
 spec:
   imagePullSecrets: 
-    - "image-pull-secret"
+    - "regred"
   {{- if .Values.server }}
   server:
     version: {{ .Values.server.version }}
