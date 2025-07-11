@@ -29,6 +29,7 @@ spec:
         - containerPort: 3001
       imagePullSecrets:
       - name: registry-auth
+      - name: regcred
 
 ---
 
