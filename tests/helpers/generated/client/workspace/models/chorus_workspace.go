@@ -35,6 +35,9 @@ type ChorusWorkspace struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// is main
+	IsMain bool `json:"isMain,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 

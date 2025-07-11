@@ -42,11 +42,10 @@ spec:
         - name: POSTGRES_DB
           value: chorus
       {{- end }}
-      {{- if .Values.deployment.serviceAccountName }}
-      serviceAccountName: {{ .Values.deployment.serviceAccountName }}
-      {{- end }}
+      serviceAccountName: backend-service-account-{{ include "backend.nameid" . }}
       imagePullSecrets:
       - name: registry-auth
+      - name: regcred
       volumes:
       - name: backend-config
         secret:

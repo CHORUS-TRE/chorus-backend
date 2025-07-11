@@ -11,6 +11,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
@@ -23,13 +24,15 @@ var _ chorus.AuthenticationServiceServer = (*AuthenticationController)(nil)
 type AuthenticationController struct {
 	authenticator             service.Authenticator
 	refreshTokenAuthorization middleware.Authorization
+	cfg                       config.Config
 }
 
 // NewAuthenticationController returns a fresh authentication service controller instance.
-func NewAuthenticationController(authenticator service.Authenticator) AuthenticationController {
+func NewAuthenticationController(authenticator service.Authenticator, cfg config.Config) AuthenticationController {
 	return AuthenticationController{
 		authenticator:             authenticator,
 		refreshTokenAuthorization: middleware.NewAuthorization(logger.SecLog, []string{user_model.RoleAuthenticated.String()}),
+		cfg:                       cfg,
 	}
 }
 
@@ -87,7 +90,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 	expiresDate := time.Now().Add(t)
 	expires := expiresDate.Format(time.RFC1123)
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/; SameSite=None; Expires="+expires)
+	header := a.getSetCookieHeader(res, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -109,7 +112,7 @@ func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.
 	expiresDate := time.Now().Add(t)
 	expires := expiresDate.Format(time.RFC1123)
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken="+res+"; Path=/; SameSite=None; Expires="+expires)
+	header := a.getSetCookieHeader(res, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -143,7 +146,7 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 	expiresDate := time.Now().Add(t)
 	expires := expiresDate.Format(time.RFC1123)
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; SameSite=None; Expires="+expires)
+	header := a.getSetCookieHeader(token, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -169,7 +172,7 @@ func (a AuthenticationController) Logout(ctx context.Context, req *chorus.Logout
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 
-	header := metadata.Pairs("Set-Cookie", "jwttoken=; Path=/; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
+	header := a.getSetCookieHeader("", "Thu, 01 Jan 1970 00:00:00 GMT")
 	if err := grpc.SetHeader(ctx, header); err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
@@ -182,4 +185,10 @@ func (a AuthenticationController) Logout(ctx context.Context, req *chorus.Logout
 	}
 
 	return &chorus.LogoutReply{RedirectURL: utils.FromString(redirectURL)}, nil
+}
+
+func (a AuthenticationController) getSetCookieHeader(token string, expires string) metadata.MD {
+	// return metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; SameSite=None; Expires="+expires)
+	// Path=/; Domain=.dev.chorus-tre.ch; SameSite=None; Secure; HttpOnly";
+	return metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; Domain="+a.cfg.Daemon.HTTP.Headers.CookieDomain+"; SameSite=None; Secure; HttpOnly; Expires="+expires)
 }

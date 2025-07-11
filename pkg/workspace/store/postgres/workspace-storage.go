@@ -25,8 +25,8 @@ func NewWorkspaceStorage(db *sqlx.DB) *WorkspaceStorage {
 
 func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error) {
 	const query = `
-		SELECT id, tenantid, userid, name, shortname, description, status, createdat, updatedat
-			FROM workspaces
+		SELECT id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat
+		FROM workspaces
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
@@ -40,15 +40,15 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 
 func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination, allowDeleted bool) ([]*model.Workspace, error) {
 	query := `
-SELECT id, tenantid, userid, name, shortname, description, status, createdat, updatedat
-	FROM workspaces
-`
+		SELECT id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat
+		FROM workspaces
+	`
 
 	conditions := []string{}
 	arguments := []interface{}{}
 
 	if tenantID != 0 {
-		conditions = append(conditions, "tenantid = $1")
+		conditions = append(conditions, fmt.Sprintf("tenantid = $%d", len(arguments)+1))
 		arguments = append(arguments, tenantID)
 	}
 
@@ -59,6 +59,9 @@ SELECT id, tenantid, userid, name, shortname, description, status, createdat, up
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
+
+	// Add sorting by ismain and createdat by default
+	query += " ORDER BY ismain DESC, createdat DESC"
 
 	var workspaces []*model.Workspace
 	if err := s.db.SelectContext(ctx, &workspaces, query, arguments...); err != nil {
@@ -71,13 +74,13 @@ SELECT id, tenantid, userid, name, shortname, description, status, createdat, up
 // CreateWorkspace saves the provided workspace object in the database 'workspaces' table.
 func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (uint64, error) {
 	const workspaceQuery = `
-INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id;
+		INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id;
 	`
 
 	var id uint64
 	err := s.db.GetContext(ctx, &id, workspaceQuery,
-		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status,
+		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
 	)
 	if err != nil {
 		return 0, err
@@ -89,12 +92,12 @@ VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id;
 func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (err error) {
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
-		SET name = $3, shortname = $4, description = $5, status = $6, updatedat = NOW()
+		SET name = $3, shortname = $4, description = $5, status = $6, isMain = $7, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
 	// Update User
-	rows, err := s.db.ExecContext(ctx, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status)
+	rows, err := s.db.ExecContext(ctx, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ func UserAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) fun
 }
 
 func (c userControllerAuthorization) GetUsers(ctx context.Context, req *chorus.GetUsersRequest) (*chorus.GetUsersReply, error) {
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}

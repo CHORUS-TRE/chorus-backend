@@ -61,7 +61,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Daemon
 	v.SetDefault("daemon.http.host", "localhost")
 	v.SetDefault("daemon.http.port", "5000")
-	v.SetDefault("daemon.http.headers.access_control_allow_origin", "*")
+	v.SetDefault("daemon.http.headers.access_control_allow_origins", []string{})
+	v.SetDefault("daemon.http.headers.access_control_allow_origin_wildcard", false)
 	v.SetDefault("daemon.http.max_call_recv_msg_size", 10485760)  // 10 MiB
 	v.SetDefault("daemon.http.max_call_send_msg_size", 104857600) // 100 MiB
 	v.SetDefault("daemon.grpc.host", "localhost")
