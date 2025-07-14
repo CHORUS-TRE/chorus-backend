@@ -18,12 +18,12 @@ import (
 )
 
 const (
-	johnPassword     = "johnPassword"
-	janePassword     = "janePassword"
-	johnPasswordHash = "$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO"
-	janePasswordHash = "$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42"
+	hmotoPassword     = "johnPassword"
+	janePassword      = "janePassword"
+	hmotoPasswordHash = "$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO"
+	janePasswordHash  = "$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42"
 
-	johnTOTPSecret = "2UAQQOLQSXTAYP3A7A2TQDKMKQB4Y45D"
+	hmotoTOTPSecret = "2UAQQOLQSXTAYP3A7A2TQDKMKQB4Y45D"
 )
 
 var _ = Describe("authentication service", func() {
@@ -84,11 +84,11 @@ var _ = Describe("authentication service", func() {
 
 				setupTables()
 
-				code, _ := totp.GenerateCode(johnTOTPSecret, time.Now())
+				code, _ := totp.GenerateCode(hmotoTOTPSecret, time.Now())
 				req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
 					&models.ChorusCredentials{
-						Username: "jodoe",
-						Password: johnPassword,
+						Username: "hmoto",
+						Password: hmotoPassword,
 						Totp:     code,
 					},
 				)
@@ -127,6 +127,8 @@ func setupTables() {
 	INSERT INTO user_role (id, userid, roleid) VALUES(99883, 97882, 98883);
 	`
 	helpers.Populate(q)
+
+	helpers.Dump("SELECT * FROM users WHERE tenantid = 88888")
 }
 
 func cleanTables() {
