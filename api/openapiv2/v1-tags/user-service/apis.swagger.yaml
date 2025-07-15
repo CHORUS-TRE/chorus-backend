@@ -29,6 +29,38 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
       tags:
         - UserService
     post:
@@ -291,7 +323,8 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusListUsersResult'
-        title: PaginationResult pagination = 2; // Uncomment if pagination is needed
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
   chorusListUsersResult:
     type: object
     properties:
@@ -300,6 +333,46 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusUser'
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusPaginationResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int64
+        description: Total number of results
+      offset:
+        type: integer
+        format: int64
+        description: Offset used for pagination
+      limit:
+        type: integer
+        format: int64
+        description: Limit used for pagination
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Sort order used for pagination
   chorusResetPasswordReply:
     type: object
     properties:
@@ -327,6 +400,13 @@ definitions:
         type: array
         items:
           type: string
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
   chorusUpdatePasswordReply:
     type: object
     properties:

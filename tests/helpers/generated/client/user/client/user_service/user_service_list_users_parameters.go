@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewUserServiceListUsersParams creates a new UserServiceListUsersParams object,
@@ -60,6 +61,35 @@ UserServiceListUsersParams contains all the parameters to send to the API endpoi
 	Typically these are written to a http.Request.
 */
 type UserServiceListUsersParams struct {
+
+	/* PaginationLimit.
+
+	   Optionally limit the number of results (between 1 and 500)
+
+	   Format: int64
+	*/
+	PaginationLimit *int64
+
+	/* PaginationOffset.
+
+	   Optionally offset the number of results
+
+	   Format: int64
+	*/
+	PaginationOffset *int64
+
+	/* PaginationQuery.
+
+	   Optionally filter the results
+	*/
+	PaginationQuery []string
+
+	// PaginationSortOrder.
+	PaginationSortOrder *string
+
+	// PaginationSortType.
+	PaginationSortType *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -113,6 +143,61 @@ func (o *UserServiceListUsersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithPaginationLimit adds the paginationLimit to the user service list users params
+func (o *UserServiceListUsersParams) WithPaginationLimit(paginationLimit *int64) *UserServiceListUsersParams {
+	o.SetPaginationLimit(paginationLimit)
+	return o
+}
+
+// SetPaginationLimit adds the paginationLimit to the user service list users params
+func (o *UserServiceListUsersParams) SetPaginationLimit(paginationLimit *int64) {
+	o.PaginationLimit = paginationLimit
+}
+
+// WithPaginationOffset adds the paginationOffset to the user service list users params
+func (o *UserServiceListUsersParams) WithPaginationOffset(paginationOffset *int64) *UserServiceListUsersParams {
+	o.SetPaginationOffset(paginationOffset)
+	return o
+}
+
+// SetPaginationOffset adds the paginationOffset to the user service list users params
+func (o *UserServiceListUsersParams) SetPaginationOffset(paginationOffset *int64) {
+	o.PaginationOffset = paginationOffset
+}
+
+// WithPaginationQuery adds the paginationQuery to the user service list users params
+func (o *UserServiceListUsersParams) WithPaginationQuery(paginationQuery []string) *UserServiceListUsersParams {
+	o.SetPaginationQuery(paginationQuery)
+	return o
+}
+
+// SetPaginationQuery adds the paginationQuery to the user service list users params
+func (o *UserServiceListUsersParams) SetPaginationQuery(paginationQuery []string) {
+	o.PaginationQuery = paginationQuery
+}
+
+// WithPaginationSortOrder adds the paginationSortOrder to the user service list users params
+func (o *UserServiceListUsersParams) WithPaginationSortOrder(paginationSortOrder *string) *UserServiceListUsersParams {
+	o.SetPaginationSortOrder(paginationSortOrder)
+	return o
+}
+
+// SetPaginationSortOrder adds the paginationSortOrder to the user service list users params
+func (o *UserServiceListUsersParams) SetPaginationSortOrder(paginationSortOrder *string) {
+	o.PaginationSortOrder = paginationSortOrder
+}
+
+// WithPaginationSortType adds the paginationSortType to the user service list users params
+func (o *UserServiceListUsersParams) WithPaginationSortType(paginationSortType *string) *UserServiceListUsersParams {
+	o.SetPaginationSortType(paginationSortType)
+	return o
+}
+
+// SetPaginationSortType adds the paginationSortType to the user service list users params
+func (o *UserServiceListUsersParams) SetPaginationSortType(paginationSortType *string) {
+	o.PaginationSortType = paginationSortType
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -121,8 +206,104 @@ func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg
 	}
 	var res []error
 
+	if o.PaginationLimit != nil {
+
+		// query param pagination.limit
+		var qrPaginationLimit int64
+
+		if o.PaginationLimit != nil {
+			qrPaginationLimit = *o.PaginationLimit
+		}
+		qPaginationLimit := swag.FormatInt64(qrPaginationLimit)
+		if qPaginationLimit != "" {
+
+			if err := r.SetQueryParam("pagination.limit", qPaginationLimit); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.PaginationOffset != nil {
+
+		// query param pagination.offset
+		var qrPaginationOffset int64
+
+		if o.PaginationOffset != nil {
+			qrPaginationOffset = *o.PaginationOffset
+		}
+		qPaginationOffset := swag.FormatInt64(qrPaginationOffset)
+		if qPaginationOffset != "" {
+
+			if err := r.SetQueryParam("pagination.offset", qPaginationOffset); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.PaginationQuery != nil {
+
+		// binding items for pagination.query
+		joinedPaginationQuery := o.bindParamPaginationQuery(reg)
+
+		// query array param pagination.query
+		if err := r.SetQueryParam("pagination.query", joinedPaginationQuery...); err != nil {
+			return err
+		}
+	}
+
+	if o.PaginationSortOrder != nil {
+
+		// query param pagination.sort.order
+		var qrPaginationSortOrder string
+
+		if o.PaginationSortOrder != nil {
+			qrPaginationSortOrder = *o.PaginationSortOrder
+		}
+		qPaginationSortOrder := qrPaginationSortOrder
+		if qPaginationSortOrder != "" {
+
+			if err := r.SetQueryParam("pagination.sort.order", qPaginationSortOrder); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.PaginationSortType != nil {
+
+		// query param pagination.sort.type
+		var qrPaginationSortType string
+
+		if o.PaginationSortType != nil {
+			qrPaginationSortType = *o.PaginationSortType
+		}
+		qPaginationSortType := qrPaginationSortType
+		if qPaginationSortType != "" {
+
+			if err := r.SetQueryParam("pagination.sort.type", qPaginationSortType); err != nil {
+				return err
+			}
+		}
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
+}
+
+// bindParamUserServiceListUsers binds the parameter pagination.query
+func (o *UserServiceListUsersParams) bindParamPaginationQuery(formats strfmt.Registry) []string {
+	paginationQueryIR := o.PaginationQuery
+
+	var paginationQueryIC []string
+	for _, paginationQueryIIR := range paginationQueryIR { // explode []string
+
+		paginationQueryIIV := paginationQueryIIR // string as string
+		paginationQueryIC = append(paginationQueryIC, paginationQueryIIV)
+	}
+
+	// items.CollectionFormat: "multi"
+	paginationQueryIS := swag.JoinByFormat(paginationQueryIC, "multi")
+
+	return paginationQueryIS
 }

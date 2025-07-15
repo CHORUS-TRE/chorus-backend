@@ -45,3 +45,21 @@ enum SortOrder {
     ASC = 1;
 }
 
+message PaginationResult {
+    uint32 total = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Total number of results",
+        // default: "0",
+    }];
+    uint32 offset = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Offset used for pagination",
+        // default: "0",
+    }];
+    uint32 limit = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Limit used for pagination",
+        // default: "20",
+    }];
+    Sort sort = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Sort order used for pagination",
+        // default: "created_at-asc",
+    }];
+}

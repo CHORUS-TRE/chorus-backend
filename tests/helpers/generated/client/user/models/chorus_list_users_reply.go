@@ -18,13 +18,20 @@ import (
 // swagger:model chorusListUsersReply
 type ChorusListUsersReply struct {
 
-	// PaginationResult pagination = 2; // Uncomment if pagination is needed
+	// pagination
+	Pagination *ChorusPaginationResult `json:"pagination,omitempty"`
+
+	// result
 	Result *ChorusListUsersResult `json:"result,omitempty"`
 }
 
 // Validate validates this chorus list users reply
 func (m *ChorusListUsersReply) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validatePagination(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateResult(formats); err != nil {
 		res = append(res, err)
@@ -33,6 +40,25 @@ func (m *ChorusListUsersReply) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusListUsersReply) validatePagination(formats strfmt.Registry) error {
+	if swag.IsZero(m.Pagination) { // not required
+		return nil
+	}
+
+	if m.Pagination != nil {
+		if err := m.Pagination.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("pagination")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("pagination")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -59,6 +85,10 @@ func (m *ChorusListUsersReply) validateResult(formats strfmt.Registry) error {
 func (m *ChorusListUsersReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidatePagination(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateResult(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -66,6 +96,27 @@ func (m *ChorusListUsersReply) ContextValidate(ctx context.Context, formats strf
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusListUsersReply) contextValidatePagination(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Pagination != nil {
+
+		if swag.IsZero(m.Pagination) { // not required
+			return nil
+		}
+
+		if err := m.Pagination.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("pagination")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("pagination")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
