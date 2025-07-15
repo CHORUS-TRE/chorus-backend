@@ -25,12 +25,12 @@ func Logging(logger *logger.ContextLogger) func(service.UserStore) service.UserS
 	}
 }
 
-func (c userStorageLogging) GetUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
+func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.GetUsers(ctx, tenantID)
+	res, err := c.next.ListUsers(ctx, tenantID)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -107,25 +107,25 @@ func (c userStorageLogging) UpdateUser(ctx context.Context, tenantID uint64, use
 	return nil
 }
 
-func (c userStorageLogging) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (uint64, error) {
+func (c userStorageLogging) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	userId, err := c.next.CreateUser(ctx, tenantID, user)
+	res, err := c.next.CreateUser(ctx, tenantID, user)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return 0, err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
-		logger.WithUserIDField(userId),
+		logger.WithUserIDField(res.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return userId, nil
+	return res, nil
 }
 
 func (c userStorageLogging) CreateRole(ctx context.Context, role string) error {

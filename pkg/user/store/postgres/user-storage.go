@@ -22,8 +22,8 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 	return &UserStorage{db: db}
 }
 
-// GetUsers queries all stocked users that are not 'deleted'.
-func (s *UserStorage) GetUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
+// ListUsers queries all stocked users that are not 'deleted'.
+func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
 	const query = `
 SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
 FROM users
@@ -133,11 +133,11 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error {
 	const query = `
 		UPDATE users
-		SET (status, username, updatedat) = ($3, concat(username, $4), NOW())
+		SET (status, username, updatedat) = ($3, concat(username, $4::text), NOW())
 		WHERE tenantid = $1 AND id = $2;
 	`
-
-	rows, err := s.db.ExecContext(ctx, query, tenantID, userID, model.UserDeleted.String(), "-"+uuid.Next())
+	uuidSuffix := "-" + uuid.Next()
+	rows, err := s.db.ExecContext(ctx, query, tenantID, userID, model.UserDeleted.String(), uuidSuffix)
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
 	}
@@ -240,11 +240,12 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 }
 
 // CreateUser saves the provided user object in the database 'users' table.
-func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (uint64, error) {
+func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	const userQuery = `
 INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status,
                    totpsecret, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
+RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret;
 	`
 	const userRoleQuery = `
 INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
@@ -257,20 +258,20 @@ INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 	// the user_role entries fails.
 	tx, err := s.db.Beginx()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	var id uint64
-	err = tx.GetContext(ctx, &id,
+	var newUser model.User
+	err = tx.GetContext(ctx, &newUser,
 		userQuery, tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret,
 	)
 	if err != nil {
-		return 0, storage.Rollback(tx, err)
+		return nil, storage.Rollback(tx, err)
 	}
 
 	roles, err := s.GetRoles(ctx)
 	if err != nil {
-		return 0, storage.Rollback(tx, err)
+		return nil, storage.Rollback(tx, err)
 	}
 
 	// For each user role that matches a role insert an entry in the 'user_role' table.
@@ -279,8 +280,8 @@ INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 		found := false
 		for _, r := range roles {
 			if ur.String() == r.Name {
-				if _, loopErr = tx.ExecContext(ctx, userRoleQuery, id, r.ID); loopErr != nil {
-					return 0, storage.Rollback(tx, loopErr)
+				if _, loopErr = tx.ExecContext(ctx, userRoleQuery, newUser.ID, r.ID); loopErr != nil {
+					return nil, storage.Rollback(tx, loopErr)
 				}
 				found = true
 				break
@@ -288,22 +289,23 @@ INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 		}
 		if !found {
 			loopErr = fmt.Errorf("unknown user role: %v", ur)
-			return 0, storage.Rollback(tx, loopErr)
+			return nil, storage.Rollback(tx, loopErr)
 		}
+		newUser.Roles = append(newUser.Roles, ur)
 	}
 	// Insert TOTP recovery codes.
 	if user.TotpRecoveryCodes != nil {
 		for _, rc := range user.TotpRecoveryCodes {
-			if _, loopErr = tx.ExecContext(ctx, recoveryCodeQuery, tenantID, id, rc); loopErr != nil {
-				return 0, storage.Rollback(tx, loopErr)
+			if _, loopErr = tx.ExecContext(ctx, recoveryCodeQuery, tenantID, newUser.ID, rc); loopErr != nil {
+				return nil, storage.Rollback(tx, loopErr)
 			}
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, err
+		return nil, err
 	}
-	return id, nil
+	return &newUser, nil
 }
 
 // getUserRoles fetches all the roles of a given user.
