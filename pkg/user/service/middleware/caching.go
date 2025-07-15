@@ -49,12 +49,12 @@ func (c *Caching) GetRoles(ctx context.Context) (reply []*model.Role, err error)
 	return
 }
 
-func (c *Caching) GetUsers(ctx context.Context, req service.GetUsersReq) (reply []*model.User, err error) {
+func (c *Caching) ListUsers(ctx context.Context, req service.ListUsersReq) (reply []*model.User, err error) {
 	entry := c.cache.NewEntry(cache.WithInterface(req))
 	reply = []*model.User{}
 
 	if ok := entry.Get(ctx, &reply); !ok {
-		reply, err = c.next.GetUsers(ctx, req)
+		reply, err = c.next.ListUsers(ctx, req)
 		if err == nil {
 			entry.Set(ctx, defaultCacheExpiration, reply)
 		}
@@ -85,7 +85,7 @@ func (c *Caching) UpdateUser(ctx context.Context, req service.UpdateUserReq) err
 	return c.next.UpdateUser(ctx, req)
 }
 
-func (c *Caching) CreateUser(ctx context.Context, req service.CreateUserReq) (uint64, error) {
+func (c *Caching) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {
 	return c.next.CreateUser(ctx, req)
 }
 

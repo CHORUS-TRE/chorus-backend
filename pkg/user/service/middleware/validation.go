@@ -35,11 +35,11 @@ func (v validation) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return v.next.GetRoles(ctx)
 }
 
-func (v validation) GetUsers(ctx context.Context, req service.GetUsersReq) ([]*model.User, error) {
+func (v validation) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, error) {
 	if err := v.validate.Struct(req); err != nil {
 		return nil, err
 	}
-	return v.next.GetUsers(ctx, req)
+	return v.next.ListUsers(ctx, req)
 }
 
 func (v validation) GetUser(ctx context.Context, req service.GetUserReq) (*model.User, error) {
@@ -60,9 +60,9 @@ func (v validation) UpdateUser(ctx context.Context, req service.UpdateUserReq) e
 	return v.next.UpdateUser(ctx, req)
 }
 
-func (v validation) CreateUser(ctx context.Context, req service.CreateUserReq) (uint64, error) {
+func (v validation) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {
 	if err := v.validate.Struct(req); err != nil {
-		return 0, err
+		return nil, err
 	}
 	return v.next.CreateUser(ctx, req)
 }

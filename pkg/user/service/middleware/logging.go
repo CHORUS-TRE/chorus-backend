@@ -26,10 +26,10 @@ func Logging(logger *logger.ContextLogger) func(service.Userer) service.Userer {
 	}
 }
 
-func (c userServiceLogging) GetUsers(ctx context.Context, req service.GetUsersReq) ([]*model.User, error) {
+func (c userServiceLogging) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, error) {
 	now := time.Now()
 
-	res, err := c.next.GetUsers(ctx, req)
+	res, err := c.next.ListUsers(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -105,23 +105,23 @@ func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUs
 	return nil
 }
 
-func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUserReq) (uint64, error) {
+func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {
 	now := time.Now()
 
-	userId, err := c.next.CreateUser(ctx, req)
+	res, err := c.next.CreateUser(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return userId, fmt.Errorf("unable to create user: %w", err)
+		return nil, fmt.Errorf("unable to create user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
-		logger.WithUserIDField(userId),
+		logger.WithUserIDField(res.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return userId, nil
+	return res, nil
 }
 
 func (c userServiceLogging) CreateRole(ctx context.Context, role string) error {

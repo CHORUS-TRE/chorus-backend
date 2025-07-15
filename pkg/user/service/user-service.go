@@ -18,9 +18,9 @@ import (
 )
 
 type Userer interface {
-	GetUsers(ctx context.Context, req GetUsersReq) ([]*model.User, error)
+	ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, error)
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
-	CreateUser(ctx context.Context, req CreateUserReq) (uint64, error)
+	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
@@ -35,9 +35,9 @@ type Userer interface {
 }
 
 type UserStore interface {
-	GetUsers(ctx context.Context, tenantID uint64) ([]*model.User, error)
+	ListUsers(ctx context.Context, tenantID uint64) ([]*model.User, error)
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
-	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (uint64, error)
+	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
@@ -81,8 +81,8 @@ func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret
 	}
 }
 
-func (u *UserService) GetUsers(ctx context.Context, req GetUsersReq) ([]*model.User, error) {
-	users, err := u.store.GetUsers(ctx, req.TenantID)
+func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, error) {
+	users, err := u.store.ListUsers(ctx, req.TenantID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to query users: %w", err)
 	}
@@ -167,12 +167,12 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) error {
 	return nil
 }
 
-func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (uint64, error) {
+func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error) {
 
 	req.User.Roles = filterDuplicateRoles(req.User.Roles)
 
 	if err := verifyRoles(req.User.Roles); err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if req.User.Password != "" {
@@ -181,40 +181,40 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (uint64
 
 	password, err := helper.GeneratePassword(20)
 	if err != nil {
-		return 0, fmt.Errorf("unable to generate password: %w", err)
+		return nil, fmt.Errorf("unable to generate password: %w", err)
 	}
 
 	hash, err := helper.HashPass(password)
 	if err != nil {
-		return 0, fmt.Errorf("unable to hash password: %w", err)
+		return nil, fmt.Errorf("unable to hash password: %w", err)
 	}
 
 	user := reqToUserBusiness(req.User)
 	user.Password = hash
 
-	id, err := u.store.CreateUser(ctx, req.TenantID, user)
+	newUser, err := u.store.CreateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create user %v: %w", user.Username, err)
+		return nil, fmt.Errorf("unable to create user %v: %w", user.Username, err)
 	}
 
 	go u.sendMailWithTempPassword("Please change your password", req.TenantID, user, password, mailer.TemporaryPasswordKey)
 
-	return id, nil
+	return newUser, nil
 }
 
-func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUserReq) (uint64, error) {
+func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUserReq) (*model.User, error) {
 	user := req.User
 	if user.TotpEnabled {
 
 		secret, err := crypto.CreateTotpSecret(user.Username, u.daemonEncryptionKey)
 		if err != nil {
-			return 0, fmt.Errorf("unable to create totp secret: %w", err)
+			return nil, fmt.Errorf("unable to create totp secret: %w", err)
 		}
 		user.TotpSecret = &secret
 
 		recoveryCodes, err := crypto.CreateTotpRecoveryCodes(u.totpNumRecoveryCodes, u.daemonEncryptionKey)
 		if err != nil {
-			return 0, fmt.Errorf("unable to create totp recovery codes: %w", err)
+			return nil, fmt.Errorf("unable to create totp recovery codes: %w", err)
 		}
 		user.TotpRecoveryCodes = recoveryCodes
 		user.TotpEnabled = true
@@ -222,16 +222,16 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return 0, fmt.Errorf("unable to hash password: %w", err)
+		return nil, fmt.Errorf("unable to hash password: %w", err)
 	}
 	user.Password = string(hash)
 	user.PasswordChanged = true
 
-	id, err := u.store.CreateUser(ctx, req.TenantID, reqToUserBusiness(req.User))
+	newUser, err := u.store.CreateUser(ctx, req.TenantID, reqToUserBusiness(req.User))
 	if err != nil {
-		return 0, fmt.Errorf("unable to store user: %w", err)
+		return nil, fmt.Errorf("unable to store user: %w", err)
 	}
-	return id, nil
+	return newUser, nil
 }
 
 func (u *UserService) EnableUserTotp(ctx context.Context, req EnableTotpReq) error {
