@@ -8,8 +8,10 @@ import (
 	"strconv"
 
 	embed "github.com/CHORUS-TRE/chorus-backend/api"
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	jwt_go "github.com/golang-jwt/jwt"
 
 	"go.uber.org/zap"
@@ -20,7 +22,7 @@ type ProxyWorkbenchHandler func(ctx context.Context, tenantID, workbenchID uint6
 func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/([0-9]+)/stream`)
 
-	//auth := middleware.NewAuthorization(logger.TechLog, []string{model.RoleAuthenticated.String()})
+	auth := middleware.NewAuthorization(logger.TechLog, []string{model.RoleAuthenticated.String()})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -47,12 +49,12 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, keyFunc jwt_go.
 
 		ctx = GetContextWithAuth(ctx, r, keyFunc, claimsFactory)
 
-		//err = auth.IsAuthenticatedAndAuthorized(ctx)
-		//if err != nil {
-		//		logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
-		//	h.ServeHTTP(w, r)
-		//	return
-		//}
+		err = auth.IsAuthenticatedAndAuthorized(ctx)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
+			h.ServeHTTP(w, r)
+			return
+		}
 
 		err = pw(ctx, 1, workbenchID, w, r.WithContext(ctx))
 		if err != nil {
