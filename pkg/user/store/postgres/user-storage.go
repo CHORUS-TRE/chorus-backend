@@ -89,7 +89,7 @@ DELETE FROM totp_recovery_codes WHERE tenantid = $1 AND id = $2;
 	return nil
 }
 
-func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (err error) {
+func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (updatedUser *model.User, err error) {
 	const deleteRecoveryCodesQuery = `
 		DELETE FROM totp_recovery_codes WHERE tenantid = $1 AND userid = $2;
 	`
@@ -100,7 +100,7 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 
 	tx, txErr := s.db.Beginx()
 	if txErr != nil {
-		return txErr
+		return nil, txErr
 	}
 
 	committed := false
@@ -112,26 +112,27 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 		}
 	}()
 
-	if err = s.updateUserAndRoles(ctx, tx, tenantID, user); err != nil {
-		return fmt.Errorf("unable to update user and roles: %w", err)
+	updatedUser, err = s.updateUserAndRoles(ctx, tx, tenantID, user)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update user and roles: %w", err)
 	}
 
 	if _, err = s.db.ExecContext(ctx, deleteRecoveryCodesQuery, tenantID, user.ID); err != nil {
-		return fmt.Errorf("unable to delete recovery codes: %w", err)
+		return nil, fmt.Errorf("unable to delete recovery codes: %w", err)
 	}
 
 	for _, rc := range totpRecoveryCodes {
 		if _, err = tx.ExecContext(ctx, insertRecoveryCodeQuery, tenantID, user.ID, rc); err != nil {
-			return fmt.Errorf("unable to insert recovery codes: %w", err)
+			return nil, fmt.Errorf("unable to insert recovery codes: %w", err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("unable to commit: %w", err)
+		return nil, fmt.Errorf("unable to commit: %w", err)
 	}
 	committed = true
 
-	return err
+	return updatedUser, err
 }
 
 func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error {
@@ -157,10 +158,10 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 	return nil
 }
 
-func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (err error) {
+func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (updatedUser *model.User, err error) {
 	tx, txErr := s.db.Beginx()
 	if txErr != nil {
-		return txErr
+		return nil, txErr
 	}
 
 	committed := false
@@ -172,24 +173,25 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 		}
 	}()
 
-	err = s.updateUserAndRoles(ctx, tx, tenantID, user)
+	updatedUser, err = s.updateUserAndRoles(ctx, tx, tenantID, user)
 	if err != nil {
-		return fmt.Errorf("unable to update: %w", err)
+		return nil, fmt.Errorf("unable to update: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("unable to commit: %w", err)
+		return nil, fmt.Errorf("unable to commit: %w", err)
 	}
 	committed = true
 
-	return err
+	return updatedUser, err
 }
 
-func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) error {
+func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) (*model.User, error) {
 	const userUpdateQuery = `
 		UPDATE users
 		SET firstname = $3, lastname = $4, username = $5, source = $6, status = $7, password = $8, passwordChanged = $9, totpenabled = $10, totpsecret = $11, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 
 	const deleteUserRolesQuery = `
@@ -202,49 +204,47 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 	`
 
 	// Update User
-	rows, err := tx.ExecContext(ctx, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
+	var updatedUser model.User
+	err := tx.GetContext(ctx, &updatedUser, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
 		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
-		return fmt.Errorf("unable to exec: %w", err)
-	}
-	affected, err := rows.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("unable to get rows affected: %w", err)
-	}
-
-	if affected == 0 {
-		return database.ErrNoRowsUpdated
+		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
 
 	roles, err := s.GetRoles(ctx)
 	if err != nil {
-		return fmt.Errorf("unable to get roles: %w", err)
+		return nil, fmt.Errorf("unable to get roles: %w", err)
 	}
 
 	// Delete Old User Roles
 	_, err = tx.ExecContext(ctx, deleteUserRolesQuery, user.ID)
 	if err != nil {
-		return fmt.Errorf("unable to delete old roles: %w", err)
+		return nil, fmt.Errorf("unable to delete old roles: %w", err)
 	}
 
 	// Add new User Roles
+	var userRoles []model.UserRole
 	for _, ur := range user.Roles {
 		found := false
 		for _, r := range roles {
 			if ur.String() == r.Name {
 				if _, err = tx.ExecContext(ctx, insertUserRoleQuery, user.ID, r.ID); err != nil {
-					return fmt.Errorf("unable to exec in: %w", err)
+					return nil, fmt.Errorf("unable to exec in: %w", err)
 				}
+				userRoles = append(userRoles, ur)
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("unknown user role: %v", ur)
+			return nil, fmt.Errorf("unknown user role: %v", ur)
 		}
 	}
 
-	return nil
+	// Set the roles on the updated user
+	updatedUser.Roles = userRoles
+
+	return &updatedUser, nil
 }
 
 // CreateUser saves the provided user object in the database 'users' table.

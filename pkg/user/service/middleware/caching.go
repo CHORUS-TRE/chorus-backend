@@ -81,7 +81,7 @@ func (c *Caching) SoftDeleteUser(ctx context.Context, req service.DeleteUserReq)
 	return c.next.SoftDeleteUser(ctx, req)
 }
 
-func (c *Caching) UpdateUser(ctx context.Context, req service.UpdateUserReq) error {
+func (c *Caching) UpdateUser(ctx context.Context, req service.UpdateUserReq) (*model.User, error) {
 	return c.next.UpdateUser(ctx, req)
 }
 

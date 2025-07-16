@@ -85,24 +85,24 @@ func (c userServiceLogging) SoftDeleteUser(ctx context.Context, req service.Dele
 	return nil
 }
 
-func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUserReq) error {
+func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUserReq) (*model.User, error) {
 	now := time.Now()
 
-	err := c.next.UpdateUser(ctx, req)
+	updatedUser, err := c.next.UpdateUser(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithUserIDField(req.User.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update user: %w", err)
+		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
 		logger.WithUserIDField(req.User.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedUser, nil
 }
 
 func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {

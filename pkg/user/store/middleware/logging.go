@@ -87,24 +87,24 @@ func (c userStorageLogging) SoftDeleteUser(ctx context.Context, tenantID, userID
 	return nil
 }
 
-func (c userStorageLogging) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) error {
+func (c userStorageLogging) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 
-	err := c.next.UpdateUser(ctx, tenantID, user)
+	updatedUser, err := c.next.UpdateUser(ctx, tenantID, user)
 	if err != nil {
 		c.logger.Error(ctx, "request completed",
 			logger.WithUserIDField(user.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 	c.logger.Debug(ctx, "request completed",
 		logger.WithUserIDField(user.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedUser, nil
 }
 
 func (c userStorageLogging) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
@@ -214,22 +214,22 @@ func (a userStorageLogging) DeleteTotpRecoveryCode(ctx context.Context, tenantID
 	return nil
 }
 
-func (c userStorageLogging) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) error {
+func (c userStorageLogging) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (*model.User, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.UpdateUserWithRecoveryCodes(ctx, tenantID, user, totpRecoveryCodes)
+	updatedUser, err := c.next.UpdateUserWithRecoveryCodes(ctx, tenantID, user, totpRecoveryCodes)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedUser, nil
 }

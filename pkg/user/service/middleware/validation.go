@@ -53,7 +53,7 @@ func (v validation) SoftDeleteUser(ctx context.Context, req service.DeleteUserRe
 	return v.next.SoftDeleteUser(ctx, req)
 }
 
-func (v validation) UpdateUser(ctx context.Context, req service.UpdateUserReq) error {
+func (v validation) UpdateUser(ctx context.Context, req service.UpdateUserReq) (*model.User, error) {
 	if err := v.validate.Struct(req); err != nil {
 		return v.next.UpdateUser(ctx, req)
 	}

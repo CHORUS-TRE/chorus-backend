@@ -118,14 +118,20 @@ func (c UserController) UpdateUser(ctx context.Context, req *chorus.UpdateUserRe
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
-	err = c.user.UpdateUser(ctx, service.UpdateUserReq{
+	updatedUser, err := c.user.UpdateUser(ctx, service.UpdateUserReq{
 		TenantID: tenantID,
 		User:     user,
 	})
+
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateUser': %v", err.Error())
 	}
-	return &chorus.UpdateUserReply{Result: &chorus.UpdateUserResult{}}, nil
+	updatedUserProto, err := converter.UserFromBusiness(updatedUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateUserReply{Result: &chorus.UpdateUserResult{User: updatedUserProto}}, nil
 }
 
 func (c UserController) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {

@@ -24,7 +24,7 @@ type Userer interface {
 	CreateRole(ctx context.Context, role string) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
-	UpdateUser(ctx context.Context, req UpdateUserReq) error
+	UpdateUser(ctx context.Context, req UpdateUserReq) (*model.User, error)
 	UpdateUserPassword(ctx context.Context, req UpdateUserPasswordReq) error
 	EnableUserTotp(ctx context.Context, req EnableTotpReq) error
 	ResetUserTotp(ctx context.Context, req ResetTotpReq) (string, []string, error)
@@ -41,9 +41,9 @@ type UserStore interface {
 	CreateRole(ctx context.Context, role string) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
-	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) error
+	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error)
-	UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) error
+	UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (*model.User, error)
 	DeleteTotpRecoveryCode(ctx context.Context, tenantID, codeID uint64) error
 }
 
@@ -124,12 +124,12 @@ func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPass
 	user.Password = hashed
 	user.PasswordChanged = true
 
-	err = u.store.UpdateUser(ctx, req.TenantID, user)
+	_, err = u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
 		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
-	return nil
 
+	return nil
 }
 
 func (u *UserService) SoftDeleteUser(ctx context.Context, req DeleteUserReq) error {
@@ -140,11 +140,11 @@ func (u *UserService) SoftDeleteUser(ctx context.Context, req DeleteUserReq) err
 	return nil
 }
 
-func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) error {
+func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) (*model.User, error) {
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.User.ID)
 	if err != nil {
-		return fmt.Errorf("unable to get user %v: %w", req.User.ID, err)
+		return nil, fmt.Errorf("unable to get user %v: %w", req.User.ID, err)
 	}
 
 	req.User.Roles = filterDuplicateRoles(req.User.Roles)
@@ -156,15 +156,16 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) error {
 	user.Status = req.User.Status
 
 	if err = verifyRoles(req.User.Roles); err != nil {
-		return fmt.Errorf("role verification failed: %w", err)
+		return nil, fmt.Errorf("role verification failed: %w", err)
 	}
+
 	user.Roles = req.User.Roles
-
-	if err := u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
-		return fmt.Errorf("unable to update user %v: %w", req.User.ID, err)
+	updatedUser, err := u.store.UpdateUser(ctx, req.TenantID, user)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update user %v: %w", req.User.ID, err)
 	}
 
-	return nil
+	return updatedUser, nil
 }
 
 func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error) {
@@ -251,7 +252,7 @@ func (u *UserService) EnableUserTotp(ctx context.Context, req EnableTotpReq) err
 	}
 
 	user.TotpEnabled = true
-	if err := u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
+	if _, err := u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
 		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
 
@@ -297,7 +298,7 @@ func (u *UserService) ResetUserTotp(ctx context.Context, req ResetTotpReq) (stri
 		return "", nil, fmt.Errorf("unable to decrypt totp recovery codes: %w", err)
 	}
 
-	if err = u.store.UpdateUserWithRecoveryCodes(ctx, req.TenantID, user, recoveryCodes); err != nil {
+	if _, err = u.store.UpdateUserWithRecoveryCodes(ctx, req.TenantID, user, recoveryCodes); err != nil {
 		return "", nil, fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
 
@@ -325,7 +326,7 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 	user.PasswordChanged = false
 	user.TotpEnabled = false
 
-	err = u.store.UpdateUser(ctx, req.TenantID, user)
+	_, err = u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
 		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
 	}
