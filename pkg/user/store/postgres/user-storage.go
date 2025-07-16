@@ -103,9 +103,12 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 		return txErr
 	}
 
+	committed := false
 	defer func() {
-		if txErr = tx.Rollback(); txErr != nil {
-			err = fmt.Errorf("%s: %w", txErr.Error(), err)
+		if !committed {
+			if txErr = tx.Rollback(); txErr != nil {
+				err = fmt.Errorf("%s: %w", txErr.Error(), err)
+			}
 		}
 	}()
 
@@ -126,6 +129,7 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("unable to commit: %w", err)
 	}
+	committed = true
 
 	return err
 }
@@ -159,9 +163,12 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 		return txErr
 	}
 
+	committed := false
 	defer func() {
-		if txErr = tx.Rollback(); txErr != nil {
-			err = fmt.Errorf("%s: %w", txErr.Error(), err)
+		if !committed {
+			if txErr = tx.Rollback(); txErr != nil {
+				err = fmt.Errorf("%s: %w", txErr.Error(), err)
+			}
 		}
 	}()
 
@@ -173,6 +180,7 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("unable to commit: %w", err)
 	}
+	committed = true
 
 	return err
 }
