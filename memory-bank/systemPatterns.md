@@ -23,7 +23,7 @@ The `README.md` file provides a detailed walkthrough for creating a new service,
 - **Service-Oriented**: The codebase is organized by domain into services.
 - **Repository Pattern**: The `store` packages abstract data persistence details from the business logic.
 - **Middleware/Interceptor Pattern**: Used extensively for both gRPC and HTTP servers to handle common request/response processing tasks.
-- **Kubernetes Operator**: The `workbench-operator` suggests that for some parts of the system, the logic is extended into the Kubernetes control plane via custom controllers. This is used for managing complex, stateful applications within the k8s environment.
+- **Kubernetes Operator**: The `workbench-operator` is a standalone Go project within the `chorus-backend` repository. It follows the operator pattern and is built using the Kubebuilder framework. It manages `Workbench` custom resources (CRDs) to orchestrate the deployment of Xpra servers and their associated graphical applications as a cohesive unit within Kubernetes.
 
 ## Component Relationships
 
@@ -56,14 +56,26 @@ graph TD
         end
 
         subgraph "Kubernetes Integration"
-             L["Workbench Operator"]
+            L["Workbench Operator"]
         end
 
+        D --> F
+        D --> G
+        D --> H
+        D --> I
+        D --> J
 
-        D --> F & G & H & I & J
-        E --> F & G & H & I & J
+        E --> F
+        E --> G
+        E --> H
+        E --> I
+        E --> J
 
-        F & G & H & I & J --> K
+        F --> K
+        G --> K
+        H --> K
+        I --> K
+        J --> K
         I --> L
     end
 

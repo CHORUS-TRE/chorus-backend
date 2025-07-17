@@ -21,10 +21,18 @@
 - **Authentication**: `github.com/golang-jwt/jwt` for JWT implementation, `github.com/pquerna/otp` for one-time passwords.
 - **Testing**: `github.com/onsi/ginkgo` and `github.com/onsi/gomega` for BDD-style testing, `github.com/stretchr/testify` for assertions.
 - **Kubernetes Client**: `k8s.io/client-go` for interacting with the Kubernetes API.
+- **Kubernetes Operator Framework**: The `workbench-operator` uses `sigs.k8s.io/kubebuilder` to create and manage custom controllers.
 
 ## Development Setup
 
-The `README.md` provides instructions for setting up a local development environment. The key steps are:
+The `README.md` provides instructions for setting up a local development environment. A `Makefile` in the root directory provides convenient targets for common development tasks:
+- `make deps`: Starts development dependencies (PostgreSQL and a local Kind Kubernetes cluster).
+- `make stop-deps`: Stops and cleans up the development dependencies.
+- `make run`: Runs the backend application and the companion logger.
+- `make dev`: A meta-target that runs `deps` and then `run`.
+- `make get-admin-token`: Retrieves the admin JWT for initial setup.
+
+The key steps for manual setup are:
 1.  **Install Go**: Version 1.24.3 or compatible.
 2.  **Run PostgreSQL**: A `docker-compose.yml` file is provided in `.devcontainer` to spin up a PostgreSQL instance.
 3.  **Set up Local Kubernetes**: The `scripts/create-local-cluster.sh` script uses `kind` to create a local Kubernetes cluster.
