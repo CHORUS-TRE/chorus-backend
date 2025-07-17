@@ -104,8 +104,10 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 	}
 
 	defer func() {
-		if txErr = tx.Rollback(); txErr != nil {
-			err = fmt.Errorf("%s: %w", txErr.Error(), err)
+		if err != nil {
+			if txErr = tx.Rollback(); txErr != nil {
+				err = fmt.Errorf("%s: %w", txErr.Error(), err)
+			}
 		}
 	}()
 
@@ -133,7 +135,7 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error {
 	const query = `
 		UPDATE users
-		SET (status, username, updatedat) = ($3, concat(username, $4), NOW())
+		SET (status, username, updatedat) = ($3, username || $4::text, NOW())
 		WHERE tenantid = $1 AND id = $2;
 	`
 
@@ -160,8 +162,10 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 	}
 
 	defer func() {
-		if txErr = tx.Rollback(); txErr != nil {
-			err = fmt.Errorf("%s: %w", txErr.Error(), err)
+		if err != nil {
+			if txErr = tx.Rollback(); txErr != nil {
+				err = fmt.Errorf("%s: %w", txErr.Error(), err)
+			}
 		}
 	}()
 

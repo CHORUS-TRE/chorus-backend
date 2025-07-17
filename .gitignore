@@ -25,6 +25,9 @@
 go.work
 go.work.sum
 
+# all junit.xml files
+junit.xml
+
 # env file
 .env
 
