@@ -1,8 +1,8 @@
 package model
 
 // Constants for pagination and sorting
-const DEFAULT_LIMIT = 50 // Default number of items to return if not specified
-const MAX_LIMIT = 1000   // Maximum number of items to return in a single query
+const DEFAULT_LIMIT = 20 // Default number of items to return if not specified
+const MAX_LIMIT = 100    // Maximum number of items to return in a single query
 
 type Sortable interface {
 	IsValidSortType(sortType string) bool
