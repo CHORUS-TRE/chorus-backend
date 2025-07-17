@@ -14,6 +14,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	jsonpatch "github.com/evanphx/json-patch"
 	"go.uber.org/zap"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,6 +25,7 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -417,38 +419,45 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 	}
 
 	for _, node := range nodeList.Items {
-		pod := &corev1.Pod{
+		job := &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "prepull-",
 				Namespace:    "default",
 			},
-			Spec: corev1.PodSpec{
-				NodeName:      node.Name,
-				RestartPolicy: corev1.RestartPolicyNever,
-				Containers: []corev1.Container{
-					{
-						Name:    "puller",
-						Image:   image,
-						Command: []string{"bash", "-c", "exit"},
-					},
-				},
-				ImagePullSecrets: []corev1.LocalObjectReference{
-					{
-						Name: c.cfg.Clients.K8sClient.ImagePullSecretName,
+			Spec: batchv1.JobSpec{
+				TTLSecondsAfterFinished: ptr.To(int32(60)),
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						NodeName:      node.Name,
+						RestartPolicy: corev1.RestartPolicyNever,
+						Containers: []corev1.Container{
+							{
+								Name:    "puller",
+								Image:   image,
+								Command: []string{"bash", "-c", "exit"},
+							},
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{
+								Name: c.cfg.Clients.K8sClient.ImagePullSecretName,
+							},
+						},
 					},
 				},
 			},
+			TypeMeta: v1.TypeMeta{},
+			Status:   batchv1.JobStatus{},
 		}
 
-		_, err := c.k8sClient.CoreV1().Pods("default").Create(context.Background(), pod, v1.CreateOptions{})
+		_, err := c.k8sClient.BatchV1().Jobs("default").Create(context.Background(), job, v1.CreateOptions{})
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "failed to create pod for pre-pulling image",
+			logger.TechLog.Error(context.Background(), "failed to create job for pre-pulling image",
 				zap.String("image", image),
 				zap.String("node", node.Name),
 				zap.Error(err),
 			)
 		} else {
-			logger.TechLog.Info(context.Background(), "successfully created pod for pre-pulling image",
+			logger.TechLog.Info(context.Background(), "successfully created job for pre-pulling image",
 				zap.String("image", image),
 				zap.String("node", node.Name),
 			)
