@@ -103,9 +103,8 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 		return nil, txErr
 	}
 
-	committed := false
 	defer func() {
-		if !committed {
+		if err != nil {
 			if txErr = tx.Rollback(); txErr != nil {
 				err = fmt.Errorf("%s: %w", txErr.Error(), err)
 			}
@@ -130,7 +129,6 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 	if err = tx.Commit(); err != nil {
 		return nil, fmt.Errorf("unable to commit: %w", err)
 	}
-	committed = true
 
 	return updatedUser, err
 }
@@ -138,7 +136,7 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error {
 	const query = `
 		UPDATE users
-		SET (status, username, updatedat) = ($3, concat(username, $4::text), NOW())
+		SET (status, username, updatedat) = ($3, username || $4::text, NOW())
 		WHERE tenantid = $1 AND id = $2;
 	`
 	uuidSuffix := "-" + uuid.Next()
@@ -164,9 +162,8 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 		return nil, txErr
 	}
 
-	committed := false
 	defer func() {
-		if !committed {
+		if err != nil {
 			if txErr = tx.Rollback(); txErr != nil {
 				err = fmt.Errorf("%s: %w", txErr.Error(), err)
 			}
@@ -181,7 +178,6 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 	if err = tx.Commit(); err != nil {
 		return nil, fmt.Errorf("unable to commit: %w", err)
 	}
-	committed = true
 
 	return updatedUser, err
 }

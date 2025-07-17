@@ -17,5 +17,7 @@ func ComponentURL() string {
 		return os.Getenv(COMPONENT_URL)
 	}
 
-	return fmt.Sprintf("%s:%s", Conf().Daemon.HTTP.Host, Conf().Daemon.HTTP.Port)
+	url := fmt.Sprintf("%s:%s", Conf().Daemon.HTTP.Host, Conf().Daemon.HTTP.Port)
+	fmt.Println("Using default component URL:", url)
+	return url
 }
