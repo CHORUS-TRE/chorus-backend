@@ -99,6 +99,10 @@ func PaginationToBusiness(aPagination *chorus.PaginationQuery) model.Pagination 
 }
 
 func PaginationResultFromBusiness(paginationRes *model.PaginationResult) *chorus.PaginationResult {
+	if paginationRes == nil {
+		return nil
+	}
+
 	// If no pagination parameters were actually used (only total count), return nil
 	if paginationRes.Limit == 0 && paginationRes.Offset == 0 &&
 		paginationRes.Sort.SortType == "" && paginationRes.Sort.SortOrder == "" {
