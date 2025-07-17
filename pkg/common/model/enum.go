@@ -1,5 +1,13 @@
 package model
 
+// Constants for pagination and sorting
+const DEFAULT_LIMIT = 50 // Default number of items to return if not specified
+const MAX_LIMIT = 1000   // Maximum number of items to return in a single query
+
+type Sortable interface {
+	IsValidSortType(sortType string) bool
+}
+
 type Pagination struct {
 	Offset uint64
 	Limit  uint64
@@ -9,4 +17,11 @@ type Pagination struct {
 type Sort struct {
 	SortOrder string
 	SortType  string
+}
+
+type PaginationResult struct {
+	Total  uint64
+	Offset uint64
+	Limit  uint64
+	Sort   Sort
 }
