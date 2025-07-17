@@ -13,12 +13,13 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
 type Userer interface {
-	ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, error)
+	ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
 	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
@@ -35,7 +36,7 @@ type Userer interface {
 }
 
 type UserStore interface {
-	ListUsers(ctx context.Context, tenantID uint64) ([]*model.User, error)
+	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
@@ -81,12 +82,12 @@ func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret
 	}
 }
 
-func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, error) {
-	users, err := u.store.ListUsers(ctx, req.TenantID)
+func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
+	users, pagination, err := u.store.ListUsers(ctx, req.TenantID, req.Pagination)
 	if err != nil {
-		return nil, fmt.Errorf("unable to query users: %w", err)
+		return nil, nil, fmt.Errorf("unable to query users: %w", err)
 	}
-	return users, nil
+	return users, pagination, nil
 }
 
 func (u *UserService) GetUser(ctx context.Context, req GetUserReq) (*model.User, error) {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
@@ -26,23 +27,23 @@ func Logging(logger *logger.ContextLogger) func(service.Userer) service.Userer {
 	}
 }
 
-func (c userServiceLogging) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, error) {
+func (c userServiceLogging) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListUsers(ctx, req)
+	users, paginationRes, err := c.next.ListUsers(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get users: %w", err)
+		return nil, nil, fmt.Errorf("unable to get users: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
-		zap.Int("num_users", len(res)),
+		zap.Int("num_users", len(users)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return users, paginationRes, nil
 }
 
 func (c userServiceLogging) GetUser(ctx context.Context, req service.GetUserReq) (*model.User, error) {
