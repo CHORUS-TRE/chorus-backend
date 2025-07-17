@@ -68,11 +68,10 @@ func (u *AppService) UpdateApp(ctx context.Context, app *model.App) error {
 		return fmt.Errorf("unable to update app %v: %w", app.ID, err)
 	}
 
-	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
-	err := u.client.PrePullImageOnAllNodes(dockerImage)
-	if err != nil {
-		return fmt.Errorf("unable to pre-pull image %v: %w", dockerImage, err)
-	}
+	// Pre-pull the image asynchronously
+	go func() {
+		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
+	}()
 
 	return nil
 }
@@ -83,11 +82,15 @@ func (u *AppService) CreateApp(ctx context.Context, app *model.App) (uint64, err
 		return 0, fmt.Errorf("unable to create app %v: %w", app.Name, err)
 	}
 
-	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
-	err = u.client.PrePullImageOnAllNodes(dockerImage)
-	if err != nil {
-		return 0, fmt.Errorf("unable to pre-pull image %v: %w", dockerImage, err)
-	}
+	// Pre-pull the image asynchronously
+	go func() {
+		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
+	}()
 
 	return id, nil
+}
+
+// dockerImageToString constructs the full Docker image name
+func dockerImageToString(app *model.App) string {
+	return app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
 }
