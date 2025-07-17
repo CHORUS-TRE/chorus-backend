@@ -396,15 +396,24 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 	return port.Local, stopChan, nil
 }
 
-func (c *client) PrePullImageOnAllNodes(image string) error {
+func (c *client) PrePullImageOnAllNodes(image string) {
 	err := c.syncImagePullSecret("default")
 	if err != nil {
-		return fmt.Errorf("failed to sync image pull secret: %w", err)
+		logger.TechLog.Error(context.Background(), "failed to sync image pull secret",
+			zap.String("image", image),
+			zap.Error(err),
+		)
+		return
 	}
 
 	nodeList, err := c.k8sClient.CoreV1().Nodes().List(context.Background(), v1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to list nodes: %w", err)
+		logger.TechLog.Error(context.Background(), "failed to list nodes while pre-pulling image",
+			zap.String("image", image),
+			zap.Error(err),
+		)
+
+		return
 	}
 
 	for _, node := range nodeList.Items {
@@ -433,9 +442,16 @@ func (c *client) PrePullImageOnAllNodes(image string) error {
 
 		_, err := c.k8sClient.CoreV1().Pods("default").Create(context.Background(), pod, v1.CreateOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to create pod on node %s: %w", node.Name, err)
+			logger.TechLog.Error(context.Background(), "failed to create pod for pre-pulling image",
+				zap.String("image", image),
+				zap.String("node", node.Name),
+				zap.Error(err),
+			)
+		} else {
+			logger.TechLog.Info(context.Background(), "successfully created pod for pre-pulling image",
+				zap.String("image", image),
+				zap.String("node", node.Name),
+			)
 		}
 	}
-
-	return nil
 }
