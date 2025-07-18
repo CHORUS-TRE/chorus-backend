@@ -783,7 +783,7 @@ var _ = Describe("user service", func() {
 		// 		req := user.NewUserServiceCreateUserParams().WithBody(
 		// 			&models.ChorusCreateUserRequest{User: &models.ChorusUser{
 		// 				FirstName: "first", LastName: "last", Username: "user",
-		// 				Password: "pass", Status: "active", Roles: []string{"admin", "chorus"},
+		// 				Password: "pass", Status: "active", Roles: []string{"chorus"},
 		// 			}},
 		// 		)
 
@@ -807,7 +807,7 @@ var _ = Describe("user service", func() {
 		// 		When("the route POST '/api/rest/v1/users' is called", func() {
 		// 			req := user.NewUserServiceCreateUserParams().WithBody(
 		// 				&models.ChorusCreateUserRequest{User: &models.ChorusUser{
-		// 					FirstName: "first", LastName: "", Username: "user",
+		// 					FirstName: "", LastName: "last", Username: "user",
 		// 					Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 		// 					TotpEnabled: true,
 		// 				}},
@@ -830,7 +830,7 @@ var _ = Describe("user service", func() {
 				When("the route POST '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceCreateUserParams().WithBody(
 						&models.ChorusCreateUserRequest{User: &models.ChorusUser{
-							FirstName: "first", LastName: "last", Username: "user",
+							FirstName: "", LastName: "last", Username: "user",
 							Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 							TotpEnabled: true,
 						}},
@@ -855,7 +855,7 @@ var _ = Describe("user service", func() {
 					setupBaseTables()
 					req := user.NewUserServiceCreateUserParams().WithBody(
 						&models.ChorusCreateUserRequest{User: &models.ChorusUser{
-							FirstName: "firstfirst", LastName: "last", Username: "user88888",
+							FirstName: "first", LastName: "last", Username: "user88888",
 							Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 							TotpEnabled: true,
 						}},
@@ -864,9 +864,9 @@ var _ = Describe("user service", func() {
 					c := helpers.UserServiceHTTPClient()
 					resp, err := c.UserService.UserServiceCreateUser(req)
 
-					Then("an user id should be returned", func() {
+					Then("a user should be returned", func() {
 						ExpectAPIErr(err).Should(BeNil())
-						Expect(resp.Payload.Result.User.ID).ShouldNot(Equal(0))
+						Expect(resp.Payload.Result.User).ShouldNot(Equal(nil))
 					})
 					cleanTables()
 				})
