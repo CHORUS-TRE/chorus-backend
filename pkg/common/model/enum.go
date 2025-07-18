@@ -20,8 +20,8 @@ type Sort struct {
 }
 
 type PaginationResult struct {
-	Total  uint64
-	Offset uint64
-	Limit  uint64
-	Sort   Sort
+	Total  uint64 `validate:"required"`
+	Offset uint64 `validate:"omitempty,min=0"`
+	Limit  uint64 `validate:"omitempty,min=0,max=100"`
+	Sort   Sort   `validate:"omitempty"`
 }
