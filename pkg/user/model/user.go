@@ -62,7 +62,6 @@ func (User) IsValidSortType(sortType string) bool {
 		"username":  true,
 		"status":    true,
 		"createdat": true,
-		"updatedat": false,
 	}
 
 	return validSortTypes[sortType]
