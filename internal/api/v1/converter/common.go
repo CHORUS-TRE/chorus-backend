@@ -97,3 +97,22 @@ func PaginationToBusiness(aPagination *chorus.PaginationQuery) model.Pagination 
 		Sort:   SortToBusiness(aPagination.Sort),
 	}
 }
+
+func PaginationResultFromBusiness(paginationRes *model.PaginationResult) *chorus.PaginationResult {
+	if paginationRes == nil {
+		return nil
+	}
+
+	// If no pagination parameters were actually used (only total count), return nil
+	if paginationRes.Limit == 0 && paginationRes.Offset == 0 &&
+		paginationRes.Sort.SortType == "" && paginationRes.Sort.SortOrder == "" {
+		return nil
+	}
+
+	return &chorus.PaginationResult{
+		Total:  uint32(paginationRes.Total),
+		Limit:  uint32(paginationRes.Limit),
+		Offset: uint32(paginationRes.Offset),
+		Sort:   SortFromBusiness(paginationRes.Sort),
+	}
+}

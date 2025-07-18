@@ -8,6 +8,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
@@ -23,26 +24,50 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 }
 
 // ListUsers queries all stocked users that are not 'deleted'.
-func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
-	const query = `
-SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
-FROM users
-WHERE tenantid = $1 AND status != 'deleted';
-`
-	var users []*model.User
-	if err := s.db.SelectContext(ctx, &users, query, tenantID); err != nil {
-		return nil, err
+func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) (users []*model.User, paginationRes *common.PaginationResult, err error) {
+	// Get total count query
+	countQuery := `SELECT COUNT(*) FROM users WHERE tenantid = $1 AND status != 'deleted'`
+	var totalCount int64
+	if err = s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+		return nil, nil, err
+	}
+
+	// Get users query
+	query := `
+		SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
+		FROM users
+		WHERE tenantid = $1 AND status != 'deleted'
+	`
+
+	// Add pagination
+	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.User{})
+	query += clause
+
+	// Build pagination result
+	paginationRes = &common.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	args := []interface{}{tenantID}
+	if err := s.db.SelectContext(ctx, &users, query, args...); err != nil {
+		return nil, nil, err
 	}
 
 	for _, u := range users {
 		roles, err := s.getUserRoles(ctx, u.ID)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		u.Roles = roles[:]
+		u.Roles = roles
 	}
 
-	return users, nil
+	return users, paginationRes, nil
 }
 
 func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error) {

@@ -53,3 +53,16 @@ func ToUserStatus(status string) (UserStatus, error) {
 		return "", errors.New("unexpected UserStatus: " + status)
 	}
 }
+
+func (User) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":        true,
+		"firstname": true,
+		"lastname":  true,
+		"username":  true,
+		"status":    true,
+		"createdat": true,
+	}
+
+	return validSortTypes[sortType]
+}

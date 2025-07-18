@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
@@ -35,9 +36,9 @@ func (v validation) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return v.next.GetRoles(ctx)
 }
 
-func (v validation) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, error) {
+func (v validation) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
 	if err := v.validate.Struct(req); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return v.next.ListUsers(ctx, req)
 }
