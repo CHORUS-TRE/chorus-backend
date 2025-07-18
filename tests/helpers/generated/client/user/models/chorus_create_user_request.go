@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusUpdateUserResult chorus update user result
+// ChorusCreateUserRequest Create Users
 //
-// swagger:model chorusUpdateUserResult
-type ChorusUpdateUserResult struct {
+// swagger:model chorusCreateUserRequest
+type ChorusCreateUserRequest struct {
 
 	// user
 	User *ChorusUser `json:"user,omitempty"`
 }
 
-// Validate validates this chorus update user result
-func (m *ChorusUpdateUserResult) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus create user request
+func (m *ChorusCreateUserRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateUser(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusUpdateUserResult) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusUpdateUserResult) validateUser(formats strfmt.Registry) error {
+func (m *ChorusCreateUserRequest) validateUser(formats strfmt.Registry) error {
 	if swag.IsZero(m.User) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusUpdateUserResult) validateUser(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this chorus update user result based on the context it is used
-func (m *ChorusUpdateUserResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus create user request based on the context it is used
+func (m *ChorusCreateUserRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateUser(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusUpdateUserResult) ContextValidate(ctx context.Context, formats st
 	return nil
 }
 
-func (m *ChorusUpdateUserResult) contextValidateUser(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusCreateUserRequest) contextValidateUser(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.User != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusUpdateUserResult) contextValidateUser(ctx context.Context, format
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusUpdateUserResult) MarshalBinary() ([]byte, error) {
+func (m *ChorusCreateUserRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusUpdateUserResult) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusUpdateUserResult) UnmarshalBinary(b []byte) error {
-	var res ChorusUpdateUserResult
+func (m *ChorusCreateUserRequest) UnmarshalBinary(b []byte) error {
+	var res ChorusCreateUserRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

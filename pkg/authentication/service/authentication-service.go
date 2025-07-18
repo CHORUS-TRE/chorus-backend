@@ -40,7 +40,7 @@ type Authenticator interface {
 
 type Userer interface {
 	GetUser(ctx context.Context, req userService.GetUserReq) (*userModel.User, error)
-	CreateUser(ctx context.Context, req userService.CreateUserReq) (uint64, error)
+	CreateUser(ctx context.Context, req userService.CreateUserReq) (*userModel.User, error)
 	GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*userModel.TotpRecoveryCode, error)
 	DeleteTotpRecoveryCode(ctx context.Context, req *userService.DeleteTotpRecoveryCodeReq) error
 }
