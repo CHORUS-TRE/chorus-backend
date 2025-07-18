@@ -16,7 +16,7 @@ type Pagination struct {
 
 type Sort struct {
 	SortOrder string `validate:"omitempty,oneof=asc desc ASC DESC"`
-	SortType  string `validate:"omitempty,generalstring"` // General string validation for sort type
+	SortType  string `validate:"omitempty,safestring"` // General string validation for sort type
 }
 
 type PaginationResult struct {
