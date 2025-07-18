@@ -9,14 +9,14 @@ type Sortable interface {
 }
 
 type Pagination struct {
-	Offset uint64
-	Limit  uint64
-	Sort   Sort
+	Offset uint64 `validate:"omitempty,min=0"`
+	Limit  uint64 `validate:"omitempty,min=0,max=100"`
+	Sort   Sort   `validate:"omitempty"`
 }
 
 type Sort struct {
-	SortOrder string
-	SortType  string
+	SortOrder string `validate:"omitempty,oneof=asc desc ASC DESC"`
+	SortType  string `validate:"omitempty,generalstring"` // General string validation for sort type
 }
 
 type PaginationResult struct {
