@@ -55,36 +55,35 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 	return nil
 }
 
-func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
-	if err := s.store.UpdateAppInstance(ctx, appInstance.TenantID, appInstance); err != nil {
-		return fmt.Errorf("unable to update appInstance %v: %w", appInstance.ID, err)
+func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
+	updatedAppInstance, err := s.store.UpdateAppInstance(ctx, appInstance.TenantID, appInstance)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update appInstance %v: %w", appInstance.ID, err)
 	}
 
-	return nil
+	return updatedAppInstance, nil
 }
 
-func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
-	id, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
+func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
+	newAppInstance, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
+		return nil, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
 	}
 
-	appInstance.ID = id
-
-	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
-	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
+	wsName := s.getWorkspaceName(newAppInstance.WorkspaceID)
+	wbName := s.getWorkbenchName(newAppInstance.WorkbenchID)
 
 	clientApp, err := s.getK8sAppInstance(appInstance.TenantID, appInstance.AppID, appInstance.ID)
 	if err != nil {
-		return 0, fmt.Errorf("unable to get app %v: %w", id, err)
+		return nil, fmt.Errorf("unable to get app %v: %w", newAppInstance.ID, err)
 	}
 
 	err = s.client.CreateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create app instance %v: %w", id, err)
+		return nil, fmt.Errorf("unable to create app instance %v: %w", newAppInstance.ID, err)
 	}
 
-	return id, nil
+	return newAppInstance, nil
 }
 
 func (s *WorkbenchService) getK8sAppInstance(tenantID, appID, appInstanceID uint64) (k8s.AppInstance, error) {

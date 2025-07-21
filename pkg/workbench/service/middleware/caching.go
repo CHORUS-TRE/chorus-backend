@@ -110,10 +110,10 @@ func (c *Caching) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID
 	return c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 }
 
-func (c *Caching) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+func (c *Caching) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	return c.next.UpdateAppInstance(ctx, appInstance)
 }
 
-func (c *Caching) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+func (c *Caching) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	return c.next.CreateAppInstance(ctx, appInstance)
 }

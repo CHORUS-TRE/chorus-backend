@@ -204,41 +204,41 @@ func (c workbenchServiceLogging) DeleteAppInstance(ctx context.Context, tenantID
 	return nil
 }
 
-func (c workbenchServiceLogging) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+func (c workbenchServiceLogging) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	now := time.Now()
 
-	err := c.next.UpdateAppInstance(ctx, appInstance)
+	updatedAppInstance, err := c.next.UpdateAppInstance(ctx, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithAppInstanceIDField(appInstance.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update appInstance: %w", err)
+		return nil, fmt.Errorf("unable to update appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithAppInstanceIDField(appInstance.ID),
+		logger.WithAppInstanceIDField(updatedAppInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedAppInstance, nil
 }
 
-func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	now := time.Now()
 
-	appInstanceId, err := c.next.CreateAppInstance(ctx, appInstance)
+	newAppInstance, err := c.next.CreateAppInstance(ctx, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return appInstanceId, fmt.Errorf("unable to create appInstance: %w", err)
+		return nil, fmt.Errorf("unable to create appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithAppInstanceIDField(appInstanceId),
+		logger.WithAppInstanceIDField(newAppInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return appInstanceId, nil
+	return newAppInstance, nil
 }

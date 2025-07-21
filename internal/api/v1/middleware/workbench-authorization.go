@@ -48,7 +48,7 @@ func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req 
 	return c.next.GetWorkbench(ctx, req)
 }
 
-func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.CreateWorkbenchReply, error) {
+func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, req *chorus.CreateWorkbenchRequest) (*chorus.CreateWorkbenchReply, error) {
 	// TODO check for permission
 
 	err := c.IsAuthenticatedAndAuthorized(ctx)

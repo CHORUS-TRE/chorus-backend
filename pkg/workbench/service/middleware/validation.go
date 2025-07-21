@@ -72,16 +72,16 @@ func (v validation) DeleteAppInstance(ctx context.Context, tenantID, appInstance
 	return v.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 }
 
-func (v validation) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+func (v validation) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	if err := v.validate.Struct(appInstance); err != nil {
 		return v.next.UpdateAppInstance(ctx, appInstance)
 	}
 	return v.next.UpdateAppInstance(ctx, appInstance)
 }
 
-func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	if err := v.validate.Struct(appInstance); err != nil {
-		return 0, err
+		return nil, err
 	}
 	return v.next.CreateAppInstance(ctx, appInstance)
 }

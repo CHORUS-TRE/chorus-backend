@@ -65,11 +65,17 @@ func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *choru
 
 	appInstance.TenantID = tenantID
 
-	err = c.workbencher.UpdateAppInstance(ctx, appInstance)
+	updatedAppInstance, err := c.workbencher.UpdateAppInstance(ctx, appInstance)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateAppInstance': %v", err.Error())
 	}
-	return &chorus.UpdateAppInstanceReply{Result: &chorus.UpdateAppInstanceResult{}}, nil
+
+	updatedAppInstanceProto, err := converter.AppInstanceFromBusiness(updatedAppInstance)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateAppInstanceReply{Result: &chorus.UpdateAppInstanceResult{AppInstance: updatedAppInstanceProto}}, nil
 }
 
 func (c AppInstanceController) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
@@ -115,11 +121,11 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 		}
 		appInstances = append(appInstances, appInstance)
 	}
-	return &chorus.ListAppInstancesReply{Result: appInstances}, nil
+	return &chorus.ListAppInstancesReply{Result: &chorus.ListAppInstancesResult{AppInstances: appInstances}}, nil
 }
 
 // CreateAppInstance extracts the appInstance from the request and passes it to the appInstance service.
-func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
+func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *chorus.CreateAppInstanceRequest) (*chorus.CreateAppInstanceReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -134,7 +140,7 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 		tenantID = 1
 	}
 
-	appInstance, err := converter.AppInstanceToBusiness(req)
+	appInstance, err := converter.AppInstanceToBusiness(req.AppInstance)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -146,5 +152,11 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateAppInstance': %v", err.Error())
 	}
-	return &chorus.CreateAppInstanceReply{Result: &chorus.CreateAppInstanceResult{Id: res}}, nil
+
+	appInstanceProto, err := converter.AppInstanceFromBusiness(res)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateAppInstanceReply{Result: &chorus.CreateAppInstanceResult{AppInstance: appInstanceProto}}, nil
 }

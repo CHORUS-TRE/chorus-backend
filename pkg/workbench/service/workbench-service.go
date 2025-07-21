@@ -42,8 +42,8 @@ type Workbencher interface {
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
-	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error)
-	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error
+	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
+	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
 }
 
@@ -59,8 +59,8 @@ type WorkbenchStore interface {
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
-	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
-	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
+	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
+	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
 	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
 	DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error

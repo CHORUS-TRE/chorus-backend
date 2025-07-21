@@ -271,24 +271,24 @@ func (c workbenchStorageLogging) DeleteAppInstances(ctx context.Context, tenantI
 	return nil
 }
 
-func (c workbenchStorageLogging) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error {
+func (c workbenchStorageLogging) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 
-	err := c.next.UpdateAppInstance(ctx, tenantID, appInstance)
+	updatedAppInstance, err := c.next.UpdateAppInstance(ctx, tenantID, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, "request completed",
 			logger.WithAppInstanceIDField(appInstance.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 	c.logger.Debug(ctx, "request completed",
 		logger.WithAppInstanceIDField(appInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedAppInstance, nil
 }
 
 func (c workbenchStorageLogging) UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error {
@@ -309,23 +309,23 @@ func (c workbenchStorageLogging) UpdateAppInstances(ctx context.Context, tenantI
 	return nil
 }
 
-func (c workbenchStorageLogging) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error) {
+func (c workbenchStorageLogging) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	appInstanceId, err := c.next.CreateAppInstance(ctx, tenantID, appInstance)
+	newAppInstance, err := c.next.CreateAppInstance(ctx, tenantID, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return 0, err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
-		logger.WithAppInstanceIDField(appInstanceId),
+		logger.WithAppInstanceIDField(newAppInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return appInstanceId, nil
+	return newAppInstance, nil
 }
