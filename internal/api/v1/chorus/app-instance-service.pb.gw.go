@@ -107,7 +107,7 @@ func local_request_AppInstanceService_ListAppInstances_0(ctx context.Context, ma
 
 func request_AppInstanceService_CreateAppInstance_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstanceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq AppInstance
+		protoReq CreateAppInstanceRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -119,7 +119,7 @@ func request_AppInstanceService_CreateAppInstance_0(ctx context.Context, marshal
 
 func local_request_AppInstanceService_CreateAppInstance_0(ctx context.Context, marshaler runtime.Marshaler, server AppInstanceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq AppInstance
+		protoReq CreateAppInstanceRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

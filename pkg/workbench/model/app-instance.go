@@ -15,9 +15,9 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
-	K8sState  K8sAppInstanceState
-	K8sStatus K8sAppInstanceStatus
 	Status    AppInstanceStatus
+	K8sStatus K8sAppInstanceStatus
+	K8sState  K8sAppInstanceState
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
