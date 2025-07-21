@@ -7,7 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
-	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 
 	"github.com/coocood/freecache"
 )
@@ -33,14 +33,15 @@ type Caching struct {
 	next  service.Apper
 }
 
-func (c *Caching) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) (reply []*model.App, err error) {
+func (c *Caching) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) (reply []*model.App, paginationRes *common.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
 	reply = []*model.App{}
+	paginationRes = &common.PaginationResult{}
 
 	if ok := entry.Get(ctx, &reply); !ok {
-		reply, err = c.next.ListApps(ctx, tenantID, pagination)
+		reply, paginationRes, err = c.next.ListApps(ctx, tenantID, pagination)
 		if err == nil {
-			entry.Set(ctx, defaultCacheExpiration, reply)
+			entry.Set(ctx, defaultCacheExpiration, reply, paginationRes)
 		}
 	}
 

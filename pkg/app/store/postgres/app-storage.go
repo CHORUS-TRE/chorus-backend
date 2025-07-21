@@ -9,7 +9,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
-	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common_storage "github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 )
 
 // AppStorage is the handler through which a PostgresDB backend can be queried.
@@ -25,7 +26,7 @@ func NewAppStorage(db *sqlx.DB) *AppStorage {
 func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error) {
 	const query = `
 		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat
-			FROM apps
+		FROM apps
 		WHERE tenantid = $1 AND id = $2;
 	`
 
@@ -37,18 +38,42 @@ func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) 
 	return &app, nil
 }
 
-func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
-	const query = `
-SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat
-	FROM apps
-WHERE tenantid = $1 AND status != 'deleted';
-`
-	var apps []*model.App
-	if err := s.db.SelectContext(ctx, &apps, query, tenantID); err != nil {
-		return nil, err
+func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error) {
+	// Get total count query
+	countQuery := `SELECT COUNT(*) FROM apps WHERE tenantid = $1 AND status != 'deleted';`
+	var totalCount int
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+		return nil, nil, err
 	}
 
-	return apps, nil
+	// Get apps query
+	query := `
+		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat
+		FROM apps
+		WHERE tenantid = $1 AND status != 'deleted'
+	`
+
+	// Add pagination
+	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.App{})
+	query += clause
+
+	// Build pagination result
+	paginationRes := &common.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	var apps []*model.App
+	if err := s.db.SelectContext(ctx, &apps, query, tenantID); err != nil {
+		return nil, nil, err
+	}
+
+	return apps, paginationRes, nil
 }
 
 // CreateApp saves the provided app object in the database 'apps' table.

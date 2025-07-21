@@ -107,7 +107,7 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.app.ListApps(ctx, tenantID, pagination)
+	res, paginationRes, err := c.app.ListApps(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListApps': %v", err.Error())
 	}
@@ -120,7 +120,13 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 		}
 		apps = append(apps, app)
 	}
-	return &chorus.ListAppsReply{Result: &chorus.ListAppsResult{Apps: apps}}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
+	}
+
+	return &chorus.ListAppsReply{Result: &chorus.ListAppsResult{Apps: apps}, Pagination: paginationResult}, nil
 }
 
 // CreateApp extracts the app from the request and passes it to the app service.

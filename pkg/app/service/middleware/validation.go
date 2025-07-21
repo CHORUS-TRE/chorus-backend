@@ -5,7 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
-	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 
 	val "github.com/go-playground/validator/v10"
 )
@@ -24,9 +24,9 @@ func Validation(validate *val.Validate) func(service.Apper) service.Apper {
 	}
 }
 
-func (v validation) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
+func (v validation) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return v.next.ListApps(ctx, tenantID, pagination)
 }

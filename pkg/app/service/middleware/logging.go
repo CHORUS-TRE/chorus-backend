@@ -10,7 +10,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
-	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 )
 
 type appServiceLogging struct {
@@ -27,23 +27,23 @@ func Logging(logger *logger.ContextLogger) func(service.Apper) service.Apper {
 	}
 }
 
-func (c appServiceLogging) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
+func (c appServiceLogging) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListApps(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListApps(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get apps: %w", err)
+		return nil, nil, fmt.Errorf("unable to get apps: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_apps", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c appServiceLogging) GetApp(ctx context.Context, tenantID, appID uint64) (*model.App, error) {
