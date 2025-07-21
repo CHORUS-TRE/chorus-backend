@@ -11,25 +11,24 @@ message App {
     uint64 userId = 3;
     
     string name = 4;
-    string description = 5;
-    string status = 6;
+    string prettyName = 5;
+    string description = 6;
+    string status = 7;
     
-    string dockerImageRegistry = 7;
-    string dockerImageName = 8;
-    string dockerImageTag = 9;
+    string dockerImageRegistry = 8;
+    string dockerImageName = 9;
+    string dockerImageTag = 10;
 
-    string shmSize = 13;
-    string kioskConfigURL = 14;
-    string maxCPU = 15;
-    string minCPU = 16;
-    string maxMemory = 17;
-    string minMemory = 18;
-    string maxEphemeralStorage = 20;
-    string minEphemeralStorage = 21;
+    string shmSize = 11;
+    string maxCPU = 12;
+    string minCPU = 13;
+    string maxMemory = 14;
+    string minMemory = 15;
+    string maxEphemeralStorage = 16;
+    string minEphemeralStorage = 17;
+    string kioskConfigURL = 18;
     string iconURL = 19;
 
-    google.protobuf.Timestamp createdAt = 10;
-    google.protobuf.Timestamp updatedAt = 11;
-
-    string prettyName = 12;
+    google.protobuf.Timestamp createdAt = 20;
+    google.protobuf.Timestamp updatedAt = 21;
 }
