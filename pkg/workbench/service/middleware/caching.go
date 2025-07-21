@@ -70,11 +70,11 @@ func (c *Caching) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uin
 	return c.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
-func (c *Caching) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error {
+func (c *Caching) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	return c.next.UpdateWorkbench(ctx, workbench)
 }
 
-func (c *Caching) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
+func (c *Caching) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	return c.next.CreateWorkbench(ctx, workbench)
 }
 

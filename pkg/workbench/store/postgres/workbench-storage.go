@@ -145,45 +145,40 @@ WHERE workbenchs.id = batch_data.id
 }
 
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
-func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
+func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchQuery = `
-INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, k8sstatus, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) RETURNING id;
+		INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, k8sstatus, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) 
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
-	var id uint64
-	err := s.db.GetContext(ctx, &id, workbenchQuery,
+	var newWorkbench model.Workbench
+	err := s.db.GetContext(ctx, &newWorkbench, workbenchQuery,
 		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.InitialResolutionWidth, workbench.InitialResolutionHeight, workbench.Status, workbench.K8sStatus,
 	)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return id, nil
+	return &newWorkbench, nil
 }
 
-func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (err error) {
+func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchUpdateQuery = `
 		UPDATE workbenchs
 		SET status = $3, k8sstatus= $4, description = $5, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
-	// Update User
-	rows, err := s.db.ExecContext(ctx, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.K8sStatus, workbench.Description)
+	// Update workbench
+	var updatedWorkbench model.Workbench
+	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.K8sStatus, workbench.Description)
 	if err != nil {
-		return err
-	}
-	affected, err := rows.RowsAffected()
-	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if affected == 0 {
-		return database.ErrNoRowsUpdated
-	}
-
-	return err
+	return &updatedWorkbench, nil
 }
 
 func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error {
@@ -240,50 +235,45 @@ WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
 }
 
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.
-func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error) {
+func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceQuery = `
-INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING id;
+		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
-	var id uint64
-	err := s.db.GetContext(ctx, &id, appInstanceQuery,
+	var newAppInstance model.AppInstance
+	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
 		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, appInstance.Status, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight,
 	)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return id, nil
+	return &newAppInstance, nil
 }
 
-func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (err error) {
+func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceUpdateQuery = `
 		UPDATE app_instances
 		SET status = $3, k8sstate = $4, k8sstatus = $5, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
-	rows, err := s.db.ExecContext(ctx, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus)
+	var updatedAppInstance model.AppInstance
+	err := s.db.GetContext(ctx, &updatedAppInstance, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus)
 	if err != nil {
-		return err
-	}
-	affected, err := rows.RowsAffected()
-	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if affected == 0 {
-		return database.ErrNoRowsUpdated
-	}
-
-	return err
+	return &updatedAppInstance, nil
 }
 
 func (s *WorkbenchStorage) UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) (err error) {
 	var errAcc []error
 	for _, appInstance := range appInstances {
-		if err := s.UpdateAppInstance(ctx, tenantID, appInstance); err != nil {
+		if _, err := s.UpdateAppInstance(ctx, tenantID, appInstance); err != nil {
 			errAcc = append(errAcc, fmt.Errorf("failed to update appInstance %d: %w", appInstance.ID, err))
 		}
 	}

@@ -65,11 +65,17 @@ func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.Up
 
 	workbench.TenantID = tenantID
 
-	err = c.workbench.UpdateWorkbench(ctx, workbench)
+	updatedWorkbench, err := c.workbench.UpdateWorkbench(ctx, workbench)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkbench': %v", err.Error())
 	}
-	return &chorus.UpdateWorkbenchReply{Result: &chorus.UpdateWorkbenchResult{}}, nil
+
+	updatedWorkbenchProto, err := converter.WorkbenchFromBusiness(updatedWorkbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateWorkbenchReply{Result: &chorus.UpdateWorkbenchResult{Workbench: updatedWorkbenchProto}}, nil
 }
 
 func (c WorkbenchController) DeleteWorkbench(ctx context.Context, req *chorus.DeleteWorkbenchRequest) (*chorus.DeleteWorkbenchReply, error) {
@@ -115,11 +121,11 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 		}
 		workbenchs = append(workbenchs, workbench)
 	}
-	return &chorus.ListWorkbenchsReply{Result: workbenchs}, nil
+	return &chorus.ListWorkbenchsReply{Result: &chorus.ListWorkbenchsResult{Workbenchs: workbenchs}}, nil
 }
 
 // CreateWorkbench extracts the workbench from the request and passes it to the workbench service.
-func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.CreateWorkbenchReply, error) {
+func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.CreateWorkbenchRequest) (*chorus.CreateWorkbenchReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -134,7 +140,7 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Wo
 		tenantID = 1
 	}
 
-	workbench, err := converter.WorkbenchToBusiness(req)
+	workbench, err := converter.WorkbenchToBusiness(req.Workbench)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -142,9 +148,15 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Wo
 	workbench.TenantID = tenantID
 	workbench.UserID = userID
 
-	res, err := c.workbench.CreateWorkbench(ctx, workbench)
+	newWorkbench, err := c.workbench.CreateWorkbench(ctx, workbench)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to call 'CreateWorkbench': %v", err.Error())
 	}
-	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Id: res}}, nil
+
+	newWorkbenchProto, err := converter.WorkbenchFromBusiness(newWorkbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Workbench: newWorkbenchProto}}, nil
 }

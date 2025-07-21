@@ -106,43 +106,43 @@ func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
-func (c workbenchServiceLogging) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error {
+func (c workbenchServiceLogging) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	now := time.Now()
 
-	err := c.next.UpdateWorkbench(ctx, workbench)
+	updatedWorkbench, err := c.next.UpdateWorkbench(ctx, workbench)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithWorkbenchIDField(workbench.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update workbench: %w", err)
+		return nil, fmt.Errorf("unable to update workbench: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithWorkbenchIDField(workbench.ID),
+		logger.WithWorkbenchIDField(updatedWorkbench.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedWorkbench, nil
 }
 
-func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
+func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	now := time.Now()
 
-	workbenchId, err := c.next.CreateWorkbench(ctx, workbench)
+	newWorkbench, err := c.next.CreateWorkbench(ctx, workbench)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return workbenchId, fmt.Errorf("unable to create workbench: %w", err)
+		return nil, fmt.Errorf("unable to create workbench: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithWorkbenchIDField(workbenchId),
+		logger.WithWorkbenchIDField(newWorkbench.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return workbenchId, nil
+	return newWorkbench, nil
 }
 
 func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
