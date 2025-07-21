@@ -107,7 +107,7 @@ func local_request_WorkbenchService_ListWorkbenchs_0(ctx context.Context, marsha
 
 func request_WorkbenchService_CreateWorkbench_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq Workbench
+		protoReq CreateWorkbenchRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -119,7 +119,7 @@ func request_WorkbenchService_CreateWorkbench_0(ctx context.Context, marshaler r
 
 func local_request_WorkbenchService_CreateWorkbench_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq Workbench
+		protoReq CreateWorkbenchRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

@@ -28,46 +28,52 @@ message ListWorkbenchsRequest {
     PaginationQuery pagination = 1;
 }
 message ListWorkbenchsReply {
-    repeated Workbench result = 1;
+    ListWorkbenchsResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListWorkbenchsResult {
+    repeated Workbench workbenchs = 1;
 }
 
 message GetWorkbenchRequest {
     uint64 id = 1;
 }
-
-message GetWorkbenchResult {
-    Workbench workbench = 1;
-}
 message GetWorkbenchReply {
     GetWorkbenchResult result = 1;
 }
+message GetWorkbenchResult {
+    Workbench workbench = 1;
+}
 
+message CreateWorkbenchRequest {
+    Workbench workbench = 1;
+}
 message CreateWorkbenchReply {
     CreateWorkbenchResult result = 1;
 }
 message CreateWorkbenchResult {
-    uint64 id = 1;
+    Workbench workbench = 1;
 }
 
 message UpdateWorkbenchRequest {
     Workbench workbench = 1;
 }
-
-message UpdateWorkbenchResult {}
-
 message UpdateWorkbenchReply {
     UpdateWorkbenchResult result = 1;
 }
+message UpdateWorkbenchResult {
+    Workbench workbench = 1;
+}
+
 
 message DeleteWorkbenchRequest {
     uint64  id = 1;
 }
-
-message DeleteWorkbenchResult {}
-
 message DeleteWorkbenchReply {
     DeleteWorkbenchResult result = 1;
 }
+message DeleteWorkbenchResult {}
+
 
 service WorkbenchService {
     rpc GetWorkbench(GetWorkbenchRequest) returns (GetWorkbenchReply) {
@@ -92,7 +98,7 @@ service WorkbenchService {
         };
     };
 
-    rpc CreateWorkbench(Workbench) returns (CreateWorkbenchReply) {
+    rpc CreateWorkbench(CreateWorkbenchRequest) returns (CreateWorkbenchReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/workbenchs"
             body: "*"

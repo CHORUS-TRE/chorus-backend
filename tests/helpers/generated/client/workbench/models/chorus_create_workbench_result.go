@@ -8,6 +8,7 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -17,17 +18,75 @@ import (
 // swagger:model chorusCreateWorkbenchResult
 type ChorusCreateWorkbenchResult struct {
 
-	// id
-	ID string `json:"id,omitempty"`
+	// workbench
+	Workbench *ChorusWorkbench `json:"workbench,omitempty"`
 }
 
 // Validate validates this chorus create workbench result
 func (m *ChorusCreateWorkbenchResult) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateWorkbench(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this chorus create workbench result based on context it is used
+func (m *ChorusCreateWorkbenchResult) validateWorkbench(formats strfmt.Registry) error {
+	if swag.IsZero(m.Workbench) { // not required
+		return nil
+	}
+
+	if m.Workbench != nil {
+		if err := m.Workbench.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("workbench")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("workbench")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this chorus create workbench result based on the context it is used
 func (m *ChorusCreateWorkbenchResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateWorkbench(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusCreateWorkbenchResult) contextValidateWorkbench(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Workbench != nil {
+
+		if swag.IsZero(m.Workbench) { // not required
+			return nil
+		}
+
+		if err := m.Workbench.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("workbench")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("workbench")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -1524,7 +1524,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusWorkbench'
+            $ref: '#/definitions/chorusCreateWorkbenchRequest'
       tags:
         - WorkbenchService
     put:
@@ -2062,12 +2062,16 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateWorkbenchResult'
+  chorusCreateWorkbenchRequest:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusCreateWorkbenchResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusCreateWorkspaceReply:
     type: object
     properties:
@@ -2263,6 +2267,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListWorkbenchsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListWorkbenchsResult:
+    type: object
+    properties:
+      workbenchs:
         type: array
         items:
           type: object
@@ -2453,6 +2464,9 @@ definitions:
         $ref: '#/definitions/chorusWorkbench'
   chorusUpdateWorkbenchResult:
     type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusUpdateWorkspaceReply:
     type: object
     properties:
@@ -2528,16 +2542,6 @@ definitions:
       initialResolutionHeight:
         type: integer
         format: int64
-      appInsanceIds:
-        type: array
-        items:
-          type: string
-          format: uint64
-      appInstances:
-        type: array
-        items:
-          type: string
-          format: uint64
       createdAt:
         type: string
         format: date-time

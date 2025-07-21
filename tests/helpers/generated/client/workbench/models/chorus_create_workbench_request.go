@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusUpdateWorkbenchResult chorus update workbench result
+// ChorusCreateWorkbenchRequest chorus create workbench request
 //
-// swagger:model chorusUpdateWorkbenchResult
-type ChorusUpdateWorkbenchResult struct {
+// swagger:model chorusCreateWorkbenchRequest
+type ChorusCreateWorkbenchRequest struct {
 
 	// workbench
 	Workbench *ChorusWorkbench `json:"workbench,omitempty"`
 }
 
-// Validate validates this chorus update workbench result
-func (m *ChorusUpdateWorkbenchResult) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus create workbench request
+func (m *ChorusCreateWorkbenchRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateWorkbench(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusUpdateWorkbenchResult) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusUpdateWorkbenchResult) validateWorkbench(formats strfmt.Registry) error {
+func (m *ChorusCreateWorkbenchRequest) validateWorkbench(formats strfmt.Registry) error {
 	if swag.IsZero(m.Workbench) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusUpdateWorkbenchResult) validateWorkbench(formats strfmt.Registry)
 	return nil
 }
 
-// ContextValidate validate this chorus update workbench result based on the context it is used
-func (m *ChorusUpdateWorkbenchResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus create workbench request based on the context it is used
+func (m *ChorusCreateWorkbenchRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateWorkbench(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusUpdateWorkbenchResult) ContextValidate(ctx context.Context, forma
 	return nil
 }
 
-func (m *ChorusUpdateWorkbenchResult) contextValidateWorkbench(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusCreateWorkbenchRequest) contextValidateWorkbench(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Workbench != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusUpdateWorkbenchResult) contextValidateWorkbench(ctx context.Conte
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusUpdateWorkbenchResult) MarshalBinary() ([]byte, error) {
+func (m *ChorusCreateWorkbenchRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusUpdateWorkbenchResult) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusUpdateWorkbenchResult) UnmarshalBinary(b []byte) error {
-	var res ChorusUpdateWorkbenchResult
+func (m *ChorusCreateWorkbenchRequest) UnmarshalBinary(b []byte) error {
+	var res ChorusCreateWorkbenchRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

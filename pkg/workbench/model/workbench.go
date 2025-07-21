@@ -16,12 +16,11 @@ type Workbench struct {
 	Name        string
 	ShortName   string
 	Description string
+	Status      WorkbenchStatus
+	K8sStatus   K8sWorkbenchStatus
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
-
-	K8sStatus K8sWorkbenchStatus
-	Status    WorkbenchStatus
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
