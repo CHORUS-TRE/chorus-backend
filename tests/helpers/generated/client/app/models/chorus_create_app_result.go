@@ -8,6 +8,7 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -17,17 +18,75 @@ import (
 // swagger:model chorusCreateAppResult
 type ChorusCreateAppResult struct {
 
-	// id
-	ID string `json:"id,omitempty"`
+	// app
+	App *ChorusApp `json:"app,omitempty"`
 }
 
 // Validate validates this chorus create app result
 func (m *ChorusCreateAppResult) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateApp(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this chorus create app result based on context it is used
+func (m *ChorusCreateAppResult) validateApp(formats strfmt.Registry) error {
+	if swag.IsZero(m.App) { // not required
+		return nil
+	}
+
+	if m.App != nil {
+		if err := m.App.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("app")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("app")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this chorus create app result based on the context it is used
 func (m *ChorusCreateAppResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateApp(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusCreateAppResult) contextValidateApp(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.App != nil {
+
+		if swag.IsZero(m.App) { // not required
+			return nil
+		}
+
+		if err := m.App.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("app")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("app")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

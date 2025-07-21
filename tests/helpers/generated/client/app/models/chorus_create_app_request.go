@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusUpdateAppResult chorus update app result
+// ChorusCreateAppRequest Create App
 //
-// swagger:model chorusUpdateAppResult
-type ChorusUpdateAppResult struct {
+// swagger:model chorusCreateAppRequest
+type ChorusCreateAppRequest struct {
 
 	// app
 	App *ChorusApp `json:"app,omitempty"`
 }
 
-// Validate validates this chorus update app result
-func (m *ChorusUpdateAppResult) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus create app request
+func (m *ChorusCreateAppRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateApp(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusUpdateAppResult) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusUpdateAppResult) validateApp(formats strfmt.Registry) error {
+func (m *ChorusCreateAppRequest) validateApp(formats strfmt.Registry) error {
 	if swag.IsZero(m.App) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusUpdateAppResult) validateApp(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this chorus update app result based on the context it is used
-func (m *ChorusUpdateAppResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus create app request based on the context it is used
+func (m *ChorusCreateAppRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateApp(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusUpdateAppResult) ContextValidate(ctx context.Context, formats str
 	return nil
 }
 
-func (m *ChorusUpdateAppResult) contextValidateApp(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusCreateAppRequest) contextValidateApp(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.App != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusUpdateAppResult) contextValidateApp(ctx context.Context, formats 
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusUpdateAppResult) MarshalBinary() ([]byte, error) {
+func (m *ChorusCreateAppRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusUpdateAppResult) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusUpdateAppResult) UnmarshalBinary(b []byte) error {
-	var res ChorusUpdateAppResult
+func (m *ChorusCreateAppRequest) UnmarshalBinary(b []byte) error {
+	var res ChorusCreateAppRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
