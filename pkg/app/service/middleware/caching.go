@@ -65,10 +65,10 @@ func (c *Caching) DeleteApp(ctx context.Context, tenantID, appID uint64) error {
 	return c.next.DeleteApp(ctx, tenantID, appID)
 }
 
-func (c *Caching) UpdateApp(ctx context.Context, app *model.App) error {
+func (c *Caching) UpdateApp(ctx context.Context, app *model.App) (*model.App, error) {
 	return c.next.UpdateApp(ctx, app)
 }
 
-func (c *Caching) CreateApp(ctx context.Context, app *model.App) (uint64, error) {
+func (c *Caching) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
 	return c.next.CreateApp(ctx, app)
 }

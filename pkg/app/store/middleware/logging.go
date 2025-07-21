@@ -88,43 +88,43 @@ func (c appStorageLogging) DeleteApp(ctx context.Context, tenantID, appID uint64
 	return nil
 }
 
-func (c appStorageLogging) UpdateApp(ctx context.Context, tenantID uint64, app *model.App) error {
+func (c appStorageLogging) UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 
-	err := c.next.UpdateApp(ctx, tenantID, app)
+	updatedApp, err := c.next.UpdateApp(ctx, tenantID, app)
 	if err != nil {
 		c.logger.Error(ctx, "request completed",
 			logger.WithAppIDField(app.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 	c.logger.Debug(ctx, "request completed",
 		logger.WithAppIDField(app.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedApp, nil
 }
 
-func (c appStorageLogging) CreateApp(ctx context.Context, tenantID uint64, app *model.App) (uint64, error) {
+func (c appStorageLogging) CreateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	appId, err := c.next.CreateApp(ctx, tenantID, app)
+	newApp, err := c.next.CreateApp(ctx, tenantID, app)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return 0, err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
-		logger.WithAppIDField(appId),
+		logger.WithAppIDField(newApp.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return appId, nil
+	return newApp, nil
 }

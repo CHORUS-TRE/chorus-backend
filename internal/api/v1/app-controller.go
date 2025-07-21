@@ -65,11 +65,16 @@ func (c AppController) UpdateApp(ctx context.Context, req *chorus.UpdateAppReque
 
 	app.TenantID = tenantID
 
-	err = c.app.UpdateApp(ctx, app)
+	updatedApp, err := c.app.UpdateApp(ctx, app)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateApp': %v", err.Error())
 	}
-	return &chorus.UpdateAppReply{Result: &chorus.UpdateAppResult{}}, nil
+
+	updatedAppProto, err := converter.AppFromBusiness(updatedApp)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+	return &chorus.UpdateAppReply{Result: &chorus.UpdateAppResult{App: updatedAppProto}}, nil
 }
 
 func (c AppController) DeleteApp(ctx context.Context, req *chorus.DeleteAppRequest) (*chorus.DeleteAppReply, error) {
@@ -115,11 +120,11 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 		}
 		apps = append(apps, app)
 	}
-	return &chorus.ListAppsReply{Result: apps}, nil
+	return &chorus.ListAppsReply{Result: &chorus.ListAppsResult{Apps: apps}}, nil
 }
 
 // CreateApp extracts the app from the request and passes it to the app service.
-func (c AppController) CreateApp(ctx context.Context, req *chorus.App) (*chorus.CreateAppReply, error) {
+func (c AppController) CreateApp(ctx context.Context, req *chorus.CreateAppRequest) (*chorus.CreateAppReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -134,7 +139,7 @@ func (c AppController) CreateApp(ctx context.Context, req *chorus.App) (*chorus.
 		tenantID = 1
 	}
 
-	app, err := converter.AppToBusiness(req)
+	app, err := converter.AppToBusiness(req.App)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -142,9 +147,14 @@ func (c AppController) CreateApp(ctx context.Context, req *chorus.App) (*chorus.
 	app.TenantID = tenantID
 	app.UserID = userID
 
-	res, err := c.app.CreateApp(ctx, app)
+	newApp, err := c.app.CreateApp(ctx, app)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateApp': %v", err.Error())
 	}
-	return &chorus.CreateAppReply{Result: &chorus.CreateAppResult{Id: res}}, nil
+
+	newAppProto, err := converter.AppFromBusiness(newApp)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+	return &chorus.CreateAppReply{Result: &chorus.CreateAppResult{App: newAppProto}}, nil
 }

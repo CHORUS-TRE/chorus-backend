@@ -13,6 +13,7 @@ type App struct {
 	UserID   uint64
 
 	Name        string
+	PrettyName  string
 	Description string
 	Status      AppStatus
 
@@ -21,13 +22,13 @@ type App struct {
 	DockerImageTag      string
 
 	ShmSize             string
-	KioskConfigURL      string
 	MaxCPU              string
 	MinCPU              string
 	MaxMemory           string
 	MinMemory           string
 	MaxEphemeralStorage string
 	MinEphemeralStorage string
+	KioskConfigURL      string
 	IconURL             string
 
 	CreatedAt time.Time

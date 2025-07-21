@@ -48,7 +48,7 @@ func (c appControllerAuthorization) GetApp(ctx context.Context, req *chorus.GetA
 	return c.next.GetApp(ctx, req)
 }
 
-func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.App) (*chorus.CreateAppReply, error) {
+func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.CreateAppRequest) (*chorus.CreateAppReply, error) {
 	// TODO check for permission
 
 	err := c.IsAuthenticatedAndAuthorized(ctx)
