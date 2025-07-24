@@ -41,18 +41,41 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 	return &workbench, nil
 }
 
-func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
-	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-	FROM workbenchs
-WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
-`
-	var workbenchs []*model.Workbench
-	if err := s.db.SelectContext(ctx, &workbenchs, query, tenantID); err != nil {
-		return nil, err
+func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
+	countQuery := `SELECT COUNT(*) FROM workbenchs WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;`
+	var totalCount int64
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+		return nil, nil, err
 	}
 
-	return workbenchs, nil
+	// Get workbenches query
+	query := `
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		FROM workbenchs
+		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
+	`
+
+	// Add pagination
+	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.Workbench{})
+	query += clause
+
+	// Build pagination result
+	paginationRes := &common_model.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	var workbenchs []*model.Workbench
+	if err := s.db.SelectContext(ctx, &workbenchs, query, tenantID); err != nil {
+		return nil, nil, err
+	}
+
+	return workbenchs, paginationRes, nil
 }
 
 func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {

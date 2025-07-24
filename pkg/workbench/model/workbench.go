@@ -94,3 +94,17 @@ func ToK8sWorkbenchStatus(status string) (K8sWorkbenchStatus, error) {
 		return "", fmt.Errorf("unexpected K8sWorkbenchStatus: %s", status)
 	}
 }
+
+func (Workbench) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":          true,
+		"userid":      true,
+		"workspaceid": true,
+		"name":        true,
+		"shortname":   true,
+		"status":      true,
+		"createdat":   true,
+	}
+
+	return validSortTypes[sortType]
+}

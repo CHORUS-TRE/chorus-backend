@@ -26,25 +26,25 @@ func Logging(logger *logger.ContextLogger) func(service.WorkbenchStore) service.
 	}
 }
 
-func (c workbenchStorageLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (c workbenchStorageLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, err
+		return nil, nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
 		logger.WithCountField(len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {

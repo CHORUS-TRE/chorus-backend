@@ -28,23 +28,23 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to get workbenchs: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_workbenchs", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchServiceLogging) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {

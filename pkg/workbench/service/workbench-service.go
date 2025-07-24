@@ -34,7 +34,7 @@ var (
 
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
+	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error)
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
@@ -49,7 +49,7 @@ type Workbencher interface {
 
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
+	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error)
 	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error)
 	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
@@ -294,12 +294,12 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
-	workbenchs, err := s.store.ListWorkbenchs(ctx, tenantID, pagination)
+func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
+	workbenchs, paginationRes, err := s.store.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, fmt.Errorf("unable to query workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to query workbenchs: %w", err)
 	}
-	return workbenchs, nil
+	return workbenchs, paginationRes, nil
 }
 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {

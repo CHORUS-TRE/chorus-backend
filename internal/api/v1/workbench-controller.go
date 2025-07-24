@@ -108,7 +108,7 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.workbench.ListWorkbenchs(ctx, tenantID, pagination)
+	res, paginationRes, err := c.workbench.ListWorkbenchs(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenchs': %v", err.Error())
 	}
@@ -121,7 +121,13 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 		}
 		workbenchs = append(workbenchs, workbench)
 	}
-	return &chorus.ListWorkbenchsReply{Result: &chorus.ListWorkbenchsResult{Workbenchs: workbenchs}}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
+	}
+
+	return &chorus.ListWorkbenchsReply{Result: &chorus.ListWorkbenchsResult{Workbenchs: workbenchs}, Pagination: paginationResult}, nil
 }
 
 // CreateWorkbench extracts the workbench from the request and passes it to the workbench service.
