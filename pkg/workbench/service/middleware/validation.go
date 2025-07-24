@@ -57,9 +57,9 @@ func (v validation) CreateWorkbench(ctx context.Context, workbench *model.Workbe
 	return v.next.CreateWorkbench(ctx, workbench)
 }
 
-func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
+func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return v.next.ListAppInstances(ctx, tenantID, pagination)
 }

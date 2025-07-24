@@ -78,12 +78,12 @@ func (c *Caching) CreateWorkbench(ctx context.Context, workbench *model.Workbenc
 	return c.next.CreateWorkbench(ctx, workbench)
 }
 
-func (c *Caching) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) (reply []*model.AppInstance, err error) {
+func (c *Caching) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) (reply []*model.AppInstance, paginationRes *common_model.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
 	reply = []*model.AppInstance{}
 
 	if ok := entry.Get(ctx, &reply); !ok {
-		reply, err = c.next.ListAppInstances(ctx, tenantID, pagination)
+		reply, paginationRes, err = c.next.ListAppInstances(ctx, tenantID, pagination)
 		if err == nil {
 			entry.Set(ctx, defaultCacheExpiration, reply)
 		}

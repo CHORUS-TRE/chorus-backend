@@ -145,23 +145,23 @@ func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench 
 	return newWorkbench, nil
 }
 
-func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
+func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get appInstances: %w", err)
+		return nil, nil, fmt.Errorf("unable to get appInstances: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_appInstances", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchServiceLogging) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {

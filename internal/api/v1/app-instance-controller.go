@@ -108,7 +108,7 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.workbencher.ListAppInstances(ctx, tenantID, pagination)
+	res, paginationRes, err := c.workbencher.ListAppInstances(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListAppInstances': %v", err.Error())
 	}
@@ -121,7 +121,13 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 		}
 		appInstances = append(appInstances, appInstance)
 	}
-	return &chorus.ListAppInstancesReply{Result: &chorus.ListAppInstancesResult{AppInstances: appInstances}}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
+	}
+
+	return &chorus.ListAppInstancesReply{Result: &chorus.ListAppInstancesResult{AppInstances: appInstances}, Pagination: paginationResult}, nil
 }
 
 // CreateAppInstance extracts the appInstance from the request and passes it to the appInstance service.

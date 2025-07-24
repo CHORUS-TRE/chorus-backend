@@ -106,3 +106,19 @@ func ToAppInstanceStatus(status string) (AppInstanceStatus, error) {
 		return "", errors.New("unexpected AppInstanceStatus: " + status)
 	}
 }
+
+func (AppInstance) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":                     true,
+		"appid":                  true,
+		"workspaceid":            true,
+		"workbenchid":            true,
+		"status":                 true,
+		"createdat":              true,
+		"appname":                true,
+		"appdockerimageregistry": true,
+		"appdockerimagename":     true,
+	}
+
+	return validSortTypes[sortType]
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common_storage "github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
@@ -220,18 +221,41 @@ func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, 
 	return &appInstance, nil
 }
 
-func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
-	const query = `
-SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-	FROM app_instances
-WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;
-`
-	var appInstances []*model.AppInstance
-	if err := s.db.SelectContext(ctx, &appInstances, query, tenantID); err != nil {
-		return nil, err
+func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+	countQuery := `SELECT COUNT(*) FROM app_instances WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;`
+	var totalCount int64
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+		return nil, nil, err
 	}
 
-	return appInstances, nil
+	// Get app instances query
+	query := `
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		FROM app_instances
+		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
+	`
+
+	// Add pagination
+	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.AppInstance{})
+	query += clause
+
+	// Build pagination result
+	paginationRes := &common_model.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	var appInstances []*model.AppInstance
+	if err := s.db.SelectContext(ctx, &appInstances, query, tenantID); err != nil {
+		return nil, nil, err
+	}
+
+	return appInstances, paginationRes, nil
 }
 
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.

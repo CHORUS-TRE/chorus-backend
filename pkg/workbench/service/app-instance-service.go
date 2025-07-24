@@ -11,12 +11,12 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
-func (s *WorkbenchService) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
-	appInstances, err := s.store.ListAppInstances(ctx, tenantID, pagination)
+func (s *WorkbenchService) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+	appInstances, paginationRes, err := s.store.ListAppInstances(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, fmt.Errorf("unable to query appInstances: %w", err)
+		return nil, nil, fmt.Errorf("unable to query appInstances: %w", err)
 	}
-	return appInstances, nil
+	return appInstances, paginationRes, nil
 }
 
 func (s *WorkbenchService) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
