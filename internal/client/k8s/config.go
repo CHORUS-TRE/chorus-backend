@@ -36,6 +36,7 @@ func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting restconfig: %w", err)
 	}
+
 	return restConfig, nil
 }
 
