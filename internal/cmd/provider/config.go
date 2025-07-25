@@ -112,13 +112,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.k8s_client.default_registry", "harbor.dev.chorus-tre.ch")
 	v.SetDefault("clients.k8s_client.default_repository", "apps")
 
-	// Clients
-	v.SetDefault("clients.k8s_client.is_watcher", false)
-	v.SetDefault("clients.k8s_client.server_version", "latest")
-	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")
-	v.SetDefault("clients.k8s_client.default_registry", "harbor.dev.chorus-tre.ch")
-	v.SetDefault("clients.k8s_client.default_repository", "apps")
-
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")
 	v.SetDefault("log.loggers.stdout_technical.enabled", true)
