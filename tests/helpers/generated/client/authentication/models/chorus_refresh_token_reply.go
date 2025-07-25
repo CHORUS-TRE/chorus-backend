@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusGetAuthenticationModesReply chorus get authentication modes reply
+// ChorusRefreshTokenReply chorus refresh token reply
 //
-// swagger:model chorusGetAuthenticationModesReply
-type ChorusGetAuthenticationModesReply struct {
+// swagger:model chorusRefreshTokenReply
+type ChorusRefreshTokenReply struct {
 
 	// result
-	Result *ChorusGetAuthenticationModesResult `json:"result,omitempty"`
+	Result *ChorusRefreshTokenResult `json:"result,omitempty"`
 }
 
-// Validate validates this chorus get authentication modes reply
-func (m *ChorusGetAuthenticationModesReply) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus refresh token reply
+func (m *ChorusRefreshTokenReply) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateResult(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusGetAuthenticationModesReply) Validate(formats strfmt.Registry) er
 	return nil
 }
 
-func (m *ChorusGetAuthenticationModesReply) validateResult(formats strfmt.Registry) error {
+func (m *ChorusRefreshTokenReply) validateResult(formats strfmt.Registry) error {
 	if swag.IsZero(m.Result) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusGetAuthenticationModesReply) validateResult(formats strfmt.Regist
 	return nil
 }
 
-// ContextValidate validate this chorus get authentication modes reply based on the context it is used
-func (m *ChorusGetAuthenticationModesReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus refresh token reply based on the context it is used
+func (m *ChorusRefreshTokenReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateResult(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusGetAuthenticationModesReply) ContextValidate(ctx context.Context,
 	return nil
 }
 
-func (m *ChorusGetAuthenticationModesReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusRefreshTokenReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Result != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusGetAuthenticationModesReply) contextValidateResult(ctx context.Co
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusGetAuthenticationModesReply) MarshalBinary() ([]byte, error) {
+func (m *ChorusRefreshTokenReply) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusGetAuthenticationModesReply) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusGetAuthenticationModesReply) UnmarshalBinary(b []byte) error {
-	var res ChorusGetAuthenticationModesReply
+func (m *ChorusRefreshTokenReply) UnmarshalBinary(b []byte) error {
+	var res ChorusRefreshTokenReply
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
