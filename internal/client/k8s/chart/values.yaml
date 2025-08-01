@@ -2,7 +2,7 @@ name: my-workbench
 apps: []
 
 imagePullSecret:
-  name: image-pull-secret
+  name: regred
   dockerConfigJson: |
     {
       "auths": {
