@@ -1101,7 +1101,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusCreateUserRequest'
+            $ref: '#/definitions/chorusUser'
       tags:
         - UserService
       security: []
@@ -1141,7 +1141,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateUserRequest'
+            $ref: '#/definitions/chorusUser'
       tags:
         - UserService
   /api/rest/v1/users/me:
@@ -2046,11 +2046,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateUserResult'
-  chorusCreateUserRequest:
-    type: object
-    properties:
-      user:
-        $ref: '#/definitions/chorusUser'
     title: Create Users
   chorusCreateUserResult:
     type: object
@@ -2430,11 +2425,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateUserResult'
-  chorusUpdateUserRequest:
-    type: object
-    properties:
-      user:
-        $ref: '#/definitions/chorusUser'
     title: Update User
   chorusUpdateUserResult:
     type: object

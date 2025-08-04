@@ -67,9 +67,6 @@ message UpdatePasswordReply {
 message UpdatePasswordResult {}
 
 // Create Users
-message CreateUserRequest {
-    User user = 1;
-}
 message CreateUserReply {
     CreateUserResult result = 1;
 }
@@ -78,16 +75,12 @@ message CreateUserResult {
 }
 
 // Update User
-message UpdateUserRequest {
-    User user = 1;
-}
 message UpdateUserReply {
     UpdateUserResult result = 1;
 }
 message UpdateUserResult {
     User user = 1;
 }
-
 
 // Delete User
 message DeleteUserRequest {
@@ -177,7 +170,7 @@ service UserService {
         };
     };
 
-    rpc UpdateUser(UpdateUserRequest) returns (UpdateUserReply) {
+    rpc UpdateUser(User) returns (UpdateUserReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/users"
             body: "*"
@@ -234,7 +227,7 @@ service UserService {
         };
     };
 
-    rpc CreateUser(CreateUserRequest) returns (CreateUserReply) {
+    rpc CreateUser(User) returns (CreateUserReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/users"
             body: "*"

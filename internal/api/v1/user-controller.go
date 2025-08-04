@@ -103,7 +103,7 @@ func (c UserController) UpdatePassword(ctx context.Context, req *chorus.UpdatePa
 	return &chorus.UpdatePasswordReply{Result: &chorus.UpdateUserResult{}}, nil
 }
 
-func (c UserController) UpdateUser(ctx context.Context, req *chorus.UpdateUserRequest) (*chorus.UpdateUserReply, error) {
+func (c UserController) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -113,7 +113,7 @@ func (c UserController) UpdateUser(ctx context.Context, req *chorus.UpdateUserRe
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	user, err := userToUpdateServiceRequest(req.User)
+	user, err := userToUpdateServiceRequest(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -183,7 +183,7 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 }
 
 // CreateUser extracts the user from the request and passes it to the user service.
-func (c UserController) CreateUser(ctx context.Context, req *chorus.CreateUserRequest) (*chorus.CreateUserReply, error) {
+func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -193,7 +193,7 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.CreateUserRe
 		tenantID = 1
 	}
 
-	user, err := userToServiceRequest(req.User)
+	user, err := userToServiceRequest(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}

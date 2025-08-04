@@ -246,16 +246,15 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 // CreateUser saves the provided user object in the database 'users' table.
 func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	const userQuery = `
-INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status,
-                   totpsecret, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
-RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret;
+		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 	const userRoleQuery = `
-INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
+		INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
 	`
 	const recoveryCodeQuery = `
-INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
+		INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 	`
 
 	// We do not want to insert a user if the subsequent creation of

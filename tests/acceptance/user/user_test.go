@@ -278,15 +278,13 @@ var _ = Describe("user service", func() {
 
 			When("the route PUT '/api/rest/v1/users' is called", func() {
 				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUpdateUserRequest{
-						User: &models.ChorusUser{
-							FirstName: "Bob",
-							ID:        "90000",
-							LastName:  "Smith",
-							Roles:     []string{"admin", "authenticated"},
-							Status:    "disabled",
-							Username:  "Bobby",
-						},
+					&models.ChorusUser{
+						FirstName: "Bob",
+						ID:        "90000",
+						LastName:  "Smith",
+						Roles:     []string{"admin", "authenticated"},
+						Status:    "disabled",
+						Username:  "Bobby",
 					},
 				)
 
@@ -308,15 +306,13 @@ var _ = Describe("user service", func() {
 
 				When("the route PUT '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceUpdateUserParams().WithBody(
-						&models.ChorusUpdateUserRequest{
-							User: &models.ChorusUser{
-								FirstName: "Bob",
-								ID:        "90000",
-								LastName:  "Smith",
-								Roles:     []string{"admin", "authenticated"},
-								Status:    "disabled",
-								Username:  "Bobby",
-							},
+						&models.ChorusUser{
+							FirstName: "Bob",
+							ID:        "90000",
+							LastName:  "Smith",
+							Roles:     []string{"admin", "authenticated"},
+							Status:    "disabled",
+							Username:  "Bobby",
 						},
 					)
 
@@ -339,15 +335,13 @@ var _ = Describe("user service", func() {
 				setupTables()
 
 				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUpdateUserRequest{
-						User: &models.ChorusUser{
-							FirstName: "Bob",
-							ID:        "90000",
-							LastName:  "Smith",
-							Roles:     []string{"admin", "authenticated"},
-							Status:    "disabled",
-							Username:  "Bobby",
-						},
+					&models.ChorusUser{
+						FirstName: "Bob",
+						ID:        "90000",
+						LastName:  "Smith",
+						Roles:     []string{"admin", "authenticated"},
+						Status:    "disabled",
+						Username:  "Bobby",
 					},
 				)
 
@@ -369,15 +363,13 @@ var _ = Describe("user service", func() {
 				setupTables()
 
 				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUpdateUserRequest{
-						User: &models.ChorusUser{
-							FirstName: "Bob",
-							ID:        "90000",
-							LastName:  "Smith",
-							Roles:     []string{"admin", "chorus"},
-							Status:    "disabled",
-							Username:  "Bobby",
-						},
+					&models.ChorusUser{
+						FirstName: "Bob",
+						ID:        "90000",
+						LastName:  "Smith",
+						Roles:     []string{"admin", "chorus"},
+						Status:    "disabled",
+						Username:  "Bobby",
 					},
 				)
 
@@ -829,11 +821,11 @@ var _ = Describe("user service", func() {
 
 				When("the route POST '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceCreateUserParams().WithBody(
-						&models.ChorusCreateUserRequest{User: &models.ChorusUser{
+						&models.ChorusUser{
 							FirstName: "", LastName: "last", Username: "user",
 							Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 							TotpEnabled: true,
-						}},
+						},
 					)
 
 					c := helpers.UserServiceHTTPClient()
@@ -854,11 +846,11 @@ var _ = Describe("user service", func() {
 				When("the route POST '/api/rest/v1/users' is called", func() {
 					setupBaseTables()
 					req := user.NewUserServiceCreateUserParams().WithBody(
-						&models.ChorusCreateUserRequest{User: &models.ChorusUser{
+						&models.ChorusUser{
 							FirstName: "first", LastName: "last", Username: "user88888",
 							Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 							TotpEnabled: true,
-						}},
+						},
 					)
 
 					c := helpers.UserServiceHTTPClient()
