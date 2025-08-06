@@ -29,7 +29,7 @@ storage:
       port: 5432
       username: admin
       password: password
-      database: chorus
+      database: chorus_ci
       max_connections: 10
       max_lifetime: 10s
       debug_mode: true
@@ -43,13 +43,13 @@ services:
     key: value
   authentication_service:
     enabled: true
-  mailer:
+  mailer_service:
     smtp:
       user: smtpUser
       password: smtpPassword
       host: smtp-relay.sendinblue.com
       port: 587
-      authentication: plain
+      authentication: none
 
 log:
   loggers:
