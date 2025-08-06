@@ -12,17 +12,17 @@ import (
 
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
-	ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workspace, error)
-	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (uint64, error)
-	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) error
+	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
+	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
+	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
 }
 
 type WorkspaceStore interface {
 	GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error)
-	ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination, allowDeleted bool) ([]*model.Workspace, error)
-	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (uint64, error)
-	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) error
+	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
+	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
+	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 }
 
@@ -47,7 +47,7 @@ func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter) *Workspac
 }
 
 func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
-	workspaces, err := s.store.ListWorkspaces(ctx, 0, common_model.Pagination{}, true)
+	workspaces, _, err := s.store.ListWorkspaces(ctx, 0, &common_model.Pagination{}, true)
 	if err != nil {
 		return fmt.Errorf("unable to list workspaces: %w", err)
 	}
@@ -71,12 +71,12 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	return nil
 }
 
-func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workspace, error) {
-	workspaces, err := s.store.ListWorkspaces(ctx, tenantID, pagination, false)
+func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
+	workspaces, paginationRes, err := s.store.ListWorkspaces(ctx, tenantID, pagination, false)
 	if err != nil {
-		return nil, fmt.Errorf("unable to query workspaces: %w", err)
+		return nil, nil, fmt.Errorf("unable to query workspaces: %w", err)
 	}
-	return workspaces, nil
+	return workspaces, paginationRes, nil
 }
 
 func (s *WorkspaceService) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {
@@ -102,24 +102,25 @@ func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, worksp
 	return nil
 }
 
-func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) error {
-	if err := s.store.UpdateWorkspace(ctx, workspace.TenantID, workspace); err != nil {
-		return fmt.Errorf("unable to update workspace %v: %w", workspace.ID, err)
+func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
+	updatedWorkspace, err := s.store.UpdateWorkspace(ctx, workspace.TenantID, workspace)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update workspace %v: %w", workspace.ID, err)
 	}
 
-	return nil
+	return updatedWorkspace, nil
 }
 
-func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (uint64, error) {
-	id, err := s.store.CreateWorkspace(ctx, workspace.TenantID, workspace)
+func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
+	newWorkspace, err := s.store.CreateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
+		return nil, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
 	}
 
-	err = s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(id))
+	err = s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))
 	if err != nil {
-		return 0, fmt.Errorf("unable to create workbench %v: %w", workspace.ID, err)
+		return nil, fmt.Errorf("unable to create workbench %v: %w", workspace.ID, err)
 	}
 
-	return id, nil
+	return newWorkspace, nil
 }

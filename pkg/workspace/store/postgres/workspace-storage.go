@@ -3,13 +3,13 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -38,79 +38,86 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 	return &workspace, nil
 }
 
-func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination, allowDeleted bool) ([]*model.Workspace, error) {
+func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error) {
+	// Get total count query
+	countQuery := `SELECT COUNT(*) FROM workspaces WHERE tenantid = $1`
+	if !allowDeleted {
+		countQuery += " AND status != 'deleted' AND deletedat IS NULL"
+	}
+
+	var totalCount int
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+		return nil, nil, err
+	}
+
+	// Get workspaces query
 	query := `
 		SELECT id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat
 		FROM workspaces
+		WHERE tenantid = $1
 	`
 
-	conditions := []string{}
-	arguments := []interface{}{}
-
-	if tenantID != 0 {
-		conditions = append(conditions, fmt.Sprintf("tenantid = $%d", len(arguments)+1))
-		arguments = append(arguments, tenantID)
-	}
-
 	if !allowDeleted {
-		conditions = append(conditions, "status != 'deleted'", "deletedat IS NULL")
+		query += " AND status != 'deleted' AND deletedat IS NULL"
 	}
 
-	if len(conditions) > 0 {
-		query += " WHERE " + strings.Join(conditions, " AND ")
+	// Add pagination
+	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.Workspace{})
+	query += clause
+
+	// Build pagination result
+	paginationRes := &common_model.PaginationResult{
+		Total: uint64(totalCount),
 	}
 
-	// Add sorting by ismain and createdat by default
-	query += " ORDER BY ismain DESC, createdat DESC"
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
 
 	var workspaces []*model.Workspace
-	if err := s.db.SelectContext(ctx, &workspaces, query, arguments...); err != nil {
-		return nil, err
+	args := []interface{}{tenantID}
+	if err := s.db.SelectContext(ctx, &workspaces, query, args...); err != nil {
+		return nil, nil, err
 	}
 
-	return workspaces, nil
+	return workspaces, paginationRes, nil
 }
 
 // CreateWorkspace saves the provided workspace object in the database 'workspaces' table.
-func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (uint64, error) {
+func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
 	const workspaceQuery = `
 		INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING id;
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
 	`
 
-	var id uint64
-	err := s.db.GetContext(ctx, &id, workspaceQuery,
-		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-	)
+	var createdWorkspace model.Workspace
+	err := s.db.GetContext(ctx, &createdWorkspace, workspaceQuery, tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return id, nil
+	return &createdWorkspace, nil
 }
 
-func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (err error) {
+func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
 		SET name = $3, shortname = $4, description = $5, status = $6, isMain = $7, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
+		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
 	`
 
-	// Update User
-	rows, err := s.db.ExecContext(ctx, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain)
+	// Update Workspace
+	var updatedWorkspace model.Workspace
+	err := s.db.GetContext(ctx, &updatedWorkspace, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain)
 	if err != nil {
-		return err
-	}
-	affected, err := rows.RowsAffected()
-	if err != nil {
-		return err
+		return nil, fmt.Errorf("unable to update workspace: %w", err)
 	}
 
-	if affected == 0 {
-		return database.ErrNoRowsUpdated
-	}
-
-	return err
+	return &updatedWorkspace, nil
 }
 
 func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {

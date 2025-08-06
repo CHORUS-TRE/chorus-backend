@@ -59,7 +59,7 @@ func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, r
 	return c.next.CreateWorkspace(ctx, req)
 }
 
-func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, req *chorus.UpdateWorkspaceRequest) (*chorus.UpdateWorkspaceReply, error) {
+func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {
 	// TODO check for permission
 
 	err := c.IsAuthenticatedAndAuthorized(ctx)

@@ -28,7 +28,7 @@ type Userer interface {
 
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
-	CreateWorkspace(ctx context.Context, workspace *workspace_model.Workspace) (uint64, error)
+	CreateWorkspace(ctx context.Context, workspace *workspace_model.Workspace) (*workspace_model.Workspace, error)
 }
 
 type Stewarder interface {

@@ -32,14 +32,15 @@ type Caching struct {
 	next  service.Workspaceer
 }
 
-func (c *Caching) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) (reply []*model.Workspace, err error) {
+func (c *Caching) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) (reply []*model.Workspace, paginationRes *common_model.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
 	reply = []*model.Workspace{}
+	paginationRes = &common_model.PaginationResult{}
 
-	if ok := entry.Get(ctx, &reply); !ok {
-		reply, err = c.next.ListWorkspaces(ctx, tenantID, pagination)
+	if ok := entry.Get(ctx, &reply, &paginationRes); !ok {
+		reply, paginationRes, err = c.next.ListWorkspaces(ctx, tenantID, pagination)
 		if err == nil {
-			entry.Set(ctx, defaultCacheExpiration, reply)
+			entry.Set(ctx, defaultCacheExpiration, reply, paginationRes)
 		}
 	}
 
@@ -64,10 +65,10 @@ func (c *Caching) DeleteWorkspace(ctx context.Context, tenantID, workspaceID uin
 	return c.next.DeleteWorkspace(ctx, tenantID, workspaceID)
 }
 
-func (c *Caching) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) error {
+func (c *Caching) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	return c.next.UpdateWorkspace(ctx, workspace)
 }
 
-func (c *Caching) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (uint64, error) {
+func (c *Caching) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	return c.next.CreateWorkspace(ctx, workspace)
 }

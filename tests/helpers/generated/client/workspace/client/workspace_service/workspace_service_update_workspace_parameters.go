@@ -64,7 +64,7 @@ WorkspaceServiceUpdateWorkspaceParams contains all the parameters to send to the
 type WorkspaceServiceUpdateWorkspaceParams struct {
 
 	// Body.
-	Body *models.ChorusUpdateWorkspaceRequest
+	Body *models.ChorusWorkspace
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *WorkspaceServiceUpdateWorkspaceParams) SetHTTPClient(client *http.Clien
 }
 
 // WithBody adds the body to the workspace service update workspace params
-func (o *WorkspaceServiceUpdateWorkspaceParams) WithBody(body *models.ChorusUpdateWorkspaceRequest) *WorkspaceServiceUpdateWorkspaceParams {
+func (o *WorkspaceServiceUpdateWorkspaceParams) WithBody(body *models.ChorusWorkspace) *WorkspaceServiceUpdateWorkspaceParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the workspace service update workspace params
-func (o *WorkspaceServiceUpdateWorkspaceParams) SetBody(body *models.ChorusUpdateWorkspaceRequest) {
+func (o *WorkspaceServiceUpdateWorkspaceParams) SetBody(body *models.ChorusWorkspace) {
 	o.Body = body
 }
 
