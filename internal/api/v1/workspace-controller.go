@@ -48,7 +48,7 @@ func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWo
 	return &chorus.GetWorkspaceReply{Result: &chorus.GetWorkspaceResult{Workspace: tgWorkspace}}, nil
 }
 
-func (c WorkspaceController) UpdateWorkspace(ctx context.Context, req *chorus.UpdateWorkspaceRequest) (*chorus.UpdateWorkspaceReply, error) {
+func (c WorkspaceController) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,18 +58,24 @@ func (c WorkspaceController) UpdateWorkspace(ctx context.Context, req *chorus.Up
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	workspace, err := converter.WorkspaceToBusiness(req.Workspace)
+	workspace, err := converter.WorkspaceToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
 	workspace.TenantID = tenantID
 
-	err = c.workspace.UpdateWorkspace(ctx, workspace)
+	updatedWorkspace, err := c.workspace.UpdateWorkspace(ctx, workspace)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkspace': %v", err.Error())
 	}
-	return &chorus.UpdateWorkspaceReply{Result: &chorus.UpdateWorkspaceResult{}}, nil
+
+	tgWorkspace, err := converter.WorkspaceFromBusiness(updatedWorkspace)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateWorkspaceReply{Result: &chorus.UpdateWorkspaceResult{Workspace: tgWorkspace}}, nil
 }
 
 func (c WorkspaceController) DeleteWorkspace(ctx context.Context, req *chorus.DeleteWorkspaceRequest) (*chorus.DeleteWorkspaceReply, error) {
@@ -102,7 +108,7 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.workspace.ListWorkspaces(ctx, tenantID, pagination)
+	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaces': %v", err.Error())
 	}
@@ -115,7 +121,10 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 		}
 		workspaces = append(workspaces, workspace)
 	}
-	return &chorus.ListWorkspacesReply{Result: workspaces}, nil
+
+	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
+
+	return &chorus.ListWorkspacesReply{Result: &chorus.ListWorkspacesResult{Workspaces: workspaces}, Pagination: paginationResult}, nil
 }
 
 // CreateWorkspace extracts the workspace from the request and passes it to the workspace service.
@@ -142,9 +151,15 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 	workspace.TenantID = tenantID
 	workspace.UserID = userID
 
-	res, err := c.workspace.CreateWorkspace(ctx, workspace)
+	newWorkspace, err := c.workspace.CreateWorkspace(ctx, workspace)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateWorkspace': %v", err.Error())
 	}
-	return &chorus.CreateWorkspaceReply{Result: &chorus.CreateWorkspaceResult{Id: res}}, nil
+
+	tgWorkspace, err := converter.WorkspaceFromBusiness(newWorkspace)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateWorkspaceReply{Result: &chorus.CreateWorkspaceResult{Workspace: tgWorkspace}}, nil
 }
