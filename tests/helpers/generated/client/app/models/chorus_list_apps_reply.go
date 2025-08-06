@@ -7,7 +7,6 @@ package models
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -19,13 +18,20 @@ import (
 // swagger:model chorusListAppsReply
 type ChorusListAppsReply struct {
 
+	// pagination
+	Pagination *ChorusPaginationResult `json:"pagination,omitempty"`
+
 	// result
-	Result []*ChorusApp `json:"result"`
+	Result *ChorusListAppsResult `json:"result,omitempty"`
 }
 
 // Validate validates this chorus list apps reply
 func (m *ChorusListAppsReply) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validatePagination(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateResult(formats); err != nil {
 		res = append(res, err)
@@ -37,27 +43,39 @@ func (m *ChorusListAppsReply) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ChorusListAppsReply) validatePagination(formats strfmt.Registry) error {
+	if swag.IsZero(m.Pagination) { // not required
+		return nil
+	}
+
+	if m.Pagination != nil {
+		if err := m.Pagination.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("pagination")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("pagination")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *ChorusListAppsReply) validateResult(formats strfmt.Registry) error {
 	if swag.IsZero(m.Result) { // not required
 		return nil
 	}
 
-	for i := 0; i < len(m.Result); i++ {
-		if swag.IsZero(m.Result[i]) { // not required
-			continue
-		}
-
-		if m.Result[i] != nil {
-			if err := m.Result[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("result" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("result" + "." + strconv.Itoa(i))
-				}
-				return err
+	if m.Result != nil {
+		if err := m.Result.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("result")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("result")
 			}
+			return err
 		}
-
 	}
 
 	return nil
@@ -66,6 +84,10 @@ func (m *ChorusListAppsReply) validateResult(formats strfmt.Registry) error {
 // ContextValidate validate this chorus list apps reply based on the context it is used
 func (m *ChorusListAppsReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.contextValidatePagination(ctx, formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.contextValidateResult(ctx, formats); err != nil {
 		res = append(res, err)
@@ -77,26 +99,43 @@ func (m *ChorusListAppsReply) ContextValidate(ctx context.Context, formats strfm
 	return nil
 }
 
-func (m *ChorusListAppsReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusListAppsReply) contextValidatePagination(ctx context.Context, formats strfmt.Registry) error {
 
-	for i := 0; i < len(m.Result); i++ {
+	if m.Pagination != nil {
 
-		if m.Result[i] != nil {
-
-			if swag.IsZero(m.Result[i]) { // not required
-				return nil
-			}
-
-			if err := m.Result[i].ContextValidate(ctx, formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("result" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("result" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
+		if swag.IsZero(m.Pagination) { // not required
+			return nil
 		}
 
+		if err := m.Pagination.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("pagination")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("pagination")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *ChorusListAppsReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Result != nil {
+
+		if swag.IsZero(m.Result) { // not required
+			return nil
+		}
+
+		if err := m.Result.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("result")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("result")
+			}
+			return err
+		}
 	}
 
 	return nil

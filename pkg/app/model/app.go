@@ -13,6 +13,7 @@ type App struct {
 	UserID   uint64
 
 	Name        string
+	PrettyName  string
 	Description string
 	Status      AppStatus
 
@@ -21,13 +22,13 @@ type App struct {
 	DockerImageTag      string
 
 	ShmSize             string
-	KioskConfigURL      string
 	MaxCPU              string
 	MinCPU              string
 	MaxMemory           string
 	MinMemory           string
 	MaxEphemeralStorage string
 	MinEphemeralStorage string
+	KioskConfigURL      string
 	IconURL             string
 
 	CreatedAt time.Time
@@ -59,4 +60,18 @@ func ToAppStatus(status string) (AppStatus, error) {
 	default:
 		return "", errors.New("unexpected AppStatus: " + status)
 	}
+}
+
+func (App) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":                  true,
+		"name":                true,
+		"prettyname":          true,
+		"status":              true,
+		"dockerimageregistry": true,
+		"dockerimagename":     true,
+		"createdat":           true,
+	}
+
+	return validSortTypes[sortType]
 }

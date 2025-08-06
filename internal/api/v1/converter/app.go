@@ -28,22 +28,22 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 		UserID:   app.UserId,
 
 		Name:        app.Name,
+		PrettyName:  app.PrettyName,
 		Description: app.Description,
+		Status:      status,
 
-		Status: status,
-
+		DockerImageRegistry: app.DockerImageRegistry,
 		DockerImageName:     app.DockerImageName,
 		DockerImageTag:      app.DockerImageTag,
-		DockerImageRegistry: app.DockerImageRegistry,
 
 		ShmSize:             app.ShmSize,
-		KioskConfigURL:      app.KioskConfigURL,
 		MaxCPU:              app.MaxCPU,
 		MinCPU:              app.MinCPU,
 		MaxMemory:           app.MaxMemory,
 		MinMemory:           app.MinMemory,
 		MaxEphemeralStorage: app.MaxEphemeralStorage,
 		MinEphemeralStorage: app.MinEphemeralStorage,
+		KioskConfigURL:      app.KioskConfigURL,
 		IconURL:             app.IconURL,
 
 		CreatedAt: ca,

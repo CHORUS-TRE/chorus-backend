@@ -131,7 +131,7 @@ func local_request_AppService_CreateApp_0(ctx context.Context, marshaler runtime
 
 func request_AppService_UpdateApp_0(ctx context.Context, marshaler runtime.Marshaler, client AppServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateAppRequest
+		protoReq App
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -143,7 +143,7 @@ func request_AppService_UpdateApp_0(ctx context.Context, marshaler runtime.Marsh
 
 func local_request_AppService_UpdateApp_0(ctx context.Context, marshaler runtime.Marshaler, server AppServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateAppRequest
+		protoReq App
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

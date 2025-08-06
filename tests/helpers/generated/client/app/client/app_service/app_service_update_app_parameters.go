@@ -64,7 +64,7 @@ AppServiceUpdateAppParams contains all the parameters to send to the API endpoin
 type AppServiceUpdateAppParams struct {
 
 	// Body.
-	Body *models.ChorusUpdateAppRequest
+	Body *models.ChorusApp
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *AppServiceUpdateAppParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the app service update app params
-func (o *AppServiceUpdateAppParams) WithBody(body *models.ChorusUpdateAppRequest) *AppServiceUpdateAppParams {
+func (o *AppServiceUpdateAppParams) WithBody(body *models.ChorusApp) *AppServiceUpdateAppParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the app service update app params
-func (o *AppServiceUpdateAppParams) SetBody(body *models.ChorusUpdateAppRequest) {
+func (o *AppServiceUpdateAppParams) SetBody(body *models.ChorusApp) {
 	o.Body = body
 }
 
