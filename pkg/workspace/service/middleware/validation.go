@@ -24,9 +24,9 @@ func Validation(validate *val.Validate) func(service.Workspaceer) service.Worksp
 	}
 }
 
-func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workspace, error) {
+func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return v.next.ListWorkspaces(ctx, tenantID, pagination)
 }
@@ -39,16 +39,16 @@ func (v validation) DeleteWorkspace(ctx context.Context, tenantID, workspaceID u
 	return v.next.DeleteWorkspace(ctx, tenantID, workspaceID)
 }
 
-func (v validation) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) error {
+func (v validation) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	if err := v.validate.Struct(workspace); err != nil {
-		return v.next.UpdateWorkspace(ctx, workspace)
+		return nil, err
 	}
 	return v.next.UpdateWorkspace(ctx, workspace)
 }
 
-func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (uint64, error) {
+func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	if err := v.validate.Struct(workspace); err != nil {
-		return 0, err
+		return nil, err
 	}
 	return v.next.CreateWorkspace(ctx, workspace)
 }
