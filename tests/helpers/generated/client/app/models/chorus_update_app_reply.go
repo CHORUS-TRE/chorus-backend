@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusUpdateAppReply chorus update app reply
+// ChorusUpdateAppReply Update App
 //
 // swagger:model chorusUpdateAppReply
 type ChorusUpdateAppReply struct {

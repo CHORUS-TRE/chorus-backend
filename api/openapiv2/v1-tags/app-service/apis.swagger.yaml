@@ -81,7 +81,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusCreateAppRequest'
+            $ref: '#/definitions/chorusApp'
       tags:
         - AppService
     put:
@@ -102,7 +102,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateAppRequest'
+            $ref: '#/definitions/chorusApp'
       tags:
         - AppService
   /api/rest/v1/apps/{id}:
@@ -204,11 +204,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateAppResult'
-  chorusCreateAppRequest:
-    type: object
-    properties:
-      app:
-        $ref: '#/definitions/chorusApp'
     title: Create App
   chorusCreateAppResult:
     type: object
@@ -299,11 +294,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateAppResult'
-  chorusUpdateAppRequest:
-    type: object
-    properties:
-      app:
-        $ref: '#/definitions/chorusApp'
     title: Update App
   chorusUpdateAppResult:
     type: object

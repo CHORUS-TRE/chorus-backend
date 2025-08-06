@@ -48,7 +48,7 @@ func (c AppController) GetApp(ctx context.Context, req *chorus.GetAppRequest) (*
 	return &chorus.GetAppReply{Result: &chorus.GetAppResult{App: tgApp}}, nil
 }
 
-func (c AppController) UpdateApp(ctx context.Context, req *chorus.UpdateAppRequest) (*chorus.UpdateAppReply, error) {
+func (c AppController) UpdateApp(ctx context.Context, req *chorus.App) (*chorus.UpdateAppReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,7 +58,7 @@ func (c AppController) UpdateApp(ctx context.Context, req *chorus.UpdateAppReque
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	app, err := converter.AppToBusiness(req.App)
+	app, err := converter.AppToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -130,7 +130,7 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 }
 
 // CreateApp extracts the app from the request and passes it to the app service.
-func (c AppController) CreateApp(ctx context.Context, req *chorus.CreateAppRequest) (*chorus.CreateAppReply, error) {
+func (c AppController) CreateApp(ctx context.Context, req *chorus.App) (*chorus.CreateAppReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -145,7 +145,7 @@ func (c AppController) CreateApp(ctx context.Context, req *chorus.CreateAppReque
 		tenantID = 1
 	}
 
-	app, err := converter.AppToBusiness(req.App)
+	app, err := converter.AppToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}

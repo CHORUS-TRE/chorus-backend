@@ -64,7 +64,7 @@ AppServiceCreateAppParams contains all the parameters to send to the API endpoin
 type AppServiceCreateAppParams struct {
 
 	// Body.
-	Body *models.ChorusCreateAppRequest
+	Body *models.ChorusApp
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *AppServiceCreateAppParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the app service create app params
-func (o *AppServiceCreateAppParams) WithBody(body *models.ChorusCreateAppRequest) *AppServiceCreateAppParams {
+func (o *AppServiceCreateAppParams) WithBody(body *models.ChorusApp) *AppServiceCreateAppParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the app service create app params
-func (o *AppServiceCreateAppParams) SetBody(body *models.ChorusCreateAppRequest) {
+func (o *AppServiceCreateAppParams) SetBody(body *models.ChorusApp) {
 	o.Body = body
 }
 

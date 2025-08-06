@@ -48,9 +48,6 @@ message GetAppResult {
 }
 
 // Create App
-message CreateAppRequest {
-    App app = 1;
-}
 message CreateAppReply {
     CreateAppResult result = 1;
 }
@@ -59,9 +56,6 @@ message CreateAppResult {
 }
 
 // Update App
-message UpdateAppRequest {
-    App app = 1;
-}
 message UpdateAppReply {
     UpdateAppResult result = 1;
 }
@@ -102,7 +96,7 @@ service AppService {
         };
     };
 
-    rpc CreateApp(CreateAppRequest) returns (CreateAppReply) {
+    rpc CreateApp(App) returns (CreateAppReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/apps"
             body: "*"
@@ -114,7 +108,7 @@ service AppService {
         };
     };
 
-    rpc UpdateApp(UpdateAppRequest) returns (UpdateAppReply) {
+    rpc UpdateApp(App) returns (UpdateAppReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/apps"
             body: "*"
