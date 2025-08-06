@@ -48,7 +48,7 @@ func (c AppInstanceController) GetAppInstance(ctx context.Context, req *chorus.G
 	return &chorus.GetAppInstanceReply{Result: &chorus.GetAppInstanceResult{AppInstance: tgAppInstance}}, nil
 }
 
-func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *chorus.UpdateAppInstanceRequest) (*chorus.UpdateAppInstanceReply, error) {
+func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,18 +58,24 @@ func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *choru
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	appInstance, err := converter.AppInstanceToBusiness(req.AppInstance)
+	appInstance, err := converter.AppInstanceToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
 	appInstance.TenantID = tenantID
 
-	err = c.workbencher.UpdateAppInstance(ctx, appInstance)
+	updatedAppInstance, err := c.workbencher.UpdateAppInstance(ctx, appInstance)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateAppInstance': %v", err.Error())
 	}
-	return &chorus.UpdateAppInstanceReply{Result: &chorus.UpdateAppInstanceResult{}}, nil
+
+	updatedAppInstanceProto, err := converter.AppInstanceFromBusiness(updatedAppInstance)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateAppInstanceReply{Result: &chorus.UpdateAppInstanceResult{AppInstance: updatedAppInstanceProto}}, nil
 }
 
 func (c AppInstanceController) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
@@ -102,7 +108,7 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.workbencher.ListAppInstances(ctx, tenantID, pagination)
+	res, paginationRes, err := c.workbencher.ListAppInstances(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListAppInstances': %v", err.Error())
 	}
@@ -115,7 +121,13 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 		}
 		appInstances = append(appInstances, appInstance)
 	}
-	return &chorus.ListAppInstancesReply{Result: appInstances}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
+	}
+
+	return &chorus.ListAppInstancesReply{Result: &chorus.ListAppInstancesResult{AppInstances: appInstances}, Pagination: paginationResult}, nil
 }
 
 // CreateAppInstance extracts the appInstance from the request and passes it to the appInstance service.
@@ -146,5 +158,11 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateAppInstance': %v", err.Error())
 	}
-	return &chorus.CreateAppInstanceReply{Result: &chorus.CreateAppInstanceResult{Id: res}}, nil
+
+	appInstanceProto, err := converter.AppInstanceFromBusiness(res)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateAppInstanceReply{Result: &chorus.CreateAppInstanceResult{AppInstance: appInstanceProto}}, nil
 }

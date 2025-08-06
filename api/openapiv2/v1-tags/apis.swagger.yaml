@@ -165,7 +165,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateAppInstanceRequest'
+            $ref: '#/definitions/chorusAppInstance'
       tags:
         - AppInstanceService
   /api/rest/v1/app-instances/{id}:
@@ -1563,7 +1563,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateWorkbenchRequest'
+            $ref: '#/definitions/chorusWorkbench'
       tags:
         - WorkbenchService
   /api/rest/v1/workbenchs/{id}:
@@ -2027,9 +2027,8 @@ definitions:
   chorusCreateAppInstanceResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
   chorusCreateAppReply:
     type: object
     properties:
@@ -2065,9 +2064,8 @@ definitions:
   chorusCreateWorkbenchResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusCreateWorkspaceReply:
     type: object
     properties:
@@ -2232,6 +2230,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListAppInstancesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListAppInstancesResult:
+    type: object
+    properties:
+      appInstances:
         type: array
         items:
           type: object
@@ -2263,6 +2268,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListWorkbenchsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListWorkbenchsResult:
+    type: object
+    properties:
+      workbenchs:
         type: array
         items:
           type: object
@@ -2393,13 +2405,11 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateAppInstanceResult'
-  chorusUpdateAppInstanceRequest:
+  chorusUpdateAppInstanceResult:
     type: object
     properties:
       appInstance:
         $ref: '#/definitions/chorusAppInstance'
-  chorusUpdateAppInstanceResult:
-    type: object
   chorusUpdateAppReply:
     type: object
     properties:
@@ -2446,13 +2456,11 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateWorkbenchResult'
-  chorusUpdateWorkbenchRequest:
+  chorusUpdateWorkbenchResult:
     type: object
     properties:
       workbench:
         $ref: '#/definitions/chorusWorkbench'
-  chorusUpdateWorkbenchResult:
-    type: object
   chorusUpdateWorkspaceReply:
     type: object
     properties:
@@ -2528,16 +2536,6 @@ definitions:
       initialResolutionHeight:
         type: integer
         format: int64
-      appInsanceIds:
-        type: array
-        items:
-          type: string
-          format: uint64
-      appInstances:
-        type: array
-        items:
-          type: string
-          format: uint64
       createdAt:
         type: string
         format: date-time

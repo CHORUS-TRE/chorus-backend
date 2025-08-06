@@ -48,7 +48,7 @@ func (c WorkbenchController) GetWorkbench(ctx context.Context, req *chorus.GetWo
 	return &chorus.GetWorkbenchReply{Result: &chorus.GetWorkbenchResult{Workbench: tgWorkbench}}, nil
 }
 
-func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.UpdateWorkbenchRequest) (*chorus.UpdateWorkbenchReply, error) {
+func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.UpdateWorkbenchReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,18 +58,24 @@ func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.Up
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	workbench, err := converter.WorkbenchToBusiness(req.Workbench)
+	workbench, err := converter.WorkbenchToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
 	workbench.TenantID = tenantID
 
-	err = c.workbench.UpdateWorkbench(ctx, workbench)
+	updatedWorkbench, err := c.workbench.UpdateWorkbench(ctx, workbench)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkbench': %v", err.Error())
 	}
-	return &chorus.UpdateWorkbenchReply{Result: &chorus.UpdateWorkbenchResult{}}, nil
+
+	updatedWorkbenchProto, err := converter.WorkbenchFromBusiness(updatedWorkbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateWorkbenchReply{Result: &chorus.UpdateWorkbenchResult{Workbench: updatedWorkbenchProto}}, nil
 }
 
 func (c WorkbenchController) DeleteWorkbench(ctx context.Context, req *chorus.DeleteWorkbenchRequest) (*chorus.DeleteWorkbenchReply, error) {
@@ -102,7 +108,7 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.workbench.ListWorkbenchs(ctx, tenantID, pagination)
+	res, paginationRes, err := c.workbench.ListWorkbenchs(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenchs': %v", err.Error())
 	}
@@ -115,7 +121,13 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 		}
 		workbenchs = append(workbenchs, workbench)
 	}
-	return &chorus.ListWorkbenchsReply{Result: workbenchs}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
+	}
+
+	return &chorus.ListWorkbenchsReply{Result: &chorus.ListWorkbenchsResult{Workbenchs: workbenchs}, Pagination: paginationResult}, nil
 }
 
 // CreateWorkbench extracts the workbench from the request and passes it to the workbench service.
@@ -142,9 +154,15 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Wo
 	workbench.TenantID = tenantID
 	workbench.UserID = userID
 
-	res, err := c.workbench.CreateWorkbench(ctx, workbench)
+	newWorkbench, err := c.workbench.CreateWorkbench(ctx, workbench)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to call 'CreateWorkbench': %v", err.Error())
 	}
-	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Id: res}}, nil
+
+	newWorkbenchProto, err := converter.WorkbenchFromBusiness(newWorkbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Workbench: newWorkbenchProto}}, nil
 }

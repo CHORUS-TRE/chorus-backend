@@ -19,12 +19,6 @@ import (
 // swagger:model chorusWorkbench
 type ChorusWorkbench struct {
 
-	// app insance ids
-	AppInsanceIds []string `json:"appInsanceIds"`
-
-	// app instances
-	AppInstances []string `json:"appInstances"`
-
 	// created at
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`

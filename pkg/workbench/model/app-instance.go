@@ -15,9 +15,9 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
-	K8sState  K8sAppInstanceState
-	K8sStatus K8sAppInstanceStatus
 	Status    AppInstanceStatus
+	K8sStatus K8sAppInstanceStatus
+	K8sState  K8sAppInstanceState
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -105,4 +105,20 @@ func ToAppInstanceStatus(status string) (AppInstanceStatus, error) {
 	default:
 		return "", errors.New("unexpected AppInstanceStatus: " + status)
 	}
+}
+
+func (AppInstance) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":                     true,
+		"appid":                  true,
+		"workspaceid":            true,
+		"workbenchid":            true,
+		"status":                 true,
+		"createdat":              true,
+		"appname":                true,
+		"appdockerimageregistry": true,
+		"appdockerimagename":     true,
+	}
+
+	return validSortTypes[sortType]
 }

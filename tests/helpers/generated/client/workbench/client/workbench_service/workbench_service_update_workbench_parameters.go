@@ -64,7 +64,7 @@ WorkbenchServiceUpdateWorkbenchParams contains all the parameters to send to the
 type WorkbenchServiceUpdateWorkbenchParams struct {
 
 	// Body.
-	Body *models.ChorusUpdateWorkbenchRequest
+	Body *models.ChorusWorkbench
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *WorkbenchServiceUpdateWorkbenchParams) SetHTTPClient(client *http.Clien
 }
 
 // WithBody adds the body to the workbench service update workbench params
-func (o *WorkbenchServiceUpdateWorkbenchParams) WithBody(body *models.ChorusUpdateWorkbenchRequest) *WorkbenchServiceUpdateWorkbenchParams {
+func (o *WorkbenchServiceUpdateWorkbenchParams) WithBody(body *models.ChorusWorkbench) *WorkbenchServiceUpdateWorkbenchParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the workbench service update workbench params
-func (o *WorkbenchServiceUpdateWorkbenchParams) SetBody(body *models.ChorusUpdateWorkbenchRequest) {
+func (o *WorkbenchServiceUpdateWorkbenchParams) SetBody(body *models.ChorusWorkbench) {
 	o.Body = body
 }
 

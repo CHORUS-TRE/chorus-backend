@@ -102,7 +102,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateWorkbenchRequest'
+            $ref: '#/definitions/chorusWorkbench'
       tags:
         - WorkbenchService
   /api/rest/v1/workbenchs/{id}:
@@ -157,9 +157,8 @@ definitions:
   chorusCreateWorkbenchResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusDeleteWorkbenchReply:
     type: object
     properties:
@@ -181,6 +180,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListWorkbenchsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListWorkbenchsResult:
+    type: object
+    properties:
+      workbenchs:
         type: array
         items:
           type: object
@@ -207,6 +213,24 @@ definitions:
         x-example:
           - user_id=9999
           - status=STATUS_CREATED,STATUS_CLOSED
+  chorusPaginationResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int64
+        description: Total number of results
+      offset:
+        type: integer
+        format: int64
+        description: Offset used for pagination
+      limit:
+        type: integer
+        format: int64
+        description: Limit used for pagination
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Sort order used for pagination
   chorusSort:
     type: object
     properties:
@@ -219,13 +243,11 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateWorkbenchResult'
-  chorusUpdateWorkbenchRequest:
+  chorusUpdateWorkbenchResult:
     type: object
     properties:
       workbench:
         $ref: '#/definitions/chorusWorkbench'
-  chorusUpdateWorkbenchResult:
-    type: object
   chorusWorkbench:
     type: object
     properties:
@@ -257,16 +279,6 @@ definitions:
       initialResolutionHeight:
         type: integer
         format: int64
-      appInsanceIds:
-        type: array
-        items:
-          type: string
-          format: uint64
-      appInstances:
-        type: array
-        items:
-          type: string
-          format: uint64
       createdAt:
         type: string
         format: date-time
