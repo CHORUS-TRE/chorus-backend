@@ -45,9 +45,6 @@ message GetAppInstanceResult {
     AppInstance appInstance = 1;
 }
 
-message CreateAppInstanceRequest {
-    AppInstance appInstance = 1;
-}
 message CreateAppInstanceReply {
     CreateAppInstanceResult result = 1;
 }
@@ -55,9 +52,6 @@ message CreateAppInstanceResult {
     AppInstance appInstance = 1;
 }
 
-message UpdateAppInstanceRequest {
-    AppInstance appInstance = 1;
-}
 message UpdateAppInstanceReply {
     UpdateAppInstanceResult result = 1;
 }
@@ -97,7 +91,7 @@ service AppInstanceService {
         };
     };
 
-    rpc CreateAppInstance(CreateAppInstanceRequest) returns (CreateAppInstanceReply) {
+    rpc CreateAppInstance(AppInstance) returns (CreateAppInstanceReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/app-instances"
             body: "*"
@@ -109,7 +103,7 @@ service AppInstanceService {
         };
     };
 
-    rpc UpdateAppInstance(UpdateAppInstanceRequest) returns (UpdateAppInstanceReply) {
+    rpc UpdateAppInstance(AppInstance) returns (UpdateAppInstanceReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/app-instances"
             body: "*"

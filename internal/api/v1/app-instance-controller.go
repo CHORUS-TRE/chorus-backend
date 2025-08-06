@@ -48,7 +48,7 @@ func (c AppInstanceController) GetAppInstance(ctx context.Context, req *chorus.G
 	return &chorus.GetAppInstanceReply{Result: &chorus.GetAppInstanceResult{AppInstance: tgAppInstance}}, nil
 }
 
-func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *chorus.UpdateAppInstanceRequest) (*chorus.UpdateAppInstanceReply, error) {
+func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,7 +58,7 @@ func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *choru
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	appInstance, err := converter.AppInstanceToBusiness(req.AppInstance)
+	appInstance, err := converter.AppInstanceToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -131,7 +131,7 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 }
 
 // CreateAppInstance extracts the appInstance from the request and passes it to the appInstance service.
-func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *chorus.CreateAppInstanceRequest) (*chorus.CreateAppInstanceReply, error) {
+func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -146,7 +146,7 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 		tenantID = 1
 	}
 
-	appInstance, err := converter.AppInstanceToBusiness(req.AppInstance)
+	appInstance, err := converter.AppInstanceToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}

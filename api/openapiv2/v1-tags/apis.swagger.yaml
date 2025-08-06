@@ -126,7 +126,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusCreateAppInstanceRequest'
+            $ref: '#/definitions/chorusAppInstance'
       tags:
         - AppInstanceService
     put:
@@ -165,7 +165,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateAppInstanceRequest'
+            $ref: '#/definitions/chorusAppInstance'
       tags:
         - AppInstanceService
   /api/rest/v1/app-instances/{id}:
@@ -2024,11 +2024,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateAppInstanceResult'
-  chorusCreateAppInstanceRequest:
-    type: object
-    properties:
-      appInstance:
-        $ref: '#/definitions/chorusAppInstance'
   chorusCreateAppInstanceResult:
     type: object
     properties:
@@ -2410,11 +2405,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateAppInstanceResult'
-  chorusUpdateAppInstanceRequest:
-    type: object
-    properties:
-      appInstance:
-        $ref: '#/definitions/chorusAppInstance'
   chorusUpdateAppInstanceResult:
     type: object
     properties:
