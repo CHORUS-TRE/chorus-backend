@@ -48,7 +48,7 @@ func (c WorkbenchController) GetWorkbench(ctx context.Context, req *chorus.GetWo
 	return &chorus.GetWorkbenchReply{Result: &chorus.GetWorkbenchResult{Workbench: tgWorkbench}}, nil
 }
 
-func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.UpdateWorkbenchRequest) (*chorus.UpdateWorkbenchReply, error) {
+func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.UpdateWorkbenchReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,7 +58,7 @@ func (c WorkbenchController) UpdateWorkbench(ctx context.Context, req *chorus.Up
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	workbench, err := converter.WorkbenchToBusiness(req.Workbench)
+	workbench, err := converter.WorkbenchToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -131,7 +131,7 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 }
 
 // CreateWorkbench extracts the workbench from the request and passes it to the workbench service.
-func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.CreateWorkbenchRequest) (*chorus.CreateWorkbenchReply, error) {
+func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.CreateWorkbenchReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -146,7 +146,7 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Cr
 		tenantID = 1
 	}
 
-	workbench, err := converter.WorkbenchToBusiness(req.Workbench)
+	workbench, err := converter.WorkbenchToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}

@@ -64,7 +64,7 @@ WorkbenchServiceCreateWorkbenchParams contains all the parameters to send to the
 type WorkbenchServiceCreateWorkbenchParams struct {
 
 	// Body.
-	Body *models.ChorusCreateWorkbenchRequest
+	Body *models.ChorusWorkbench
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *WorkbenchServiceCreateWorkbenchParams) SetHTTPClient(client *http.Clien
 }
 
 // WithBody adds the body to the workbench service create workbench params
-func (o *WorkbenchServiceCreateWorkbenchParams) WithBody(body *models.ChorusCreateWorkbenchRequest) *WorkbenchServiceCreateWorkbenchParams {
+func (o *WorkbenchServiceCreateWorkbenchParams) WithBody(body *models.ChorusWorkbench) *WorkbenchServiceCreateWorkbenchParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the workbench service create workbench params
-func (o *WorkbenchServiceCreateWorkbenchParams) SetBody(body *models.ChorusCreateWorkbenchRequest) {
+func (o *WorkbenchServiceCreateWorkbenchParams) SetBody(body *models.ChorusWorkbench) {
 	o.Body = body
 }
 

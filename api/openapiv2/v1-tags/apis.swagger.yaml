@@ -1524,7 +1524,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusCreateWorkbenchRequest'
+            $ref: '#/definitions/chorusWorkbench'
       tags:
         - WorkbenchService
     put:
@@ -1563,7 +1563,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateWorkbenchRequest'
+            $ref: '#/definitions/chorusWorkbench'
       tags:
         - WorkbenchService
   /api/rest/v1/workbenchs/{id}:
@@ -2066,11 +2066,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateWorkbenchResult'
-  chorusCreateWorkbenchRequest:
-    type: object
-    properties:
-      workbench:
-        $ref: '#/definitions/chorusWorkbench'
   chorusCreateWorkbenchResult:
     type: object
     properties:
@@ -2471,11 +2466,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateWorkbenchResult'
-  chorusUpdateWorkbenchRequest:
-    type: object
-    properties:
-      workbench:
-        $ref: '#/definitions/chorusWorkbench'
   chorusUpdateWorkbenchResult:
     type: object
     properties:
