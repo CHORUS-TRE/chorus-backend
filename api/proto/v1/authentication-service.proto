@@ -5,7 +5,7 @@ option go_package = ".;chorus";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-import "credentials.proto";
+import "authentication.proto";
 import "public_endpoint.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
@@ -23,6 +23,8 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 };
 
+
+
 message AuthenticationReply {
     AuthenticationResult result = 1;
 }
@@ -30,50 +32,33 @@ message AuthenticationResult {
     string token  = 1;
 }
 
-message AuthenticationMode {
-    string type  = 1;
-    optional Internal internal = 2;
-    optional OpenID openid = 3;
-    string ButtonText = 4;
-    string IconURL = 5;
+message GetAuthenticationModesRequest {}
+message GetAuthenticationModesReply {
+    GetAuthenticationModesResult result = 1;
+}
+message GetAuthenticationModesResult {
+    repeated AuthenticationMode modes = 1;
 }
 
-message Internal {
-    bool public_registration_enabled = 1;
+message RefreshTokenRequest {}
+message RefreshTokenReply {
+    RefreshTokenResult result = 1;
+}
+message RefreshTokenResult {
+    string token = 1;
 }
 
-message OpenID {
-    string id = 1;
-}
-
-message GetAuthenticationModesRequest {
-    
-}
-
-message RefreshTokenRequest {
-    
-}
-
-message LogoutRequest {
-    
-}
-
+message LogoutRequest {}
 message LogoutReply {
     optional string redirectURL = 1;
-}
-
-message GetAuthenticationModesReply {
-    repeated AuthenticationMode result = 1;
 }
 
 message AuthenticateOauthRequest {
     string id = 1;
 }
-
 message AuthenticateOauthReply {
     AuthenticateOauthResult result = 1;
 }
-
 message AuthenticateOauthResult {
     string redirectURI = 1;
 }
@@ -84,13 +69,11 @@ message AuthenticateOauthRedirectRequest {
     string session_state = 3;
     string code = 4;
 }
-
-message AuthenticateOauthRedirectResult {
-    string token = 1;
-}
-
 message AuthenticateOauthRedirectReply {
     AuthenticateOauthRedirectResult result = 1;
+}
+message AuthenticateOauthRedirectResult {
+    string token = 1;
 }
 
 
@@ -122,7 +105,7 @@ service AuthenticationService {
         };
     };
     
-    rpc RefreshToken(RefreshTokenRequest) returns (AuthenticationReply) {
+    rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/authentication/refresh-token"
             body: "*"
