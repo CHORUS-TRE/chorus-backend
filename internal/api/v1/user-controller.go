@@ -10,6 +10,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -21,11 +22,12 @@ var _ chorus.UserServiceServer = (*UserController)(nil)
 // UserController is the user service controller handler.
 type UserController struct {
 	user service.Userer
+	cfg  config.Config
 }
 
 // NewUserController returns a fresh admin service controller instance.
-func NewUserController(user service.Userer) UserController {
-	return UserController{user: user}
+func NewUserController(user service.Userer, cfg config.Config) UserController {
+	return UserController{user: user, cfg: cfg}
 }
 
 func (c UserController) GetUserMe(ctx context.Context, empty *empty.Empty) (*chorus.GetUserMeReply, error) {
@@ -185,7 +187,11 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		tenantID = 1
+		if c.cfg.Daemon.TenantID != 0 {
+			tenantID = c.cfg.Daemon.TenantID
+		} else {
+			tenantID = 1
+		}
 	}
 
 	user, err := userToServiceRequest(req)
