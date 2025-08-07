@@ -92,8 +92,7 @@ services:
 
 clients:
   k8s_client:
-    ca: "{{ .service_account_secret_ca }}"
-    token: "{{ .service_account_secret_token }}"
+    sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
     api_server: "{{ .service_account_api_server_url }}"
 
 log:
