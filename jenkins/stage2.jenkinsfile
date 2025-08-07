@@ -138,7 +138,10 @@ pipeline {
                   sh '''
                     export env=ci
                     cd deploy
+                    echo "KUBECONFIG $KUBECONFIG"
                     ./deploy.sh 
+
+                    kubectl cluster-info
                   '''
                 }
               }
@@ -165,6 +168,9 @@ pipeline {
                     file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
                   ]){
                     sh """
+                      echo "KUBECONFIG $KUBECONFIG"
+                      kubectl cluster-info
+
                       echo "looking for pod name"
                       POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
                       
