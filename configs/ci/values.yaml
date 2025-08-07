@@ -1,2 +1,3 @@
 deployment:
   disableMountSecrets: true
+  postgresDBName: "chorus_ci"
