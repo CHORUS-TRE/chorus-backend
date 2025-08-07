@@ -45,12 +45,6 @@ func getK8sConfigFromServiceAccountPath(cfg config.Config) (*rest.Config, error)
 	saPath := cfg.Clients.K8sClient.ServiceAccountSecretPath
 	apiServer := cfg.Clients.K8sClient.APIServer
 
-	// Read token
-	token, err := os.ReadFile(saPath + "/token")
-	if err != nil {
-		return nil, fmt.Errorf("error reading service account token: %w", err)
-	}
-
 	// Read CA cert
 	caCert, err := os.ReadFile(saPath + "/ca.crt")
 	if err != nil {
@@ -58,8 +52,8 @@ func getK8sConfigFromServiceAccountPath(cfg config.Config) (*rest.Config, error)
 	}
 
 	restConfig := &rest.Config{
-		Host:        apiServer,
-		BearerToken: string(token),
+		Host:            apiServer,
+		BearerTokenFile: saPath + "/token",
 		TLSClientConfig: rest.TLSClientConfig{
 			CAData: caCert,
 		},
