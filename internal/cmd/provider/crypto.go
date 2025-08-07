@@ -28,9 +28,13 @@ func ProvideDaemonEncryptionKey() *crypto.Secret {
 				logger.TechLog.Fatal(context.Background(), "unable to load encryption key from: "+cfg.Daemon.PrivateKeyFile, zap.Error(err))
 			}
 		} else if cfg.Daemon.PrivateKey != "" {
-
+			daemonEncryptionKey, err = loadEncryptionKeyFromBytes([]byte(cfg.Daemon.PrivateKey))
+			if err != nil {
+				logger.TechLog.Fatal(context.Background(), "unable to load encryption key from bytes", zap.Error(err))
+			}
+		} else {
+			logger.TechLog.Warn(context.Background(), "daemon private key is not set in the configuration")
 		}
-
 	})
 	return daemonEncryptionKey
 }
