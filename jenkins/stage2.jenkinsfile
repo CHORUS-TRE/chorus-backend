@@ -184,7 +184,7 @@ pipeline {
                       sleep 20
 
                       echo "running acceptance tests"
-                      ./scripts/run_acceptance_tests.sh
+                      ./scripts/run_acceptance_test.sh
                     """
                   }
                 }
