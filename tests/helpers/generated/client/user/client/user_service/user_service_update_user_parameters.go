@@ -64,7 +64,7 @@ UserServiceUpdateUserParams contains all the parameters to send to the API endpo
 type UserServiceUpdateUserParams struct {
 
 	// Body.
-	Body *models.ChorusUpdateUserRequest
+	Body *models.ChorusUser
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *UserServiceUpdateUserParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the user service update user params
-func (o *UserServiceUpdateUserParams) WithBody(body *models.ChorusUpdateUserRequest) *UserServiceUpdateUserParams {
+func (o *UserServiceUpdateUserParams) WithBody(body *models.ChorusUser) *UserServiceUpdateUserParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the user service update user params
-func (o *UserServiceUpdateUserParams) SetBody(body *models.ChorusUpdateUserRequest) {
+func (o *UserServiceUpdateUserParams) SetBody(body *models.ChorusUser) {
 	o.Body = body
 }
 

@@ -40,7 +40,7 @@ type UserUpdateReq struct {
 	Roles []model.UserRole `validate:"min=1"`
 }
 
-type GetUsersReq struct {
+type ListUsersReq struct {
 	TenantID uint64
 }
 
