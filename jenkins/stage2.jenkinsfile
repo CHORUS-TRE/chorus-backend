@@ -180,7 +180,8 @@ pipeline {
                       sleep 3
                       
                       echo "port-forwarding and logging service/service-backend-${RELEASE_NAME}"
-                      kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 5432:5432 &
+                      kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
+                      kubectl -n ci port-forward pod/\$POD_NAME 5432:5432 &
                       kubectl -n ci logs -f pod/\$POD_NAME &
 
                       sleep 10
