@@ -28,6 +28,7 @@ func TestConfigFile() string {
 
 func Setup() {
 	configFile := TestConfigFile()
+	fmt.Println("using config file:", configFile)
 
 	viper.BindEnv("storage.datastores.chorus.host", "DB_HOST")
 

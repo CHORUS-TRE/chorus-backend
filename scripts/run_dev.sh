@@ -1,0 +1,1 @@
+go run ./cmd/chorus/main.go start | go run ./cmd/logger/main.go

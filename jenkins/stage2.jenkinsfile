@@ -139,43 +139,58 @@ pipeline {
                     export env=ci
                     cd deploy
                     ./deploy.sh 
+
+                    kubectl cluster-info
                   '''
                 }
               }
             }
             stage('test') {
-              agent {
-                docker {
-                    image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
-                    registryUrl 'https://harbor.build.chorus-tre.ch'
-                    registryCredentialsId 'harbor-build-registry'
-                    alwaysPull true
-                    args "-u root"
-                    // args '-ti --entrypoint /bin/bash'
-                }
-              }
+              // agent {
+              //   docker {
+              //       image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+              //       registryUrl 'https://harbor.build.chorus-tre.ch'
+              //       registryCredentialsId 'harbor-build-registry'
+              //       alwaysPull true
+              //       args "-u root"
+              //       // args '-ti --entrypoint /bin/bash'
+              //   }
+              // }
               steps {
-                sh """
-                  echo hello
-                """
-                // dir('chorus-dev-ops') {
-                  // checkout scm
-                  // withCredentials([
-                  //   file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"]),
-                  //   file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
-                  // ]){
-                  //   sh """
-                  //     // echo "looking for pod name"
-                  //     // POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
-                  //     // echo "waiting 60sec for pod \$POD_NAME to be ready"
-                  //     // kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
-                  //     // kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
-                  //     // kubectl -n ci logs -f pod/\$POD_NAME &
-                  //     // sleep 20
-                  //     // python3 -m unittest discover ./src/tests/acceptance
-                  //   """
-                  // }
-                // }
+                // sh """
+                //   echo hello
+                // """
+                dir('chorus-dev-ops') {
+                  checkout scm
+                  withCredentials([
+                    file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"]),
+                    file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
+                  ]){
+                    sh """
+                      echo "KUBECONFIG $KUBECONFIG"
+                      kubectl cluster-info
+
+                      echo "looking for pod name"
+                      POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
+                      
+                      echo "waiting 60sec for pod \$POD_NAME to be ready"
+                      kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
+                      echo "pod \$POD_NAME is ready"
+
+                      sleep 3
+                      
+                      echo "port-forwarding and logging service/service-backend-${RELEASE_NAME}"
+                      kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
+                      kubectl -n ci port-forward pod/\$POD_NAME 5432:5432 &
+                      kubectl -n ci logs -f pod/\$POD_NAME &
+
+                      sleep 10
+
+                      echo "running acceptance tests"
+                      ./scripts/run_acceptance_test.sh
+                    """
+                  }
+                }
               }
             }
           }

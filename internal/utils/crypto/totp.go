@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -29,6 +30,10 @@ func CreateTotpSecret(username string, daemonEncryptionKey *Secret) (string, err
 	})
 	if err != nil {
 		return "", err
+	}
+
+	if daemonEncryptionKey == nil {
+		return "", fmt.Errorf("daemon encryption key is nil")
 	}
 
 	encryptionKey, err := daemonEncryptionKey.Get()
