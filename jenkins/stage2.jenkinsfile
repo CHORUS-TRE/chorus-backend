@@ -138,7 +138,6 @@ pipeline {
                   sh '''
                     export env=ci
                     cd deploy
-                    echo "KUBECONFIG $KUBECONFIG"
                     ./deploy.sh 
 
                     kubectl cluster-info
@@ -147,16 +146,16 @@ pipeline {
               }
             }
             stage('test') {
-              agent {
-                docker {
-                    image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
-                    registryUrl 'https://harbor.build.chorus-tre.ch'
-                    registryCredentialsId 'harbor-build-registry'
-                    alwaysPull true
-                    args "-u root"
-                    // args '-ti --entrypoint /bin/bash'
-                }
-              }
+              // agent {
+              //   docker {
+              //       image "harbor.build.chorus-tre.ch/chorus/backend:${IMAGE_TAG}"
+              //       registryUrl 'https://harbor.build.chorus-tre.ch'
+              //       registryCredentialsId 'harbor-build-registry'
+              //       alwaysPull true
+              //       args "-u root"
+              //       // args '-ti --entrypoint /bin/bash'
+              //   }
+              // }
               steps {
                 // sh """
                 //   echo hello
