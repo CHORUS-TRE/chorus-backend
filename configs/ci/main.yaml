@@ -10,13 +10,13 @@ daemon:
       access_control_max_age: "600"
       cookie_domain: "localhost"
   jwt:
-    secret: "{{ .jwt_secret }}"
+    secret: "P*oDq#k3GwtvnUnh3w"
     expiration_time: 72h
     max_refresh_time: 4320h #180d
   jobs:
     job_status_gc:
       enabled: true
-  private_key: "{{ .daemon_private_key }}"
+  private_key: "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIIukqP9oBMqkrv369AT404ZK7WhioBqp652YZUzoK2FjoAoGCCqGSM49\nAwEHoUQDQgAEu0fZUiQFLWJ+CnxqcrCvZ8OuxN3dLDfJ9bBPcK1SYzDruT5lkqhS\nxjGnybbwUfA86bmqwAnrBghm8b2s4sR5QA==\n-----END EC PRIVATE KEY-----\n"
   salt: supreme-stung-pointy-demise3-blizzard-briskness-scrawny-shush-exalted
   tenant_id: 88888
 
