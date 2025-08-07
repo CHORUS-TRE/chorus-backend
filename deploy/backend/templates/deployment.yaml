@@ -31,9 +31,9 @@ spec:
         {{- end }}
         command: ["/chorus/bin/chorus"]
         {{- if not .Values.deployment.disableMountSecrets }}
-        args: ["start", "--config", "/chorus/conf/config.yaml"]
-        {{- else }}
         args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/secrets/secrets.yaml"]
+        {{- else }}
+        args: ["start", "--config", "/chorus/conf/config.yaml"]
         {{- end }}
       {{- if .Values.deployment.postgresEnabled }}
       - name: postgres
