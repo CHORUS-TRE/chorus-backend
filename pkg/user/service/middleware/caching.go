@@ -5,6 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
@@ -49,14 +50,15 @@ func (c *Caching) GetRoles(ctx context.Context) (reply []*model.Role, err error)
 	return
 }
 
-func (c *Caching) ListUsers(ctx context.Context, req service.ListUsersReq) (reply []*model.User, err error) {
+func (c *Caching) ListUsers(ctx context.Context, req service.ListUsersReq) (users []*model.User, pagination *common.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithInterface(req))
-	reply = []*model.User{}
+	users = []*model.User{}
+	pagination = &common.PaginationResult{}
 
-	if ok := entry.Get(ctx, &reply); !ok {
-		reply, err = c.next.ListUsers(ctx, req)
+	if ok := entry.Get(ctx, &users, &pagination); !ok {
+		users, pagination, err = c.next.ListUsers(ctx, req)
 		if err == nil {
-			entry.Set(ctx, defaultCacheExpiration, reply)
+			entry.Set(ctx, defaultCacheExpiration, users, pagination)
 		}
 	}
 

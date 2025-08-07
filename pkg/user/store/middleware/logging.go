@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
@@ -25,25 +26,25 @@ func Logging(logger *logger.ContextLogger) func(service.UserStore) service.UserS
 	}
 }
 
-func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
+func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.User, *common.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.ListUsers(ctx, tenantID)
+	users, paginationRes, err := c.next.ListUsers(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, err
+		return nil, nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
-		logger.WithCountField(len(res)),
+		logger.WithCountField(len(users)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return users, paginationRes, nil
 }
 
 func (c userStorageLogging) GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error) {
