@@ -16,8 +16,7 @@ daemon:
   jobs:
     job_status_gc:
       enabled: true
-  private_key_file: ./configs/dev/files/keys/chorus_privkey.pem
-  public_key_file: ./configs/dev/files/keys/chorus_pubkey.pem
+  private_key: "{{ .daemon_private_key }}"
   salt: supreme-stung-pointy-demise3-blizzard-briskness-scrawny-shush-exalted
   tenant_id: 88888
 
