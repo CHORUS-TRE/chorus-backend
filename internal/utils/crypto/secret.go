@@ -37,6 +37,10 @@ func NewSecret(secret []byte) (*Secret, error) {
 }
 
 func (k *Secret) Get() ([]byte, error) {
+	if k == nil {
+		return nil, fmt.Errorf("secret is nil")
+	}
+
 	dk := Derive(k.Key, k.Salt)
 
 	dec, err := Decrypt(k.EncSecret, dk)
