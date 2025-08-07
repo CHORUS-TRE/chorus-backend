@@ -25,10 +25,16 @@ spec:
         volumeMounts:
         - name: backend-config
           mountPath: /chorus/conf
+        {{- if not .Values.deployment.disableMountSecrets }}
         - name: backend-config-secrets
           mountPath: /chorus/secrets
+        {{- end }}
         command: ["/chorus/bin/chorus"]
+        {{- if not .Values.deployment.disableMountSecrets }}
         args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/secrets/secrets.yaml"]
+        {{- else }}
+        args: ["start", "--config", "/chorus/conf/config.yaml"]
+        {{- end }}
       {{- if .Values.deployment.postgresEnabled }}
       - name: postgres
         image: postgres
@@ -40,7 +46,11 @@ spec:
         - name: POSTGRES_PASSWORD
           value: password
         - name: POSTGRES_DB
+          {{- if .Values.deployment.postgresDBName }}
+          value: {{ .Values.deployment.postgresDBName }}
+          {{- else }}
           value: chorus
+          {{- end }}
       {{- end }}
       serviceAccountName: backend-service-account-{{ include "backend.nameid" . }}
       imagePullSecrets:
@@ -57,9 +67,11 @@ spec:
             path: privkey.pem
           - key: pubkey.pem
             path: pubkey.pem
+      {{- if not .Values.deployment.disableMountSecrets }}
       - name: backend-config-secrets
         secret:
           secretName: backend-secrets
           items:
           - key: secrets.yaml
             path: secrets.yaml
+      {{- end }}
