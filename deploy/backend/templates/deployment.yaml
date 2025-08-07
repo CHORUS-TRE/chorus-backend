@@ -25,7 +25,7 @@ spec:
         volumeMounts:
         - name: backend-config
           mountPath: /chorus/conf
-        {{- if .Values.deployment.disableMountSecrets }}
+        {{- if not .Values.deployment.disableMountSecrets }}
         - name: backend-config-secrets
           mountPath: /chorus/secrets
         {{- end }}
@@ -59,7 +59,7 @@ spec:
             path: privkey.pem
           - key: pubkey.pem
             path: pubkey.pem
-      {{- if .Values.deployment.disableMountSecrets }}
+      {{- if not .Values.deployment.disableMountSecrets }}
       - name: backend-config-secrets
         secret:
           secretName: backend-secrets
