@@ -155,27 +155,34 @@ pipeline {
                 }
               }
               steps {
-                sh """
-                  echo hello
-                """
-                // dir('chorus-dev-ops') {
-                  // checkout scm
-                  // withCredentials([
-                  //   file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"]),
-                  //   file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
-                  // ]){
-                  //   sh """
-                  //     // echo "looking for pod name"
-                  //     // POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
-                  //     // echo "waiting 60sec for pod \$POD_NAME to be ready"
-                  //     // kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
-                  //     // kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
-                  //     // kubectl -n ci logs -f pod/\$POD_NAME &
-                  //     // sleep 20
-                  //     // python3 -m unittest discover ./src/tests/acceptance
-                  //   """
-                  // }
-                // }
+                // sh """
+                //   echo hello
+                // """
+                dir('chorus-dev-ops') {
+                  checkout scm
+                  withCredentials([
+                    file([credentialsId: 'Kubernetes-INT-microk8s-admin-config', variable: "KUBECONFIG"]),
+                    file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
+                  ]){
+                    sh """
+                      echo "looking for pod name"
+                      POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
+                      
+                      echo "waiting 60sec for pod \$POD_NAME to be ready"
+                      kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
+                      echo "pod \$POD_NAME is ready"
+                      
+                      echo "port-forwarding and logging service/service-backend-${RELEASE_NAME}"
+                      kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
+                      kubectl -n ci logs -f pod/\$POD_NAME &
+
+                      sleep 20
+
+                      echo "running acceptance tests"
+                      ./scripts/run_acceptance_tests.sh
+                    """
+                  }
+                }
               }
             }
           }
