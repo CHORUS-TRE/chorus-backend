@@ -124,6 +124,8 @@ type (
 	}
 
 	K8sClient struct {
+		Enabled bool `yaml:"enabled,omitempty"` // if true, the client will be used to connect to the k8s cluster
+
 		KubeConfig string `yaml:"kube_config,omitempty"` // either provide a kubeconfig
 
 		APIServer                string `yaml:"api_server,omitempty"`     // or a service account api server
