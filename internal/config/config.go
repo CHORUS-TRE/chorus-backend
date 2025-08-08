@@ -124,11 +124,14 @@ type (
 	}
 
 	K8sClient struct {
+		Enabled bool `yaml:"enabled,omitempty"` // if true, the client will be used to connect to the k8s cluster
+
 		KubeConfig string `yaml:"kube_config,omitempty"` // either provide a kubeconfig
 
-		Token     string `yaml:"token,omitempty"`      // either a service account token
-		CA        string `yaml:"ca,omitempty"`         // and service account ca
-		APIServer string `yaml:"api_server,omitempty"` // and service account api server
+		APIServer                string `yaml:"api_server,omitempty"`     // or a service account api server
+		ServiceAccountSecretPath string `yaml:"sa_secret_path,omitempty"` // and a service account secret path
+		Token                    string `yaml:"token,omitempty"`          // or a service account token
+		CA                       string `yaml:"ca,omitempty"`             // and service account ca
 
 		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
 		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
