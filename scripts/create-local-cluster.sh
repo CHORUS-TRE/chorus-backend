@@ -122,6 +122,7 @@ ca_ident=$(echo "$ca" | awk '{print "      "$0}')
 cat <<EOF >configs/dev/files/kind.yaml
 clients:
   k8s_client:
+    enabled: true
     is_watcher: true
     server_version: "6.2.3-4"
     ca: |
