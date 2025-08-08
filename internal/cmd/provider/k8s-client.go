@@ -15,7 +15,8 @@ var k8sClient k8s.K8sClienter
 func ProvideK8sClient() k8s.K8sClienter {
 	k8sClientOnce.Do(func() {
 		cfg := ProvideConfig()
-		if cfg.Clients.K8sClient.KubeConfig == "" && cfg.Clients.K8sClient.Token == "" {
+		if !cfg.Clients.K8sClient.Enabled {
+			logger.TechLog.Info(context.Background(), "K8s client is disabled, using test client")
 			k8sClient = k8s.NewTestClient()
 		} else {
 			var err error
