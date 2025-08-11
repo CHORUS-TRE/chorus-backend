@@ -16,12 +16,11 @@ type Workbench struct {
 	Name        string
 	ShortName   string
 	Description string
+	Status      WorkbenchStatus
+	K8sStatus   K8sWorkbenchStatus
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
-
-	K8sStatus K8sWorkbenchStatus
-	Status    WorkbenchStatus
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -94,4 +93,18 @@ func ToK8sWorkbenchStatus(status string) (K8sWorkbenchStatus, error) {
 	default:
 		return "", fmt.Errorf("unexpected K8sWorkbenchStatus: %s", status)
 	}
+}
+
+func (Workbench) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":          true,
+		"userid":      true,
+		"workspaceid": true,
+		"name":        true,
+		"shortname":   true,
+		"status":      true,
+		"createdat":   true,
+	}
+
+	return validSortTypes[sortType]
 }

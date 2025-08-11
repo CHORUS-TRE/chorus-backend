@@ -131,7 +131,7 @@ func local_request_WorkspaceService_CreateWorkspace_0(ctx context.Context, marsh
 
 func request_WorkspaceService_UpdateWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateWorkspaceRequest
+		protoReq Workspace
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -143,7 +143,7 @@ func request_WorkspaceService_UpdateWorkspace_0(ctx context.Context, marshaler r
 
 func local_request_WorkspaceService_UpdateWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, server WorkspaceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateWorkspaceRequest
+		protoReq Workspace
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

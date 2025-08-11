@@ -26,25 +26,25 @@ func Logging(logger *logger.ContextLogger) func(service.WorkbenchStore) service.
 	}
 }
 
-func (c workbenchStorageLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (c workbenchStorageLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, err
+		return nil, nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
 		logger.WithCountField(len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {
@@ -150,53 +150,32 @@ func (c workbenchStorageLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
-func (c workbenchStorageLogging) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error {
+func (c workbenchStorageLogging) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 
-	err := c.next.UpdateWorkbench(ctx, tenantID, workbench)
+	updatedWorkbench, err := c.next.UpdateWorkbench(ctx, tenantID, workbench)
 	if err != nil {
 		c.logger.Error(ctx, "request completed",
 			logger.WithWorkbenchIDField(workbench.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 	c.logger.Debug(ctx, "request completed",
-		logger.WithWorkbenchIDField(workbench.ID),
+		logger.WithWorkbenchIDField(updatedWorkbench.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedWorkbench, nil
 }
 
-func (c workbenchStorageLogging) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error) {
+func (c workbenchStorageLogging) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	workbenchId, err := c.next.CreateWorkbench(ctx, tenantID, workbench)
-	if err != nil {
-		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
-			zap.Error(err),
-			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
-		)
-		return 0, err
-	}
-
-	c.logger.Debug(ctx, "request completed",
-		logger.WithWorkbenchIDField(workbenchId),
-		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
-	)
-	return workbenchId, nil
-}
-
-func (c workbenchStorageLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
-	c.logger.Debug(ctx, "request started")
-
-	now := time.Now()
-
-	res, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	newWorkbench, err := c.next.CreateWorkbench(ctx, tenantID, workbench)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -206,10 +185,31 @@ func (c workbenchStorageLogging) ListAppInstances(ctx context.Context, tenantID 
 	}
 
 	c.logger.Debug(ctx, "request completed",
+		logger.WithWorkbenchIDField(newWorkbench.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return newWorkbench, nil
+}
+
+func (c workbenchStorageLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
 		logger.WithCountField(len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchStorageLogging) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
@@ -271,24 +271,24 @@ func (c workbenchStorageLogging) DeleteAppInstances(ctx context.Context, tenantI
 	return nil
 }
 
-func (c workbenchStorageLogging) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error {
+func (c workbenchStorageLogging) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 
-	err := c.next.UpdateAppInstance(ctx, tenantID, appInstance)
+	updatedAppInstance, err := c.next.UpdateAppInstance(ctx, tenantID, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, "request completed",
 			logger.WithAppInstanceIDField(appInstance.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 	c.logger.Debug(ctx, "request completed",
 		logger.WithAppInstanceIDField(appInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedAppInstance, nil
 }
 
 func (c workbenchStorageLogging) UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error {
@@ -309,23 +309,23 @@ func (c workbenchStorageLogging) UpdateAppInstances(ctx context.Context, tenantI
 	return nil
 }
 
-func (c workbenchStorageLogging) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error) {
+func (c workbenchStorageLogging) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	appInstanceId, err := c.next.CreateAppInstance(ctx, tenantID, appInstance)
+	newAppInstance, err := c.next.CreateAppInstance(ctx, tenantID, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return 0, err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
-		logger.WithAppInstanceIDField(appInstanceId),
+		logger.WithAppInstanceIDField(newAppInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return appInstanceId, nil
+	return newAppInstance, nil
 }

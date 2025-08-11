@@ -67,6 +67,9 @@ message UpdatePasswordReply {
 message UpdatePasswordResult {}
 
 // Create Users
+message CreateUserRequest {
+    User user = 1;
+}
 message CreateUserReply {
     CreateUserResult result = 1;
 }
@@ -227,7 +230,7 @@ service UserService {
         };
     };
 
-    rpc CreateUser(User) returns (CreateUserReply) {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/users"
             body: "*"

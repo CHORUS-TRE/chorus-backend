@@ -45,7 +45,7 @@ func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.Ge
 	return c.next.GetUser(ctx, req)
 }
 
-func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
+func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus.CreateUserRequest) (*chorus.CreateUserReply, error) {
 	// err := c.IsAuthenticatedAndAuthorized(ctx)
 	// if err != nil {
 	// 	return nil, err

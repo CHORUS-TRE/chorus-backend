@@ -193,7 +193,7 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 }
 
 // CreateUser extracts the user from the request and passes it to the user service.
-func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
+func (c UserController) CreateUser(ctx context.Context, req *chorus.CreateUserRequest) (*chorus.CreateUserReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -207,7 +207,7 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		}
 	}
 
-	user, err := userToServiceRequest(req)
+	user, err := userToServiceRequest(req.User)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}

@@ -48,7 +48,7 @@ func (c AppController) GetApp(ctx context.Context, req *chorus.GetAppRequest) (*
 	return &chorus.GetAppReply{Result: &chorus.GetAppResult{App: tgApp}}, nil
 }
 
-func (c AppController) UpdateApp(ctx context.Context, req *chorus.UpdateAppRequest) (*chorus.UpdateAppReply, error) {
+func (c AppController) UpdateApp(ctx context.Context, req *chorus.App) (*chorus.UpdateAppReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -58,18 +58,23 @@ func (c AppController) UpdateApp(ctx context.Context, req *chorus.UpdateAppReque
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	app, err := converter.AppToBusiness(req.App)
+	app, err := converter.AppToBusiness(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
 	app.TenantID = tenantID
 
-	err = c.app.UpdateApp(ctx, app)
+	updatedApp, err := c.app.UpdateApp(ctx, app)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateApp': %v", err.Error())
 	}
-	return &chorus.UpdateAppReply{Result: &chorus.UpdateAppResult{}}, nil
+
+	updatedAppProto, err := converter.AppFromBusiness(updatedApp)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+	return &chorus.UpdateAppReply{Result: &chorus.UpdateAppResult{App: updatedAppProto}}, nil
 }
 
 func (c AppController) DeleteApp(ctx context.Context, req *chorus.DeleteAppRequest) (*chorus.DeleteAppReply, error) {
@@ -102,7 +107,7 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, err := c.app.ListApps(ctx, tenantID, pagination)
+	res, paginationRes, err := c.app.ListApps(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListApps': %v", err.Error())
 	}
@@ -115,7 +120,13 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 		}
 		apps = append(apps, app)
 	}
-	return &chorus.ListAppsReply{Result: apps}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
+	}
+
+	return &chorus.ListAppsReply{Result: &chorus.ListAppsResult{Apps: apps}, Pagination: paginationResult}, nil
 }
 
 // CreateApp extracts the app from the request and passes it to the app service.
@@ -142,9 +153,14 @@ func (c AppController) CreateApp(ctx context.Context, req *chorus.App) (*chorus.
 	app.TenantID = tenantID
 	app.UserID = userID
 
-	res, err := c.app.CreateApp(ctx, app)
+	newApp, err := c.app.CreateApp(ctx, app)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateApp': %v", err.Error())
 	}
-	return &chorus.CreateAppReply{Result: &chorus.CreateAppResult{Id: res}}, nil
+
+	newAppProto, err := converter.AppFromBusiness(newApp)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+	return &chorus.CreateAppReply{Result: &chorus.CreateAppResult{App: newAppProto}}, nil
 }

@@ -28,23 +28,23 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to get workbenchs: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_workbenchs", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchServiceLogging) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
@@ -106,62 +106,62 @@ func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
-func (c workbenchServiceLogging) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error {
+func (c workbenchServiceLogging) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	now := time.Now()
 
-	err := c.next.UpdateWorkbench(ctx, workbench)
+	updatedWorkbench, err := c.next.UpdateWorkbench(ctx, workbench)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithWorkbenchIDField(workbench.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update workbench: %w", err)
+		return nil, fmt.Errorf("unable to update workbench: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithWorkbenchIDField(workbench.ID),
+		logger.WithWorkbenchIDField(updatedWorkbench.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedWorkbench, nil
 }
 
-func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
+func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	now := time.Now()
 
-	workbenchId, err := c.next.CreateWorkbench(ctx, workbench)
+	newWorkbench, err := c.next.CreateWorkbench(ctx, workbench)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return workbenchId, fmt.Errorf("unable to create workbench: %w", err)
+		return nil, fmt.Errorf("unable to create workbench: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithWorkbenchIDField(workbenchId),
+		logger.WithWorkbenchIDField(newWorkbench.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return workbenchId, nil
+	return newWorkbench, nil
 }
 
-func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
+func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get appInstances: %w", err)
+		return nil, nil, fmt.Errorf("unable to get appInstances: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_appInstances", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return res, paginationRes, nil
 }
 
 func (c workbenchServiceLogging) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
@@ -204,41 +204,41 @@ func (c workbenchServiceLogging) DeleteAppInstance(ctx context.Context, tenantID
 	return nil
 }
 
-func (c workbenchServiceLogging) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+func (c workbenchServiceLogging) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	now := time.Now()
 
-	err := c.next.UpdateAppInstance(ctx, appInstance)
+	updatedAppInstance, err := c.next.UpdateAppInstance(ctx, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithAppInstanceIDField(appInstance.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update appInstance: %w", err)
+		return nil, fmt.Errorf("unable to update appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithAppInstanceIDField(appInstance.ID),
+		logger.WithAppInstanceIDField(updatedAppInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedAppInstance, nil
 }
 
-func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	now := time.Now()
 
-	appInstanceId, err := c.next.CreateAppInstance(ctx, appInstance)
+	newAppInstance, err := c.next.CreateAppInstance(ctx, appInstance)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return appInstanceId, fmt.Errorf("unable to create appInstance: %w", err)
+		return nil, fmt.Errorf("unable to create appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithAppInstanceIDField(appInstanceId),
+		logger.WithAppInstanceIDField(newAppInstance.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return appInstanceId, nil
+	return newAppInstance, nil
 }

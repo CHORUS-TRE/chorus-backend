@@ -8,6 +8,7 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -17,17 +18,75 @@ import (
 // swagger:model chorusCreateWorkspaceResult
 type ChorusCreateWorkspaceResult struct {
 
-	// id
-	ID string `json:"id,omitempty"`
+	// workspace
+	Workspace *ChorusWorkspace `json:"workspace,omitempty"`
 }
 
 // Validate validates this chorus create workspace result
 func (m *ChorusCreateWorkspaceResult) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateWorkspace(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this chorus create workspace result based on context it is used
+func (m *ChorusCreateWorkspaceResult) validateWorkspace(formats strfmt.Registry) error {
+	if swag.IsZero(m.Workspace) { // not required
+		return nil
+	}
+
+	if m.Workspace != nil {
+		if err := m.Workspace.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("workspace")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("workspace")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this chorus create workspace result based on the context it is used
 func (m *ChorusCreateWorkspaceResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateWorkspace(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusCreateWorkspaceResult) contextValidateWorkspace(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Workspace != nil {
+
+		if swag.IsZero(m.Workspace) { // not required
+			return nil
+		}
+
+		if err := m.Workspace.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("workspace")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("workspace")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

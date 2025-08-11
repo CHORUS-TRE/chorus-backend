@@ -6,6 +6,7 @@ package helpers
 import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/openapi"
+	app_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/app/client"
 	attachment_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/attachment/client"
 	auth_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/authentication/client"
 	health_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/health/client"
@@ -16,6 +17,10 @@ import (
 )
 
 var schemes = []string{"http"}
+
+func AppServiceHTTPClient() *app_client.ChorusAppService {
+	return app_client.NewHTTPClient(strfmt.Default)
+}
 
 func AuthenticationServiceHTTPClient() *auth_client.ChorusAuthenticationService {
 	return auth_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)

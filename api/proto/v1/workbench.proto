@@ -17,13 +17,12 @@ message Workbench {
     string status = 8;
     string k8sStatus = 9;
 
-
     uint32 initialResolutionWidth = 10;
     uint32 initialResolutionHeight = 11;
 
-    repeated uint64 appInsanceIds = 12;
-    repeated uint64 appInstances = 13;
+    // repeated uint64 appInstanceIds = 12;
+    // repeated uint64 appInstances = 13;
     
-    google.protobuf.Timestamp createdAt = 14;
-    google.protobuf.Timestamp updatedAt = 15;
+    google.protobuf.Timestamp createdAt = 12;
+    google.protobuf.Timestamp updatedAt = 13;
 }
