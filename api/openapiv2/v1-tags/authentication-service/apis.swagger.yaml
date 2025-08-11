@@ -168,7 +168,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusAuthenticationReply'
+            $ref: '#/definitions/chorusRefreshTokenReply'
         default:
           description: An unexpected error response.
           schema:
@@ -247,6 +247,11 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusGetAuthenticationModesResult'
+  chorusGetAuthenticationModesResult:
+    type: object
+    properties:
+      modes:
         type: array
         items:
           type: object
@@ -268,8 +273,18 @@ definitions:
     properties:
       id:
         type: string
+  chorusRefreshTokenReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRefreshTokenResult'
   chorusRefreshTokenRequest:
     type: object
+  chorusRefreshTokenResult:
+    type: object
+    properties:
+      token:
+        type: string
   protobufAny:
     type: object
     properties:

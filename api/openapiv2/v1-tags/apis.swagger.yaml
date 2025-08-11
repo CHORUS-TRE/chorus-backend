@@ -731,7 +731,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusAuthenticationReply'
+            $ref: '#/definitions/chorusRefreshTokenReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -2152,6 +2152,11 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusGetAuthenticationModesResult'
+  chorusGetAuthenticationModesResult:
+    type: object
+    properties:
+      modes:
         type: array
         items:
           type: object
@@ -2372,8 +2377,18 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusRefreshTokenReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRefreshTokenResult'
   chorusRefreshTokenRequest:
     type: object
+  chorusRefreshTokenResult:
+    type: object
+    properties:
+      token:
+        type: string
   chorusResetPasswordReply:
     type: object
     properties:

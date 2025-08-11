@@ -68,7 +68,7 @@ func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, re
 		}
 	}
 
-	return &chorus.GetAuthenticationModesReply{Result: res}, nil
+	return &chorus.GetAuthenticationModesReply{Result: &chorus.GetAuthenticationModesResult{Modes: res}}, nil
 }
 
 // Authenticate extracts the fields from an 'AuthenticationRequest' and passes them to the service.
@@ -98,7 +98,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
 }
 
-func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.RefreshTokenRequest) (*chorus.AuthenticationReply, error) {
+func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.RefreshTokenRequest) (*chorus.RefreshTokenReply, error) {
 	err := a.refreshTokenAuthorization.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 
-	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
+	return &chorus.RefreshTokenReply{Result: &chorus.RefreshTokenResult{Token: res}}, nil
 }
 
 func (a AuthenticationController) AuthenticateOauth(ctx context.Context, req *chorus.AuthenticateOauthRequest) (*chorus.AuthenticateOauthReply, error) {

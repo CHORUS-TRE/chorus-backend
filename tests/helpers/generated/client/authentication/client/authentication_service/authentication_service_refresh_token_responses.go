@@ -53,7 +53,7 @@ AuthenticationServiceRefreshTokenOK describes a response with status code 200, w
 A successful response.
 */
 type AuthenticationServiceRefreshTokenOK struct {
-	Payload *models.ChorusAuthenticationReply
+	Payload *models.ChorusRefreshTokenReply
 }
 
 // IsSuccess returns true when this authentication service refresh token o k response has a 2xx status code
@@ -96,13 +96,13 @@ func (o *AuthenticationServiceRefreshTokenOK) String() string {
 	return fmt.Sprintf("[POST /api/rest/v1/authentication/refresh-token][%d] authenticationServiceRefreshTokenOK %s", 200, payload)
 }
 
-func (o *AuthenticationServiceRefreshTokenOK) GetPayload() *models.ChorusAuthenticationReply {
+func (o *AuthenticationServiceRefreshTokenOK) GetPayload() *models.ChorusRefreshTokenReply {
 	return o.Payload
 }
 
 func (o *AuthenticationServiceRefreshTokenOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ChorusAuthenticationReply)
+	o.Payload = new(models.ChorusRefreshTokenReply)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
