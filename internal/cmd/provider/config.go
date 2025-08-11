@@ -106,13 +106,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.steward.workspace.enabled", false)
 
 	// Clients
-	v.SetDefault("clients.k8s_client.is_watcher", false)
-	v.SetDefault("clients.k8s_client.server_version", "latest")
-	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")
-	v.SetDefault("clients.k8s_client.default_registry", "harbor.dev.chorus-tre.ch")
-	v.SetDefault("clients.k8s_client.default_repository", "apps")
-
-	// Clients
+	v.SetDefault("clients.k8s_client.enabled", false)
 	v.SetDefault("clients.k8s_client.is_watcher", false)
 	v.SetDefault("clients.k8s_client.server_version", "latest")
 	v.SetDefault("clients.k8s_client.image_pull_secret_name", "image-pull-secret")

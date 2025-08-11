@@ -120,9 +120,9 @@ services:
 
 clients:
   k8s_client:
+    enabled: true
     is_watcher: true
-    ca: "{{ .service_account_secret_ca }}"
-    token: "{{ .service_account_secret_token }}"
+    sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
 
 log:
