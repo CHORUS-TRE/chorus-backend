@@ -28,46 +28,45 @@ message ListAppInstancesRequest {
     PaginationQuery pagination = 1;
 }
 message ListAppInstancesReply {
-    repeated AppInstance result = 1;
+    ListAppInstancesResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListAppInstancesResult {
+    repeated AppInstance appInstances = 1;
 }
 
 message GetAppInstanceRequest {
     uint64 id = 1;
 }
-
-message GetAppInstanceResult {
-    AppInstance appInstance = 1;
-}
 message GetAppInstanceReply {
     GetAppInstanceResult result = 1;
+}
+message GetAppInstanceResult {
+    AppInstance appInstance = 1;
 }
 
 message CreateAppInstanceReply {
     CreateAppInstanceResult result = 1;
 }
 message CreateAppInstanceResult {
-    uint64 id = 1;
-}
-
-message UpdateAppInstanceRequest {
     AppInstance appInstance = 1;
 }
 
-message UpdateAppInstanceResult {}
-
 message UpdateAppInstanceReply {
     UpdateAppInstanceResult result = 1;
+}
+message UpdateAppInstanceResult {
+    AppInstance appInstance = 1;
 }
 
 message DeleteAppInstanceRequest {
     uint64  id = 1;
 }
-
-message DeleteAppInstanceResult {}
-
 message DeleteAppInstanceReply {
     DeleteAppInstanceResult result = 1;
 }
+message DeleteAppInstanceResult {}
+
 
 service AppInstanceService {
     rpc GetAppInstance(GetAppInstanceRequest) returns (GetAppInstanceReply) {
@@ -104,7 +103,7 @@ service AppInstanceService {
         };
     };
 
-    rpc UpdateAppInstance(UpdateAppInstanceRequest) returns (UpdateAppInstanceReply) {
+    rpc UpdateAppInstance(AppInstance) returns (UpdateAppInstanceReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/app-instances"
             body: "*"

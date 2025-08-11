@@ -102,7 +102,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateAppRequest'
+            $ref: '#/definitions/chorusApp'
       tags:
         - AppService
   /api/rest/v1/apps/{id}:
@@ -163,6 +163,8 @@ definitions:
         format: uint64
       name:
         type: string
+      prettyName:
+        type: string
       description:
         type: string
       status:
@@ -174,8 +176,6 @@ definitions:
       dockerImageTag:
         type: string
       shmSize:
-        type: string
-      kioskConfigURL:
         type: string
       maxCPU:
         type: string
@@ -189,6 +189,8 @@ definitions:
         type: string
       minEphemeralStorage:
         type: string
+      kioskConfigURL:
+        type: string
       iconURL:
         type: string
       createdAt:
@@ -197,19 +199,17 @@ definitions:
       updatedAt:
         type: string
         format: date-time
-      prettyName:
-        type: string
   chorusCreateAppReply:
     type: object
     properties:
       result:
         $ref: '#/definitions/chorusCreateAppResult'
+    title: Create App
   chorusCreateAppResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      app:
+        $ref: '#/definitions/chorusApp'
   chorusDeleteAppReply:
     type: object
     properties:
@@ -231,6 +231,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListAppsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListAppsResult:
+    type: object
+    properties:
+      apps:
         type: array
         items:
           type: object
@@ -257,6 +264,24 @@ definitions:
         x-example:
           - user_id=9999
           - status=STATUS_CREATED,STATUS_CLOSED
+  chorusPaginationResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int64
+        description: Total number of results
+      offset:
+        type: integer
+        format: int64
+        description: Offset used for pagination
+      limit:
+        type: integer
+        format: int64
+        description: Limit used for pagination
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Sort order used for pagination
   chorusSort:
     type: object
     properties:
@@ -269,13 +294,12 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateAppResult'
-  chorusUpdateAppRequest:
+    title: Update App
+  chorusUpdateAppResult:
     type: object
     properties:
       app:
         $ref: '#/definitions/chorusApp'
-  chorusUpdateAppResult:
-    type: object
   protobufAny:
     type: object
     properties:

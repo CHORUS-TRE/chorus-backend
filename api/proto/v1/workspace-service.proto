@@ -28,46 +28,45 @@ message ListWorkspacesRequest {
     PaginationQuery pagination = 1;
 }
 message ListWorkspacesReply {
-    repeated Workspace result = 1;
+    ListWorkspacesResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListWorkspacesResult {
+    repeated Workspace workspaces = 1;
 }
 
 message GetWorkspaceRequest {
     uint64 id = 1;
 }
-
-message GetWorkspaceResult {
-    Workspace workspace = 1;
-}
 message GetWorkspaceReply {
     GetWorkspaceResult result = 1;
+}
+message GetWorkspaceResult {
+    Workspace workspace = 1;
 }
 
 message CreateWorkspaceReply {
     CreateWorkspaceResult result = 1;
 }
 message CreateWorkspaceResult {
-    uint64 id = 1;
-}
-
-message UpdateWorkspaceRequest {
     Workspace workspace = 1;
 }
 
-message UpdateWorkspaceResult {}
-
 message UpdateWorkspaceReply {
     UpdateWorkspaceResult result = 1;
+}
+message UpdateWorkspaceResult {
+    Workspace workspace = 1;
 }
 
 message DeleteWorkspaceRequest {
     uint64  id = 1;
 }
-
-message DeleteWorkspaceResult {}
-
 message DeleteWorkspaceReply {
     DeleteWorkspaceResult result = 1;
 }
+message DeleteWorkspaceResult {}
+
 
 service WorkspaceService {
     rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceReply) {
@@ -104,7 +103,7 @@ service WorkspaceService {
         };
     };
 
-    rpc UpdateWorkspace(UpdateWorkspaceRequest) returns (UpdateWorkspaceReply) {
+    rpc UpdateWorkspace(Workspace) returns (UpdateWorkspaceReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/workspaces"
             body: "*"

@@ -6,22 +6,22 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
-	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 )
 
 type Apper interface {
 	GetApp(ctx context.Context, tenantID, appID uint64) (*model.App, error)
-	ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error)
-	CreateApp(ctx context.Context, app *model.App) (uint64, error)
-	UpdateApp(ctx context.Context, app *model.App) error
+	ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error)
+	CreateApp(ctx context.Context, app *model.App) (*model.App, error)
+	UpdateApp(ctx context.Context, app *model.App) (*model.App, error)
 	DeleteApp(ctx context.Context, tenantId, appId uint64) error
 }
 
 type AppStore interface {
 	GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error)
-	ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error)
-	CreateApp(ctx context.Context, tenantID uint64, app *model.App) (uint64, error)
-	UpdateApp(ctx context.Context, tenantID uint64, app *model.App) error
+	ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error)
+	CreateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error)
+	UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error)
 	DeleteApp(ctx context.Context, tenantID uint64, appID uint64) error
 }
 
@@ -37,18 +37,18 @@ func NewAppService(store AppStore, client k8s.K8sClienter) *AppService {
 	}
 }
 
-func (u *AppService) ListApps(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.App, error) {
-	apps, err := u.store.ListApps(ctx, tenantID, pagination)
+func (u *AppService) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error) {
+	apps, paginationRes, err := u.store.ListApps(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, fmt.Errorf("unable to query apps: %w", err)
+		return nil, nil, fmt.Errorf("unable to query apps: %w", err)
 	}
-	return apps, nil
+	return apps, paginationRes, nil
 }
 
 func (u *AppService) GetApp(ctx context.Context, tenantID, appID uint64) (*model.App, error) {
 	app, err := u.store.GetApp(ctx, tenantID, appID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get app %v: %w", app.ID, err)
+		return nil, fmt.Errorf("unable to get app %v: %w", appID, err)
 	}
 
 	return app, nil
@@ -63,31 +63,28 @@ func (u *AppService) DeleteApp(ctx context.Context, tenantID, appID uint64) erro
 	return nil
 }
 
-func (u *AppService) UpdateApp(ctx context.Context, app *model.App) error {
-	if err := u.store.UpdateApp(ctx, app.TenantID, app); err != nil {
-		return fmt.Errorf("unable to update app %v: %w", app.ID, err)
+func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	updatedApp, err := u.store.UpdateApp(ctx, app.TenantID, app)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update app %v: %w", app.ID, err)
 	}
 
-	// Pre-pull the image asynchronously
-	go func() {
-		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
-	}()
+	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
+	go u.client.PrePullImageOnAllNodes(dockerImage)
 
-	return nil
+	return updatedApp, nil
 }
 
-func (u *AppService) CreateApp(ctx context.Context, app *model.App) (uint64, error) {
-	id, err := u.store.CreateApp(ctx, app.TenantID, app)
+func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	newApp, err := u.store.CreateApp(ctx, app.TenantID, app)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create app %v: %w", app.Name, err)
+		return nil, fmt.Errorf("unable to create app %v: %w", app.Name, err)
 	}
 
-	// Pre-pull the image asynchronously
-	go func() {
-		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
-	}()
+	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
+	go u.client.PrePullImageOnAllNodes(dockerImage)
 
-	return id, nil
+	return newApp, nil
 }
 
 // dockerImageToString constructs the full Docker image name

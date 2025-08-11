@@ -59,7 +59,7 @@ func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.A
 	return c.next.CreateApp(ctx, req)
 }
 
-func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.UpdateAppRequest) (*chorus.UpdateAppReply, error) {
+func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.App) (*chorus.UpdateAppReply, error) {
 	// TODO check for permission
 
 	err := c.IsAuthenticatedAndAuthorized(ctx)

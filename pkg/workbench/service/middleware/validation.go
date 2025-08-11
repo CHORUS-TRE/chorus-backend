@@ -25,9 +25,9 @@ func Validation(validate *val.Validate) func(service.Workbencher) service.Workbe
 	}
 }
 
-func (v validation) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
+func (v validation) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return v.next.ListWorkbenchs(ctx, tenantID, pagination)
 }
@@ -43,23 +43,23 @@ func (v validation) DeleteWorkbench(ctx context.Context, tenantID, workbenchID u
 	return v.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
-func (v validation) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error {
+func (v validation) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	if err := v.validate.Struct(workbench); err != nil {
 		return v.next.UpdateWorkbench(ctx, workbench)
 	}
 	return v.next.UpdateWorkbench(ctx, workbench)
 }
 
-func (v validation) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
+func (v validation) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	if err := v.validate.Struct(workbench); err != nil {
-		return 0, err
+		return nil, err
 	}
 	return v.next.CreateWorkbench(ctx, workbench)
 }
 
-func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error) {
+func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	return v.next.ListAppInstances(ctx, tenantID, pagination)
 }
@@ -72,16 +72,16 @@ func (v validation) DeleteAppInstance(ctx context.Context, tenantID, appInstance
 	return v.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 }
 
-func (v validation) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error {
+func (v validation) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	if err := v.validate.Struct(appInstance); err != nil {
 		return v.next.UpdateAppInstance(ctx, appInstance)
 	}
 	return v.next.UpdateAppInstance(ctx, appInstance)
 }
 
-func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error) {
+func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	if err := v.validate.Struct(appInstance); err != nil {
-		return 0, err
+		return nil, err
 	}
 	return v.next.CreateAppInstance(ctx, appInstance)
 }

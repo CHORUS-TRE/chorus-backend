@@ -9,7 +9,6 @@ message AppInstance {
 
     uint64 tenantId = 2;
     uint64 userId = 3;
-    
     uint64 appId = 4;
     uint64 workspaceId = 5;
     uint64 workbenchId = 6;

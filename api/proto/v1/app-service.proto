@@ -24,50 +24,54 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 };
 
+// List Apps
 message ListAppsRequest {
     PaginationQuery pagination = 1;
 }
 message ListAppsReply {
-    repeated App result = 1;
+    ListAppsResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListAppsResult {
+    repeated App apps = 1;
 }
 
+// Get App (by id)
 message GetAppRequest {
     uint64 id = 1;
-}
-
-message GetAppResult {
-    App app = 1;
 }
 message GetAppReply {
     GetAppResult result = 1;
 }
+message GetAppResult {
+    App app = 1;
+}
 
+// Create App
 message CreateAppReply {
     CreateAppResult result = 1;
 }
 message CreateAppResult {
-    uint64 id = 1;
-}
-
-message UpdateAppRequest {
     App app = 1;
 }
 
-message UpdateAppResult {}
-
+// Update App
 message UpdateAppReply {
     UpdateAppResult result = 1;
 }
+message UpdateAppResult {
+    App app = 1;
+}
 
+// Delete App
 message DeleteAppRequest {
     uint64  id = 1;
 }
-
-message DeleteAppResult {}
-
 message DeleteAppReply {
     DeleteAppResult result = 1;
 }
+message DeleteAppResult {}
+
 
 service AppService {
     rpc GetApp(GetAppRequest) returns (GetAppReply) {
@@ -104,7 +108,7 @@ service AppService {
         };
     };
 
-    rpc UpdateApp(UpdateAppRequest) returns (UpdateAppReply) {
+    rpc UpdateApp(App) returns (UpdateAppReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/apps"
             body: "*"
