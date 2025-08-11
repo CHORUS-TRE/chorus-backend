@@ -27,23 +27,24 @@ func Logging(logger *logger.ContextLogger) func(service.Workspaceer) service.Wor
 	}
 }
 
-func (c workspaceServiceLogging) ListWorkspaces(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workspace, error) {
+func (c workspaceServiceLogging) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.ListWorkspaces(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListWorkspaces(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get workspaces: %w", err)
+		return nil, nil, fmt.Errorf("unable to get workspaces: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_workspaces", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+
+	return res, paginationRes, nil
 }
 
 func (c workspaceServiceLogging) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {
@@ -86,41 +87,43 @@ func (c workspaceServiceLogging) DeleteWorkspace(ctx context.Context, tenantID, 
 	return nil
 }
 
-func (c workspaceServiceLogging) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) error {
+func (c workspaceServiceLogging) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	now := time.Now()
 
-	err := c.next.UpdateWorkspace(ctx, workspace)
+	updatedWorkspace, err := c.next.UpdateWorkspace(ctx, workspace)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithWorkspaceIDField(workspace.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update workspace: %w", err)
+		return nil, fmt.Errorf("unable to update workspace: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspace.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+
+	return updatedWorkspace, nil
 }
 
-func (c workspaceServiceLogging) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (uint64, error) {
+func (c workspaceServiceLogging) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	now := time.Now()
 
-	workspaceId, err := c.next.CreateWorkspace(ctx, workspace)
+	newWorkspace, err := c.next.CreateWorkspace(ctx, workspace)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return workspaceId, fmt.Errorf("unable to create workspace: %w", err)
+		return nil, fmt.Errorf("unable to create workspace: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		logger.WithWorkspaceIDField(workspaceId),
+		logger.WithWorkspaceIDField(newWorkspace.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return workspaceId, nil
+
+	return newWorkspace, nil
 }

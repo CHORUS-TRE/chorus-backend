@@ -34,33 +34,33 @@ var (
 
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
-	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error)
+	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error)
+	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
-	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error
+	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
-	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (uint64, error)
-	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) error
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
+	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
 }
 
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error)
+	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error)
 	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error)
 	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
-	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (uint64, error)
-	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) error
+	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
+	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.AppInstance, error)
-	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (uint64, error)
-	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) error
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
+	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
 	DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error
 	DeleteAppInstances(ctx context.Context, tenantID uint64, appInstanceIDs []uint64) error
@@ -174,7 +174,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 		}
 
 		logger.TechLog.Debug(context.Background(), "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
-		err = s.store.UpdateWorkbench(context.Background(), k8sWorkbench.TenantID, workbench)
+		_, err = s.store.UpdateWorkbench(context.Background(), k8sWorkbench.TenantID, workbench)
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
 			return err
@@ -294,12 +294,12 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination common_model.Pagination) ([]*model.Workbench, error) {
-	workbenchs, err := s.store.ListWorkbenchs(ctx, tenantID, pagination)
+func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
+	workbenchs, paginationRes, err := s.store.ListWorkbenchs(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, fmt.Errorf("unable to query workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to query workbenchs: %w", err)
 	}
-	return workbenchs, nil
+	return workbenchs, paginationRes, nil
 }
 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
@@ -330,21 +330,22 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 	return nil
 }
 
-func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) error {
-	if err := s.store.UpdateWorkbench(ctx, workbench.TenantID, workbench); err != nil {
-		return fmt.Errorf("unable to update workbench %v: %w", workbench.ID, err)
+func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
+	updatedWorkbench, err := s.store.UpdateWorkbench(ctx, workbench.TenantID, workbench)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update workbench %v: %w", workbench.ID, err)
 	}
 
-	return nil
+	return updatedWorkbench, nil
 }
 
-func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (uint64, error) {
-	id, err := s.store.CreateWorkbench(ctx, workbench.TenantID, workbench)
+func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
+	newWorkbench, err := s.store.CreateWorkbench(ctx, workbench.TenantID, workbench)
 	if err != nil {
-		return 0, fmt.Errorf("unable to create workbench: %w", err)
+		return nil, fmt.Errorf("unable to create workbench: %w", err)
 	}
 
-	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(id)
+	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
 	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
 		TenantID:                workbench.TenantID,
@@ -354,10 +355,10 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		InitialResolutionHeight: workbench.InitialResolutionHeight,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
+		return nil, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
 	}
 
-	return id, nil
+	return newWorkbench, nil
 }
 
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {

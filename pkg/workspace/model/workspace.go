@@ -67,3 +67,17 @@ func ToWorkspaceStatus(status string) (WorkspaceStatus, error) {
 		return "", fmt.Errorf("unexpected WorkspaceStatus: %s", status)
 	}
 }
+
+func (Workspace) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":          true,
+		"name":        true,
+		"shortname":   true,
+		"description": true,
+		"status":      true,
+		"isMain":      true,
+		"createdat":   true,
+	}
+
+	return validSortTypes[sortType]
+}
