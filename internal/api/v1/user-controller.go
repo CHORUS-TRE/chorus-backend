@@ -168,7 +168,8 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	res, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID})
+	pagination := converter.PaginationToBusiness(req.Pagination)
+	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListUsers': %v", err.Error())
 	}
@@ -181,7 +182,14 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 		}
 		users = append(users, user)
 	}
-	return &chorus.ListUsersReply{Result: &chorus.ListUsersResult{Users: users}}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		result := converter.PaginationResultFromBusiness(paginationRes)
+		paginationResult = result
+	}
+
+	return &chorus.ListUsersReply{Result: &chorus.ListUsersResult{Users: users}, Pagination: paginationResult}, nil
 }
 
 // CreateUser extracts the user from the request and passes it to the user service.

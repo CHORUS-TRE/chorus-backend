@@ -3,6 +3,7 @@ package service
 import (
 	"time"
 
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
@@ -41,7 +42,8 @@ type UserUpdateReq struct {
 }
 
 type ListUsersReq struct {
-	TenantID uint64
+	TenantID   uint64
+	Pagination *common.Pagination
 }
 
 type GetUserReq struct {
