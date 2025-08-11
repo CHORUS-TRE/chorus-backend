@@ -64,7 +64,7 @@ UserServiceCreateUserParams contains all the parameters to send to the API endpo
 type UserServiceCreateUserParams struct {
 
 	// Body.
-	Body *models.ChorusCreateUserRequest
+	Body *models.ChorusUser
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *UserServiceCreateUserParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the user service create user params
-func (o *UserServiceCreateUserParams) WithBody(body *models.ChorusCreateUserRequest) *UserServiceCreateUserParams {
+func (o *UserServiceCreateUserParams) WithBody(body *models.ChorusUser) *UserServiceCreateUserParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the user service create user params
-func (o *UserServiceCreateUserParams) SetBody(body *models.ChorusCreateUserRequest) {
+func (o *UserServiceCreateUserParams) SetBody(body *models.ChorusUser) {
 	o.Body = body
 }
 

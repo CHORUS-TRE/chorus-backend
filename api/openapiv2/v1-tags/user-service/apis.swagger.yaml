@@ -81,7 +81,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusCreateUserRequest'
+            $ref: '#/definitions/chorusUser'
       tags:
         - UserService
       security: []
@@ -267,11 +267,6 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateUserResult'
-  chorusCreateUserRequest:
-    type: object
-    properties:
-      user:
-        $ref: '#/definitions/chorusUser'
     title: Create Users
   chorusCreateUserResult:
     type: object

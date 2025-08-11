@@ -821,11 +821,11 @@ var _ = Describe("user service", func() {
 
 				When("the route POST '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceCreateUserParams().WithBody(
-						&models.ChorusCreateUserRequest{User: &models.ChorusUser{
+						&models.ChorusUser{
 							FirstName: "first", LastName: "last", Username: "user",
 							Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 							TotpEnabled: true,
-						}},
+						},
 					)
 
 					c := helpers.UserServiceHTTPClient()
