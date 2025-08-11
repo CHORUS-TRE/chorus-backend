@@ -53,6 +53,4 @@ func (c *testClient) DeleteWorkbench(namespace, workbenchName string) error {
 	return nil
 }
 
-func (c *testClient) PrePullImageOnAllNodes(image string) error {
-	return nil
-}
+func (c *testClient) PrePullImageOnAllNodes(image string) {}

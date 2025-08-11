@@ -8,6 +8,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
@@ -22,27 +23,51 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 	return &UserStorage{db: db}
 }
 
-// GetUsers queries all stocked users that are not 'deleted'.
-func (s *UserStorage) GetUsers(ctx context.Context, tenantID uint64) ([]*model.User, error) {
-	const query = `
-SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
-FROM users
-WHERE tenantid = $1 AND status != 'deleted';
-`
-	var users []*model.User
-	if err := s.db.SelectContext(ctx, &users, query, tenantID); err != nil {
-		return nil, err
+// ListUsers queries all stocked users that are not 'deleted'.
+func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) (users []*model.User, paginationRes *common.PaginationResult, err error) {
+	// Get total count query
+	countQuery := `SELECT COUNT(*) FROM users WHERE tenantid = $1 AND status != 'deleted'`
+	var totalCount int64
+	if err = s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+		return nil, nil, err
+	}
+
+	// Get users query
+	query := `
+		SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
+		FROM users
+		WHERE tenantid = $1 AND status != 'deleted'
+	`
+
+	// Add pagination
+	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.User{})
+	query += clause
+
+	// Build pagination result
+	paginationRes = &common.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	args := []interface{}{tenantID}
+	if err := s.db.SelectContext(ctx, &users, query, args...); err != nil {
+		return nil, nil, err
 	}
 
 	for _, u := range users {
 		roles, err := s.getUserRoles(ctx, u.ID)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		u.Roles = roles[:]
+		u.Roles = roles
 	}
 
-	return users, nil
+	return users, paginationRes, nil
 }
 
 func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error) {
@@ -89,7 +114,7 @@ DELETE FROM totp_recovery_codes WHERE tenantid = $1 AND id = $2;
 	return nil
 }
 
-func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (err error) {
+func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (updatedUser *model.User, err error) {
 	const deleteRecoveryCodesQuery = `
 		DELETE FROM totp_recovery_codes WHERE tenantid = $1 AND userid = $2;
 	`
@@ -100,7 +125,7 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 
 	tx, txErr := s.db.Beginx()
 	if txErr != nil {
-		return txErr
+		return nil, txErr
 	}
 
 	defer func() {
@@ -111,25 +136,26 @@ func (s *UserStorage) UpdateUserWithRecoveryCodes(ctx context.Context, tenantID 
 		}
 	}()
 
-	if err = s.updateUserAndRoles(ctx, tx, tenantID, user); err != nil {
-		return fmt.Errorf("unable to update user and roles: %w", err)
+	updatedUser, err = s.updateUserAndRoles(ctx, tx, tenantID, user)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update user and roles: %w", err)
 	}
 
 	if _, err = s.db.ExecContext(ctx, deleteRecoveryCodesQuery, tenantID, user.ID); err != nil {
-		return fmt.Errorf("unable to delete recovery codes: %w", err)
+		return nil, fmt.Errorf("unable to delete recovery codes: %w", err)
 	}
 
 	for _, rc := range totpRecoveryCodes {
 		if _, err = tx.ExecContext(ctx, insertRecoveryCodeQuery, tenantID, user.ID, rc); err != nil {
-			return fmt.Errorf("unable to insert recovery codes: %w", err)
+			return nil, fmt.Errorf("unable to insert recovery codes: %w", err)
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("unable to commit: %w", err)
+		return nil, fmt.Errorf("unable to commit: %w", err)
 	}
 
-	return err
+	return updatedUser, err
 }
 
 func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error {
@@ -138,8 +164,8 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 		SET (status, username, updatedat) = ($3, username || $4::text, NOW())
 		WHERE tenantid = $1 AND id = $2;
 	`
-
-	rows, err := s.db.ExecContext(ctx, query, tenantID, userID, model.UserDeleted.String(), "-"+uuid.Next())
+	uuidSuffix := "-" + uuid.Next()
+	rows, err := s.db.ExecContext(ctx, query, tenantID, userID, model.UserDeleted.String(), uuidSuffix)
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
 	}
@@ -155,10 +181,10 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 	return nil
 }
 
-func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (err error) {
+func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (updatedUser *model.User, err error) {
 	tx, txErr := s.db.Beginx()
 	if txErr != nil {
-		return txErr
+		return nil, txErr
 	}
 
 	defer func() {
@@ -169,23 +195,24 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 		}
 	}()
 
-	err = s.updateUserAndRoles(ctx, tx, tenantID, user)
+	updatedUser, err = s.updateUserAndRoles(ctx, tx, tenantID, user)
 	if err != nil {
-		return fmt.Errorf("unable to update: %w", err)
+		return nil, fmt.Errorf("unable to update: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("unable to commit: %w", err)
+		return nil, fmt.Errorf("unable to commit: %w", err)
 	}
 
-	return err
+	return updatedUser, err
 }
 
-func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) error {
+func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) (*model.User, error) {
 	const userUpdateQuery = `
 		UPDATE users
 		SET firstname = $3, lastname = $4, username = $5, source = $6, status = $7, password = $8, passwordChanged = $9, totpenabled = $10, totpsecret = $11, updatedat = NOW()
-		WHERE tenantid = $1 AND id = $2;
+		WHERE tenantid = $1 AND id = $2
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 
 	const deleteUserRolesQuery = `
@@ -198,83 +225,81 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 	`
 
 	// Update User
-	rows, err := tx.ExecContext(ctx, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
+	var updatedUser model.User
+	err := tx.GetContext(ctx, &updatedUser, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
 		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
-		return fmt.Errorf("unable to exec: %w", err)
-	}
-	affected, err := rows.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("unable to get rows affected: %w", err)
-	}
-
-	if affected == 0 {
-		return database.ErrNoRowsUpdated
+		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
 
 	roles, err := s.GetRoles(ctx)
 	if err != nil {
-		return fmt.Errorf("unable to get roles: %w", err)
+		return nil, fmt.Errorf("unable to get roles: %w", err)
 	}
 
 	// Delete Old User Roles
 	_, err = tx.ExecContext(ctx, deleteUserRolesQuery, user.ID)
 	if err != nil {
-		return fmt.Errorf("unable to delete old roles: %w", err)
+		return nil, fmt.Errorf("unable to delete old roles: %w", err)
 	}
 
 	// Add new User Roles
+	var userRoles []model.UserRole
 	for _, ur := range user.Roles {
 		found := false
 		for _, r := range roles {
 			if ur.String() == r.Name {
 				if _, err = tx.ExecContext(ctx, insertUserRoleQuery, user.ID, r.ID); err != nil {
-					return fmt.Errorf("unable to exec in: %w", err)
+					return nil, fmt.Errorf("unable to exec in: %w", err)
 				}
+				userRoles = append(userRoles, ur)
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("unknown user role: %v", ur)
+			return nil, fmt.Errorf("unknown user role: %v", ur)
 		}
 	}
 
-	return nil
+	// Set the roles on the updated user
+	updatedUser.Roles = userRoles
+
+	return &updatedUser, nil
 }
 
 // CreateUser saves the provided user object in the database 'users' table.
-func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (uint64, error) {
+func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	const userQuery = `
-INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status,
-                   totpsecret, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING id;
+		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 	const userRoleQuery = `
-INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
+		INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
 	`
 	const recoveryCodeQuery = `
-INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
+		INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 	`
 
 	// We do not want to insert a user if the subsequent creation of
 	// the user_role entries fails.
 	tx, err := s.db.Beginx()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	var id uint64
-	err = tx.GetContext(ctx, &id,
+	var newUser model.User
+	err = tx.GetContext(ctx, &newUser,
 		userQuery, tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret,
 	)
 	if err != nil {
-		return 0, storage.Rollback(tx, err)
+		return nil, storage.Rollback(tx, err)
 	}
 
 	roles, err := s.GetRoles(ctx)
 	if err != nil {
-		return 0, storage.Rollback(tx, err)
+		return nil, storage.Rollback(tx, err)
 	}
 
 	// For each user role that matches a role insert an entry in the 'user_role' table.
@@ -283,8 +308,8 @@ INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 		found := false
 		for _, r := range roles {
 			if ur.String() == r.Name {
-				if _, loopErr = tx.ExecContext(ctx, userRoleQuery, id, r.ID); loopErr != nil {
-					return 0, storage.Rollback(tx, loopErr)
+				if _, loopErr = tx.ExecContext(ctx, userRoleQuery, newUser.ID, r.ID); loopErr != nil {
+					return nil, storage.Rollback(tx, loopErr)
 				}
 				found = true
 				break
@@ -292,22 +317,23 @@ INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 		}
 		if !found {
 			loopErr = fmt.Errorf("unknown user role: %v", ur)
-			return 0, storage.Rollback(tx, loopErr)
+			return nil, storage.Rollback(tx, loopErr)
 		}
+		newUser.Roles = append(newUser.Roles, ur)
 	}
 	// Insert TOTP recovery codes.
 	if user.TotpRecoveryCodes != nil {
 		for _, rc := range user.TotpRecoveryCodes {
-			if _, loopErr = tx.ExecContext(ctx, recoveryCodeQuery, tenantID, id, rc); loopErr != nil {
-				return 0, storage.Rollback(tx, loopErr)
+			if _, loopErr = tx.ExecContext(ctx, recoveryCodeQuery, tenantID, newUser.ID, rc); loopErr != nil {
+				return nil, storage.Rollback(tx, loopErr)
 			}
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, err
+		return nil, err
 	}
-	return id, nil
+	return &newUser, nil
 }
 
 // getUserRoles fetches all the roles of a given user.

@@ -6,7 +6,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 var _ chorus.UserServiceServer = (*userControllerAuthorization)(nil)
@@ -28,13 +27,13 @@ func UserAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) fun
 	}
 }
 
-func (c userControllerAuthorization) GetUsers(ctx context.Context, req *chorus.GetUsersRequest) (*chorus.GetUsersReply, error) {
+func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
 	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}
 	//nolint: staticcheck
-	return c.next.GetUsers(ctx, req)
+	return c.next.ListUsers(ctx, req)
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
@@ -55,13 +54,13 @@ func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus
 	return c.next.CreateUser(ctx, req)
 }
 
-func (c userControllerAuthorization) GetUserMe(ctx context.Context, empty *empty.Empty) (*chorus.GetUserMeReply, error) {
+func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
 	err := c.IsAuthenticatedAndAuthorizedWithRoles(ctx, []string{model.RoleAuthenticated.String()})
 	if err != nil {
 		return nil, err
 	}
 	//nolint: staticcheck
-	return c.next.GetUserMe(ctx, empty)
+	return c.next.GetUserMe(ctx, req)
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
@@ -73,7 +72,7 @@ func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *ch
 	return c.next.UpdatePassword(ctx, req)
 }
 
-func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.UpdateUserRequest) (*chorus.UpdateUserReply, error) {
+func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
 	err := c.IsAuthenticatedAndAuthorized(ctx)
 	if err != nil {
 		return nil, err

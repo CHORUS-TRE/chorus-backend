@@ -13,7 +13,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusGetUserMeResult Get User (me)
+// ChorusGetUserMeResult chorus get user me result
 //
 // swagger:model chorusGetUserMeResult
 type ChorusGetUserMeResult struct {
