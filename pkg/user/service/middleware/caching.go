@@ -5,6 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
@@ -49,14 +50,15 @@ func (c *Caching) GetRoles(ctx context.Context) (reply []*model.Role, err error)
 	return
 }
 
-func (c *Caching) GetUsers(ctx context.Context, req service.GetUsersReq) (reply []*model.User, err error) {
+func (c *Caching) ListUsers(ctx context.Context, req service.ListUsersReq) (users []*model.User, pagination *common.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithInterface(req))
-	reply = []*model.User{}
+	users = []*model.User{}
+	pagination = &common.PaginationResult{}
 
-	if ok := entry.Get(ctx, &reply); !ok {
-		reply, err = c.next.GetUsers(ctx, req)
+	if ok := entry.Get(ctx, &users, &pagination); !ok {
+		users, pagination, err = c.next.ListUsers(ctx, req)
 		if err == nil {
-			entry.Set(ctx, defaultCacheExpiration, reply)
+			entry.Set(ctx, defaultCacheExpiration, users, pagination)
 		}
 	}
 
@@ -81,11 +83,11 @@ func (c *Caching) SoftDeleteUser(ctx context.Context, req service.DeleteUserReq)
 	return c.next.SoftDeleteUser(ctx, req)
 }
 
-func (c *Caching) UpdateUser(ctx context.Context, req service.UpdateUserReq) error {
+func (c *Caching) UpdateUser(ctx context.Context, req service.UpdateUserReq) (*model.User, error) {
 	return c.next.UpdateUser(ctx, req)
 }
 
-func (c *Caching) CreateUser(ctx context.Context, req service.CreateUserReq) (uint64, error) {
+func (c *Caching) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {
 	return c.next.CreateUser(ctx, req)
 }
 

@@ -30,17 +30,17 @@ func getAuthAsClientOpts(t string) func(*runtime.ClientOperation) {
 var _ = Describe("user service", func() {
 	helpers.Setup()
 
-	Describe("get users", func() {
+	Describe("list users", func() {
 
 		Given("an invalid jwt-token", func() {
 
 			auth := getAuthAsClientOpts("invalid")
 
 			When("the route GET '/api/rest/v1/users' is called", func() {
-				req := user.NewUserServiceGetUsersParams()
+				req := user.NewUserServiceListUsersParams()
 
 				c := helpers.UserServiceHTTPClient()
-				_, err := c.UserService.UserServiceGetUsers(req, auth)
+				_, err := c.UserService.UserServiceListUsers(req, auth)
 
 				Then("an authentication error should be raised", func() {
 					ExpectAPIErr(err).ShouldNot(BeNil())
@@ -56,10 +56,10 @@ var _ = Describe("user service", func() {
 				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
 
 				When("the route GET '/api/rest/v1/users' is called", func() {
-					req := user.NewUserServiceGetUsersParams()
+					req := user.NewUserServiceListUsersParams()
 
 					c := helpers.UserServiceHTTPClient()
-					_, err := c.UserService.UserServiceGetUsers(req, auth)
+					_, err := c.UserService.UserServiceListUsers(req, auth)
 
 					Then("a permission error should be raised", func() {
 						ExpectAPIErr(err).ShouldNot(BeNil())
@@ -75,14 +75,14 @@ var _ = Describe("user service", func() {
 
 			When("the route GET '/api/rest/v1/users' is called", func() {
 				setupTables()
-				req := user.NewUserServiceGetUsersParams()
+				req := user.NewUserServiceListUsersParams()
 
 				c := helpers.UserServiceHTTPClient()
-				resp, err := c.UserService.UserServiceGetUsers(req, auth)
+				resp, err := c.UserService.UserServiceListUsers(req, auth)
 
 				Then("users should be returned", func() {
 					ExpectAPIErr(err).Should(BeNil())
-					Expect(len(resp.Payload.Result)).Should(Equal(2))
+					Expect(len(resp.Payload.Result.Users)).Should(Equal(2))
 				})
 				cleanTables()
 			})
@@ -278,15 +278,13 @@ var _ = Describe("user service", func() {
 
 			When("the route PUT '/api/rest/v1/users' is called", func() {
 				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUpdateUserRequest{
-						User: &models.ChorusUser{
-							FirstName: "Bob",
-							ID:        "90000",
-							LastName:  "Smith",
-							Roles:     []string{"admin", "authenticated"},
-							Status:    "disabled",
-							Username:  "Bobby",
-						},
+					&models.ChorusUser{
+						FirstName: "Bob",
+						ID:        "90000",
+						LastName:  "Smith",
+						Roles:     []string{"admin", "authenticated"},
+						Status:    "disabled",
+						Username:  "Bobby",
 					},
 				)
 
@@ -308,15 +306,13 @@ var _ = Describe("user service", func() {
 
 				When("the route PUT '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceUpdateUserParams().WithBody(
-						&models.ChorusUpdateUserRequest{
-							User: &models.ChorusUser{
-								FirstName: "Bob",
-								ID:        "90000",
-								LastName:  "Smith",
-								Roles:     []string{"admin", "authenticated"},
-								Status:    "disabled",
-								Username:  "Bobby",
-							},
+						&models.ChorusUser{
+							FirstName: "Bob",
+							ID:        "90000",
+							LastName:  "Smith",
+							Roles:     []string{"admin", "authenticated"},
+							Status:    "disabled",
+							Username:  "Bobby",
 						},
 					)
 
@@ -339,15 +335,13 @@ var _ = Describe("user service", func() {
 				setupTables()
 
 				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUpdateUserRequest{
-						User: &models.ChorusUser{
-							FirstName: "Bob",
-							ID:        "90000",
-							LastName:  "Smith",
-							Roles:     []string{"admin", "authenticated"},
-							Status:    "disabled",
-							Username:  "Bobby",
-						},
+					&models.ChorusUser{
+						FirstName: "Bob",
+						ID:        "90000",
+						LastName:  "Smith",
+						Roles:     []string{"admin", "authenticated"},
+						Status:    "disabled",
+						Username:  "Bobby",
 					},
 				)
 
@@ -369,15 +363,13 @@ var _ = Describe("user service", func() {
 				setupTables()
 
 				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUpdateUserRequest{
-						User: &models.ChorusUser{
-							FirstName: "Bob",
-							ID:        "90000",
-							LastName:  "Smith",
-							Roles:     []string{"admin", "chorus"},
-							Status:    "disabled",
-							Username:  "Bobby",
-						},
+					&models.ChorusUser{
+						FirstName: "Bob",
+						ID:        "90000",
+						LastName:  "Smith",
+						Roles:     []string{"admin", "chorus"},
+						Status:    "disabled",
+						Username:  "Bobby",
 					},
 				)
 
@@ -729,11 +721,11 @@ var _ = Describe("user service", func() {
 
 		// 	When("the route POST '/api/rest/v1/users' is called", func() {
 		// 		req := user.NewUserServiceCreateUserParams().WithBody(
-		// 			&models.ChorusUser{
+		// 			&models.ChorusCreateUserRequest{User: &models.ChorusUser{
 		// 				FirstName: "first", LastName: "last", Username: "user",
 		// 				Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 		// 				TotpEnabled: true,
-		// 			},
+		// 			}},
 		// 		)
 
 		// 		c := helpers.UserServiceHTTPClient()
@@ -755,11 +747,11 @@ var _ = Describe("user service", func() {
 
 		// 		When("the route POST '/api/rest/v1/users' is called", func() {
 		// 			req := user.NewUserServiceCreateUserParams().WithBody(
-		// 				&models.ChorusUser{
+		// 				&models.ChorusCreateUserRequest{User: &models.ChorusUser{
 		// 					FirstName: "first", LastName: "last", Username: "user",
 		// 					Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 		// 					TotpEnabled: true,
-		// 				},
+		// 				}},
 		// 			)
 
 		// 			c := helpers.UserServiceHTTPClient()
@@ -781,10 +773,10 @@ var _ = Describe("user service", func() {
 		// 	When("the route POST '/api/rest/v1/users' is called with an invalid role", func() {
 		// 		setupTables()
 		// 		req := user.NewUserServiceCreateUserParams().WithBody(
-		// 			&models.ChorusUser{
+		// 			&models.ChorusCreateUserRequest{User: &models.ChorusUser{
 		// 				FirstName: "first", LastName: "last", Username: "user",
 		// 				Password: "pass", Status: "active", Roles: []string{"chorus"},
-		// 			},
+		// 			}},
 		// 		)
 
 		// 		c := helpers.UserServiceHTTPClient()
@@ -806,11 +798,11 @@ var _ = Describe("user service", func() {
 
 		// 		When("the route POST '/api/rest/v1/users' is called", func() {
 		// 			req := user.NewUserServiceCreateUserParams().WithBody(
-		// 				&models.ChorusUser{
+		// 				&models.ChorusCreateUserRequest{User: &models.ChorusUser{
 		// 					FirstName: "", LastName: "last", Username: "user",
 		// 					Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
 		// 					TotpEnabled: true,
-		// 				},
+		// 				}},
 		// 			)
 
 		// 			c := helpers.UserServiceHTTPClient()
@@ -864,9 +856,9 @@ var _ = Describe("user service", func() {
 					c := helpers.UserServiceHTTPClient()
 					resp, err := c.UserService.UserServiceCreateUser(req)
 
-					Then("an user id should be returned", func() {
+					Then("a user should be returned", func() {
 						ExpectAPIErr(err).Should(BeNil())
-						Expect(resp.Payload.Result.ID).ShouldNot(Equal(0))
+						Expect(resp.Payload.Result.User).ShouldNot(Equal(nil))
 					})
 					cleanTables()
 				})

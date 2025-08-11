@@ -64,7 +64,7 @@ type ClientService interface {
 
 	UserServiceGetUserMe(params *UserServiceGetUserMeParams, opts ...ClientOption) (*UserServiceGetUserMeOK, error)
 
-	UserServiceGetUsers(params *UserServiceGetUsersParams, opts ...ClientOption) (*UserServiceGetUsersOK, error)
+	UserServiceListUsers(params *UserServiceListUsersParams, opts ...ClientOption) (*UserServiceListUsersOK, error)
 
 	UserServiceResetPassword(params *UserServiceResetPasswordParams, opts ...ClientOption) (*UserServiceResetPasswordOK, error)
 
@@ -273,24 +273,24 @@ func (a *Client) UserServiceGetUserMe(params *UserServiceGetUserMeParams, opts .
 }
 
 /*
-UserServiceGetUsers lists users
+UserServiceListUsers lists users
 
 This endpoint returns a list of users
 */
-func (a *Client) UserServiceGetUsers(params *UserServiceGetUsersParams, opts ...ClientOption) (*UserServiceGetUsersOK, error) {
+func (a *Client) UserServiceListUsers(params *UserServiceListUsersParams, opts ...ClientOption) (*UserServiceListUsersOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewUserServiceGetUsersParams()
+		params = NewUserServiceListUsersParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "UserService_GetUsers",
+		ID:                 "UserService_ListUsers",
 		Method:             "GET",
 		PathPattern:        "/api/rest/v1/users",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &UserServiceGetUsersReader{formats: a.formats},
+		Reader:             &UserServiceListUsersReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -302,12 +302,12 @@ func (a *Client) UserServiceGetUsers(params *UserServiceGetUsersParams, opts ...
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UserServiceGetUsersOK)
+	success, ok := result.(*UserServiceListUsersOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceGetUsersDefault)
+	unexpectedSuccess := result.(*UserServiceListUsersDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

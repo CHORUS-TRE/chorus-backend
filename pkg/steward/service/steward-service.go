@@ -20,7 +20,7 @@ type Tenanter interface {
 }
 
 type Userer interface {
-	CreateUser(ctx context.Context, req user_service.CreateUserReq) (uint64, error)
+	CreateUser(ctx context.Context, req user_service.CreateUserReq) (*user_model.User, error)
 	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
 	CreateRole(ctx context.Context, role string) error
 	GetRoles(ctx context.Context) ([]*user_model.Role, error)

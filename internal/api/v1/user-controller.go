@@ -6,7 +6,6 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
@@ -30,7 +29,7 @@ func NewUserController(user service.Userer, cfg config.Config) UserController {
 	return UserController{user: user, cfg: cfg}
 }
 
-func (c UserController) GetUserMe(ctx context.Context, empty *empty.Empty) (*chorus.GetUserMeReply, error) {
+func (c UserController) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
@@ -106,7 +105,7 @@ func (c UserController) UpdatePassword(ctx context.Context, req *chorus.UpdatePa
 	return &chorus.UpdatePasswordReply{Result: &chorus.UpdateUserResult{}}, nil
 }
 
-func (c UserController) UpdateUser(ctx context.Context, req *chorus.UpdateUserRequest) (*chorus.UpdateUserReply, error) {
+func (c UserController) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -116,19 +115,25 @@ func (c UserController) UpdateUser(ctx context.Context, req *chorus.UpdateUserRe
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	user, err := userToUpdateServiceRequest(req.User)
+	user, err := userToUpdateServiceRequest(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
-	err = c.user.UpdateUser(ctx, service.UpdateUserReq{
+	updatedUser, err := c.user.UpdateUser(ctx, service.UpdateUserReq{
 		TenantID: tenantID,
 		User:     user,
 	})
+
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateUser': %v", err.Error())
 	}
-	return &chorus.UpdateUserReply{Result: &chorus.UpdateUserResult{}}, nil
+	updatedUserProto, err := converter.UserFromBusiness(updatedUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateUserReply{Result: &chorus.UpdateUserResult{User: updatedUserProto}}, nil
 }
 
 func (c UserController) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
@@ -151,9 +156,9 @@ func (c UserController) DeleteUser(ctx context.Context, req *chorus.DeleteUserRe
 	return &chorus.DeleteUserReply{Result: &chorus.DeleteUserResult{}}, nil
 }
 
-// GetUsers extracts the retrieved users from the service and inserts them into a reply object.
+// ListUsers extracts the retrieved users from the service and inserts them into a reply object.
 // Note that an admin role is required to call this procedure.
-func (c UserController) GetUsers(ctx context.Context, req *chorus.GetUsersRequest) (*chorus.GetUsersReply, error) {
+func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -163,9 +168,10 @@ func (c UserController) GetUsers(ctx context.Context, req *chorus.GetUsersReques
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	res, err := c.user.GetUsers(ctx, service.GetUsersReq{TenantID: tenantID})
+	pagination := converter.PaginationToBusiness(req.Pagination)
+	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination})
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetUsers': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListUsers': %v", err.Error())
 	}
 
 	var users []*chorus.User
@@ -176,7 +182,14 @@ func (c UserController) GetUsers(ctx context.Context, req *chorus.GetUsersReques
 		}
 		users = append(users, user)
 	}
-	return &chorus.GetUsersReply{Result: users}, nil
+
+	var paginationResult *chorus.PaginationResult
+	if paginationRes != nil {
+		result := converter.PaginationResultFromBusiness(paginationRes)
+		paginationResult = result
+	}
+
+	return &chorus.ListUsersReply{Result: &chorus.ListUsersResult{Users: users}, Pagination: paginationResult}, nil
 }
 
 // CreateUser extracts the user from the request and passes it to the user service.
@@ -216,7 +229,13 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateUser': %v", err.Error())
 	}
-	return &chorus.CreateUserReply{Result: &chorus.CreateUserResult{Id: res}}, nil
+
+	tgUser, err := converter.UserFromBusiness(res)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateUserReply{Result: &chorus.CreateUserResult{User: tgUser}}, nil
 }
 
 func (c UserController) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {

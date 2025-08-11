@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 
@@ -26,23 +27,23 @@ func Logging(logger *logger.ContextLogger) func(service.Userer) service.Userer {
 	}
 }
 
-func (c userServiceLogging) GetUsers(ctx context.Context, req service.GetUsersReq) ([]*model.User, error) {
+func (c userServiceLogging) ListUsers(ctx context.Context, req service.ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
 	now := time.Now()
 
-	res, err := c.next.GetUsers(ctx, req)
+	users, paginationRes, err := c.next.ListUsers(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get users: %w", err)
+		return nil, nil, fmt.Errorf("unable to get users: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
-		zap.Int("num_users", len(res)),
+		zap.Int("num_users", len(users)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return users, paginationRes, nil
 }
 
 func (c userServiceLogging) GetUser(ctx context.Context, req service.GetUserReq) (*model.User, error) {
@@ -85,43 +86,43 @@ func (c userServiceLogging) SoftDeleteUser(ctx context.Context, req service.Dele
 	return nil
 }
 
-func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUserReq) error {
+func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUserReq) (*model.User, error) {
 	now := time.Now()
 
-	err := c.next.UpdateUser(ctx, req)
+	updatedUser, err := c.next.UpdateUser(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithUserIDField(req.User.ID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to update user: %w", err)
+		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
 		logger.WithUserIDField(req.User.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return updatedUser, nil
 }
 
-func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUserReq) (uint64, error) {
+func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {
 	now := time.Now()
 
-	userId, err := c.next.CreateUser(ctx, req)
+	res, err := c.next.CreateUser(ctx, req)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return userId, fmt.Errorf("unable to create user: %w", err)
+		return nil, fmt.Errorf("unable to create user: %w", err)
 	}
 
 	c.logger.Info(ctx, "request completed",
-		logger.WithUserIDField(userId),
+		logger.WithUserIDField(res.ID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return userId, nil
+	return res, nil
 }
 
 func (c userServiceLogging) CreateRole(ctx context.Context, role string) error {
