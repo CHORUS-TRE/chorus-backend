@@ -102,7 +102,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateWorkspaceRequest'
+            $ref: '#/definitions/chorusWorkspace'
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}:
@@ -157,9 +157,8 @@ definitions:
   chorusCreateWorkspaceResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusDeleteWorkspaceReply:
     type: object
     properties:
@@ -181,6 +180,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListWorkspacesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListWorkspacesResult:
+    type: object
+    properties:
+      workspaces:
         type: array
         items:
           type: object
@@ -207,6 +213,24 @@ definitions:
         x-example:
           - user_id=9999
           - status=STATUS_CREATED,STATUS_CLOSED
+  chorusPaginationResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int64
+        description: Total number of results
+      offset:
+        type: integer
+        format: int64
+        description: Offset used for pagination
+      limit:
+        type: integer
+        format: int64
+        description: Limit used for pagination
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Sort order used for pagination
   chorusSort:
     type: object
     properties:
@@ -219,13 +243,11 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateWorkspaceResult'
-  chorusUpdateWorkspaceRequest:
+  chorusUpdateWorkspaceResult:
     type: object
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
-  chorusUpdateWorkspaceResult:
-    type: object
   chorusWorkspace:
     type: object
     properties:

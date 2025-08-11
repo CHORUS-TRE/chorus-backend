@@ -1786,7 +1786,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusUpdateWorkspaceRequest'
+            $ref: '#/definitions/chorusWorkspace'
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}:
@@ -2074,9 +2074,8 @@ definitions:
   chorusCreateWorkspaceResult:
     type: object
     properties:
-      id:
-        type: string
-        format: uint64
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusCredentials:
     type: object
     properties:
@@ -2290,6 +2289,13 @@ definitions:
     type: object
     properties:
       result:
+        $ref: '#/definitions/chorusListWorkspacesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListWorkspacesResult:
+    type: object
+    properties:
+      workspaces:
         type: array
         items:
           type: object
@@ -2472,13 +2478,11 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusUpdateWorkspaceResult'
-  chorusUpdateWorkspaceRequest:
+  chorusUpdateWorkspaceResult:
     type: object
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
-  chorusUpdateWorkspaceResult:
-    type: object
   chorusUser:
     type: object
     properties:
