@@ -26,14 +26,14 @@ type AppStore interface {
 }
 
 type AppService struct {
-	store  AppStore
-	client k8s.K8sClienter
+	store     AppStore
+	k8sClient k8s.K8sClienter
 }
 
-func NewAppService(store AppStore, client k8s.K8sClienter) *AppService {
+func NewAppService(store AppStore, k8sClient k8s.K8sClienter) *AppService {
 	return &AppService{
-		store:  store,
-		client: client,
+		store:     store,
+		k8sClient: k8sClient,
 	}
 }
 
@@ -70,7 +70,7 @@ func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App,
 	}
 
 	go func() {
-		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
+		u.k8sClient.PrePullImageOnAllNodes(dockerImageToString(app))
 	}()
 
 	return updatedApp, nil
@@ -83,7 +83,7 @@ func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 	}
 
 	go func() {
-		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
+		u.k8sClient.PrePullImageOnAllNodes(dockerImageToString(app))
 	}()
 
 	return newApp, nil
