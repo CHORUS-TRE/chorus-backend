@@ -69,8 +69,9 @@ func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App,
 		return nil, fmt.Errorf("unable to update app %v: %w", app.ID, err)
 	}
 
-	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
-	go u.client.PrePullImageOnAllNodes(dockerImage)
+	go func() {
+		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
+	}()
 
 	return updatedApp, nil
 }
@@ -81,8 +82,9 @@ func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 		return nil, fmt.Errorf("unable to create app %v: %w", app.Name, err)
 	}
 
-	dockerImage := app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
-	go u.client.PrePullImageOnAllNodes(dockerImage)
+	go func() {
+		u.client.PrePullImageOnAllNodes(dockerImageToString(app))
+	}()
 
 	return newApp, nil
 }
