@@ -47,11 +47,9 @@ func (c *client) ImageExists(imageRef string, username string, password string) 
 		return false, fmt.Errorf("failed to get docker registry auth: %w", err)
 	}
 
-	// Use GET request directly since some registries (like Harbor) don't support HEAD properly
 	_, err = remote.Get(ref, remote.WithAuth(authenticator))
 	if err != nil {
-		// Check if it's a "not found" error
-		if isNotFoundError(err) {
+		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == 404 {
 			return false, nil
 		}
 		return false, fmt.Errorf("failed to check if docker image exists: %w", err)
@@ -84,12 +82,4 @@ func (c *client) getRegistryAuth(registry string, username string, password stri
 
 	// Fallback to anonymous access
 	return authn.Anonymous, nil
-}
-
-// isNotFoundError checks if the error indicates the image was not found
-func isNotFoundError(err error) bool {
-	if terr, ok := err.(*transport.Error); ok {
-		return terr.StatusCode == 404 // HTTP 404 Not Found
-	}
-	return false
 }
