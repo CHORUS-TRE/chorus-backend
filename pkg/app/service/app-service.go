@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -26,14 +27,16 @@ type AppStore interface {
 }
 
 type AppService struct {
-	store     AppStore
-	k8sClient k8s.K8sClienter
+	store        AppStore
+	k8sClient    k8s.K8sClienter
+	dockerClient docker.DockerClienter
 }
 
-func NewAppService(store AppStore, k8sClient k8s.K8sClienter) *AppService {
+func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter) *AppService {
 	return &AppService{
-		store:     store,
-		k8sClient: k8sClient,
+		store:        store,
+		k8sClient:    k8sClient,
+		dockerClient: dockerClient,
 	}
 }
 
@@ -64,26 +67,48 @@ func (u *AppService) DeleteApp(ctx context.Context, tenantID, appID uint64) erro
 }
 
 func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	imageRef := dockerImageToString(app)
+
+	// Verify that app image exists using docker client
+	exists, err := u.dockerClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+	if err != nil {
+		return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("app image %s does not exist", imageRef)
+	}
+
 	updatedApp, err := u.store.UpdateApp(ctx, app.TenantID, app)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update app %v: %w", app.ID, err)
+		return nil, fmt.Errorf("unable to update app %s: %w", app.Name, err)
 	}
 
 	go func() {
-		u.k8sClient.PrePullImageOnAllNodes(dockerImageToString(app))
+		u.k8sClient.PrePullImageOnAllNodes(imageRef)
 	}()
 
 	return updatedApp, nil
 }
 
 func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	imageRef := dockerImageToString(app)
+
+	// Verify that app image exists using docker client
+	exists, err := u.dockerClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+	if err != nil {
+		return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("app image %s does not exist", imageRef)
+	}
+
 	newApp, err := u.store.CreateApp(ctx, app.TenantID, app)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create app %v: %w", app.Name, err)
+		return nil, fmt.Errorf("unable to create app %s: %w", app.Name, err)
 	}
 
 	go func() {
-		u.k8sClient.PrePullImageOnAllNodes(dockerImageToString(app))
+		u.k8sClient.PrePullImageOnAllNodes(imageRef)
 	}()
 
 	return newApp, nil
