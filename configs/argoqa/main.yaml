@@ -91,6 +91,8 @@ services:
     proxy_hit_save_batch_interval: 30s
 
 clients:
+  docker_client:
+    enabled: true
   k8s_client:
     enabled: true
     sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
