@@ -28,7 +28,7 @@ func AppAuthorizing(logger *logger.ContextLogger, authorizer authorization.Autho
 }
 
 func (c appControllerAuthorization) ListApps(ctx context.Context, req *chorus.ListAppsRequest) (*chorus.ListAppsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListApps)
+	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionListApps))
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c appControllerAuthorization) ListApps(ctx context.Context, req *chorus.Li
 }
 
 func (c appControllerAuthorization) GetApp(ctx context.Context, req *chorus.GetAppRequest) (*chorus.GetAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetApp)
+	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionGetApp))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c appControllerAuthorization) GetApp(ctx context.Context, req *chorus.GetA
 }
 
 func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.App) (*chorus.CreateAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateApp)
+	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionCreateApp))
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.A
 }
 
 func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.App) (*chorus.UpdateAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateApp)
+	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionUpdateApp))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.A
 }
 
 func (c appControllerAuthorization) DeleteApp(ctx context.Context, req *chorus.DeleteAppRequest) (*chorus.DeleteAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteApp)
+	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionDeleteApp))
 	if err != nil {
 		return nil, err
 	}

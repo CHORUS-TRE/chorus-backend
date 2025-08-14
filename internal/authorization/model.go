@@ -2,68 +2,81 @@ package authorization
 
 import "fmt"
 
-type Permission string
+func NewPermission(name PermissionName, opts ...NewContextOption) Permission {
+	context := NewContext(opts...)
+	return Permission{
+		Name:    name,
+		Context: context,
+	}
+}
+
+type Permission struct {
+	Name    PermissionName
+	Context Context
+}
+
+type PermissionName string
 
 const (
-	PermissionListAppInstances  Permission = "listAppInstances"
-	PermissionCreateAppInstance Permission = "createAppInstance"
-	PermissionUpdateAppInstance Permission = "updateAppInstance"
-	PermissionGetAppInstance    Permission = "getAppInstance"
-	PermissionDeleteAppInstance Permission = "deleteAppInstance"
+	PermissionListAppInstances  PermissionName = "listAppInstances"
+	PermissionCreateAppInstance PermissionName = "createAppInstance"
+	PermissionUpdateAppInstance PermissionName = "updateAppInstance"
+	PermissionGetAppInstance    PermissionName = "getAppInstance"
+	PermissionDeleteAppInstance PermissionName = "deleteAppInstance"
 
-	PermissionListWorkbenchs    Permission = "listWorkbenchs"
-	PermissionCreateWorkbench   Permission = "createWorkbench"
-	PermissionUpdateWorkbench   Permission = "updateWorkbench"
-	PermissionGetWorkbench      Permission = "getWorkbench"
-	PermissionStreamWorkbench   Permission = "streamWorkbench"
-	PermissionDeleteWorkbench   Permission = "deleteWorkbench"
-	PermissionInviteInWorkbench Permission = "inviteInWorkbench"
+	PermissionListWorkbenchs    PermissionName = "listWorkbenchs"
+	PermissionCreateWorkbench   PermissionName = "createWorkbench"
+	PermissionUpdateWorkbench   PermissionName = "updateWorkbench"
+	PermissionGetWorkbench      PermissionName = "getWorkbench"
+	PermissionStreamWorkbench   PermissionName = "streamWorkbench"
+	PermissionDeleteWorkbench   PermissionName = "deleteWorkbench"
+	PermissionInviteInWorkbench PermissionName = "inviteInWorkbench"
 
-	PermissionListWorkspaces    Permission = "listWorkspaces"
-	PermissionCreateWorkspace   Permission = "createWorkspace"
-	PermissionUpdateWorkspace   Permission = "updateWorkspace"
-	PermissionGetWorkspace      Permission = "getWorkspace"
-	PermissionDeleteWorkspace   Permission = "deleteWorkspace"
-	PermissionInviteInWorkspace Permission = "inviteInWorkspace"
+	PermissionListWorkspaces    PermissionName = "listWorkspaces"
+	PermissionCreateWorkspace   PermissionName = "createWorkspace"
+	PermissionUpdateWorkspace   PermissionName = "updateWorkspace"
+	PermissionGetWorkspace      PermissionName = "getWorkspace"
+	PermissionDeleteWorkspace   PermissionName = "deleteWorkspace"
+	PermissionInviteInWorkspace PermissionName = "inviteInWorkspace"
 
-	PermissionListApps  Permission = "listApps"
-	PermissionCreateApp Permission = "createApp"
-	PermissionUpdateApp Permission = "updateApp"
-	PermissionGetApp    Permission = "getApp"
-	PermissionDeleteApp Permission = "deleteApp"
+	PermissionListApps  PermissionName = "listApps"
+	PermissionCreateApp PermissionName = "createApp"
+	PermissionUpdateApp PermissionName = "updateApp"
+	PermissionGetApp    PermissionName = "getApp"
+	PermissionDeleteApp PermissionName = "deleteApp"
 
-	PermissionAuthenticate                       Permission = "authenticate"
-	PermissionLogout                             Permission = "logout"
-	PermissionGetListOfPossibleWayToAuthenticate Permission = "getListOfPossibleWayToAuthenticate"
-	PermissionAuthenticateUsingAuth2_0           Permission = "authenticateUsingAuth2.0"
-	PermissionAuthenticateRedirectUsingAuth2_0   Permission = "authenticateRedirectUsingAuth2.0"
-	PermissionRefreshToken                       Permission = "refreshToken"
+	PermissionAuthenticate                       PermissionName = "authenticate"
+	PermissionLogout                             PermissionName = "logout"
+	PermissionGetListOfPossibleWayToAuthenticate PermissionName = "getListOfPossibleWayToAuthenticate"
+	PermissionAuthenticateUsingAuth2_0           PermissionName = "authenticateUsingAuth2.0"
+	PermissionAuthenticateRedirectUsingAuth2_0   PermissionName = "authenticateRedirectUsingAuth2.0"
+	PermissionRefreshToken                       PermissionName = "refreshToken"
 
-	PermissionGetHealthCheck Permission = "getHealthCheck"
+	PermissionGetHealthCheck PermissionName = "getHealthCheck"
 
-	PermissionListNotifications        Permission = "listNotifications"
-	PermissionCountUnreadNotifications Permission = "countUnreadNotifications"
-	PermissionMarkNotificationAsRead   Permission = "markNotificationAsRead"
+	PermissionListNotifications        PermissionName = "listNotifications"
+	PermissionCountUnreadNotifications PermissionName = "countUnreadNotifications"
+	PermissionMarkNotificationAsRead   PermissionName = "markNotificationAsRead"
 
-	PermissionInitializeTenant Permission = "initializeTenant"
+	PermissionInitializeTenant PermissionName = "initializeTenant"
 
-	PermissionListUsers      Permission = "listUsers"
-	PermissionCreateUser     Permission = "createUser"
-	PermissionUpdateUser     Permission = "updateUser"
-	PermissionGetMyOwnUser   Permission = "getMyOwnUser"
-	PermissionUpdatePassword Permission = "updatePassword"
-	PermissionEnableTotp     Permission = "enableTotp"
-	PermissionResetTotp      Permission = "resetTotp"
-	PermissionGetUser        Permission = "getUser"
-	PermissionDeleteUser     Permission = "deleteUser"
-	PermissionResetPassword  Permission = "resetPassword"
+	PermissionListUsers      PermissionName = "listUsers"
+	PermissionCreateUser     PermissionName = "createUser"
+	PermissionUpdateUser     PermissionName = "updateUser"
+	PermissionGetMyOwnUser   PermissionName = "getMyOwnUser"
+	PermissionUpdatePassword PermissionName = "updatePassword"
+	PermissionEnableTotp     PermissionName = "enableTotp"
+	PermissionResetTotp      PermissionName = "resetTotp"
+	PermissionGetUser        PermissionName = "getUser"
+	PermissionDeleteUser     PermissionName = "deleteUser"
+	PermissionResetPassword  PermissionName = "resetPassword"
 )
 
-func (p Permission) String() string {
+func (p PermissionName) String() string {
 	return string(p)
 }
 
-func ToPermission(p string) (Permission, error) {
+func ToPermissionName(p string) (PermissionName, error) {
 	switch p {
 	case string(PermissionListAppInstances):
 		return PermissionListAppInstances, nil
@@ -164,29 +177,58 @@ func ToPermission(p string) (Permission, error) {
 	return "", fmt.Errorf("unknown permission type: %s", p)
 }
 
-type Role string
+type NewContextOption func(*Context)
+
+func WithWorkspace(workspace any) NewContextOption {
+	return func(c *Context) {
+		(*c)[RoleContextWorkspace] = fmt.Sprintf("%v", workspace)
+	}
+}
+
+func WithWorkbench(workbench any) NewContextOption {
+	return func(c *Context) {
+		(*c)[RoleContextWorkbench] = fmt.Sprintf("%v", workbench)
+	}
+}
+
+func NewContext(opts ...NewContextOption) Context {
+	c := make(Context)
+	for _, v := range opts {
+		v(&c)
+	}
+	return c
+}
+
+type Context map[ContextDimension]string
+
+type Role struct {
+	Name    RoleName
+	Context Context
+}
+
+type RoleName string
 
 const (
-	RolePublic               Role = "public"
-	RoleAuthenticated        Role = "authenticated"
-	RoleWorkspaceGuest       Role = "workspaceGuest"
-	RoleWorkspaceMember      Role = "workspaceMember"
-	RoleWorkspaceMaintainer  Role = "workspaceMaintainer"
-	RoleWorkspaceAdmin       Role = "workspaceAdmin"
-	RoleWorkbenchViewer      Role = "workbenchViewer"
-	RoleWorkbenchMember      Role = "workbenchMember"
-	RoleWorkbenchAdmin       Role = "workbenchAdmin"
-	RoleHealthchecker        Role = "healthchecker"
-	RolePlateformUserManager Role = "plateformUserManager"
-	RoleAppStoreAdmin        Role = "appStoreAdmin"
-	RoleSuperAdmin           Role = "superAdmin"
+	RolePublic               RoleName = "public"
+	RoleAuthenticated        RoleName = "authenticated"
+	RoleWorkspaceGuest       RoleName = "workspaceGuest"
+	RoleWorkspaceMember      RoleName = "workspaceMember"
+	RoleWorkspaceMaintainer  RoleName = "workspaceMaintainer"
+	RoleWorkspaceAdmin       RoleName = "workspaceAdmin"
+	RoleWorkbenchViewer      RoleName = "workbenchViewer"
+	RoleWorkbenchMember      RoleName = "workbenchMember"
+	RoleWorkbenchAdmin       RoleName = "workbenchAdmin"
+	RoleHealthchecker        RoleName = "healthchecker"
+	RolePlateformUserManager RoleName = "plateformUserManager"
+	RoleAppStoreAdmin        RoleName = "appStoreAdmin"
+	RoleSuperAdmin           RoleName = "superAdmin"
 )
 
-func (r Role) String() string {
+func (r RoleName) String() string {
 	return string(r)
 }
 
-func ToRole(r string) (Role, error) {
+func ToRoleName(r string) (RoleName, error) {
 	switch r {
 	case string(RolePublic):
 		return RolePublic, nil
@@ -217,4 +259,26 @@ func ToRole(r string) (Role, error) {
 	}
 
 	return "", fmt.Errorf("unknown role type: %s", r)
+}
+
+type ContextDimension string
+
+const (
+	RoleContextWorkspace ContextDimension = "workspace"
+	RoleContextWorkbench ContextDimension = "workbench"
+)
+
+func (r ContextDimension) String() string {
+	return string(r)
+}
+
+func ToRoleContext(r string) (ContextDimension, error) {
+	switch r {
+	case string(RoleContextWorkspace):
+		return RoleContextWorkspace, nil
+	case string(RoleContextWorkbench):
+		return RoleContextWorkbench, nil
+	}
+
+	return "", fmt.Errorf("unknown role context type: %s", r)
 }
