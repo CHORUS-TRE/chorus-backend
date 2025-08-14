@@ -28,7 +28,7 @@ func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization
 }
 
 func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, req *chorus.ListWorkbenchsRequest) (*chorus.ListWorkbenchsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionListWorkbenchs))
+	err := c.IsAuthorized(ctx, authorization.PermissionListWorkbenchs)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, re
 }
 
 func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionGetWorkbench, authorization.WithWorkbench(req.Id)))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req 
 }
 
 func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.CreateWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionCreateWorkbench))
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateWorkbench)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.UpdateWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionUpdateWorkbench, authorization.WithWorkbench(req.Id)))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, req *chorus.DeleteWorkbenchRequest) (*chorus.DeleteWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionDeleteWorkbench, authorization.WithWorkbench(req.Id)))
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
 	}

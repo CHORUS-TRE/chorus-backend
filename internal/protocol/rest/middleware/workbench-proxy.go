@@ -49,7 +49,7 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, authorizer auth
 
 		ctx = GetContextWithAuth(ctx, r, keyFunc, claimsFactory)
 
-		err = auth.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionStreamWorkbench, authorization.WithWorkbench(workbenchID)))
+		err = auth.IsAuthorized(ctx, authorization.PermissionStreamWorkbench, authorization.WithWorkbench(workbenchID))
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
 			h.ServeHTTP(w, r)

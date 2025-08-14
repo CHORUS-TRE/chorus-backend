@@ -26,7 +26,9 @@ func NewAuthorization(logger *logger.ContextLogger, authorizer authorization.Aut
 	}
 }
 
-func (c Authorization) IsAuthorized(ctx context.Context, permission authorization.Permission) error {
+func (c Authorization) IsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) error {
+	permission := authorization.NewPermission(permissionName, opts...)
+
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")

@@ -30,7 +30,7 @@ func StewardAuthorizing(logger *logger.ContextLogger, authorizer authorization.A
 }
 
 func (c stewardControllerAuthorization) InitializeTenant(ctx context.Context, request *chorus.InitializeTenantRequest) (*empty.Empty, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionInitializeTenant))
+	err := c.IsAuthorized(ctx, authorization.PermissionInitializeTenant)
 	if err != nil {
 		return nil, err
 	}

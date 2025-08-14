@@ -29,7 +29,7 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorizati
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionListAppInstances))
+	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context
 }
 
 func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionGetAppInstance))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetAppInstance)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 }
 
 func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionCreateAppInstance))
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateAppInstance)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionUpdateAppInstance))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateAppInstance)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionDeleteAppInstance))
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance)
 	if err != nil {
 		return nil, err
 	}

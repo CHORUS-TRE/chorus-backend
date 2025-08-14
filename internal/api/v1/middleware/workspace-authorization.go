@@ -28,7 +28,7 @@ func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization
 }
 
 func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionListWorkspaces))
+	err := c.IsAuthorized(ctx, authorization.PermissionListWorkspaces)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 }
 
 func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id)))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req 
 }
 
 func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionCreateWorkspace))
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateWorkspace)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, r
 }
 
 func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.Id)))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, r
 }
 
 func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, req *chorus.DeleteWorkspaceRequest) (*chorus.DeleteWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionDeleteWorkspace, authorization.WithWorkspace(req.Id)))
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}

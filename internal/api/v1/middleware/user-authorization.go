@@ -29,7 +29,7 @@ func UserAuthorizing(logger *logger.ContextLogger, authorizer authorization.Auth
 }
 
 func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionListUsers))
+	err := c.IsAuthorized(ctx, authorization.PermissionListUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionGetUser))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetUser)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.Ge
 }
 
 func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionCreateUser))
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateUser)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionUpdatePassword))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdatePassword)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionUpdateUser))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateUser)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionDeleteUser))
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteUser)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionEnableTotp))
+	err := c.IsAuthorized(ctx, authorization.PermissionEnableTotp)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.ResetTotpRequest) (*chorus.ResetTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionResetTotp))
+	err := c.IsAuthorized(ctx, authorization.PermissionResetTotp)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *chorus.ResetPasswordRequest) (*chorus.ResetPasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionResetPassword))
+	err := c.IsAuthorized(ctx, authorization.PermissionResetPassword)
 	if err != nil {
 		return nil, err
 	}

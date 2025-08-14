@@ -99,7 +99,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 }
 
 func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.RefreshTokenRequest) (*chorus.RefreshTokenReply, error) {
-	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionRefreshToken))
+	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authorization.PermissionRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 }
 
 func (a AuthenticationController) Logout(ctx context.Context, req *chorus.LogoutRequest) (*chorus.LogoutReply, error) {
-	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authorization.NewPermission(authorization.PermissionLogout))
+	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authorization.PermissionLogout)
 	if err != nil {
 		return nil, err
 	}
