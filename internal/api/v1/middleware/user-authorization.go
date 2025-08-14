@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
@@ -38,7 +37,7 @@ func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetUser)
+	err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -56,19 +55,16 @@ func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
-	// err := c.IsAuthorized(ctx, authorization.PermissionGetUserMe)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUserFromCtx(ctx))
+	if err != nil {
+		return nil, err
+	}
 
-	// return c.next.GetUserMe(ctx, req)
-
-	// not implemented error
-	return nil, fmt.Errorf("GetUserMe is not implemented in userControllerAuthorization")
+	return c.next.GetUserMe(ctx, req)
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdatePassword)
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdatePassword, authorization.WithUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +73,7 @@ func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateUser)
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateUser, authorization.WithUser(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +82,7 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteUser)
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteUser, authorization.WithUser(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +91,7 @@ func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionEnableTotp)
+	err := c.IsAuthorized(ctx, authorization.PermissionEnableTotp, authorization.WithUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +100,7 @@ func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.ResetTotpRequest) (*chorus.ResetTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionResetTotp)
+	err := c.IsAuthorized(ctx, authorization.PermissionResetTotp, authorization.WithUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +109,7 @@ func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *chorus.ResetPasswordRequest) (*chorus.ResetPasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionResetPassword)
+	err := c.IsAuthorized(ctx, authorization.PermissionResetPassword, authorization.WithUser(req.Id))
 	if err != nil {
 		return nil, err
 	}

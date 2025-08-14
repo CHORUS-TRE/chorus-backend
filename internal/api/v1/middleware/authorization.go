@@ -54,16 +54,16 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 	}
 
 	if !isAuthorized {
-		return c.permissionDenied(ctx, claims, aRoles)
+		return c.permissionDenied(ctx, claims, permission)
 	}
 
 	return nil
 }
 
-func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, authorizedRoles []authorization.Role) error {
+func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, p authorization.Permission) error {
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
 		zap.Strings("roles", claims.Roles))
-	return status.Errorf(codes.PermissionDenied, "authorized roles: %v", authorizedRoles)
+	return status.Errorf(codes.PermissionDenied, "required permission: %v", p)
 }

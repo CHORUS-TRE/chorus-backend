@@ -1,6 +1,11 @@
 package authorization
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+)
 
 func NewPermission(name PermissionName, opts ...NewContextOption) Permission {
 	context := NewContext(opts...)
@@ -191,6 +196,28 @@ func WithWorkbench(workbench any) NewContextOption {
 	}
 }
 
+func WithUser(user any) NewContextOption {
+	return func(c *Context) {
+		(*c)[RoleContextUser] = fmt.Sprintf("%v", user)
+	}
+}
+
+func WithUserFromCtx(ctx context.Context) NewContextOption {
+	uID := ""
+	f := func(c *Context) {
+		(*c)[RoleContextUser] = uID
+	}
+
+	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
+	if !ok {
+		return f
+	}
+
+	uID = fmt.Sprintf("%v", claims.ID)
+
+	return f
+}
+
 func NewContext(opts ...NewContextOption) Context {
 	c := make(Context)
 	for _, v := range opts {
@@ -266,6 +293,7 @@ type ContextDimension string
 const (
 	RoleContextWorkspace ContextDimension = "workspace"
 	RoleContextWorkbench ContextDimension = "workbench"
+	RoleContextUser      ContextDimension = "user"
 )
 
 func (r ContextDimension) String() string {
@@ -278,6 +306,8 @@ func ToRoleContext(r string) (ContextDimension, error) {
 		return RoleContextWorkspace, nil
 	case string(RoleContextWorkbench):
 		return RoleContextWorkbench, nil
+	case string(RoleContextUser):
+		return RoleContextUser, nil
 	}
 
 	return "", fmt.Errorf("unknown role context type: %s", r)
