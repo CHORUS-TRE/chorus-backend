@@ -120,7 +120,8 @@ type (
 	}
 
 	Clients struct {
-		K8sClient K8sClient `yaml:"k8s_client,omitempty"`
+		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
+		DockerClient DockerClient `yaml:"docker_client,omitempty"`
 	}
 
 	K8sClient struct {
@@ -142,6 +143,10 @@ type (
 
 		DefaultRegistry   string `yaml:"default_registry,omitempty"`
 		DefaultRepository string `yaml:"default_repository,omitempty"`
+	}
+
+	DockerClient struct {
+		Enabled bool `yaml:"enabled,omitempty"`
 	}
 
 	ImagePullSecret struct {
