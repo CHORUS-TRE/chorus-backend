@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -18,7 +19,7 @@ import (
 
 // InitServer initializes a HTTP-server and returns an empty request multiplexer
 // for a GRPC gateway and a configuration object.
-func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
+func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, authorizer authorization.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
@@ -40,7 +41,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
-		handler = middleware.AddProxyWorkbench(handler, pw, keyFunc, claimsFactory)
+		handler = middleware.AddProxyWorkbench(handler, pw, authorizer, keyFunc, claimsFactory)
 	}
 	if cfg.Services.AuthenticationService.DevAuthEnabled {
 		handler = middleware.AddDevAuth(handler)

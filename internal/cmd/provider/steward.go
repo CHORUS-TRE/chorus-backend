@@ -3,8 +3,6 @@ package provider
 import (
 	"sync"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
-
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 
@@ -21,7 +19,7 @@ var stewardController chorus.StewardServiceServer
 func ProvideStewardController() chorus.StewardServiceServer {
 	stewardControllerOnce.Do(func() {
 		stewardController = v1.NewStewardController(ProvideStewardService())
-		stewardController = ctrl_mw.StewardAuthorizing(logger.SecLog, []string{model.RoleChorus.String()})(stewardController)
+		stewardController = ctrl_mw.StewardAuthorizing(logger.SecLog, ProvideAuthorizer())(stewardController)
 
 	})
 	return stewardController

@@ -9,7 +9,6 @@ import (
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
-	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/store/middleware"
@@ -40,7 +39,7 @@ var workbenchController chorus.WorkbenchServiceServer
 func ProvideWorkbenchController() chorus.WorkbenchServiceServer {
 	workbenchControllerOnce.Do(func() {
 		workbenchController = v1.NewWorkbenchController(ProvideWorkbench())
-		workbenchController = ctrl_mw.WorkbenchAuthorizing(logger.SecLog, []string{user_model.RoleAuthenticated.String()})(workbenchController)
+		workbenchController = ctrl_mw.WorkbenchAuthorizing(logger.SecLog, ProvideAuthorizer())(workbenchController)
 	})
 	return workbenchController
 }

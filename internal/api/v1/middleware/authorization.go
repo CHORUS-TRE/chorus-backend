@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 
@@ -12,74 +13,53 @@ import (
 )
 
 type Authorization struct {
-	logger          *logger.ContextLogger
-	authorizedRoles []string
+	logger     *logger.ContextLogger
+	authorizer authorization.Authorizer
+	// authorizedRoles []string
 }
 
-func NewAuthorization(logger *logger.ContextLogger, authorizedRoles []string) Authorization {
+func NewAuthorization(logger *logger.ContextLogger, authorizer authorization.Authorizer) Authorization {
 	return Authorization{
-		logger,
-		authorizedRoles,
+		logger:     logger,
+		authorizer: authorizer,
+		// authorizedRoles: []string{},
 	}
 }
 
-func (c Authorization) IsAuthenticatedAndAuthorized(ctx context.Context) error {
+func (c Authorization) IsAuthorized(ctx context.Context, permission authorization.Permission) error {
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")
 		return status.Error(codes.Unauthenticated, "malformed jwt-token")
 	}
-	if !c.isAuthorized(claims.Roles) {
-		return c.permissionDenied(ctx, claims)
+
+	aRoles := make([]authorization.Role, 0, len(claims.Roles))
+	for _, r := range claims.Roles {
+		ar, err := authorization.ToRole(r)
+		if err != nil {
+			c.logger.Warn(ctx, "invalid role", zap.String("role", r))
+			continue
+		}
+		aRoles = append(aRoles, ar)
 	}
+
+	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
+	if err != nil {
+		c.logger.Error(ctx, "authorization error", zap.Error(err))
+		return status.Error(codes.Internal, "authorization error")
+	}
+
+	if !isAuthorized {
+		return c.permissionDenied(ctx, claims, aRoles)
+	}
+
 	return nil
 }
 
-func (c Authorization) IsAuthenticatedAndAuthorizedWithRoles(ctx context.Context, roles []string) error {
-	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
-	if !ok {
-		c.logger.Warn(ctx, "malformed JWT token")
-		return status.Error(codes.Unauthenticated, "malformed jwt-token")
-	}
-	if !c.isAuthorized(claims.Roles) && !hasAnyOfRoles(claims.Roles, roles) {
-		return c.permissionDenied(ctx, claims)
-	}
-	return nil
-}
-
-func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims) error {
+func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, authorizerRoles []authorization.Role) error {
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
 		zap.Strings("roles", claims.Roles))
-	return status.Errorf(codes.PermissionDenied, "authorized roles: %v", c.authorizedRoles)
-}
-
-func (c Authorization) isAuthorized(roles []string) bool {
-	for _, r := range roles {
-		for _, authorizedRole := range c.authorizedRoles {
-			if r == authorizedRole {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func hasRole(role string, roles []string) bool {
-	for _, r := range roles {
-		if r == role {
-			return true
-		}
-	}
-	return false
-}
-
-func hasAnyOfRoles(roles []string, wantedRoles []string) bool {
-	for _, r := range roles {
-		if hasRole(r, wantedRoles) {
-			return true
-		}
-	}
-	return false
+	return status.Errorf(codes.PermissionDenied, "authorized roles: %v", authorizerRoles)
 }
