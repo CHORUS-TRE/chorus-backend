@@ -18,9 +18,9 @@ spec:
         fileParameters:
           - name: main.yaml
             path: ../../configs/argodev/main.yaml
-        valuesObject:
-          podLabels:
-            commit-sha: $ARGOCD_APP_REVISION_SHORT
+        parameters:
+          - name: podLabels.commit-sha
+            value: $ARGOCD_APP_REVISION_SHORT
   syncPolicy:
     automated:
       prune: true
