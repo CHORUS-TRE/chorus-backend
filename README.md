@@ -14,7 +14,6 @@ This project is the backend of the chorus platform.
 - **JWT Generation**: Implements JSON Web Tokens for secure data transmission.
 - **Authorization Middlewares**: Ensures secure access control within the application.
 
-
 ## Launching
 
 1) install go
