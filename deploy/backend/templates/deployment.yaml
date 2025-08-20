@@ -15,6 +15,9 @@ spec:
     metadata:
       labels:
         app: deployment-backend-{{ include "backend.nameid" . }}
+        {{- if .Values.podLabels }}
+        {{- toYaml .Values.podLabels | nindent 6 }}
+        {{- end }}
     spec:
       containers:
       - name: deployment-backend-{{ include "backend.nameid" . }}
