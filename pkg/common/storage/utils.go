@@ -62,8 +62,8 @@ func BuildPaginationClause(pagination *common.Pagination, model common.Sortable)
 	limit := pagination.Limit
 	if pagination.Limit <= 0 || pagination.Limit > common.MAX_LIMIT {
 		limit = common.DEFAULT_LIMIT
-		clause += fmt.Sprintf(" LIMIT %d", limit)
 	}
+	clause += fmt.Sprintf(" LIMIT %d", limit)
 
 	// Add OFFSET clause
 	offset := uint64(0)
