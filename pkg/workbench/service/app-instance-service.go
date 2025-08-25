@@ -73,7 +73,7 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 	wsName := s.getWorkspaceName(newAppInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(newAppInstance.WorkbenchID)
 
-	clientApp, err := s.getK8sAppInstance(appInstance.TenantID, appInstance.AppID, appInstance.ID)
+	clientApp, err := s.getK8sAppInstance(newAppInstance.TenantID, newAppInstance.AppID, newAppInstance.ID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get app %v: %w", newAppInstance.ID, err)
 	}
