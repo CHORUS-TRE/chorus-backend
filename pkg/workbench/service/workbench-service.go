@@ -39,6 +39,7 @@ type Workbencher interface {
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
+	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -56,6 +57,7 @@ type WorkbenchStore interface {
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
+	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -325,6 +327,15 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
 		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+	}
+
+	return nil
+}
+
+func (s *WorkbenchService) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	err := s.store.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
 	}
 
 	return nil
