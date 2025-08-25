@@ -236,19 +236,19 @@ type Role struct {
 type RoleName string
 
 const (
-	RolePublic               RoleName = "public"
-	RoleAuthenticated        RoleName = "authenticated"
-	RoleWorkspaceGuest       RoleName = "workspaceGuest"
-	RoleWorkspaceMember      RoleName = "workspaceMember"
-	RoleWorkspaceMaintainer  RoleName = "workspaceMaintainer"
-	RoleWorkspaceAdmin       RoleName = "workspaceAdmin"
-	RoleWorkbenchViewer      RoleName = "workbenchViewer"
-	RoleWorkbenchMember      RoleName = "workbenchMember"
-	RoleWorkbenchAdmin       RoleName = "workbenchAdmin"
-	RoleHealthchecker        RoleName = "healthchecker"
-	RolePlateformUserManager RoleName = "plateformUserManager"
-	RoleAppStoreAdmin        RoleName = "appStoreAdmin"
-	RoleSuperAdmin           RoleName = "superAdmin"
+	RolePublic               RoleName = "Public"
+	RoleAuthenticated        RoleName = "Authenticated"
+	RoleWorkspaceGuest       RoleName = "WorkspaceGuest"
+	RoleWorkspaceMember      RoleName = "WorkspaceMember"
+	RoleWorkspaceMaintainer  RoleName = "WorkspaceMaintainer"
+	RoleWorkspaceAdmin       RoleName = "WorkspaceAdmin"
+	RoleWorkbenchViewer      RoleName = "WorkbenchViewer"
+	RoleWorkbenchMember      RoleName = "WorkbenchMember"
+	RoleWorkbenchAdmin       RoleName = "WorkbenchAdmin"
+	RoleHealthchecker        RoleName = "Healthchecker"
+	RolePlateformUserManager RoleName = "PlateformUserManager"
+	RoleAppStoreAdmin        RoleName = "AppStoreAdmin"
+	RoleSuperAdmin           RoleName = "SuperAdmin"
 )
 
 func (r RoleName) String() string {

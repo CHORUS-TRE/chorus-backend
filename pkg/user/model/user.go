@@ -3,6 +3,8 @@ package model
 import (
 	"errors"
 	"time"
+
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 )
 
 // User maps an entry in the 'user' database table.
@@ -23,7 +25,7 @@ type User struct {
 	TotpSecret        *string
 	TotpRecoveryCodes []string
 
-	Roles []UserRole
+	Roles []authorization_model.Role
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
