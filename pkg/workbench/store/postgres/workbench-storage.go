@@ -234,6 +234,7 @@ func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64,
 }
 
 func (s *WorkbenchStorage) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	// TODO: batch
 	const query = `
 		SELECT id FROM workbenchs
 		WHERE tenantid = $1 AND workspaceid = $2 AND status != 'deleted' AND deletedat IS NULL;
