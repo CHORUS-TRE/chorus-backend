@@ -106,6 +106,26 @@ func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
+func (c workbenchServiceLogging) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
+	now := time.Now()
+
+	err := c.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			logger.WithWorkspaceIDField(workspaceID),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to delete workbenchs in workspace %v: %w", workspaceID, err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		logger.WithWorkspaceIDField(workspaceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
 func (c workbenchServiceLogging) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	now := time.Now()
 

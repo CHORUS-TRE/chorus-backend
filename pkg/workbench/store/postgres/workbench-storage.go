@@ -206,10 +206,14 @@ func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64,
 }
 
 func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error {
+	// First delete app instances in workbench
+	if err := s.DeleteAppInstancesInWorkbench(ctx, tenantID, workbenchID); err != nil {
+		return fmt.Errorf("unable to delete app instances in workbench %v: %w", workbenchID, err)
+	}
+
 	const query = `
-		UPDATE workbenchs	SET 
-			(status, name, updatedat, deletedat) = 
-			($3, concat(name, $4::TEXT), NOW(), NOW())
+		UPDATE workbenchs
+		SET (status, name, updatedat, deletedat) = ($3, concat(name, $4::TEXT), NOW(), NOW())
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
@@ -224,6 +228,28 @@ func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64,
 
 	if affected == 0 {
 		return database.ErrNoRowsDeleted
+	}
+
+	return nil
+}
+
+func (s *WorkbenchStorage) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	// TODO: batch
+	const query = `
+		SELECT id FROM workbenchs
+		WHERE tenantid = $1 AND workspaceid = $2 AND status != 'deleted' AND deletedat IS NULL;
+	`
+
+	var workbenchIDs []uint64
+	if err := s.db.SelectContext(ctx, &workbenchIDs, query, tenantID, workspaceID); err != nil {
+		return fmt.Errorf("unable to select workbenchs: %w", err)
+	}
+
+	// Delete workbenchs
+	for _, workbenchID := range workbenchIDs {
+		if err := s.DeleteWorkbench(ctx, tenantID, workbenchID); err != nil {
+			return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		}
 	}
 
 	return nil
@@ -359,4 +385,19 @@ func (s *WorkbenchStorage) DeleteAppInstances(ctx context.Context, tenantID uint
 		}
 	}
 	return errors.Join(errAcc...)
+}
+
+func (s *WorkbenchStorage) DeleteAppInstancesInWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error {
+	const query = `
+		UPDATE app_instances
+		SET (status, updatedat, deletedat) = ($3, NOW(), NOW())
+		WHERE tenantid = $1 AND workbenchid = $2 AND deletedat IS NULL;
+	`
+
+	_, err := s.db.ExecContext(ctx, query, tenantID, workbenchID, model.AppInstanceDeleted.String())
+	if err != nil {
+		return fmt.Errorf("unable to exec: %w", err)
+	}
+
+	return nil
 }

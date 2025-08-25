@@ -43,6 +43,10 @@ func (v validation) DeleteWorkbench(ctx context.Context, tenantID, workbenchID u
 	return v.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
+func (v validation) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
+	return v.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+}
+
 func (v validation) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	if err := v.validate.Struct(workbench); err != nil {
 		return v.next.UpdateWorkbench(ctx, workbench)

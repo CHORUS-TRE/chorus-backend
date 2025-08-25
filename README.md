@@ -1,6 +1,5 @@
 # Chorus backend
 
-
 ## Introduction
 This project is the backend of the chorus platform.
 
@@ -14,7 +13,6 @@ This project is the backend of the chorus platform.
 - **User & Authentication Service**: Provides a dedicated service for user management and authentication.
 - **JWT Generation**: Implements JSON Web Tokens for secure data transmission.
 - **Authorization Middlewares**: Ensures secure access control within the application.
-
 
 ## Launching
 
