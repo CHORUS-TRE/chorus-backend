@@ -20,7 +20,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/lib/pq v1.10.9
-	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/ginkgo/v2 v2.25.1
 	github.com/onsi/gomega v1.37.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/pquerna/otp v1.4.0
@@ -32,7 +32,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/trustelem/zxcvbn v1.0.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.39.0
+	golang.org/x/crypto v0.41.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250505200425-f936aa4a68b2
 	google.golang.org/grpc v1.72.0
@@ -120,11 +120,11 @@ require (
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/term v0.34.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
