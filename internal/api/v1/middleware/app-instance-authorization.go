@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
@@ -11,15 +12,16 @@ var _ chorus.AppInstanceServiceServer = (*appInstanceControllerAuthorization)(ni
 
 type appInstanceControllerAuthorization struct {
 	Authorization
-	next chorus.AppInstanceServiceServer
+	authorizer authorization.Authorizer
+	next       chorus.AppInstanceServiceServer
 }
 
-func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
+func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 	return func(next chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 		return &appInstanceControllerAuthorization{
 			Authorization: Authorization{
-				logger:          logger,
-				authorizedRoles: authorizedRoles,
+				logger:     logger,
+				authorizer: authorizer,
 			},
 			next: next,
 		}
@@ -27,56 +29,46 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizedRoles []stri
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	// TODO check for permission
-
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances)
 	if err != nil {
 		return nil, err
 	}
-	//nolint: staticcheck
+
 	return c.next.ListAppInstances(ctx, req)
 }
 
 func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
-	// TODO check for permission
-
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionGetAppInstance)
 	if err != nil {
 		return nil, err
 	}
-	//nolint: staticcheck
+
 	return c.next.GetAppInstance(ctx, req)
 }
 
 func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
-	// TODO check for permission
-
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateAppInstance)
 	if err != nil {
 		return nil, err
 	}
-	// nolint: staticcheck
+
 	return c.next.CreateAppInstance(ctx, req)
 }
 
 func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
-	// TODO check for permission
-
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateAppInstance)
 	if err != nil {
 		return nil, err
 	}
-	//nolint: staticcheck
+
 	return c.next.UpdateAppInstance(ctx, req)
 }
 
 func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
-	// TODO check for permission
-
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance)
 	if err != nil {
 		return nil, err
 	}
-	//nolint: staticcheck
+
 	return c.next.DeleteAppInstance(ctx, req)
 }
