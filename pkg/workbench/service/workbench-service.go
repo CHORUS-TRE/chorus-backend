@@ -17,6 +17,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/prometheus/client_golang/prometheus"
@@ -84,7 +85,8 @@ type WorkbenchService struct {
 	store  WorkbenchStore
 	client k8s.K8sClienter
 
-	apper app_service.Apper
+	apper  app_service.Apper
+	userer user_service.Userer
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
@@ -93,13 +95,14 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
 		client: client,
 
-		apper: apper,
+		apper:  apper,
+		userer: userer,
 
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),
@@ -265,11 +268,19 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 			})
 		}
 
+		user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: workbench.TenantID, ID: workbench.UserID})
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to get user", zap.Error(err), zap.Uint64("userID", workbench.UserID))
+			return err
+		}
+
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
 		err = s.client.UpdateWorkbench(k8s.MakeWorkbenchRequest{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
+			Username:                user.Username,
+			UserID:                  user.ID,
 			Name:                    workbenchName,
 			Apps:                    clientApps,
 			InitialResolutionWidth:  workbench.InitialResolutionWidth,
@@ -356,11 +367,18 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return nil, fmt.Errorf("unable to create workbench: %w", err)
 	}
 
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: workbench.TenantID, ID: workbench.UserID})
+	if err != nil {
+		return nil, fmt.Errorf("unable to get user %v: %w", workbench.UserID, err)
+	}
+
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
 	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
+		Username:                user.Username,
+		UserID:                  user.ID,
 		Name:                    workbenchName,
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
 		InitialResolutionHeight: workbench.InitialResolutionHeight,
