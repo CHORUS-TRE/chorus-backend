@@ -19,6 +19,8 @@ import (
 type Workbench struct {
 	Namespace               string
 	TenantID                uint64
+	Username                string
+	UserID                  uint64
 	Name                    string
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -52,9 +54,11 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	}
 
 	workbench := Workbench{
-		TenantID:                tenantID,
 		Namespace:               wb.Namespace,
+		TenantID:                tenantID,
 		Name:                    wb.Name,
+		Username:                c.K8sUserToUsername(wb.Spec.Server.User), // Username may be truncated
+		UserID:                  c.K8sUserIDToUserID(uint64(wb.Spec.Server.UserID)),
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
 		Status:                  string(wb.Status.Server.Status),
@@ -62,6 +66,33 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	}
 
 	return workbench, nil
+}
+
+const userNameMaxLength int = 8
+const userIDOffset uint64 = 1000
+
+func (c *client) K8sUserToUsername(user string) string {
+	parts := strings.SplitN(user, "_", 2)
+	name := strings.ReplaceAll(parts[0], "_", " ")
+
+	return name
+}
+
+func (c *client) UsernameToK8sUser(username string, userID uint64) string {
+	name := strings.ToLower(username)
+	name = strings.ReplaceAll(name, " ", "_")
+	if len(name) > userNameMaxLength {
+		name = name[:userNameMaxLength]
+	}
+	return fmt.Sprintf("%s_%d", name, userID)
+}
+
+func (c *client) K8sUserIDToUserID(userID uint64) uint64 {
+	return userID - userIDOffset
+}
+
+func (c *client) UserIDToK8sUserID(userID uint64) uint64 {
+	return userID + userIDOffset
 }
 
 const appInstanceNamePrefix = "app-instance-"
@@ -257,6 +288,8 @@ type WorkbenchServer struct {
 	InitialResolutionWidth  int    `json:"initialResolutionWidth,omitempty"`
 	InitialResolutionHeight int    `json:"initialResolutionHeight,omitempty"`
 	Version                 string `json:"version,omitempty"`
+	User                    string `json:"user,omitempty"`
+	UserID                  int    `json:"userid,omitempty"`
 }
 type Image struct {
 	Registry   string `json:"registry"`
