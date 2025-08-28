@@ -195,13 +195,6 @@ spec:
               server:
                 description: Server represents the configuration of the server part.
                 properties:
-                  user:
-                    description: User name for the workbench session.
-                    type: string
-                  userid:
-                    description: User ID for the workbench session.
-                    type: integer
-                    minimum: 1000
                   version:
                     default: latest
                     description: Version defines the version to use.
