@@ -78,7 +78,7 @@ func (c *client) K8sUserToUsername(user string) string {
 	return name
 }
 
-func (c *client) UsernameToK8sUser(username string, userID uint64) string {
+func (c *client) UsernameToK8sUser(userID uint64, username string) string {
 	name := strings.ToLower(username)
 	name = strings.ReplaceAll(name, " ", "_")
 	reg := regexp.MustCompile(`[^a-z0-9_]`)

@@ -243,7 +243,7 @@ func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 		},
 		Spec: WorkbenchSpec{
 			Server: WorkbenchServer{
-				User:                    c.UsernameToK8sUser(req.Username, req.UserID),
+				User:                    c.UsernameToK8sUser(req.UserID, req.Username),
 				UserID:                  int(c.UserIDToK8sUserID(req.UserID)),
 				InitialResolutionWidth:  int(req.InitialResolutionWidth),
 				InitialResolutionHeight: int(req.InitialResolutionHeight),
