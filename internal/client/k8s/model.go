@@ -81,9 +81,8 @@ func (c *client) K8sUserToUsername(user string) string {
 func (c *client) UsernameToK8sUser(username string, userID uint64) string {
 	name := strings.ToLower(username)
 	name = strings.ReplaceAll(name, " ", "_")
-	if len(name) > userNameMaxLength {
-		name = name[:userNameMaxLength]
-	}
+	name = name[:min(len(name), userNameMaxLength)]
+
 	return fmt.Sprintf("%s_%d", name, userID)
 }
 
