@@ -46,10 +46,10 @@ echo "Pulling dependencies"
 echo "Login to harbor.dev.chorus-tre.ch"
 # read -s -p "Password of robot\$chorus-dev: " pw
 docker login harbor.dev.chorus-tre.ch -u "$user" -p "$pw"
-docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16
-docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16 controller:latest
-docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4
-docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4 harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.28
+docker tag harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.28 controller:latest
+docker pull --platform=linux/amd64 harbor.dev.chorus-tre.ch/apps/xpra-server:6.3.2-1
+docker tag harbor.dev.chorus-tre.ch/apps/xpra-server:6.3.2-1 harbor.dev.chorus-tre.ch/apps/xpra-server:6.3.2-1
 
 if [ $exists -eq 1 ]; then
     echo "Cluster chorus already exist, skipping create..."
@@ -59,8 +59,8 @@ else
     sleep 10
 fi
 
-kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16 --name chorus
-kind load docker-image harbor.dev.chorus-tre.ch/apps/xpra-server:6.2.3-4 --name chorus
+kind load docker-image harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.28 --name chorus
+kind load docker-image harbor.dev.chorus-tre.ch/apps/xpra-server:6.3.2-1 --name chorus
 
 kubectl apply -f configs/dev/files/deploy-ingress-nginx.yaml
 
@@ -75,7 +75,7 @@ cd workbench-operator
 # kubectl apply -f tmp-workbench-crd.yaml
 # rm tmp-workbench-crd.yaml
 echo "" > config/prometheus/monitor.yaml
-export IMG="harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.16"
+export IMG="harbor.dev.chorus-tre.ch/chorus/workbench-operator:0.3.28"
 make build-installer
 kubectl apply -f dist/install.yaml
 cd ..
@@ -126,7 +126,7 @@ clients:
   k8s_client:
     enabled: true
     is_watcher: true
-    server_version: "6.2.3-4"
+    server_version: "6.3.2-1"
     ca: |
 $ca_ident
     token: $token
