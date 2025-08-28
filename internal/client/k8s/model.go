@@ -90,7 +90,7 @@ func (c *client) UsernameToK8sUser(userID uint64, username string) string {
 
 	name = name[:min(len(name), userNameMaxLength)]
 
-	return fmt.Sprintf("%d_%s", userID, name)
+	return fmt.Sprintf("%d-%s", userID, name)
 }
 
 func (c *client) K8sUserIDToUserID(userID uint64) uint64 {
