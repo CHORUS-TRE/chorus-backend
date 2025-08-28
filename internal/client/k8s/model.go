@@ -69,7 +69,7 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 }
 
 const userNameMaxLength int = 8
-const userIDOffset uint64 = 1000
+const userIDOffset uint64 = 1001
 
 func (c *client) K8sUserToUsername(user string) string {
 	parts := strings.SplitN(user, "_", 2)
