@@ -18,6 +18,10 @@ type Workspaceer interface {
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
 }
 
+type Workbencher interface {
+	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+}
+
 type WorkspaceStore interface {
 	GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
@@ -27,14 +31,16 @@ type WorkspaceStore interface {
 }
 
 type WorkspaceService struct {
-	store  WorkspaceStore
-	client k8s.K8sClienter
+	store       WorkspaceStore
+	client      k8s.K8sClienter
+	workbencher Workbencher
 }
 
-func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher) *WorkspaceService {
 	ws := &WorkspaceService{
-		store:  store,
-		client: client,
+		store:       store,
+		client:      client,
+		workbencher: workbencher,
 	}
 
 	go func() {
@@ -89,7 +95,12 @@ func (s *WorkspaceService) GetWorkspace(ctx context.Context, tenantID, workspace
 }
 
 func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
-	err := s.store.DeleteWorkspace(ctx, tenantID, workspaceID)
+	err := s.workbencher.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		return fmt.Errorf("unable to delete workbenchs in workspace %v: %w", workspaceID, err)
+	}
+
+	err = s.store.DeleteWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		return fmt.Errorf("unable to delete workspace %v: %w", workspaceID, err)
 	}

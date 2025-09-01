@@ -71,6 +71,10 @@ func (c *Caching) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uin
 	return c.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
+func (c *Caching) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	return c.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+}
+
 func (c *Caching) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	return c.next.UpdateWorkbench(ctx, workbench)
 }

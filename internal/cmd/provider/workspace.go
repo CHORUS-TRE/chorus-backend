@@ -24,6 +24,7 @@ func ProvideWorkspace() service.Workspaceer {
 		workspace = service.NewWorkspaceService(
 			ProvideWorkspaceStore(),
 			ProvideK8sClient(),
+			ProvideWorkbench(),
 		)
 		workspace = service_mw.Logging(logger.BizLog)(workspace)
 		workspace = service_mw.Validation(ProvideValidator())(workspace)

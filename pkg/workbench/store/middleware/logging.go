@@ -150,6 +150,24 @@ func (c workbenchStorageLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
+func (c workbenchStorageLogging) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+	c.logger.Debug(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
 func (c workbenchStorageLogging) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()

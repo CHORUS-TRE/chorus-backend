@@ -26,6 +26,7 @@ func ProvideWorkbench() service.Workbencher {
 			ProvideWorkbenchStore(),
 			ProvideK8sClient(),
 			ProvideAppService(),
+			ProvideUser(),
 		)
 		workbench = service_mw.Logging(logger.BizLog)(workbench)
 		workbench = service_mw.Validation(ProvideValidator())(workbench)
