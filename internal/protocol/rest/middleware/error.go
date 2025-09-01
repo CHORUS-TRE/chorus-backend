@@ -11,15 +11,15 @@ import (
 )
 
 type CustomErrorResponse struct {
-	Error   string `json:"error"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Details string `json:"details"`
+	Instance string `json:"instance"`
+	Code     string `json:"code"`
+	Error    string `json:"error"`
+	Message  string `json:"message"`
 }
 
 // CustomHTTPError handles gRPC errors and returns custom HTTP error responses
 func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
-	const fallback = `{"error": "Internal Server Error", "code": 500, "message": "An unexpected error occurred", "details": "chorus-backend-error"}`
+	const fallback = `{"instance": "/error", "error": "Internal Server Error", "status": 500, "message": "An unexpected error occurred"}`
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -31,10 +31,10 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 	httpStatus := runtime.HTTPStatusFromCode(s.Code())
 
 	customErr := CustomErrorResponse{
-		Error:   http.StatusText(httpStatus),
-		Code:    httpStatus,
-		Message: s.Message(),
-		Details: "chorus-backend-error",
+		Instance: r.URL.Path,
+		Code:     "CHORUS_ERROR_CODE", // To be defined in GRPC error types
+		Error:    http.StatusText(httpStatus),
+		Message:  s.Message(),
 	}
 
 	buf, merr := json.Marshal(customErr)
