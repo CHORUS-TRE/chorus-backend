@@ -274,12 +274,17 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 			return err
 		}
 
+		username := ""
+		if user.Source == s.getMainSourceID() {
+			username = user.Username
+		}
+
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
 		err = s.client.UpdateWorkbench(k8s.MakeWorkbenchRequest{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
-			Username:                user.Username,
+			Username:                username,
 			UserID:                  user.ID,
 			Name:                    workbenchName,
 			Apps:                    clientApps,
@@ -372,12 +377,17 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return nil, fmt.Errorf("unable to get user %v: %w", workbench.UserID, err)
 	}
 
+	username := ""
+	if user.Source == s.getMainSourceID() {
+		username = user.Username
+	}
+
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
 	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
-		Username:                user.Username,
+		Username:                username,
 		UserID:                  user.ID,
 		Name:                    workbenchName,
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
@@ -500,4 +510,13 @@ func (s *WorkbenchService) saveBatchProxyHit(ctx context.Context) {
 		}
 		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to save batch proxy hit, losing %v hits to %v workbenches", hits, numWorkbenches), zap.Error(err))
 	}
+}
+
+func (s *WorkbenchService) getMainSourceID() string {
+	for _, mode := range s.cfg.Services.AuthenticationService.Modes {
+		if mode.MainSource {
+			return mode.OpenID.ID
+		}
+	}
+	return ""
 }
