@@ -16,6 +16,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
+	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
@@ -275,7 +276,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 		}
 
 		username := ""
-		if user.Source == s.getMainSourceID() {
+		if user.Source == auth_helper.GetMainSourceID(s.cfg) {
 			username = user.Username
 		}
 
@@ -378,7 +379,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	}
 
 	username := ""
-	if user.Source == s.getMainSourceID() {
+	if user.Source == auth_helper.GetMainSourceID(s.cfg) {
 		username = user.Username
 	}
 
@@ -510,16 +511,4 @@ func (s *WorkbenchService) saveBatchProxyHit(ctx context.Context) {
 		}
 		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to save batch proxy hit, losing %v hits to %v workbenches", hits, numWorkbenches), zap.Error(err))
 	}
-}
-
-func (s *WorkbenchService) getMainSourceID() string {
-	for _, mode := range s.cfg.Services.AuthenticationService.Modes {
-		if mode.MainSource {
-			if mode.Type == "internal" {
-				return "internal"
-			}
-			return mode.OpenID.ID
-		}
-	}
-	return ""
 }
