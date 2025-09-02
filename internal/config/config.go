@@ -268,6 +268,7 @@ type (
 	Mode struct {
 		Type                      string `yaml:"type"`
 		Enabled                   bool   `yaml:"enabled"`
+		MainSource                bool   `yaml:"main_source"`
 		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
 		OpenID                    OpenID `yaml:"openid,omitempty"`
 		ButtonText                string `yaml:"button_text,omitempty"`
