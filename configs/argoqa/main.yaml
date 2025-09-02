@@ -98,6 +98,7 @@ clients:
     enabled: true
     sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
     api_server: "{{ .service_account_api_server_url }}"
+    add_user_details: true
 
 log:
   loggers:

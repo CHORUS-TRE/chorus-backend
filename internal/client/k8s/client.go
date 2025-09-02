@@ -264,7 +264,7 @@ func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 	}
 
 	username := c.UsernameToK8sUser(req.Username)
-	if username != "" {
+	if c.cfg.Clients.K8sClient.AddUserDetails && username != "" {
 		workbench.Spec.Server.User = username
 		workbench.Spec.Server.UserID = int(c.UserIDToK8sUserID(req.UserID))
 	}
