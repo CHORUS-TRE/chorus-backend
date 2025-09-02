@@ -137,7 +137,8 @@ type (
 		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
 		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
 
-		ServerVersion string `yaml:"server_version,omitempty"`
+		ServerVersion  string `yaml:"server_version,omitempty"`
+		AddUserDetails bool   `yaml:"add_user_details,omitempty"`
 
 		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
 
@@ -268,6 +269,7 @@ type (
 	Mode struct {
 		Type                      string `yaml:"type"`
 		Enabled                   bool   `yaml:"enabled"`
+		MainSource                bool   `yaml:"main_source"`
 		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
 		OpenID                    OpenID `yaml:"openid,omitempty"`
 		ButtonText                string `yaml:"button_text,omitempty"`

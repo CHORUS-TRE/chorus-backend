@@ -61,6 +61,7 @@ services:
       keycloak:
         type: openid
         enabled: true
+        main_source: true
         button_text: "Login with CHUV"
         icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
         order: 2
@@ -126,6 +127,7 @@ clients:
     is_watcher: true
     sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
     api_server: https://ctzsrrlp52.os-ls.kaas.switch.ch:6443
+    add_user_details: true
 
 log:
   loggers:

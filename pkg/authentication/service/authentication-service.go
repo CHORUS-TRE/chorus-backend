@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -95,14 +94,22 @@ func (e *Err2FARequired) Error() string {
 }
 
 // NewAuthenticationService returns a fresh authentication service instance.
-func NewAuthenticationService(cfg config.Config, userer Userer, store AuthenticationStore, daemonEncryptionKey *crypto.Secret) *AuthenticationService {
+func NewAuthenticationService(cfg config.Config, userer Userer, store AuthenticationStore, daemonEncryptionKey *crypto.Secret) (*AuthenticationService, error) {
 	oauthConfigs := make(map[string]*oauth2.Config)
 
 	// Initialize the OAuth2 configs for each OpenID mode
+	hasMainSource := false
 	for _, mode := range cfg.Services.AuthenticationService.Modes {
+		if mode.MainSource {
+			if hasMainSource {
+				return nil, fmt.Errorf("only one authentication mode can be marked as main source")
+			}
+			hasMainSource = true
+		}
+
 		if mode.Type == "openid" {
 			if mode.OpenID.ID == "internal" {
-				log.Fatal("openid mode cannot be named internal")
+				return nil, fmt.Errorf("openid mode cannot be named internal")
 			}
 
 			redirectURL := mode.OpenID.ChorusBackendHost + "/api/rest/v1/authentication/oauth2/" + mode.OpenID.ID + "/redirect"
@@ -134,7 +141,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 		daemonEncryptionKey: daemonEncryptionKey,
 		store:               store,
 		oauthConfigs:        oauthConfigs,
-	}
+	}, nil
 }
 
 func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationMode {

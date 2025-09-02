@@ -57,7 +57,7 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		Namespace:               wb.Namespace,
 		TenantID:                tenantID,
 		Name:                    wb.Name,
-		Username:                c.K8sUserToUsername(wb.Spec.Server.User), // Username may be truncated
+		Username:                wb.Spec.Server.User,
 		UserID:                  c.K8sUserIDToUserID(uint64(wb.Spec.Server.UserID)),
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
@@ -68,29 +68,15 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	return workbench, nil
 }
 
-const userNameMaxLength int = 8
 const userIDOffset uint64 = 1001
 
-func (c *client) K8sUserToUsername(user string) string {
-	parts := strings.SplitN(user, "_", 2)
-	name := strings.ReplaceAll(parts[0], "_", " ")
-
-	return name
-}
-
-func (c *client) UsernameToK8sUser(userID uint64, username string) string {
+func (c *client) UsernameToK8sUser(username string) string {
 	name := strings.ToLower(username)
 	name = strings.ReplaceAll(name, " ", "_")
 	reg := regexp.MustCompile(`[^a-z0-9_]`)
 	name = reg.ReplaceAllString(name, "")
 
-	if len(name) == 0 {
-		name = "user"
-	}
-
-	name = name[:min(len(name), userNameMaxLength)]
-
-	return fmt.Sprintf("%d-%s", userID, name)
+	return name
 }
 
 func (c *client) K8sUserIDToUserID(userID uint64) uint64 {

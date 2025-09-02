@@ -243,8 +243,6 @@ func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 		},
 		Spec: WorkbenchSpec{
 			Server: WorkbenchServer{
-				User:                    c.UsernameToK8sUser(req.UserID, req.Username),
-				UserID:                  int(c.UserIDToK8sUserID(req.UserID)),
 				InitialResolutionWidth:  int(req.InitialResolutionWidth),
 				InitialResolutionHeight: int(req.InitialResolutionHeight),
 			},
@@ -263,6 +261,12 @@ func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 
 	if c.cfg.Clients.K8sClient.ServerVersion != "" {
 		workbench.Spec.Server.Version = c.cfg.Clients.K8sClient.ServerVersion
+	}
+
+	username := c.UsernameToK8sUser(req.Username)
+	if c.cfg.Clients.K8sClient.AddUserDetails && username != "" {
+		workbench.Spec.Server.User = username
+		workbench.Spec.Server.UserID = int(c.UserIDToK8sUserID(req.UserID))
 	}
 
 	return workbench, nil
