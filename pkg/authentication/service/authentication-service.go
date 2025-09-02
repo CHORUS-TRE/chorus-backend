@@ -99,7 +99,15 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 	oauthConfigs := make(map[string]*oauth2.Config)
 
 	// Initialize the OAuth2 configs for each OpenID mode
+	hasMainSource := false
 	for _, mode := range cfg.Services.AuthenticationService.Modes {
+		if mode.MainSource {
+			if hasMainSource {
+				log.Fatal("only one authentication mode can be marked as main source")
+			}
+			hasMainSource = true
+		}
+
 		if mode.Type == "openid" {
 			if mode.OpenID.ID == "internal" {
 				log.Fatal("openid mode cannot be named internal")
