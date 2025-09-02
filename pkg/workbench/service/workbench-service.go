@@ -515,6 +515,9 @@ func (s *WorkbenchService) saveBatchProxyHit(ctx context.Context) {
 func (s *WorkbenchService) getMainSourceID() string {
 	for _, mode := range s.cfg.Services.AuthenticationService.Modes {
 		if mode.MainSource {
+			if mode.Type == "internal" {
+				return "internal"
+			}
 			return mode.OpenID.ID
 		}
 	}
