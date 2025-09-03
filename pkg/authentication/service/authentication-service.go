@@ -297,7 +297,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	}
 
 	// Get username claim field from config, default to "sub"
-	usernameClaim := "sub"
+	usernameClaim := model.DEFAULT_USERNAME_CLAIM
 	if mode.OpenID.UserNameClaim != "" {
 		usernameClaim = mode.OpenID.UserNameClaim
 	}

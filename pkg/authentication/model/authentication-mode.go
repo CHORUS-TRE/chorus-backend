@@ -16,3 +16,5 @@ type Internal struct {
 type OpenID struct {
 	ID string `yaml:"id"`
 }
+
+const DEFAULT_USERNAME_CLAIM = "sub"
