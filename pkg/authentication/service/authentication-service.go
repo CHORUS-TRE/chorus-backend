@@ -291,7 +291,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	}
 
 	type OAuthUser struct {
-		Username  string `json:"sub"`
+		Username  string `json:"preferred_username"`
 		Email     string `json:"email"`
 		FirstName string `json:"given_name"`
 		LastName  string `json:"family_name"`
