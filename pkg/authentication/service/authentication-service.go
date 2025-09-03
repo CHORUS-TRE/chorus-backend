@@ -314,8 +314,8 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		}
 
 		createUser := &userService.UserReq{
-			FirstName:   userInfo["given_name"],
-			LastName:    userInfo["family_name"],
+			FirstName:   userInfo[model.DEFAULT_FIRST_NAME_CLAIM],
+			LastName:    userInfo[model.DEFAULT_LAST_NAME_CLAIM],
 			Username:    username,
 			Source:      providerID,
 			Password:    "",
