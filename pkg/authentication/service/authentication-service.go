@@ -291,9 +291,19 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	}
 
 	// Decode user info response
-	var userInfo map[string]string
+	var userInfo map[string]interface{}
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
 		return "", 0, "", fmt.Errorf("failed to decode user info response: %w", err)
+	}
+
+	// Helper function to safely get string values
+	getUserInfoString := func(key string) string {
+		if val, exists := userInfo[key]; exists {
+			if str, ok := val.(string); ok {
+				return str
+			}
+		}
+		return ""
 	}
 
 	// Get username claim field from config
@@ -303,8 +313,8 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	}
 
 	// Get username from user info
-	username, ok := userInfo[usernameClaim]
-	if !ok {
+	username := getUserInfoString(usernameClaim)
+	if username == "" {
 		return "", 0, "", fmt.Errorf("failed to get username claim %s in user info", usernameClaim)
 	}
 
@@ -315,8 +325,8 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		}
 
 		createUser := &userService.UserReq{
-			FirstName:   userInfo[model.DEFAULT_FIRST_NAME_CLAIM],
-			LastName:    userInfo[model.DEFAULT_LAST_NAME_CLAIM],
+			FirstName:   getUserInfoString(model.DEFAULT_FIRST_NAME_CLAIM),
+			LastName:    getUserInfoString(model.DEFAULT_LAST_NAME_CLAIM),
 			Username:    username,
 			Source:      providerID,
 			Password:    "",
