@@ -296,15 +296,16 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		return "", 0, "", fmt.Errorf("failed to decode user info response: %w", err)
 	}
 
-	// Get username claim field from config, default to "sub"
+	// Get username claim field from config
 	usernameClaim := model.DEFAULT_USERNAME_CLAIM
 	if mode.OpenID.UserNameClaim != "" {
 		usernameClaim = mode.OpenID.UserNameClaim
 	}
 
+	// Get username from user info
 	username, ok := userInfo[usernameClaim]
 	if !ok {
-		return "", 0, "", fmt.Errorf("failed to find username claim %q in user info: %w", usernameClaim, &ErrInvalidArgument{})
+		username = userInfo[model.DEFAULT_USERNAME_CLAIM]
 	}
 
 	user, err := a.store.GetActiveUser(ctx, username, providerID)
