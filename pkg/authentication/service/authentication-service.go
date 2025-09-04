@@ -290,29 +290,44 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		return "", 0, "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
 	}
 
-	type OAuthUser struct {
-		Username  string `json:"sub"`
-		Email     string `json:"email"`
-		FirstName string `json:"given_name"`
-		LastName  string `json:"family_name"`
-	}
-
-	// var userInfo map[string]string
-	var userInfo OAuthUser
+	// Decode user info response
+	var userInfo map[string]interface{}
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
 		return "", 0, "", fmt.Errorf("failed to decode user info response: %w", err)
 	}
 
-	user, err := a.store.GetActiveUser(ctx, userInfo.Username, providerID)
+	// Helper function to safely get string values
+	getUserInfoString := func(key string) string {
+		if val, exists := userInfo[key]; exists {
+			if str, ok := val.(string); ok {
+				return str
+			}
+		}
+		return ""
+	}
+
+	// Get username claim field from config
+	usernameClaim := model.DEFAULT_USERNAME_CLAIM
+	if mode.OpenID.UserNameClaim != "" {
+		usernameClaim = mode.OpenID.UserNameClaim
+	}
+
+	// Get username from user info
+	username := getUserInfoString(usernameClaim)
+	if username == "" {
+		return "", 0, "", fmt.Errorf("failed to get username claim %s in user info", usernameClaim)
+	}
+
+	user, err := a.store.GetActiveUser(ctx, username, providerID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return "", 0, "", nil
 		}
 
 		createUser := &userService.UserReq{
-			FirstName:   userInfo.FirstName,
-			LastName:    userInfo.LastName,
-			Username:    userInfo.Username,
+			FirstName:   getUserInfoString(model.DEFAULT_FIRST_NAME_CLAIM),
+			LastName:    getUserInfoString(model.DEFAULT_LAST_NAME_CLAIM),
+			Username:    username,
 			Source:      providerID,
 			Password:    "",
 			Status:      userModel.UserActive,
@@ -325,7 +340,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
 		}
 
-		user, err = a.store.GetActiveUser(ctx, userInfo.Username, providerID)
+		user, err = a.store.GetActiveUser(ctx, username, providerID)
 		if err != nil {
 			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
 		}
