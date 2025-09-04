@@ -16,6 +16,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
+	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
@@ -274,12 +275,17 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 			return err
 		}
 
+		username := ""
+		if user.Source == auth_helper.GetMainSourceID(s.cfg) {
+			username = user.Username
+		}
+
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
 		err = s.client.UpdateWorkbench(k8s.MakeWorkbenchRequest{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
-			Username:                user.Username,
+			Username:                username,
 			UserID:                  user.ID,
 			Name:                    workbenchName,
 			Apps:                    clientApps,
@@ -372,12 +378,17 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return nil, fmt.Errorf("unable to get user %v: %w", workbench.UserID, err)
 	}
 
+	username := ""
+	if user.Source == auth_helper.GetMainSourceID(s.cfg) {
+		username = user.Username
+	}
+
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
 	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
-		Username:                user.Username,
+		Username:                username,
 		UserID:                  user.ID,
 		Name:                    workbenchName,
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
