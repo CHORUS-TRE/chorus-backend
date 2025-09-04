@@ -6,6 +6,7 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
@@ -16,12 +17,12 @@ type stewardControllerAuthorization struct {
 	next chorus.StewardServiceServer
 }
 
-func StewardAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.StewardServiceServer) chorus.StewardServiceServer {
+func StewardAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.StewardServiceServer) chorus.StewardServiceServer {
 	return func(next chorus.StewardServiceServer) chorus.StewardServiceServer {
 		return &stewardControllerAuthorization{
 			Authorization: Authorization{
-				logger:          logger,
-				authorizedRoles: authorizedRoles,
+				logger:     logger,
+				authorizer: authorizer,
 			},
 			next: next,
 		}
@@ -29,7 +30,7 @@ func StewardAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) 
 }
 
 func (c stewardControllerAuthorization) InitializeTenant(ctx context.Context, request *chorus.InitializeTenantRequest) (*empty.Empty, error) {
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionInitializeTenant)
 	if err != nil {
 		return nil, err
 	}
