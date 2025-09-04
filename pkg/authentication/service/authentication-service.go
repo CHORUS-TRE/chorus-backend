@@ -305,7 +305,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	// Get username from user info
 	username, ok := userInfo[usernameClaim]
 	if !ok {
-		username = userInfo[model.DEFAULT_USERNAME_CLAIM]
+		return "", 0, "", fmt.Errorf("failed to get username claim %s in user info", usernameClaim)
 	}
 
 	user, err := a.store.GetActiveUser(ctx, username, providerID)
