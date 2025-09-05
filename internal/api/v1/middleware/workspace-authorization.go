@@ -80,3 +80,47 @@ func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, r
 	//nolint: staticcheck
 	return c.next.DeleteWorkspace(ctx, req)
 }
+
+func (c workspaceControllerAuthorization) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
+	// TODO check for permission
+
+	err := c.IsAuthenticatedAndAuthorized(ctx)
+	if err != nil {
+		return nil, err
+	}
+	//nolint: staticcheck
+	return c.next.GetWorkspaceFile(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
+	// TODO check for permission
+
+	err := c.IsAuthenticatedAndAuthorized(ctx)
+	if err != nil {
+		return nil, err
+	}
+	//nolint: staticcheck
+	return c.next.CreateWorkspaceFile(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) UpdateWorkspaceFile(ctx context.Context, req *chorus.UpdateWorkspaceFileRequest) (*chorus.UpdateWorkspaceFileReply, error) {
+	// TODO check for permission
+
+	err := c.IsAuthenticatedAndAuthorized(ctx)
+	if err != nil {
+		return nil, err
+	}
+	//nolint: staticcheck
+	return c.next.UpdateWorkspaceFile(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) DeleteWorkspaceFile(ctx context.Context, req *chorus.DeleteWorkspaceFileRequest) (*chorus.DeleteWorkspaceFileReply, error) {
+	// TODO check for permission
+
+	err := c.IsAuthenticatedAndAuthorized(ctx)
+	if err != nil {
+		return nil, err
+	}
+	//nolint: staticcheck
+	return c.next.DeleteWorkspaceFile(ctx, req)
+}

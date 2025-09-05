@@ -81,3 +81,16 @@ func (Workspace) IsValidSortType(sortType string) bool {
 
 	return validSortTypes[sortType]
 }
+
+type WorkspaceFile struct {
+	Name        string
+	Path        string
+	IsDirectory bool
+	Size        int64
+	MimeType    string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	Content []byte
+}
