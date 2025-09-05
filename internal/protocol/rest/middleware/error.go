@@ -11,14 +11,14 @@ import (
 )
 
 type CustomErrorResponse struct {
-	Code    int                    `json:"code"`    // gRPC code
-	Message string                 `json:"message"` // error message
-	Details map[string]interface{} `json:"details"` // additional details as a map
+	Code    int           `json:"code"`    // gRPC code
+	Message string        `json:"message"` // error message
+	Details []interface{} `json:"details"` // details as array
 }
 
 // CustomHTTPError handles gRPC errors and returns custom HTTP error responses
 func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
-	const fallback = `{"code": 13, "message": "An unexpected error occurred", "details": {}}`
+	const fallback = `{"code": 13, "message": "An unexpected error occurred", "error": "An unexpected error occurred", "details": []}`
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -32,7 +32,7 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 	var customErr CustomErrorResponse
 	customErr.Code = int(st.Code())
 	customErr.Message = st.Message()
-	customErr.Details = map[string]interface{}{}
+	customErr.Details = []interface{}{}
 
 	// Check if we have custom error detail in status details
 	for _, detail := range st.Details() {
@@ -40,13 +40,15 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 			// Add current request context
 			errorDetail.Instance = r.URL.Path
 
-			customErr.Details = map[string]interface{}{
+			// Create structured error detail as an object in the details array
+			detailObj := map[string]interface{}{
 				"chorusCode": errorDetail.ChorusCode,
 				"instance":   errorDetail.Instance,
 				"title":      errorDetail.Title,
 				"message":    errorDetail.Message,
 				"timestamp":  errorDetail.Timestamp.AsTime().String(),
 			}
+			customErr.Details = append(customErr.Details, detailObj)
 		}
 	}
 
