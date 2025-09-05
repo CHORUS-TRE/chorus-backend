@@ -37,6 +37,9 @@ func InitServer(whitelister middleware.ClientWhitelister, keyFunc jwt_go.Keyfunc
 	unary = append(unary, metrics.NewMetricsUnaryServerInterceptors(serverMetrics)...)
 	stream = append(stream, metrics.NewMetricsStreamServerInterceptors(serverMetrics)...)
 
+	// Add error handling middleware FIRST to catch ChorusErrors before they get converted
+	unary = append(unary, middleware.UnaryErrorInterceptor)
+
 	// Add JWT-authentication middleware.
 	unary = append(unary, middleware.NewAuthUnaryServerInterceptors(keyFunc, claimsFactory)...)
 	stream = append(stream, middleware.NewAuthStreamServerInterceptors(keyFunc, claimsFactory)...)

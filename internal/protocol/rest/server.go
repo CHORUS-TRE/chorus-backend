@@ -22,6 +22,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
+		runtime.WithErrorHandler(middleware.CustomHTTPError),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			MarshalOptions: protojson.MarshalOptions{
 				EmitUnpopulated: true,

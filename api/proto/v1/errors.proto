@@ -1,0 +1,16 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message ErrorDetail {
+    // Unique chorus specific error code
+    string chorusCode = 1;
+    // Instance identifier (url)
+    string instance = 2;
+    // A short human-readable summary of the problem
+    string title = 3;
+    // A human-readable explanation specific to this occurrence of the problem
+    string message = 4;
+}
