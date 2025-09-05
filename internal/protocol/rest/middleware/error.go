@@ -41,11 +41,11 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 			errorDetail.Instance = r.URL.Path
 
 			customErr.Details = map[string]interface{}{
-				"chorus_code": errorDetail.ChorusCode,
-				"instance":    errorDetail.Instance,
-				"title":       errorDetail.Title,
-				"message":     errorDetail.Message,
-				"timestamp":   errorDetail.Timestamp.AsTime().String(),
+				"chorusCode": errorDetail.ChorusCode,
+				"instance":   errorDetail.Instance,
+				"title":      errorDetail.Title,
+				"message":    errorDetail.Message,
+				"timestamp":  errorDetail.Timestamp.AsTime().String(),
 			}
 		}
 	}
