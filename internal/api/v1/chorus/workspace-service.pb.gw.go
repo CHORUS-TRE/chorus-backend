@@ -260,14 +260,6 @@ func request_WorkspaceService_CreateWorkspaceFile_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
 	}
-	val, ok = pathParams["path"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
-	}
-	protoReq.Path, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
-	}
 	msg, err := client.CreateWorkspaceFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -288,14 +280,6 @@ func local_request_WorkspaceService_CreateWorkspaceFile_0(ctx context.Context, m
 	protoReq.WorkspaceId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
-	}
-	val, ok = pathParams["path"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
-	}
-	protoReq.Path, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	msg, err := server.CreateWorkspaceFile(ctx, &protoReq)
 	return msg, metadata, err
@@ -318,14 +302,6 @@ func request_WorkspaceService_UpdateWorkspaceFile_0(ctx context.Context, marshal
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
 	}
-	val, ok = pathParams["path"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
-	}
-	protoReq.Path, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
-	}
 	msg, err := client.UpdateWorkspaceFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -346,14 +322,6 @@ func local_request_WorkspaceService_UpdateWorkspaceFile_0(ctx context.Context, m
 	protoReq.WorkspaceId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
-	}
-	val, ok = pathParams["path"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
-	}
-	protoReq.Path, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	msg, err := server.UpdateWorkspaceFile(ctx, &protoReq)
 	return msg, metadata, err
@@ -544,7 +512,7 @@ func RegisterWorkspaceServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/CreateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/CreateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -564,7 +532,7 @@ func RegisterWorkspaceServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/UpdateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/UpdateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -744,7 +712,7 @@ func RegisterWorkspaceServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/CreateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/CreateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -761,7 +729,7 @@ func RegisterWorkspaceServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/UpdateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/UpdateWorkspaceFile", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/files"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -801,8 +769,8 @@ var (
 	pattern_WorkspaceService_UpdateWorkspace_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspaces"}, ""))
 	pattern_WorkspaceService_DeleteWorkspace_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspaces", "id"}, ""))
 	pattern_WorkspaceService_GetWorkspaceFile_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "files", "path"}, ""))
-	pattern_WorkspaceService_CreateWorkspaceFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "files", "path"}, ""))
-	pattern_WorkspaceService_UpdateWorkspaceFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "files", "path"}, ""))
+	pattern_WorkspaceService_CreateWorkspaceFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "files"}, ""))
+	pattern_WorkspaceService_UpdateWorkspaceFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "files"}, ""))
 	pattern_WorkspaceService_DeleteWorkspaceFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "files", "path"}, ""))
 )
 

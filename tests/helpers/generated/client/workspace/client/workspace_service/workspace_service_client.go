@@ -127,7 +127,7 @@ func (a *Client) WorkspaceServiceCreateWorkspaceFile(params *WorkspaceServiceCre
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_CreateWorkspaceFile",
 		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -400,7 +400,7 @@ func (a *Client) WorkspaceServiceUpdateWorkspaceFile(params *WorkspaceServiceUpd
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_UpdateWorkspaceFile",
 		Method:             "PUT",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

@@ -1868,6 +1868,95 @@ paths:
           format: uint64
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/files:
+    post:
+      summary: Create a file in a workspace
+      description: This endpoint creates a file in a workspace at the specified path
+      operationId: WorkspaceService_CreateWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkspaceFileReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: file
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceFile'
+      tags:
+        - WorkspaceService
+    put:
+      summary: Update a file in a workspace
+      description: This endpoint updates (rename or moves) a file in a workspace at the specified path
+      operationId: WorkspaceService_UpdateWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceFileReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: file
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceFile'
+      tags:
+        - WorkspaceService
   /api/rest/v1/workspaces/{workspaceId}/files/{path}:
     get:
       summary: List files in a workspace
@@ -1955,104 +2044,6 @@ paths:
           required: true
           type: string
           pattern: .+
-      tags:
-        - WorkspaceService
-    post:
-      summary: Create a file in a workspace
-      description: This endpoint creates a file in a workspace at the specified path
-      operationId: WorkspaceService_CreateWorkspaceFile
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusCreateWorkspaceFileReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: path
-          in: path
-          required: true
-          type: string
-          pattern: .+
-        - name: file
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/chorusWorkspaceFile'
-      tags:
-        - WorkspaceService
-    put:
-      summary: Update a file in a workspace
-      description: This endpoint updates (rename or moves) a file in a workspace at the specified path
-      operationId: WorkspaceService_UpdateWorkspaceFile
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusUpdateWorkspaceFileReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: path
-          in: path
-          required: true
-          type: string
-          pattern: .+
-        - name: file
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
 definitions:

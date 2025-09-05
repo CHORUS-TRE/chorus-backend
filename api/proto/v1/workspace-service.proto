@@ -82,8 +82,7 @@ message GetWorkspaceFileResult {
 
 message CreateWorkspaceFileRequest {
     uint64 workspaceId = 1;
-    string path = 2;
-    WorkspaceFile file = 3;
+    WorkspaceFile file = 2;
 }
 message CreateWorkspaceFileReply {
     CreateWorkspaceFileResult result = 1;
@@ -94,8 +93,7 @@ message CreateWorkspaceFileResult {
 
 message UpdateWorkspaceFileRequest {
     uint64 workspaceId = 1;
-    string path = 2;
-    WorkspaceFile file = 3;
+    WorkspaceFile file = 2;
 }
 message UpdateWorkspaceFileReply {
     UpdateWorkspaceFileResult result = 1;
@@ -185,7 +183,7 @@ service WorkspaceService {
 
     rpc CreateWorkspaceFile(CreateWorkspaceFileRequest) returns (CreateWorkspaceFileReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"
+            post: "/api/rest/v1/workspaces/{workspaceId}/files"
             body: "file"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -197,7 +195,7 @@ service WorkspaceService {
 
     rpc UpdateWorkspaceFile(UpdateWorkspaceFileRequest) returns (UpdateWorkspaceFileReply) {
         option (google.api.http) = {
-            put: "/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"
+            put: "/api/rest/v1/workspaces/{workspaceId}/files"
             body: "file"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

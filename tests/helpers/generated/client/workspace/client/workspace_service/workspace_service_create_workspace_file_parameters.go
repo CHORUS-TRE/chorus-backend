@@ -66,9 +66,6 @@ type WorkspaceServiceCreateWorkspaceFileParams struct {
 	// File.
 	File *models.ChorusWorkspaceFile
 
-	// Path.
-	Path string
-
 	// WorkspaceID.
 	//
 	// Format: uint64
@@ -138,17 +135,6 @@ func (o *WorkspaceServiceCreateWorkspaceFileParams) SetFile(file *models.ChorusW
 	o.File = file
 }
 
-// WithPath adds the path to the workspace service create workspace file params
-func (o *WorkspaceServiceCreateWorkspaceFileParams) WithPath(path string) *WorkspaceServiceCreateWorkspaceFileParams {
-	o.SetPath(path)
-	return o
-}
-
-// SetPath adds the path to the workspace service create workspace file params
-func (o *WorkspaceServiceCreateWorkspaceFileParams) SetPath(path string) {
-	o.Path = path
-}
-
 // WithWorkspaceID adds the workspaceID to the workspace service create workspace file params
 func (o *WorkspaceServiceCreateWorkspaceFileParams) WithWorkspaceID(workspaceID string) *WorkspaceServiceCreateWorkspaceFileParams {
 	o.SetWorkspaceID(workspaceID)
@@ -171,11 +157,6 @@ func (o *WorkspaceServiceCreateWorkspaceFileParams) WriteToRequest(r runtime.Cli
 		if err := r.SetBodyParam(o.File); err != nil {
 			return err
 		}
-	}
-
-	// path param path
-	if err := r.SetPathParam("path", o.Path); err != nil {
-		return err
 	}
 
 	// path param workspaceId

@@ -54,9 +54,6 @@ func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Worksp
 }
 
 func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
-	if err := v.validate.Var(filePath, "required"); err != nil {
-		return nil, err
-	}
 	return v.next.GetWorkspaceFile(ctx, workspaceID, filePath)
 }
 
@@ -79,8 +76,5 @@ func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64,
 }
 
 func (v validation) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
-	if err := v.validate.Var(filePath, "required"); err != nil {
-		return err
-	}
 	return v.next.DeleteWorkspaceFile(ctx, workspaceID, filePath)
 }

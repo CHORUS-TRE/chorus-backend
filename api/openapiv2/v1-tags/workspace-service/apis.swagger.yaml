@@ -148,6 +148,59 @@ paths:
           format: uint64
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/files:
+    post:
+      summary: Create a file in a workspace
+      description: This endpoint creates a file in a workspace at the specified path
+      operationId: WorkspaceService_CreateWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: file
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceFile'
+      tags:
+        - WorkspaceService
+    put:
+      summary: Update a file in a workspace
+      description: This endpoint updates (rename or moves) a file in a workspace at the specified path
+      operationId: WorkspaceService_UpdateWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: file
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceFile'
+      tags:
+        - WorkspaceService
   /api/rest/v1/workspaces/{workspaceId}/files/{path}:
     get:
       summary: List files in a workspace
@@ -199,68 +252,6 @@ paths:
           required: true
           type: string
           pattern: .+
-      tags:
-        - WorkspaceService
-    post:
-      summary: Create a file in a workspace
-      description: This endpoint creates a file in a workspace at the specified path
-      operationId: WorkspaceService_CreateWorkspaceFile
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusCreateWorkspaceFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: path
-          in: path
-          required: true
-          type: string
-          pattern: .+
-        - name: file
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/chorusWorkspaceFile'
-      tags:
-        - WorkspaceService
-    put:
-      summary: Update a file in a workspace
-      description: This endpoint updates (rename or moves) a file in a workspace at the specified path
-      operationId: WorkspaceService_UpdateWorkspaceFile
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusUpdateWorkspaceFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: path
-          in: path
-          required: true
-          type: string
-          pattern: .+
-        - name: file
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
 definitions:

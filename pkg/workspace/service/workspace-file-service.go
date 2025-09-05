@@ -17,7 +17,7 @@ func getSampleWorkspaceFiles() map[uint64]map[string]*model.WorkspaceFile {
 	// Workspace 1 sample files
 	files[1] = make(map[string]*model.WorkspaceFile)
 	files[1]["/"] = &model.WorkspaceFile{
-		Name:        "root",
+		Name:        "workspace1",
 		Path:        "/",
 		IsDirectory: true,
 		Size:        0,
@@ -78,7 +78,7 @@ func getSampleWorkspaceFiles() map[uint64]map[string]*model.WorkspaceFile {
 	// Workspace 2 sample files
 	files[2] = make(map[string]*model.WorkspaceFile)
 	files[2]["/"] = &model.WorkspaceFile{
-		Name:        "root",
+		Name:        "workspace2",
 		Path:        "/",
 		IsDirectory: true,
 		Size:        0,
@@ -214,6 +214,9 @@ func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID 
 	if file.Path == "" {
 		return nil, fmt.Errorf("file path cannot be empty")
 	}
+	if file.Path == "/" {
+		return nil, fmt.Errorf("cannot update root workspace directory")
+	}
 
 	s.filesMu.Lock()
 	defer s.filesMu.Unlock()
@@ -230,11 +233,12 @@ func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID 
 		return nil, fmt.Errorf("file not found: %s", file.Path)
 	}
 
+	delete(workspaceFiles, existingFile.Path)
+
 	updatedFile := *file
 	updatedFile.CreatedAt = existingFile.CreatedAt
 	updatedFile.UpdatedAt = time.Now()
-
-	s.files[workspaceID][file.Path] = &updatedFile
+	s.files[workspaceID][updatedFile.Path] = &updatedFile
 
 	result := updatedFile
 	return &result, nil
@@ -243,6 +247,10 @@ func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID 
 func (s *WorkspaceService) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
 	if filePath == "" {
 		return fmt.Errorf("file path cannot be empty")
+	}
+
+	if filePath == "/" {
+		return fmt.Errorf("cannot delete root workspace directory")
 	}
 
 	s.filesMu.Lock()
@@ -260,10 +268,6 @@ func (s *WorkspaceService) DeleteWorkspaceFile(ctx context.Context, workspaceID 
 	}
 
 	delete(workspaceFiles, filePath)
-
-	if len(workspaceFiles) == 0 {
-		delete(s.files, workspaceID)
-	}
 
 	return nil
 }
