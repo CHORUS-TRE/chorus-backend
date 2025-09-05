@@ -5,36 +5,49 @@ import (
 	"encoding/json"
 	"net/http"
 
+	errorspb "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type CustomErrorResponse struct {
-	Instance string `json:"instance"`
-	Code     string `json:"code"`
-	Error    string `json:"error"`
-	Message  string `json:"message"`
+	Code    int                    `json:"code"`    // gRPC code
+	Message string                 `json:"message"` // error message
+	Details map[string]interface{} `json:"details"` // additional details as a map
 }
 
 // CustomHTTPError handles gRPC errors and returns custom HTTP error responses
 func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, r *http.Request, err error) {
-	const fallback = `{"instance": "/error", "error": "Internal Server Error", "status": 500, "message": "An unexpected error occurred"}`
+	const fallback = `{"code": 13, "message": "An unexpected error occurred", "details": {}}`
 
 	w.Header().Set("Content-Type", "application/json")
 
-	s, ok := status.FromError(err)
-	if !ok {
-		s = status.New(codes.Unknown, err.Error())
-	}
+	// Convert gRPC error to HTTP status
+	st, _ := status.FromError(err)
 
-	httpStatus := runtime.HTTPStatusFromCode(s.Code())
+	// Get http status
+	httpStatus := runtime.HTTPStatusFromCode(st.Code())
 
-	customErr := CustomErrorResponse{
-		Instance: r.URL.Path,
-		Code:     "CHORUS_ERROR_CODE", // To be defined in GRPC error types
-		Error:    http.StatusText(httpStatus),
-		Message:  s.Message(),
+	// Create custom error response
+	var customErr CustomErrorResponse
+	customErr.Code = int(st.Code())
+	customErr.Message = st.Message()
+	customErr.Details = map[string]interface{}{}
+
+	// Check if we have custom error detail in status details
+	for _, detail := range st.Details() {
+		if errorDetail, ok := detail.(*errorspb.ErrorDetail); ok {
+			// Add current request context
+			errorDetail.Instance = r.URL.Path
+
+			customErr.Details = map[string]interface{}{
+				"chorus_code": errorDetail.ChorusCode,
+				"instance":    errorDetail.Instance,
+				"title":       errorDetail.Title,
+				"message":     errorDetail.Message,
+				"timestamp":   errorDetail.Timestamp.AsTime().String(),
+			}
+		}
 	}
 
 	buf, merr := json.Marshal(customErr)
