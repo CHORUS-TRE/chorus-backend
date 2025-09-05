@@ -56,13 +56,21 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	WorkspaceServiceCreateWorkspace(params *WorkspaceServiceCreateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceCreateWorkspaceOK, error)
 
+	WorkspaceServiceCreateWorkspaceFile(params *WorkspaceServiceCreateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceCreateWorkspaceFileOK, error)
+
 	WorkspaceServiceDeleteWorkspace(params *WorkspaceServiceDeleteWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceDeleteWorkspaceOK, error)
 
+	WorkspaceServiceDeleteWorkspaceFile(params *WorkspaceServiceDeleteWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceDeleteWorkspaceFileOK, error)
+
 	WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceOK, error)
+
+	WorkspaceServiceGetWorkspaceFile(params *WorkspaceServiceGetWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceFileOK, error)
 
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
 	WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceOK, error)
+
+	WorkspaceServiceUpdateWorkspaceFile(params *WorkspaceServiceUpdateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceFileOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -107,6 +115,45 @@ func (a *Client) WorkspaceServiceCreateWorkspace(params *WorkspaceServiceCreateW
 }
 
 /*
+WorkspaceServiceCreateWorkspaceFile creates a file in a workspace
+
+This endpoint creates a file in a workspace at the specified path
+*/
+func (a *Client) WorkspaceServiceCreateWorkspaceFile(params *WorkspaceServiceCreateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceCreateWorkspaceFileOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceCreateWorkspaceFileParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_CreateWorkspaceFile",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceCreateWorkspaceFileReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceCreateWorkspaceFileOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceCreateWorkspaceFileDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkspaceServiceDeleteWorkspace deletes a workspace
 
 This endpoint deletes a workspace
@@ -146,6 +193,45 @@ func (a *Client) WorkspaceServiceDeleteWorkspace(params *WorkspaceServiceDeleteW
 }
 
 /*
+WorkspaceServiceDeleteWorkspaceFile deletes a file in a workspace
+
+This endpoint deletes a file in a workspace at the specified path
+*/
+func (a *Client) WorkspaceServiceDeleteWorkspaceFile(params *WorkspaceServiceDeleteWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceDeleteWorkspaceFileOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceDeleteWorkspaceFileParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_DeleteWorkspaceFile",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceDeleteWorkspaceFileReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceDeleteWorkspaceFileOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceDeleteWorkspaceFileDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkspaceServiceGetWorkspace gets a workspace
 
 This endpoint returns a workspace
@@ -181,6 +267,45 @@ func (a *Client) WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspa
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceGetWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceGetWorkspaceFile lists files in a workspace
+
+This endpoint lists all files at given path within a workspace
+*/
+func (a *Client) WorkspaceServiceGetWorkspaceFile(params *WorkspaceServiceGetWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceFileOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceGetWorkspaceFileParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_GetWorkspaceFile",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceGetWorkspaceFileReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceGetWorkspaceFileOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceGetWorkspaceFileDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -259,6 +384,45 @@ func (a *Client) WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateW
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceUpdateWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceUpdateWorkspaceFile updates a file in a workspace
+
+This endpoint updates (rename or moves) a file in a workspace at the specified path
+*/
+func (a *Client) WorkspaceServiceUpdateWorkspaceFile(params *WorkspaceServiceUpdateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceFileOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceUpdateWorkspaceFileParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_UpdateWorkspaceFile",
+		Method:             "PUT",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceUpdateWorkspaceFileReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceUpdateWorkspaceFileOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceUpdateWorkspaceFileDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

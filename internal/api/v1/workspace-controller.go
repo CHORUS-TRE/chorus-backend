@@ -163,3 +163,100 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 
 	return &chorus.CreateWorkspaceReply{Result: &chorus.CreateWorkspaceResult{Workspace: tgWorkspace}}, nil
 }
+
+func (c WorkspaceController) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	file, err := c.workspace.GetWorkspaceFile(ctx, req.WorkspaceId, req.Path)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspaceFile': %v", err.Error())
+	}
+
+	tgFile, err := converter.WorkspaceFileFromBusiness(file)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	resp := &chorus.GetWorkspaceFileReply{Result: &chorus.GetWorkspaceFileResult{File: tgFile}}
+
+	if file.IsDirectory {
+		children, err := c.workspace.GetWorkspaceFileChildren(ctx, req.WorkspaceId, req.Path)
+		if err != nil {
+			return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspaceFileChildren': %v", err.Error())
+		}
+
+		tgChildren := make([]*chorus.WorkspaceFile, 0, len(children))
+		for _, child := range children {
+			tgChild, err := converter.WorkspaceFileFromBusiness(child)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+			}
+			tgChildren = append(tgChildren, tgChild)
+		}
+
+		resp.Result.Children = tgChildren
+	}
+
+	return resp, nil
+}
+
+func (c WorkspaceController) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	file, err := converter.WorkspaceFileToBusiness(req.File)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	newFile, err := c.workspace.CreateWorkspaceFile(ctx, req.WorkspaceId, file)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateWorkspaceFile': %v", err.Error())
+	}
+
+	tgFile, err := converter.WorkspaceFileFromBusiness(newFile)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateWorkspaceFileReply{Result: &chorus.CreateWorkspaceFileResult{File: tgFile}}, nil
+}
+
+func (c WorkspaceController) UpdateWorkspaceFile(ctx context.Context, req *chorus.UpdateWorkspaceFileRequest) (*chorus.UpdateWorkspaceFileReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	file, err := converter.WorkspaceFileToBusiness(req.File)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	updatedFile, err := c.workspace.UpdateWorkspaceFile(ctx, req.WorkspaceId, file)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkspaceFile': %v", err.Error())
+	}
+
+	tgFile, err := converter.WorkspaceFileFromBusiness(updatedFile)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.UpdateWorkspaceFileReply{Result: &chorus.UpdateWorkspaceFileResult{File: tgFile}}, nil
+}
+
+func (c WorkspaceController) DeleteWorkspaceFile(ctx context.Context, req *chorus.DeleteWorkspaceFileRequest) (*chorus.DeleteWorkspaceFileReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	err := c.workspace.DeleteWorkspaceFile(ctx, req.WorkspaceId, req.Path)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteWorkspaceFile': %v", err.Error())
+	}
+
+	return &chorus.DeleteWorkspaceFileReply{Result: &chorus.DeleteWorkspaceFileResult{}}, nil
+}
