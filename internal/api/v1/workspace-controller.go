@@ -235,7 +235,7 @@ func (c WorkspaceController) UpdateWorkspaceFile(ctx context.Context, req *choru
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
-	updatedFile, err := c.workspace.UpdateWorkspaceFile(ctx, req.WorkspaceId, file)
+	updatedFile, err := c.workspace.UpdateWorkspaceFile(ctx, req.WorkspaceId, req.OldPath, file)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkspaceFile': %v", err.Error())
 	}

@@ -137,12 +137,11 @@ func (s *WorkspaceService) GetWorkspaceFile(ctx context.Context, workspaceID uin
 
 	filePath = normalizePath(filePath)
 
-	workspaceFiles, exists := s.files[workspaceID]
-	if !exists {
-		return nil, fmt.Errorf("workspace not found: %d", workspaceID)
+	if _, exists := s.files[workspaceID]; !exists {
+		s.createRootDirectory(workspaceID)
 	}
 
-	file, exists := workspaceFiles[filePath]
+	file, exists := s.files[workspaceID][filePath]
 	if !exists {
 		return nil, fmt.Errorf("file not found: %s", filePath)
 	}
@@ -158,12 +157,7 @@ func (s *WorkspaceService) GetWorkspaceFileChildren(ctx context.Context, workspa
 
 	filePath = normalizePath(filePath)
 
-	workspaceFiles, exists := s.files[workspaceID]
-	if !exists {
-		return []*model.WorkspaceFile{}, nil
-	}
-
-	children := s.getChildren(workspaceFiles, filePath)
+	children := s.getChildren(s.files[workspaceID], filePath)
 
 	result := make([]*model.WorkspaceFile, len(children))
 	for i, child := range children {
@@ -188,7 +182,7 @@ func (s *WorkspaceService) CreateWorkspaceFile(ctx context.Context, workspaceID 
 	file.Path = normalizePath(file.Path)
 
 	if _, exists := s.files[workspaceID]; !exists {
-		s.files[workspaceID] = make(map[string]*model.WorkspaceFile)
+		s.createRootDirectory(workspaceID)
 	}
 
 	if _, exists := s.files[workspaceID][file.Path]; exists {
@@ -207,7 +201,7 @@ func (s *WorkspaceService) CreateWorkspaceFile(ctx context.Context, workspaceID 
 	return &result, nil
 }
 
-func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
 	if file == nil {
 		return nil, fmt.Errorf("file cannot be nil")
 	}
@@ -221,24 +215,22 @@ func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID 
 	s.filesMu.Lock()
 	defer s.filesMu.Unlock()
 
-	file.Path = normalizePath(file.Path)
+	oldPath = normalizePath(oldPath)
 
-	workspaceFiles, exists := s.files[workspaceID]
-	if !exists {
-		return nil, fmt.Errorf("file not found: %s", file.Path)
+	if _, exists := s.files[workspaceID]; !exists {
+		s.createRootDirectory(workspaceID)
 	}
 
-	existingFile, exists := workspaceFiles[file.Path]
+	existingFile, exists := s.files[workspaceID][oldPath]
 	if !exists {
-		return nil, fmt.Errorf("file not found: %s", file.Path)
+		return nil, fmt.Errorf("file not found: %s", oldPath)
 	}
-
-	delete(workspaceFiles, existingFile.Path)
 
 	updatedFile := *file
 	updatedFile.CreatedAt = existingFile.CreatedAt
 	updatedFile.UpdatedAt = time.Now()
 	s.files[workspaceID][updatedFile.Path] = &updatedFile
+	delete(s.files[workspaceID], existingFile.Path)
 
 	result := updatedFile
 	return &result, nil
@@ -321,4 +313,21 @@ func normalizePath(path string) string {
 	}
 
 	return path
+}
+
+func (s *WorkspaceService) createRootDirectory(workspaceID uint64) {
+	if _, exists := s.files[workspaceID]; !exists {
+		s.files[workspaceID] = make(map[string]*model.WorkspaceFile)
+	}
+
+	if _, exists := s.files[workspaceID]["/"]; !exists {
+		now := time.Now()
+		s.files[workspaceID]["/"] = &model.WorkspaceFile{
+			Name:        fmt.Sprintf("workspace%d", workspaceID),
+			Path:        "/",
+			IsDirectory: true,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		}
+	}
 }

@@ -21,7 +21,7 @@ type Workspaceer interface {
 	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
 	GetWorkspaceFileChildren(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error)
 	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
+	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 }
 

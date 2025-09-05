@@ -175,6 +175,7 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}:
     put:
       summary: Update a file in a workspace
       description: This endpoint updates (rename or moves) a file in a workspace at the specified path
@@ -194,6 +195,12 @@ paths:
           required: true
           type: string
           format: uint64
+        - name: oldPath
+          description: For renaming or moving files
+          in: path
+          required: true
+          type: string
+          pattern: .+
         - name: file
           in: body
           required: true

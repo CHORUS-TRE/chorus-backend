@@ -93,7 +93,8 @@ message CreateWorkspaceFileResult {
 
 message UpdateWorkspaceFileRequest {
     uint64 workspaceId = 1;
-    WorkspaceFile file = 2;
+    string oldPath = 2; // For renaming or moving files
+    WorkspaceFile file = 3;
 }
 message UpdateWorkspaceFileReply {
     UpdateWorkspaceFileResult result = 1;
@@ -195,7 +196,7 @@ service WorkspaceService {
 
     rpc UpdateWorkspaceFile(UpdateWorkspaceFileRequest) returns (UpdateWorkspaceFileReply) {
         option (google.api.http) = {
-            put: "/api/rest/v1/workspaces/{workspaceId}/files"
+            put: "/api/rest/v1/workspaces/{workspaceId}/files/{oldPath=**}"
             body: "file"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

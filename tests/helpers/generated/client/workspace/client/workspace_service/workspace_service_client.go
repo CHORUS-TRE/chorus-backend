@@ -400,7 +400,7 @@ func (a *Client) WorkspaceServiceUpdateWorkspaceFile(params *WorkspaceServiceUpd
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_UpdateWorkspaceFile",
 		Method:             "PUT",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{oldPath}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

@@ -66,6 +66,12 @@ type WorkspaceServiceUpdateWorkspaceFileParams struct {
 	// File.
 	File *models.ChorusWorkspaceFile
 
+	/* OldPath.
+
+	   For renaming or moving files
+	*/
+	OldPath string
+
 	// WorkspaceID.
 	//
 	// Format: uint64
@@ -135,6 +141,17 @@ func (o *WorkspaceServiceUpdateWorkspaceFileParams) SetFile(file *models.ChorusW
 	o.File = file
 }
 
+// WithOldPath adds the oldPath to the workspace service update workspace file params
+func (o *WorkspaceServiceUpdateWorkspaceFileParams) WithOldPath(oldPath string) *WorkspaceServiceUpdateWorkspaceFileParams {
+	o.SetOldPath(oldPath)
+	return o
+}
+
+// SetOldPath adds the oldPath to the workspace service update workspace file params
+func (o *WorkspaceServiceUpdateWorkspaceFileParams) SetOldPath(oldPath string) {
+	o.OldPath = oldPath
+}
+
 // WithWorkspaceID adds the workspaceID to the workspace service update workspace file params
 func (o *WorkspaceServiceUpdateWorkspaceFileParams) WithWorkspaceID(workspaceID string) *WorkspaceServiceUpdateWorkspaceFileParams {
 	o.SetWorkspaceID(workspaceID)
@@ -157,6 +174,11 @@ func (o *WorkspaceServiceUpdateWorkspaceFileParams) WriteToRequest(r runtime.Cli
 		if err := r.SetBodyParam(o.File); err != nil {
 			return err
 		}
+	}
+
+	// path param oldPath
+	if err := r.SetPathParam("oldPath", o.OldPath); err != nil {
+		return err
 	}
 
 	// path param workspaceId

@@ -85,8 +85,8 @@ func (c *Caching) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, f
 	return c.next.CreateWorkspaceFile(ctx, workspaceID, file)
 }
 
-func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	return c.next.UpdateWorkspaceFile(ctx, workspaceID, file)
+func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+	return c.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)
 }
 
 func (c *Caching) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
