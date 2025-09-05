@@ -10,9 +10,7 @@ message ErrorDetail {
     // Instance identifier (url)
     string instance = 2;
     // A short human-readable summary of the problem
-    string title = 5;
+    string title = 3;
     // A human-readable explanation specific to this occurrence of the problem
-    string message = 6;
-    // Optional timestamp when the error occurred
-    google.protobuf.Timestamp timestamp = 7;
+    string message = 4;
 }

@@ -39,16 +39,7 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 		if errorDetail, ok := detail.(*errorspb.ErrorDetail); ok {
 			// Add current request context
 			errorDetail.Instance = r.URL.Path
-
-			// Create structured error detail as an object in the details array
-			errorDetail := &errorspb.ErrorDetail{
-				ChorusCode: errorDetail.ChorusCode,
-				Instance:   errorDetail.Instance,
-				Title:      errorDetail.Title,
-				Message:    errorDetail.Message,
-				Timestamp:  errorDetail.Timestamp,
-			}
-			customErr.Details = append(customErr.Details, errorDetail)
+			customErr.Details = append(customErr.Details, &errorDetail)
 		}
 	}
 

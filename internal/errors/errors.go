@@ -4,7 +4,6 @@ import (
 	errorspb "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ChorusError struct {
@@ -29,7 +28,6 @@ func (e *ChorusError) ToGRPCStatus() *status.Status {
 		Instance:   e.Instance,
 		Title:      e.Title,
 		Message:    e.Message,
-		Timestamp:  timestamppb.Now(),
 	}
 
 	// Add details to the status
