@@ -19,6 +19,8 @@ import (
 type Workbench struct {
 	Namespace               string
 	TenantID                uint64
+	Username                string
+	UserID                  uint64
 	Name                    string
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -52,9 +54,11 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	}
 
 	workbench := Workbench{
-		TenantID:                tenantID,
 		Namespace:               wb.Namespace,
+		TenantID:                tenantID,
 		Name:                    wb.Name,
+		Username:                wb.Spec.Server.User,
+		UserID:                  c.K8sUserIDToUserID(uint64(wb.Spec.Server.UserID)),
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
 		Status:                  string(wb.Status.Server.Status),
@@ -62,6 +66,25 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	}
 
 	return workbench, nil
+}
+
+const userIDOffset uint64 = 1001
+
+func (c *client) UsernameToK8sUser(username string) string {
+	name := strings.ToLower(username)
+	name = strings.ReplaceAll(name, " ", "_")
+	reg := regexp.MustCompile(`[^a-z0-9_]`)
+	name = reg.ReplaceAllString(name, "")
+
+	return name
+}
+
+func (c *client) K8sUserIDToUserID(userID uint64) uint64 {
+	return userID - userIDOffset
+}
+
+func (c *client) UserIDToK8sUserID(userID uint64) uint64 {
+	return userID + userIDOffset
 }
 
 const appInstanceNamePrefix = "app-instance-"
@@ -257,6 +280,8 @@ type WorkbenchServer struct {
 	InitialResolutionWidth  int    `json:"initialResolutionWidth,omitempty"`
 	InitialResolutionHeight int    `json:"initialResolutionHeight,omitempty"`
 	Version                 string `json:"version,omitempty"`
+	User                    string `json:"user,omitempty"`
+	UserID                  int    `json:"userid,omitempty"`
 }
 type Image struct {
 	Registry   string `json:"registry"`

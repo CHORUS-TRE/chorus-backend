@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"go.uber.org/zap"
@@ -23,8 +24,11 @@ func ProvideAuthenticator() service.Authenticator {
 	cfg := ProvideConfig()
 
 	authenticatorOnce.Do(func() {
-		authenticator = service.NewAuthenticationService(cfg, ProvideUser(), ProvideAuthenticationStore(), ProvideDaemonEncryptionKey())
-		authenticator = service_mw.Logging(logger.SecLog)(authenticator)
+		authService, err := service.NewAuthenticationService(cfg, ProvideUser(), ProvideAuthenticationStore(), ProvideDaemonEncryptionKey())
+		if err != nil {
+			logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to provide authentication service: %v", err))
+		}
+		authenticator = service_mw.Logging(logger.SecLog)(authService)
 	})
 	return authenticator
 }
