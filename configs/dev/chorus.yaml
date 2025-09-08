@@ -99,16 +99,16 @@ services:
             - email
             - roles
   steward:
-    tenant:
+    init_tenant:
       enabled: true
-    user:
+    init_user:
       enabled: true
       username: chorus
       password: password
       roles:
         # - admin
-        - authenticated
-    workspace:
+        - Authenticated
+    init_workspace:
       enabled: true
       name: Home workspace
   mailer_service:

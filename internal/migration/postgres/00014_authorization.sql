@@ -69,7 +69,7 @@ INSERT INTO role_definitions (name) VALUES
 -- +migrate StatementEnd
 
 -- +migrate StatementBegin
-INSERT INTO user_roles (userid, roleid)
+INSERT INTO user_role (userid, roleid)
 SELECT userid, (SELECT id FROM role_definitions WHERE name = 'WorkspaceAdmin') FROM workspaces;
 -- +migrate StatementEnd
 
@@ -84,8 +84,8 @@ WHERE urc.userroleid IS NULL;
 -- +migrate StatementEnd
 
 -- +migrate StatementBegin
-INSERT INTO user_roles (userid, roleid)
-SELECT userid, (SELECT id FROM role_definitions WHERE name = 'WorkbenchAdmin') FROM workbench;
+INSERT INTO user_role (userid, roleid)
+SELECT userid, (SELECT id FROM role_definitions WHERE name = 'WorkbenchAdmin') FROM workbenchs;
 -- +migrate StatementEnd
 
 -- +migrate StatementBegin

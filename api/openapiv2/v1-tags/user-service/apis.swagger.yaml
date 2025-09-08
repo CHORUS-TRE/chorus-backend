@@ -395,6 +395,15 @@ definitions:
         type: array
         items:
           type: string
+  chorusRole:
+    type: object
+    properties:
+      name:
+        type: string
+      context:
+        type: object
+        additionalProperties:
+          type: string
   chorusSort:
     type: object
     properties:
@@ -447,7 +456,8 @@ definitions:
       roles:
         type: array
         items:
-          type: string
+          type: object
+          $ref: '#/definitions/chorusRole'
       totpEnabled:
         type: boolean
       passwordChanged:

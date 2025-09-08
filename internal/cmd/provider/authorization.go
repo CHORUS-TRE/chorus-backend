@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
@@ -17,7 +18,7 @@ func ProvideGatekeeper() gatekeeper_service.AuthorizationServiceInterface {
 	gatekeeperOnce.Do(func() {
 		schema, err := gatekeeper_model.GetDefaultSchema()
 		if err != nil {
-			logger.TechLog.Fatal(nil, "failed to get default gatekeeper model schema", zap.Error(err))
+			logger.TechLog.Fatal(context.Background(), "failed to get default gatekeeper model schema", zap.Error(err))
 		}
 		gatekeeper, err = gatekeeper_service.NewAuthorizationService(&schema)
 	})
@@ -32,7 +33,7 @@ func ProvideAuthorizer() authorization.Authorizer {
 		var err error
 		authorizer, err = authorization.NewAuthorizer(ProvideGatekeeper())
 		if err != nil {
-			logger.TechLog.Fatal(nil, "failed to create authorizer", zap.Error(err))
+			logger.TechLog.Fatal(context.Background(), "failed to create authorizer", zap.Error(err))
 		}
 	})
 	return authorizer

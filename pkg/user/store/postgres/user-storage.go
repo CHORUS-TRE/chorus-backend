@@ -250,11 +250,23 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 
 // CreateUser saves the provided user object in the database 'users' table.
 func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
-	const userQuery = `
+	var userQuery = `
 		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
 		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
+	args := []interface{}{tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret}
+
+	if user.ID != 0 {
+		userQuery = `
+		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, id,
+			createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+		`
+		args = append(args, user.ID)
+	}
+
 	const recoveryCodeQuery = `
 		INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 	`
@@ -267,9 +279,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	}
 
 	var newUser model.User
-	err = tx.GetContext(ctx, &newUser,
-		userQuery, tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret,
-	)
+	err = tx.GetContext(ctx, &newUser, userQuery, args...)
 	if err != nil {
 		return nil, storage.Rollback(tx, err)
 	}
@@ -398,7 +408,7 @@ ON user_role.userid = $1 AND user_role.id = user_role_context.user_role_id;
 // GetRoles queries all stocked roles.
 func (s *UserStorage) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	const query = `
-SELECT id, name FROM roles;
+SELECT id, name FROM role_definitions;
 	`
 	var roles []*model.Role
 	if err := s.db.SelectContext(ctx, &roles, query); err != nil {
@@ -409,10 +419,10 @@ SELECT id, name FROM roles;
 
 func (s *UserStorage) CreateRole(ctx context.Context, role string) error {
 	const query = `
-		insert into roles (name)
+		insert into role_definitions (name)
 			select $1
 		where not exists
-			(select * from roles where name = $1)`
+			(select * from role_definitions where name = $1)`
 
 	_, err := s.db.ExecContext(ctx, query, role)
 	if err != nil {

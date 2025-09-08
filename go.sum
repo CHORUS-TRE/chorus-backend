@@ -8,6 +8,8 @@ github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250814082359-1f4f8c645858 h1:kX
 github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250814082359-1f4f8c645858/go.mod h1:poKm4o0GPoaIx4/6gpp0JM+mlPwuoyWNGqHCV257EHk=
 github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250814131620-54e7bcd8c8ac h1:nLsTh7ITLXVDSc2hAFjLGlLEBGSJs+AvEz/juP0zY1A=
 github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250814131620-54e7bcd8c8ac/go.mod h1:poKm4o0GPoaIx4/6gpp0JM+mlPwuoyWNGqHCV257EHk=
+github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250825111824-317a797c1963 h1:m2XpcOQkdEYIvu4+tQpVF9NFwVzucpgLMPvdKcr1gJU=
+github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250825111824-317a797c1963/go.mod h1:poKm4o0GPoaIx4/6gpp0JM+mlPwuoyWNGqHCV257EHk=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=

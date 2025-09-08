@@ -1,10 +1,12 @@
 package provider
 
 import (
+	"context"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
+	"go.uber.org/zap"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 
@@ -30,12 +32,16 @@ var stewardService service.Stewarder
 
 func ProvideStewardService() service.Stewarder {
 	stewardServiceOnce.Do(func() {
-		stewardService = service.NewStewardService(
+		var err error
+		stewardService, err = service.NewStewardService(
 			ProvideConfig(),
 			ProvideTenanter(),
 			ProvideUser(),
 			ProvideWorkspace(),
 		)
+		if err != nil {
+			logger.TechLog.Fatal(context.Background(), "failed to create steward service", zap.Error(err))
+		}
 	})
 
 	return stewardService

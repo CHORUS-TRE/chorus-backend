@@ -102,6 +102,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionUpdateWorkbench, nil
 	case string(PermissionGetWorkbench):
 		return PermissionGetWorkbench, nil
+	case string(PermissionStreamWorkbench):
+		return PermissionStreamWorkbench, nil
 	case string(PermissionDeleteWorkbench):
 		return PermissionDeleteWorkbench, nil
 	case string(PermissionInviteInWorkbench):
@@ -228,9 +230,34 @@ func NewContext(opts ...NewContextOption) Context {
 
 type Context map[ContextDimension]string
 
+func NewRole(name RoleName, opts ...NewContextOption) Role {
+	context := NewContext(opts...)
+	return Role{
+		Name:    name,
+		Context: context,
+	}
+}
+
+func ToRole(name string, context map[string]string) (Role, error) {
+	roleName, err := ToRoleName(name)
+	if err != nil {
+		return Role{}, err
+	}
+
+	ctx := make(Context)
+	for k, v := range context {
+		ctx[ContextDimension(k)] = v
+	}
+
+	return Role{
+		Name:    roleName,
+		Context: ctx,
+	}, nil
+}
+
 type Role struct {
-	Name    RoleName
-	Context Context
+	Name    RoleName `json:"name"`
+	Context Context  `json:"context"`
 }
 
 type RoleName string
@@ -286,6 +313,24 @@ func ToRoleName(r string) (RoleName, error) {
 	}
 
 	return "", fmt.Errorf("unknown role type: %s", r)
+}
+
+func GetAllRoles() []RoleName {
+	return []RoleName{
+		RolePublic,
+		RoleAuthenticated,
+		RoleWorkspaceGuest,
+		RoleWorkspaceMember,
+		RoleWorkspaceMaintainer,
+		RoleWorkspaceAdmin,
+		RoleWorkbenchViewer,
+		RoleWorkbenchMember,
+		RoleWorkbenchAdmin,
+		RoleHealthchecker,
+		RolePlateformUserManager,
+		RoleAppStoreAdmin,
+		RoleSuperAdmin,
+	}
 }
 
 type ContextDimension string

@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -64,13 +65,13 @@ type AuthenticationService struct {
 
 // CustomClaims groups the JWT-token data fields.
 type CustomClaims struct {
-	ID        uint64   `json:"id"`
-	TenantID  uint64   `json:"tenantId"`
-	FirstName string   `json:"firstName"`
-	LastName  string   `json:"lastName"`
-	Roles     []string `json:"roles"`
-	Username  string   `json:"username"`
-	Source    string   `json:"source"`
+	ID        uint64               `json:"id"`
+	TenantID  uint64               `json:"tenantId"`
+	FirstName string               `json:"firstName"`
+	LastName  string               `json:"lastName"`
+	Roles     []authorization.Role `json:"roles"`
+	Username  string               `json:"username"`
+	Source    string               `json:"source"`
 
 	jwt.StandardClaims
 }
@@ -309,7 +310,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			Source:      providerID,
 			Password:    "",
 			Status:      userModel.UserActive,
-			Roles:       []userModel.UserRole{userModel.RoleAuthenticated},
+			Roles:       []authorization.Role{authorization.NewRole(authorization.RoleAuthenticated)},
 			TotpEnabled: false,
 		}
 
@@ -399,10 +400,7 @@ func verifyPassword(hash, password string) bool {
 
 // createJWTToken generates a fresh JWT token for a given user.
 func createJWTToken(signingKey string, user *userModel.User, expirationTime time.Duration, issuedAt time.Time) (string, error) {
-	roles := make([]string, len(user.Roles))
-	for i, r := range user.Roles {
-		roles[i] = string(r)
-	}
+
 	if issuedAt.IsZero() {
 		issuedAt = time.Now()
 	}
@@ -411,7 +409,7 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 		TenantID:  user.TenantID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
-		Roles:     roles,
+		Roles:     user.Roles,
 		Username:  user.Username,
 		Source:    user.Source,
 		StandardClaims: jwt.StandardClaims{
