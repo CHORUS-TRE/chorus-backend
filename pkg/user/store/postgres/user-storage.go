@@ -80,12 +80,12 @@ func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint6
 
 	var user model.User
 	if err := s.db.GetContext(ctx, &user, query, tenantID, userID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get user: %w", err)
 	}
 
 	roles, err := s.getUserRoles(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get user roles: %w", err)
 	}
 	user.Roles = roles
 
@@ -357,51 +357,96 @@ type DBUserRoleContext struct {
 }
 
 // getUserRoles fetches all the roles of a given user.
+// func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
+// 	const query = `
+// SELECT sq.id, sq.name
+// FROM (
+//   SELECT * FROM user_role
+//   JOIN role_definitions
+//   ON user_role.userid = $1 AND user_role.roleid = role_definitions.id
+// ) AS sq;
+// `
+// 	var dbRoles []model.Role
+// 	if err := s.db.SelectContext(ctx, &dbRoles, query, userID); err != nil {
+// 		return nil, fmt.Errorf("failed to fetch roles for user %d: %w", userID, err)
+// 	}
+
+// 	const dimensionsQuery = `
+// SELECT user_role.id AS user_role_id, contextdimension, value
+// FROM user_role_context
+// JOIN user_role
+// ON user_role.userid = $1 AND user_role.id = user_role_context.user_role_id;
+// `
+
+// 	var dimensions []DBUserRoleContext
+// 	if err := s.db.SelectContext(ctx, &dimensions, dimensionsQuery, userID); err != nil {
+// 		return nil, fmt.Errorf("failed to fetch role dimensions for user %d: %w", userID, err)
+// 	}
+
+// 	roles := make([]authorization_model.Role, 0, len(dbRoles))
+// 	for _, r := range dbRoles {
+// 		roleName, err := authorization_model.ToRoleName(r.Name)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		role := authorization_model.Role{
+// 			Name:    roleName,
+// 			Context: authorization_model.Context{},
+// 		}
+
+// 		for _, d := range dimensions {
+// 			if d.UserRoleID == r.ID {
+// 				role.Context[authorization_model.ContextDimension(d.ContextDimension)] = d.Value
+// 			}
+// 		}
+// 		roles = append(roles, role)
+// 	}
+
+//		return roles, nil
+//	}
 func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
 	const query = `
-SELECT user_role.id, roles.name
+SELECT name, contextdimension, value
 FROM (
-  SELECT * FROM user_role
-  JOIN roles
-  ON user_role.userid = $1 AND user_role.roleid = roles.id
-);
-`
-	var dbRoles []model.Role
-	if err := s.db.SelectContext(ctx, &dbRoles, query, userID); err != nil {
-		return nil, err
-	}
-
-	const dimensionsQuery = `
-SELECT user_role.id AS user_role_id, contextdimension, value
-FROM user_role_context
-JOIN user_role
-ON user_role.userid = $1 AND user_role.id = user_role_context.user_role_id;
+  SELECT role_definitions.name, user_role_context.contextdimension, user_role_context.value
+  FROM user_role
+  JOIN role_definitions
+  ON user_role.roleid = role_definitions.id
+  LEFT JOIN user_role_context
+  ON user_role.id = user_role_context.userroleid
+  WHERE user_role.userid = $1
+) AS subquery;
 `
 
-	var dimensions []DBUserRoleContext
-	if err := s.db.SelectContext(ctx, &dimensions, dimensionsQuery, userID); err != nil {
-		return nil, err
+	var flatRoles []struct {
+		Name             string  `db:"name"`
+		ContextDimension *string `db:"contextdimension"`
+		Value            *string `db:"value"`
+	}
+	if err := s.db.SelectContext(ctx, &flatRoles, query, userID); err != nil {
+		return nil, fmt.Errorf("failed to fetch roles for user %d: %w", userID, err)
 	}
 
-	roles := make([]authorization_model.Role, 0, len(dbRoles))
-	for _, r := range dbRoles {
-		roleName, err := authorization_model.ToRoleName(r.Name)
+	roleMap := make(map[string]map[string]string)
+	for _, fr := range flatRoles {
+		_, exists := roleMap[fr.Name]
+		if !exists {
+			roleMap[fr.Name] = make(map[string]string)
+		}
+		if fr.ContextDimension == nil || fr.Value == nil {
+			continue
+		}
+		roleMap[fr.Name][*fr.ContextDimension] = *fr.Value
+	}
+
+	var roles []authorization_model.Role
+	for n, m := range roleMap {
+		role, err := authorization_model.ToRole(n, m)
 		if err != nil {
-			return nil, err
-		}
-		role := authorization_model.Role{
-			Name:    roleName,
-			Context: authorization_model.Context{},
-		}
-
-		for _, d := range dimensions {
-			if d.UserRoleID == r.ID {
-				role.Context[authorization_model.ContextDimension(d.ContextDimension)] = d.Value
-			}
+			return nil, fmt.Errorf("failed to parse role %s: %w", n, err)
 		}
 		roles = append(roles, role)
 	}
-
 	return roles, nil
 }
 

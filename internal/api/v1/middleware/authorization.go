@@ -37,14 +37,12 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 
 	aRoles := make([]authorization.Role, 0, len(claims.Roles))
 	for _, r := range claims.Roles {
-		ar, err := authorization.ToRoleName(r)
+		role, err := authorization.ToRole(r.Name, r.Context)
 		if err != nil {
-			c.logger.Warn(ctx, "invalid role", zap.String("role", r))
-			continue
+			c.logger.Warn(ctx, "invalid role", zap.String("role", r.Name), zap.Error(err))
+			return status.Error(codes.Unauthenticated, "invalid role in jwt-token")
 		}
-		aRoles = append(aRoles, authorization.Role{
-			Name: ar,
-		})
+		aRoles = append(aRoles, role)
 	}
 
 	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
@@ -64,6 +62,6 @@ func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.J
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
-		zap.Strings("roles", claims.Roles))
+		zap.Any("roles", claims.Roles))
 	return status.Errorf(codes.PermissionDenied, "required permission: %v", p)
 }

@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -64,13 +64,13 @@ type AuthenticationService struct {
 
 // CustomClaims groups the JWT-token data fields.
 type CustomClaims struct {
-	ID        uint64               `json:"id"`
-	TenantID  uint64               `json:"tenantId"`
-	FirstName string               `json:"firstName"`
-	LastName  string               `json:"lastName"`
-	Roles     []authorization.Role `json:"roles"`
-	Username  string               `json:"username"`
-	Source    string               `json:"source"`
+	ID        uint64                     `json:"id"`
+	TenantID  uint64                     `json:"tenantId"`
+	FirstName string                     `json:"firstName"`
+	LastName  string                     `json:"lastName"`
+	Roles     []authorization_model.Role `json:"roles"`
+	Username  string                     `json:"username"`
+	Source    string                     `json:"source"`
 
 	jwt.StandardClaims
 }
@@ -332,7 +332,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			Source:      providerID,
 			Password:    "",
 			Status:      userModel.UserActive,
-			Roles:       []authorization.Role{authorization.NewRole(authorization.RoleAuthenticated)},
+			Roles:       []authorization_model.Role{authorization_model.NewRole(authorization_model.RoleAuthenticated)},
 			TotpEnabled: false,
 		}
 

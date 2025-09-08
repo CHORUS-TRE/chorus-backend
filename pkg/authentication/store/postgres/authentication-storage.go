@@ -50,16 +50,16 @@ FROM (
   FROM user_role
   JOIN role_definitions
   ON user_role.roleid = role_definitions.id
-  JOIN user_role_context
+  LEFT JOIN user_role_context
   ON user_role.id = user_role_context.userroleid
   WHERE user_role.userid = $1
 ) AS subquery;
 `
 
 	var flatRoles []struct {
-		Name             string `db:"name"`
-		ContextDimension string `db:"contextdimension"`
-		Value            string `db:"value"`
+		Name             string  `db:"name"`
+		ContextDimension *string `db:"contextdimension"`
+		Value            *string `db:"value"`
 	}
 	if err := s.db.SelectContext(ctx, &flatRoles, query, userID); err != nil {
 		return nil, fmt.Errorf("failed to fetch roles for user %d: %w", userID, err)
@@ -71,7 +71,10 @@ FROM (
 		if !exists {
 			roleMap[fr.Name] = make(map[string]string)
 		}
-		roleMap[fr.Name][fr.ContextDimension] = fr.Value
+		if fr.ContextDimension == nil || fr.Value == nil {
+			continue
+		}
+		roleMap[fr.Name][*fr.ContextDimension] = *fr.Value
 	}
 
 	var roles []authorization_model.Role
