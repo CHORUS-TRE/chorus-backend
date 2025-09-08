@@ -37,7 +37,7 @@ func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUser(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, authorization.WithUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}

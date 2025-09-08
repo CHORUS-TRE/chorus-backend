@@ -108,10 +108,10 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
 	}
 
 	roles := make([]authorization_model.Role, len(s.conf.Services.Steward.InitUser.Roles))
-	for i, roleName := range s.conf.Services.Steward.InitUser.Roles {
-		role, err := authorization_model.ToRole(roleName, nil)
+	for i, r := range s.conf.Services.Steward.InitUser.Roles {
+		role, err := authorization_model.ToRole(r.Name, r.Context)
 		if err != nil {
-			return fmt.Errorf("unable to convert role %v: %w", roleName, err)
+			return fmt.Errorf("unable to convert role %v: %w", r, err)
 		}
 		roles[i] = role
 	}

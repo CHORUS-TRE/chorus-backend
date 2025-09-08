@@ -184,6 +184,27 @@ func ToPermissionName(p string) (PermissionName, error) {
 	return "", fmt.Errorf("unknown permission type: %s", p)
 }
 
+func toPermission(p string, c map[string]string) (Permission, error) {
+	permissionName, err := ToPermissionName(p)
+	if err != nil {
+		return Permission{}, err
+	}
+
+	ctx := make(Context)
+	for k, v := range c {
+		cd, err := ToRoleContext(k)
+		if err != nil {
+			return Permission{}, fmt.Errorf("invalid context dimension in permission: %s", err)
+		}
+		ctx[cd] = v
+	}
+
+	return Permission{
+		Name:    permissionName,
+		Context: ctx,
+	}, nil
+}
+
 type NewContextOption func(*Context)
 
 func WithWorkspace(workspace any) NewContextOption {

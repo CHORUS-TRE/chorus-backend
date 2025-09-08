@@ -89,7 +89,9 @@ services:
       username: chorus
       password: "password"
       roles:
-        - Authenticated
+        - name: Authenticated
+          context:
+            user: 88888
     init_workspace:
       enabled: true
       workspace_id: 88888

@@ -87,7 +87,9 @@ services:
       username: chorus
       password: "{{ .steward_user_password }}"
       roles:
-        - Authenticated
+        - name: Authenticated
+          context:
+            user: 1
     init_workspace:
       enabled: true
       name: "Home workspace"

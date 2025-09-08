@@ -258,7 +258,10 @@ type (
 				UserID   uint64    `yaml:"user_id"`
 				Username string    `yaml:"username"`
 				Password Sensitive `yaml:"password"`
-				Roles    []string  `yaml:"roles"`
+				Roles    []struct {
+					Name    string            `yaml:"name"`
+					Context map[string]string `yaml:"context"`
+				} `yaml:"roles"`
 			} `yaml:"init_user"`
 
 			InitWorkspace struct {

@@ -9,6 +9,7 @@ import (
 
 type Authorizer interface {
 	IsUserAllowed(user []Role, permission Permission) (bool, error)
+	GetUserPermissions(user []Role) ([]Permission, error)
 }
 
 type auth struct {
@@ -78,4 +79,38 @@ func (a *auth) IsUserAllowed(user []Role, permission Permission) (bool, error) {
 	}
 
 	return a.gatekeeper.IsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance), nil
+}
+
+func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
+	roles := make([]*gatekeeper_model.Role, len(user))
+	for i, r := range user {
+		role, ok := a.roleMap[r.Name]
+		if !ok {
+			return nil, fmt.Errorf("unknown role: %s", r)
+		}
+
+		roleInstance := role
+		roleInstance.Attributes = make(gatekeeper_model.Attributes)
+		for k, v := range r.Context {
+			roleInstance.Attributes[gatekeeper_model.ContextDimension(k)] = v
+		}
+
+		roles[i] = &roleInstance
+	}
+
+	gkPermissions := a.gatekeeper.GetUserPermissions(gatekeeper_model.User{Roles: roles})
+	permissions := make([]Permission, len(gkPermissions))
+	for i, p := range gkPermissions {
+		cm := make(map[string]string)
+		for k, v := range p.Context {
+			cm[string(k)] = v
+		}
+		p, err := toPermission(p.Name, cm)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert gatekeeper permission %s: %w", p.Name, err)
+		}
+		permissions[i] = p
+	}
+
+	return permissions, nil
 }

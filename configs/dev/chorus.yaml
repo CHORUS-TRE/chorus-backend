@@ -107,8 +107,9 @@ services:
       username: chorus
       password: password
       roles:
-        # - admin
-        - Authenticated
+        - name: Authenticated
+          context:
+            user: 1
     init_workspace:
       enabled: true
       name: Home workspace

@@ -35,14 +35,10 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 		return status.Error(codes.Unauthenticated, "malformed jwt-token")
 	}
 
-	aRoles := make([]authorization.Role, 0, len(claims.Roles))
-	for _, r := range claims.Roles {
-		role, err := authorization.ToRole(r.Name, r.Context)
-		if err != nil {
-			c.logger.Warn(ctx, "invalid role", zap.String("role", r.Name), zap.Error(err))
-			return status.Error(codes.Unauthenticated, "invalid role in jwt-token")
-		}
-		aRoles = append(aRoles, role)
+	aRoles, err := claimRolesToAuthRoles(claims)
+	if err != nil {
+		c.logger.Error(ctx, "failed to convert claim roles to auth roles", zap.Error(err))
+		return status.Error(codes.Internal, "failed to convert claim roles to auth roles")
 	}
 
 	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
@@ -59,9 +55,28 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 }
 
 func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, p authorization.Permission) error {
+	aRoles, err := claimRolesToAuthRoles(claims)
+	var permission []authorization.Permission
+	if err == nil {
+		permission, _ = c.authorizer.GetUserPermissions(aRoles)
+	}
+
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
+		zap.Any("permission", permission),
 		zap.Any("roles", claims.Roles))
 	return status.Errorf(codes.PermissionDenied, "required permission: %v", p)
+}
+
+func claimRolesToAuthRoles(claims *jwt_model.JWTClaims) ([]authorization.Role, error) {
+	roles := make([]authorization.Role, 0, len(claims.Roles))
+	for _, r := range claims.Roles {
+		role, err := authorization.ToRole(r.Name, r.Context)
+		if err != nil {
+			return nil, err
+		}
+		roles = append(roles, role)
+	}
+	return roles, nil
 }
