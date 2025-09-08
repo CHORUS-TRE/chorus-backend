@@ -14,11 +14,16 @@ message User {
     string password = 6;
     string status = 7;
 
-    repeated string roles = 8;
+    repeated Role roles = 8;
 
     bool totpEnabled = 9;
     bool passwordChanged = 10;
 
     google.protobuf.Timestamp createdAt = 11;
     google.protobuf.Timestamp updatedAt = 12;
+}
+
+message Role {
+    string name = 1;
+    map<string, string> context = 2;
 }

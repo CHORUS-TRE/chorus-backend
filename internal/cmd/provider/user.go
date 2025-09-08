@@ -9,7 +9,6 @@ import (
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/user/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/user/store/middleware"
@@ -42,7 +41,7 @@ var userController chorus.UserServiceServer
 func ProvideUserController() chorus.UserServiceServer {
 	userControllerOnce.Do(func() {
 		userController = v1.NewUserController(ProvideUser(), ProvideConfig())
-		userController = ctrl_mw.UserAuthorizing(logger.SecLog, []string{model.RoleAdmin.String()})(userController)
+		userController = ctrl_mw.UserAuthorizing(logger.SecLog, ProvideAuthorizer())(userController)
 	})
 	return userController
 }

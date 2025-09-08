@@ -9,6 +9,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
@@ -212,16 +213,7 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
-	contains := false
-	for _, r := range user.Roles {
-		if r == model.RoleAuthenticated {
-			contains = true
-			break
-		}
-	}
-	if !contains {
-		user.Roles = append(user.Roles, model.RoleAuthenticated)
-	}
+	user.Roles = []authorization.Role{authorization.NewRole(authorization.RoleAuthenticated)}
 
 	user.Source = "internal"
 
@@ -328,20 +320,20 @@ func userToServiceRequest(user *chorus.User) (*service.UserReq, error) {
 	if err != nil {
 		return nil, err
 	}
-	roles, err := model.ToUserRoles(user.Roles)
-	if err != nil {
-		return nil, err
-	}
+	// roles, err := model.ToUserRoles(user.Roles)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &service.UserReq{
-		ID:          user.Id,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		Username:    user.Username,
-		Source:      user.Source,
-		Password:    user.Password,
-		Status:      userStatus,
-		Roles:       roles,
+		ID:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Username:  user.Username,
+		Source:    user.Source,
+		Password:  user.Password,
+		Status:    userStatus,
+		// Roles:       roles,
 		TotpEnabled: user.TotpEnabled,
 		CreatedAt:   ca,
 		UpdatedAt:   ua,
@@ -353,11 +345,16 @@ func userToUpdateServiceRequest(user *chorus.User) (*service.UserUpdateReq, erro
 	if err != nil {
 		return nil, err
 	}
-	roles, err := model.ToUserRoles(user.Roles)
-	if err != nil {
-		return nil, err
-	}
 
+	roles := make([]authorization.Role, len(user.Roles))
+
+	for i, r := range user.Roles {
+		role, err := authorization.ToRole(r.Name, r.Context)
+		if err != nil {
+			return nil, err
+		}
+		roles[i] = role
+	}
 	return &service.UserUpdateReq{
 		ID:        user.Id,
 		FirstName: user.FirstName,

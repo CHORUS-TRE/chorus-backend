@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 )
@@ -15,12 +16,12 @@ type notificationControllerAuthorization struct {
 	next chorus.NotificationServiceServer
 }
 
-func NotificationAuthorizing(logger *logger.ContextLogger, authorizedRoles []string) func(chorus.NotificationServiceServer) chorus.NotificationServiceServer {
+func NotificationAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.NotificationServiceServer) chorus.NotificationServiceServer {
 	return func(next chorus.NotificationServiceServer) chorus.NotificationServiceServer {
 		return &notificationControllerAuthorization{
 			Authorization: Authorization{
-				logger:          logger,
-				authorizedRoles: authorizedRoles,
+				logger:     logger,
+				authorizer: authorizer,
 			},
 			next: next,
 		}
@@ -28,7 +29,7 @@ func NotificationAuthorizing(logger *logger.ContextLogger, authorizedRoles []str
 }
 
 func (c notificationControllerAuthorization) CountUnreadNotifications(ctx context.Context, empty *empty.Empty) (*chorus.CountUnreadNotificationsReply, error) {
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionCountUnreadNotifications)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +37,7 @@ func (c notificationControllerAuthorization) CountUnreadNotifications(ctx contex
 	return c.next.CountUnreadNotifications(ctx, empty)
 }
 func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context.Context, req *chorus.MarkNotificationsAsReadRequest) (*empty.Empty, error) {
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionMarkNotificationAsRead)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context
 	return c.next.MarkNotificationsAsRead(ctx, req)
 }
 func (c notificationControllerAuthorization) GetNotifications(ctx context.Context, req *chorus.GetNotificationsRequest) (*chorus.GetNotificationsReply, error) {
-	err := c.IsAuthenticatedAndAuthorized(ctx)
+	err := c.IsAuthorized(ctx, authorization.PermissionListNotifications)
 	if err != nil {
 		return nil, err
 	}

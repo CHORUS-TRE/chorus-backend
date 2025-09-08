@@ -80,16 +80,21 @@ log:
 
 services:
   steward:
-    tenant:
+    init_tenant:
       enabled: true
-    user:
+      tenant_id: 88888
+    init_user:
       enabled: true
+      user_id: 88888
       username: chorus
       password: "password"
       roles:
-        - authenticated
-    workspace:
+        - name: Authenticated
+          context:
+            user: 88888
+    init_workspace:
       enabled: true
+      workspace_id: 88888
       name: "Home workspace"
 
 tenants:

@@ -86,7 +86,7 @@ func TenantIDFromClaims(claims jwt_go.Claims) uint64 {
 	return c.TenantID
 }
 
-func RolesFromClaims(claims jwt_go.Claims) []string {
+func RolesFromClaims(claims jwt_go.Claims) []jwt_model.Role {
 	c, ok := claims.(*jwt_model.JWTClaims)
 	if !ok {
 		return nil
