@@ -38,15 +38,21 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 	return &workspace, nil
 }
 
-func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error) {
+func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, IDin *[]uint64, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	// Get total count query
+	args := []interface{}{tenantID}
+
 	countQuery := `SELECT COUNT(*) FROM workspaces WHERE tenantid = $1`
 	if !allowDeleted {
 		countQuery += " AND status != 'deleted' AND deletedat IS NULL"
 	}
+	if IDin != nil {
+		countQuery += " AND id = ANY($2)"
+		args = append(args, storage.Uint64ToPqInt64(*IDin))
+	}
 
 	var totalCount int
-	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
 		return nil, nil, err
 	}
 
@@ -59,6 +65,9 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 
 	if !allowDeleted {
 		query += " AND status != 'deleted' AND deletedat IS NULL"
+	}
+	if IDin != nil {
+		query += " AND id = ANY($2)"
 	}
 
 	// Add pagination
@@ -77,7 +86,6 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	}
 
 	var workspaces []*model.Workspace
-	args := []interface{}{tenantID}
 	if err := s.db.SelectContext(ctx, &workspaces, query, args...); err != nil {
 		return nil, nil, err
 	}

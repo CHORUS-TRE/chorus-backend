@@ -62,6 +62,9 @@ WorkbenchServiceListWorkbenchsParams contains all the parameters to send to the 
 */
 type WorkbenchServiceListWorkbenchsParams struct {
 
+	// FilterWorkspaceIdsIn.
+	FilterWorkspaceIdsIn []string
+
 	/* PaginationLimit.
 
 	   Optionally limit the number of results (between 1 and 500)
@@ -143,6 +146,17 @@ func (o *WorkbenchServiceListWorkbenchsParams) SetHTTPClient(client *http.Client
 	o.HTTPClient = client
 }
 
+// WithFilterWorkspaceIdsIn adds the filterWorkspaceIdsIn to the workbench service list workbenchs params
+func (o *WorkbenchServiceListWorkbenchsParams) WithFilterWorkspaceIdsIn(filterWorkspaceIdsIn []string) *WorkbenchServiceListWorkbenchsParams {
+	o.SetFilterWorkspaceIdsIn(filterWorkspaceIdsIn)
+	return o
+}
+
+// SetFilterWorkspaceIdsIn adds the filterWorkspaceIdsIn to the workbench service list workbenchs params
+func (o *WorkbenchServiceListWorkbenchsParams) SetFilterWorkspaceIdsIn(filterWorkspaceIdsIn []string) {
+	o.FilterWorkspaceIdsIn = filterWorkspaceIdsIn
+}
+
 // WithPaginationLimit adds the paginationLimit to the workbench service list workbenchs params
 func (o *WorkbenchServiceListWorkbenchsParams) WithPaginationLimit(paginationLimit *int64) *WorkbenchServiceListWorkbenchsParams {
 	o.SetPaginationLimit(paginationLimit)
@@ -205,6 +219,17 @@ func (o *WorkbenchServiceListWorkbenchsParams) WriteToRequest(r runtime.ClientRe
 		return err
 	}
 	var res []error
+
+	if o.FilterWorkspaceIdsIn != nil {
+
+		// binding items for filter.workspaceIdsIn
+		joinedFilterWorkspaceIdsIn := o.bindParamFilterWorkspaceIdsIn(reg)
+
+		// query array param filter.workspaceIdsIn
+		if err := r.SetQueryParam("filter.workspaceIdsIn", joinedFilterWorkspaceIdsIn...); err != nil {
+			return err
+		}
+	}
 
 	if o.PaginationLimit != nil {
 
@@ -289,6 +314,23 @@ func (o *WorkbenchServiceListWorkbenchsParams) WriteToRequest(r runtime.ClientRe
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
+}
+
+// bindParamWorkbenchServiceListWorkbenchs binds the parameter filter.workspaceIdsIn
+func (o *WorkbenchServiceListWorkbenchsParams) bindParamFilterWorkspaceIdsIn(formats strfmt.Registry) []string {
+	filterWorkspaceIdsInIR := o.FilterWorkspaceIdsIn
+
+	var filterWorkspaceIdsInIC []string
+	for _, filterWorkspaceIdsInIIR := range filterWorkspaceIdsInIR { // explode []string
+
+		filterWorkspaceIdsInIIV := filterWorkspaceIdsInIIR // string as string
+		filterWorkspaceIdsInIC = append(filterWorkspaceIdsInIC, filterWorkspaceIdsInIIV)
+	}
+
+	// items.CollectionFormat: "multi"
+	filterWorkspaceIdsInIS := swag.JoinByFormat(filterWorkspaceIdsInIC, "multi")
+
+	return filterWorkspaceIdsInIS
 }
 
 // bindParamWorkbenchServiceListWorkbenchs binds the parameter pagination.query

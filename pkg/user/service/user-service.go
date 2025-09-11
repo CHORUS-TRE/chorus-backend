@@ -23,6 +23,7 @@ type Userer interface {
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
 	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
 	UpdateUser(ctx context.Context, req UpdateUserReq) (*model.User, error)
@@ -40,6 +41,7 @@ type UserStore interface {
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
 	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
@@ -368,6 +370,17 @@ func (u *UserService) sendMailWithTempPassword(subjectMessage string, tenantID u
 	} else {
 		logger.BizLog.Info(ctx, fmt.Sprintf("temporary password sent to user: %v", user.Username), zap.Uint64("tenant_id", tenantID))
 	}
+}
+
+func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+	if err := verifyRoles(roles); err != nil {
+		return fmt.Errorf("role verification failed: %w", err)
+	}
+
+	if err := u.store.CreateUserRoles(ctx, userID, roles); err != nil {
+		return fmt.Errorf("unable to create user roles for user %v: %w", userID, err)
+	}
+	return nil
 }
 
 func (u *UserService) CreateRole(ctx context.Context, role string) error {

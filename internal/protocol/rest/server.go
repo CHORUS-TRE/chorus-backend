@@ -41,7 +41,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddDoc(handler)
 	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
-		handler = middleware.AddProxyWorkbench(handler, pw, authorizer, keyFunc, claimsFactory)
+		handler = middleware.AddProxyWorkbench(handler, pw, cfg, authorizer, keyFunc, claimsFactory)
 	}
 	if cfg.Services.AuthenticationService.DevAuthEnabled {
 		handler = middleware.AddDevAuth(handler)

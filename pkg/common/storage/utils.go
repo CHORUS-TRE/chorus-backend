@@ -25,6 +25,14 @@ func PqInt64ToUint64(array pq.Int64Array) []uint64 {
 	return output
 }
 
+func Uint64ToPqInt64(array []uint64) pq.Int64Array {
+	output := make(pq.Int64Array, len(array))
+	for i, element := range array {
+		output[i] = int64(element)
+	}
+	return output
+}
+
 func SortOrderToString(sortOrder string) string {
 	order := strings.ToUpper(sortOrder)
 	if order != "DESC" && order != "ASC" {

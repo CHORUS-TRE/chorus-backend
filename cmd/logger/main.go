@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	yaml "sigs.k8s.io/yaml/goyaml.v2"
 )
 
 var blacklist = map[string]struct{}{
@@ -95,6 +97,13 @@ func main() {
 				msg := "    " + strings.ReplaceAll(strValue, "\n", "\n    ")
 				fmt.Printf("%s%s%s\n", colorMap["darkGray"], key, colorMap["end"])
 				fmt.Printf("%s%s%s\n", colorMap["darkGray"], msg, colorMap["end"])
+			} else {
+				yamlBytes, err := yaml.Marshal(value)
+				if err == nil {
+					yamlStr := "    " + strings.ReplaceAll(string(yamlBytes), "\n", "\n    ")
+					fmt.Printf("%s%s%s\n", colorMap["darkGray"], key, colorMap["end"])
+					fmt.Printf("%s%s%s\n", colorMap["darkGray"], yamlStr, colorMap["end"])
+				}
 			}
 		}
 

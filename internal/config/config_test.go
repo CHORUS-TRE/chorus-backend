@@ -117,7 +117,7 @@ func TestDecodeSteward(t *testing.T) {
 	require.Equal(t, "chorus", s.InitUser.Username)
 	require.Equal(t, Sensitive("password"), s.InitUser.Password)
 	require.Len(t, s.InitUser.Roles, 1)
-	require.Equal(t, "Authenticated", s.InitUser.Roles[0])
+	require.Equal(t, "Authenticated", s.InitUser.Roles[0].Name)
 
 	// Workspace Steward
 	require.True(t, s.InitWorkspace.Enabled)

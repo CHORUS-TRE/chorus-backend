@@ -305,6 +305,22 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	return &newUser, nil
 }
 
+func (s *UserStorage) CreateUserRoles(ctx context.Context, userID uint64, userRoles []authorization_model.Role) error {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return fmt.Errorf("unable to begin transaction: %w", err)
+	}
+
+	if err = s.createUserRoles(ctx, tx, userID, userRoles); err != nil {
+		return fmt.Errorf("unable to create user roles: %w", storage.Rollback(tx, err))
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit transaction: %w", err)
+	}
+	return nil
+}
+
 func (s *UserStorage) createUserRoles(ctx context.Context, tx *sqlx.Tx, userID uint64, userRoles []authorization_model.Role) error {
 	const userRoleQuery = `
 		INSERT INTO user_role (userid, roleid) VALUES ($1, $2) RETURNING id;
@@ -406,9 +422,9 @@ type DBUserRoleContext struct {
 //	}
 func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
 	const query = `
-SELECT name, contextdimension, value
+SELECT id, name, contextdimension, value
 FROM (
-  SELECT role_definitions.name, user_role_context.contextdimension, user_role_context.value
+  SELECT user_role.id, role_definitions.name, user_role_context.contextdimension, user_role_context.value
   FROM user_role
   JOIN role_definitions
   ON user_role.roleid = role_definitions.id
@@ -419,6 +435,7 @@ FROM (
 `
 
 	var flatRoles []struct {
+		ID               uint64  `db:"id"`
 		Name             string  `db:"name"`
 		ContextDimension *string `db:"contextdimension"`
 		Value            *string `db:"value"`
@@ -427,23 +444,26 @@ FROM (
 		return nil, fmt.Errorf("failed to fetch roles for user %d: %w", userID, err)
 	}
 
-	roleMap := make(map[string]map[string]string)
+	roleMap := make(map[uint64]map[string]string)
+	roleNameMap := make(map[uint64]string)
 	for _, fr := range flatRoles {
-		_, exists := roleMap[fr.Name]
+		roleNameMap[fr.ID] = fr.Name
+		_, exists := roleMap[fr.ID]
 		if !exists {
-			roleMap[fr.Name] = make(map[string]string)
+			roleMap[fr.ID] = make(map[string]string)
 		}
 		if fr.ContextDimension == nil || fr.Value == nil {
 			continue
 		}
-		roleMap[fr.Name][*fr.ContextDimension] = *fr.Value
+		roleMap[fr.ID][*fr.ContextDimension] = *fr.Value
 	}
 
 	var roles []authorization_model.Role
 	for n, m := range roleMap {
-		role, err := authorization_model.ToRole(n, m)
+		roleName := roleNameMap[n]
+		role, err := authorization_model.ToRole(roleName, m)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse role %s: %w", n, err)
+			return nil, fmt.Errorf("failed to parse role %s: %w", roleName, err)
 		}
 		roles = append(roles, role)
 	}

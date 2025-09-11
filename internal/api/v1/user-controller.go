@@ -346,15 +346,14 @@ func userToUpdateServiceRequest(user *chorus.User) (*service.UserUpdateReq, erro
 		return nil, err
 	}
 
-	roles := make([]authorization.Role, len(user.Roles))
-
-	for i, r := range user.Roles {
-		role, err := authorization.ToRole(r.Name, r.Context)
-		if err != nil {
-			return nil, err
-		}
-		roles[i] = role
-	}
+	// roles := make([]authorization.Role, len(user.Roles))
+	// for i, r := range user.Roles {
+	// 	role, err := authorization.ToRole(r.Name, r.Context)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	roles[i] = role
+	// }
 	return &service.UserUpdateReq{
 		ID:        user.Id,
 		FirstName: user.FirstName,
@@ -362,6 +361,6 @@ func userToUpdateServiceRequest(user *chorus.User) (*service.UserUpdateReq, erro
 		Username:  user.Username,
 		Source:    user.Source,
 		Status:    userStatus,
-		Roles:     roles,
+		// Roles:     roles,
 	}, nil
 }

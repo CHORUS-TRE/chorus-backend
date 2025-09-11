@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -34,6 +35,10 @@ type Caching struct {
 
 func (c *Caching) CreateRole(ctx context.Context, role string) error {
 	return c.next.CreateRole(ctx, role)
+}
+
+func (c *Caching) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+	return c.next.CreateUserRoles(ctx, userID, roles)
 }
 
 func (c *Caching) GetRoles(ctx context.Context) (reply []*model.Role, err error) {
