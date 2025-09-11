@@ -26,6 +26,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 message ListWorkspacesRequest {
     PaginationQuery pagination = 1;
+    optional WorkspaceFilter filter = 2;
 }
 message ListWorkspacesReply {
     ListWorkspacesResult result = 1;
@@ -33,6 +34,9 @@ message ListWorkspacesReply {
 }
 message ListWorkspacesResult {
     repeated Workspace workspaces = 1;
+}
+message WorkspaceFilter {
+    repeated uint64 workspace_ids_in = 1;
 }
 
 message GetWorkspaceRequest {

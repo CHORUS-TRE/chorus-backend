@@ -2,9 +2,12 @@ package middleware
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
@@ -28,9 +31,48 @@ func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization
 }
 
 func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListWorkspaces)
-	if err != nil {
-		return nil, err
+	if req.Filter != nil && len(req.Filter.WorkspaceIdsIn) > 0 {
+		for _, id := range req.Filter.WorkspaceIdsIn {
+			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(id))
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		attrs, err := c.GetContextListForPermission(ctx, authorization.PermissionGetWorkspace)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println("attrs:", attrs)
+		claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
+		if ok {
+			aRoles, err := claimRolesToAuthRoles(claims)
+			var permission []authorization.Permission
+			if err == nil {
+				permission, _ = c.authorizer.GetUserPermissions(aRoles)
+				fmt.Println("permissions:", permission)
+			}
+		}
+
+		for _, attr := range attrs {
+			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
+				if workspaceIDStr == "*" {
+					fmt.Println("wildcard found, returning all workspaces")
+					req.Filter = nil
+					return c.next.ListWorkspaces(ctx, req)
+				}
+				if req.Filter == nil {
+					req.Filter = &chorus.WorkspaceFilter{}
+				}
+				workspaceID, err := strconv.ParseUint(workspaceIDStr, 10, 64)
+				if err != nil {
+					return nil, err
+				}
+				fmt.Println("adding workspace ID to filter:", workspaceID)
+				req.Filter.WorkspaceIdsIn = append(req.Filter.WorkspaceIdsIn, workspaceID)
+			}
+		}
 	}
 
 	return c.next.ListWorkspaces(ctx, req)

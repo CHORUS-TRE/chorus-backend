@@ -8,6 +8,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
+	workspace_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -108,7 +109,12 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination)
+	filter := workspace_service.WorkspaceFilter{}
+	if req.Filter != nil {
+		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
+	}
+
+	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination, filter)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaces': %v", err.Error())
 	}

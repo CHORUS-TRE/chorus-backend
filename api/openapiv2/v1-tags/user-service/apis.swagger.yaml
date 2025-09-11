@@ -456,6 +456,10 @@ definitions:
       roles:
         type: array
         items:
+          type: string
+      rolesWithContext:
+        type: array
+        items:
           type: object
           $ref: '#/definitions/chorusRole'
       totpEnabled:

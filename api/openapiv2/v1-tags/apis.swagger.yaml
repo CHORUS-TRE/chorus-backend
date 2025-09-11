@@ -1709,6 +1709,14 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.workspaceIdsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
       tags:
         - WorkspaceService
     post:
@@ -2518,6 +2526,10 @@ definitions:
       roles:
         type: array
         items:
+          type: string
+      rolesWithContext:
+        type: array
+        items:
           type: object
           $ref: '#/definitions/chorusRole'
       totpEnabled:
@@ -2605,6 +2617,14 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  chorusWorkspaceFilter:
+    type: object
+    properties:
+      workspaceIdsIn:
+        type: array
+        items:
+          type: string
+          format: uint64
   protobufAny:
     type: object
     properties:

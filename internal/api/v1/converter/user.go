@@ -19,9 +19,11 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 	}
 
 	roles := make([]*chorus.Role, len(user.Roles))
+	rs := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
 		role := RoleFromBusiness(r)
 		roles[i] = &role
+		rs[i] = role.Name
 	}
 
 	return &chorus.User{
@@ -33,10 +35,11 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 		Password:        user.Password,
 		PasswordChanged: user.PasswordChanged,
 		Status:          user.Status.String(),
-		Roles:           roles,
-		TotpEnabled:     user.TotpEnabled,
-		CreatedAt:       ca,
-		UpdatedAt:       ua,
+		// Roles:           rs,
+		RolesWithContext: roles,
+		TotpEnabled:      user.TotpEnabled,
+		CreatedAt:        ca,
+		UpdatedAt:        ua,
 	}, nil
 }
 

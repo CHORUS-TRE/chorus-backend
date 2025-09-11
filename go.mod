@@ -1,9 +1,11 @@
 module github.com/CHORUS-TRE/chorus-backend
 
+// replace github.com/CHORUS-TRE/chorus-gatekeeper => /home/localadmin/chuv/chorus/chorus-gatekeeper
+
 go 1.24.3
 
 require (
-	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250908145300-92f908a55bfd
+	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250911140029-1d3ef8db0045
 	github.com/coocood/freecache v1.2.4
 	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/go-openapi/errors v0.22.1
@@ -138,5 +140,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.7.0 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
+	sigs.k8s.io/yaml v1.4.0
 )

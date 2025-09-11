@@ -10,6 +10,7 @@ import (
 type Authorizer interface {
 	IsUserAllowed(user []Role, permission Permission) (bool, error)
 	GetUserPermissions(user []Role) ([]Permission, error)
+	GetContextListForPermission(user []Role, permissionName PermissionName) ([]Context, error)
 }
 
 type auth struct {
@@ -81,7 +82,7 @@ func (a *auth) IsUserAllowed(user []Role, permission Permission) (bool, error) {
 	return a.gatekeeper.IsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance), nil
 }
 
-func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
+func (a *auth) userToGatekeeperRoles(user []Role) ([]*gatekeeper_model.Role, error) {
 	roles := make([]*gatekeeper_model.Role, len(user))
 	for i, r := range user {
 		role, ok := a.roleMap[r.Name]
@@ -96,6 +97,14 @@ func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
 		}
 
 		roles[i] = &roleInstance
+	}
+	return roles, nil
+}
+
+func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
+	roles, err := a.userToGatekeeperRoles(user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
 	}
 
 	gkPermissions := a.gatekeeper.GetUserPermissions(gatekeeper_model.User{Roles: roles})
@@ -113,4 +122,33 @@ func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
 	}
 
 	return permissions, nil
+}
+
+func (a *auth) GetContextListForPermission(user []Role, permissionName PermissionName) ([]Context, error) {
+	roles, err := a.userToGatekeeperRoles(user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
+	}
+
+	_, ok := a.permissionMap[permissionName]
+	if !ok {
+		return nil, fmt.Errorf("unknown permission: %s", permissionName)
+	}
+
+	contextList := a.gatekeeper.GetContextListForPermission(gatekeeper_model.User{Roles: roles}, string(permissionName))
+
+	result := make([]Context, len(contextList))
+	for i, c := range contextList {
+		cm := make(map[ContextDimension]string)
+		for k, v := range c {
+			contextDim, err := ToRoleContext(string(k))
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert context dimension %s: %w", k, err)
+			}
+			cm[contextDim] = v
+		}
+		result[i] = cm
+	}
+
+	return result, nil
 }

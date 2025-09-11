@@ -26,19 +26,30 @@ func NewAuthorization(logger *logger.ContextLogger, authorizer authorization.Aut
 	}
 }
 
-func (c Authorization) IsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) error {
-	permission := authorization.NewPermission(permissionName, opts...)
+func (c Authorization) getRolesAndClaims(ctx context.Context, opts ...authorization.NewContextOption) ([]authorization.Role, *jwt_model.JWTClaims, error) {
 
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")
-		return status.Error(codes.Unauthenticated, "malformed jwt-token")
+		return nil, nil, status.Error(codes.Unauthenticated, "malformed jwt-token")
 	}
 
 	aRoles, err := claimRolesToAuthRoles(claims)
 	if err != nil {
 		c.logger.Error(ctx, "failed to convert claim roles to auth roles", zap.Error(err))
-		return status.Error(codes.Internal, "failed to convert claim roles to auth roles")
+		return nil, nil, status.Error(codes.Internal, "failed to convert claim roles to auth roles")
+	}
+
+	return aRoles, claims, nil
+}
+
+func (c Authorization) IsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) error {
+	permission := authorization.NewPermission(permissionName, opts...)
+
+	aRoles, claims, err := c.getRolesAndClaims(ctx, opts...)
+	if err != nil {
+		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
+		return status.Error(codes.Internal, "failed to get roles and claims")
 	}
 
 	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
@@ -52,6 +63,22 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 	}
 
 	return nil
+}
+
+func (c Authorization) GetContextListForPermission(ctx context.Context, permissionName authorization.PermissionName) ([]authorization.Context, error) {
+	aRoles, _, err := c.getRolesAndClaims(ctx)
+	if err != nil {
+		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
+		return nil, status.Error(codes.Internal, "failed to get roles and claims")
+	}
+
+	contextList, err := c.authorizer.GetContextListForPermission(aRoles, permissionName)
+	if err != nil {
+		c.logger.Error(ctx, "authorization error", zap.Error(err))
+		return nil, status.Error(codes.Internal, "authorization error")
+	}
+
+	return contextList, nil
 }
 
 func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, p authorization.Permission) error {
