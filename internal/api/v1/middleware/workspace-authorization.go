@@ -7,8 +7,10 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"go.uber.org/zap"
 )
 
 var _ chorus.WorkspaceServiceServer = (*workspaceControllerAuthorization)(nil)
@@ -18,12 +20,14 @@ type workspaceControllerAuthorization struct {
 	next chorus.WorkspaceServiceServer
 }
 
-func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
+func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 	return func(next chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 		return &workspaceControllerAuthorization{
 			Authorization: Authorization{
 				logger:     logger,
 				authorizer: authorizer,
+				cfg:        cfg,
+				refresher:  refresher,
 			},
 			next: next,
 		}
@@ -90,10 +94,22 @@ func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req 
 func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionCreateWorkspace)
 	if err != nil {
+		explanation := c.ExplainIsAuthorized(ctx, authorization.PermissionCreateWorkspace)
+		c.logger.Info(ctx, "explanation for failed authorization", zap.String("explanation", explanation))
 		return nil, err
 	}
 
-	return c.next.CreateWorkspace(ctx, req)
+	res, err := c.next.CreateWorkspace(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.TriggerRefreshToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {

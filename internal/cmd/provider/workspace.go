@@ -24,6 +24,7 @@ func ProvideWorkspace() service.Workspaceer {
 			ProvideWorkspaceStore(),
 			ProvideK8sClient(),
 			ProvideWorkbench(),
+			ProvideUser(),
 		)
 		workspace = service_mw.Logging(logger.BizLog)(workspace)
 		workspace = service_mw.Validation(ProvideValidator())(workspace)
@@ -38,7 +39,7 @@ var workspaceController chorus.WorkspaceServiceServer
 func ProvideWorkspaceController() chorus.WorkspaceServiceServer {
 	workspaceControllerOnce.Do(func() {
 		workspaceController = v1.NewWorkspaceController(ProvideWorkspace())
-		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, ProvideAuthorizer())(workspaceController)
+		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceController)
 	})
 	return workspaceController
 }

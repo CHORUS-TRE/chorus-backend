@@ -108,7 +108,12 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, paginationRes, err := c.workbench.ListWorkbenchs(ctx, tenantID, &pagination)
+	filter := service.WorkbenchFilter{}
+	if req.Filter != nil {
+		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
+	}
+
+	res, paginationRes, err := c.workbench.ListWorkbenchs(ctx, tenantID, &pagination, filter)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenchs': %v", err.Error())
 	}

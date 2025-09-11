@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -34,17 +35,23 @@ type WorkspaceStore interface {
 	DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 }
 
+type Userer interface {
+	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
+}
+
 type WorkspaceService struct {
 	store       WorkspaceStore
 	client      k8s.K8sClienter
 	workbencher Workbencher
+	userer      Userer
 }
 
-func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
 	ws := &WorkspaceService{
 		store:       store,
 		client:      client,
 		workbencher: workbencher,
+		userer:      userer,
 	}
 
 	go func() {
@@ -130,6 +137,12 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 	newWorkspace, err := s.store.CreateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
+	}
+
+	r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
+	err = s.userer.CreateUserRoles(ctx, workspace.UserID, []authorization_model.Role{r})
+	if err != nil {
+		return nil, fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
 	}
 
 	err = s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))

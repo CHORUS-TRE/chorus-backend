@@ -31,7 +31,7 @@ type AuthenticationController struct {
 func NewAuthenticationController(authenticator service.Authenticator, authorizer authorization.Authorizer, cfg config.Config) AuthenticationController {
 	return AuthenticationController{
 		authenticator:             authenticator,
-		refreshTokenAuthorization: middleware.NewAuthorization(logger.SecLog, authorizer),
+		refreshTokenAuthorization: middleware.NewAuthorization(logger.SecLog, cfg, authorizer, authenticator),
 		cfg:                       cfg,
 	}
 }

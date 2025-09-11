@@ -33,13 +33,13 @@ type Caching struct {
 	next  service.Workbencher
 }
 
-func (c *Caching) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) (reply []*model.Workbench, paginationRes *common_model.PaginationResult, err error) {
-	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
+func (c *Caching) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) (reply []*model.Workbench, paginationRes *common_model.PaginationResult, err error) {
+	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination), cache.WithInterface(filter))
 	reply = []*model.Workbench{}
 	paginationRes = &common_model.PaginationResult{}
 
 	if ok := entry.Get(ctx, &reply, &paginationRes); !ok {
-		reply, paginationRes, err = c.next.ListWorkbenchs(ctx, tenantID, pagination)
+		reply, paginationRes, err = c.next.ListWorkbenchs(ctx, tenantID, pagination, filter)
 		if err == nil {
 			entry.Set(ctx, defaultCacheExpiration, reply, paginationRes)
 		}

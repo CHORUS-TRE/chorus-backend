@@ -9,6 +9,7 @@ import (
 
 type Authorizer interface {
 	IsUserAllowed(user []Role, permission Permission) (bool, error)
+	ExplainIsUserAllowed(user []Role, permission Permission) string
 	GetUserPermissions(user []Role) ([]Permission, error)
 	GetContextListForPermission(user []Role, permissionName PermissionName) ([]Context, error)
 }
@@ -52,20 +53,9 @@ func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface) 
 }
 
 func (a *auth) IsUserAllowed(user []Role, permission Permission) (bool, error) {
-	roles := make([]*gatekeeper_model.Role, len(user))
-	for i, r := range user {
-		role, ok := a.roleMap[r.Name]
-		if !ok {
-			return false, fmt.Errorf("unknown role: %s", r)
-		}
-
-		roleInstance := role
-		roleInstance.Attributes = make(gatekeeper_model.Attributes)
-		for k, v := range r.Context {
-			roleInstance.Attributes[gatekeeper_model.ContextDimension(k)] = v
-		}
-
-		roles[i] = &roleInstance
+	roles, err := a.userToGatekeeperRoles(user)
+	if err != nil {
+		return false, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
 	}
 
 	p, ok := a.permissionMap[permission.Name]
@@ -79,7 +69,34 @@ func (a *auth) IsUserAllowed(user []Role, permission Permission) (bool, error) {
 		pInstance.Context[gatekeeper_model.ContextDimension(k)] = v
 	}
 
-	return a.gatekeeper.IsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance), nil
+	allowed := a.gatekeeper.IsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
+
+	if !allowed {
+		explanation := a.gatekeeper.ExplainIsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
+		fmt.Println("explanation:", explanation)
+	}
+
+	return allowed, nil
+}
+
+func (a *auth) ExplainIsUserAllowed(user []Role, permission Permission) string {
+	roles, err := a.userToGatekeeperRoles(user)
+	if err != nil {
+		return fmt.Sprintf("failed to convert user roles to gatekeeper roles: %v", err)
+	}
+
+	p, ok := a.permissionMap[permission.Name]
+	if !ok {
+		return fmt.Sprintf("unknown permission: %s", permission)
+	}
+
+	pInstance := p
+	pInstance.Context = make(gatekeeper_model.Attributes)
+	for k, v := range permission.Context {
+		pInstance.Context[gatekeeper_model.ContextDimension(k)] = v
+	}
+
+	return a.gatekeeper.ExplainIsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
 }
 
 func (a *auth) userToGatekeeperRoles(user []Role) ([]*gatekeeper_model.Role, error) {

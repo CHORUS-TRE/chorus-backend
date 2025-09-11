@@ -26,6 +26,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 message ListWorkbenchsRequest {
     PaginationQuery pagination = 1;
+    optional WorkbenchFilter filter = 2;
 }
 message ListWorkbenchsReply {
     ListWorkbenchsResult result = 1;
@@ -33,6 +34,9 @@ message ListWorkbenchsReply {
 }
 message ListWorkbenchsResult {
     repeated Workbench workbenchs = 1;
+}
+message WorkbenchFilter {
+    repeated uint64 workspace_ids_in = 1;
 }
 
 message GetWorkbenchRequest {
