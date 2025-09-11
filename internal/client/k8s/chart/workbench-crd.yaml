@@ -231,7 +231,7 @@ spec:
                   - status
                   type: object
                 type: object
-              server:
+              serverDeployment:
                 description: WorkbenchStatusServer represents the server status.
                 properties:
                   revision:
