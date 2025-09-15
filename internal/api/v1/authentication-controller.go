@@ -83,7 +83,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 		case &service.Err2FARequired{}:
 			return nil, status.Errorf(codes.FailedPrecondition, "%v", err)
 		default:
-			return nil, status.Errorf(codes.Unauthenticated, "%v", err)
+			return nil, err
 		}
 	}
 
