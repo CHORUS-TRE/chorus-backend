@@ -22,3 +22,16 @@ message Workspace {
     google.protobuf.Timestamp createdAt = 11;
     google.protobuf.Timestamp updatedAt = 12;
 }
+
+message WorkspaceFile {
+    string name = 1;
+    string path = 2;
+    bool isDirectory = 3;
+    int64 size = 4;
+    string mimeType = 5;
+
+    google.protobuf.Timestamp createdAt = 6;
+    google.protobuf.Timestamp updatedAt = 7;
+    
+    bytes content = 8; // File content will be empty for now
+}
