@@ -4,15 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
+type WorkspaceFilter struct {
+	WorkspaceIDsIn *[]uint64
+}
+
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
-	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
@@ -24,23 +29,29 @@ type Workbencher interface {
 
 type WorkspaceStore interface {
 	GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error)
-	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, IDIn *[]uint64, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+}
+
+type Userer interface {
+	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
 }
 
 type WorkspaceService struct {
 	store       WorkspaceStore
 	client      k8s.K8sClienter
 	workbencher Workbencher
+	userer      Userer
 }
 
-func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
 	ws := &WorkspaceService{
 		store:       store,
 		client:      client,
 		workbencher: workbencher,
+		userer:      userer,
 	}
 
 	go func() {
@@ -53,7 +64,7 @@ func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbench
 }
 
 func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
-	workspaces, _, err := s.store.ListWorkspaces(ctx, 0, &common_model.Pagination{}, true)
+	workspaces, _, err := s.store.ListWorkspaces(ctx, 0, &common_model.Pagination{}, nil, true)
 	if err != nil {
 		return fmt.Errorf("unable to list workspaces: %w", err)
 	}
@@ -77,8 +88,8 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	return nil
 }
 
-func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
-	workspaces, paginationRes, err := s.store.ListWorkspaces(ctx, tenantID, pagination, false)
+func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
+	workspaces, paginationRes, err := s.store.ListWorkspaces(ctx, tenantID, pagination, filter.WorkspaceIDsIn, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to query workspaces: %w", err)
 	}
@@ -126,6 +137,12 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 	newWorkspace, err := s.store.CreateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
+	}
+
+	r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
+	err = s.userer.CreateUserRoles(ctx, workspace.UserID, []authorization_model.Role{r})
+	if err != nil {
+		return nil, fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
 	}
 
 	err = s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))

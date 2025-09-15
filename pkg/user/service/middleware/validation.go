@@ -38,6 +38,10 @@ func (v validation) CreateRole(ctx context.Context, role string) error {
 	return v.next.CreateRole(ctx, role)
 }
 
+func (v validation) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+	return v.next.CreateUserRoles(ctx, userID, roles)
+}
+
 func (v validation) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return v.next.GetRoles(ctx)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -131,6 +132,26 @@ func (c userServiceLogging) CreateRole(ctx context.Context, role string) error {
 	now := time.Now()
 
 	err := c.next.CreateRole(ctx, role)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c userServiceLogging) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	err := c.next.CreateUserRoles(ctx, userID, roles)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

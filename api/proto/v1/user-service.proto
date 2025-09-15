@@ -27,6 +27,13 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 // Get Users
 message ListUsersRequest {
     PaginationQuery pagination = 1;
+    optional UserFilter filter = 2;
+}
+message UserFilter {
+    repeated uint64 idsIn = 1;
+    optional uint64 workspaceId = 2;
+    optional uint64 workbenchId = 3;
+    optional string search = 4;
 }
 message ListUsersReply {
     ListUsersResult result = 1;

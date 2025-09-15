@@ -25,11 +25,11 @@ func Validation(validate *val.Validate) func(service.Workbencher) service.Workbe
 	}
 }
 
-func (v validation) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (v validation) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, err
 	}
-	return v.next.ListWorkbenchs(ctx, tenantID, pagination)
+	return v.next.ListWorkbenchs(ctx, tenantID, pagination, filter)
 }
 func (v validation) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	return v.next.ProxyWorkbench(ctx, tenantID, workbenchID, w, r)

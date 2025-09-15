@@ -10,6 +10,7 @@ import (
 	embed "github.com/CHORUS-TRE/chorus-backend/api"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	jwt_go "github.com/golang-jwt/jwt"
@@ -19,10 +20,10 @@ import (
 
 type ProxyWorkbenchHandler func(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 
-func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, authorizer authorization.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
+func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Config, authorizer authorization.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/([0-9]+)/stream`)
 
-	auth := middleware.NewAuthorization(logger.TechLog, authorizer)
+	auth := middleware.NewAuthorization(logger.TechLog, cfg, authorizer, nil)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
