@@ -60,7 +60,13 @@ type ClientService interface {
 
 	WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceOK, error)
 
+	WorkspaceServiceInviteInWorkspace(params *WorkspaceServiceInviteInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceInviteInWorkspaceOK, error)
+
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
+
+	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
+
+	WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServiceRemoveUserFromWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserFromWorkspaceOK, error)
 
 	WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceOK, error)
 
@@ -185,6 +191,45 @@ func (a *Client) WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspa
 }
 
 /*
+WorkspaceServiceInviteInWorkspace invites a user to a workspace
+
+This endpoint invites a user to a workspace
+*/
+func (a *Client) WorkspaceServiceInviteInWorkspace(params *WorkspaceServiceInviteInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceInviteInWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceInviteInWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_InviteInWorkspace",
+		Method:             "PUT",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/invite",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceInviteInWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceInviteInWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceInviteInWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkspaceServiceListWorkspaces lists workspaces
 
 This endpoint returns a list of workspaces
@@ -220,6 +265,84 @@ func (a *Client) WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWork
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceListWorkspacesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceManageUserRoleInWorkspace manages a user s role in a workspace
+
+This endpoint manages a user's role in a workspace
+*/
+func (a *Client) WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceManageUserRoleInWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_ManageUserRoleInWorkspace",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceManageUserRoleInWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceManageUserRoleInWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceManageUserRoleInWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceRemoveUserFromWorkspace removes a user from a workspace
+
+This endpoint removes a user from a workspace
+*/
+func (a *Client) WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServiceRemoveUserFromWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserFromWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceRemoveUserFromWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_RemoveUserFromWorkspace",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceRemoveUserFromWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceRemoveUserFromWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceRemoveUserFromWorkspaceDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

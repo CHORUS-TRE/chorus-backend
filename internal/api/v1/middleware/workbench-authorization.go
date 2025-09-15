@@ -126,3 +126,30 @@ func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, r
 
 	return c.next.DeleteWorkbench(ctx, req)
 }
+
+func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ManageUserRoleInWorkbench(ctx, req)
+}
+
+func (c workbenchControllerAuthorization) InviteInWorkbench(ctx context.Context, req *chorus.InviteInWorkbenchRequest) (*chorus.InviteInWorkbenchReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.InviteInWorkbench(ctx, req)
+}
+
+func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.RemoveUserFromWorkbench(ctx, req)
+}

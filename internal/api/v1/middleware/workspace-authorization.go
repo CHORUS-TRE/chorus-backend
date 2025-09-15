@@ -129,3 +129,30 @@ func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, r
 
 	return c.next.DeleteWorkspace(ctx, req)
 }
+
+func (c workspaceControllerAuthorization) InviteInWorkspace(ctx context.Context, req *chorus.InviteInWorkspaceRequest) (*chorus.InviteInWorkspaceReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkspace, authorization.WithWorkspace(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.InviteInWorkspace(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkspace, authorization.WithWorkspace(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ManageUserRoleInWorkspace(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkspace, authorization.WithWorkspace(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.RemoveUserFromWorkspace(ctx, req)
+}

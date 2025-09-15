@@ -156,7 +156,106 @@ paths:
           format: uint64
       tags:
         - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/invite:
+    put:
+      summary: Invite a user to a workbench
+      description: This endpoint invites a user to a workbench
+      operationId: WorkbenchService_InviteInWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusInviteInWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkbenchServiceInviteInWorkbenchBody'
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/user/{userId}:
+    delete:
+      summary: Remove a user from a workbench
+      description: This endpoint removes a user from a workbench
+      operationId: WorkbenchService_RemoveUserFromWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusRemoveUserFromWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/user/{userId}/role:
+    post:
+      summary: Manage a user's role in a workbench
+      description: This endpoint manages a user's role in a workbench
+      operationId: WorkbenchService_ManageUserRoleInWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkbenchServiceManageUserRoleInWorkbenchBody'
+      tags:
+        - WorkbenchService
 definitions:
+  WorkbenchServiceInviteInWorkbenchBody:
+    type: object
+    properties:
+      userId:
+        type: string
+        format: uint64
+      role:
+        $ref: '#/definitions/chorusRole'
+  WorkbenchServiceManageUserRoleInWorkbenchBody:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusRole'
   chorusCreateWorkbenchReply:
     type: object
     properties:
@@ -184,6 +283,16 @@ definitions:
     properties:
       workbench:
         $ref: '#/definitions/chorusWorkbench'
+  chorusInviteInWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInviteInWorkbenchResult'
+  chorusInviteInWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusListWorkbenchsReply:
     type: object
     properties:
@@ -199,6 +308,16 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkbench'
+  chorusManageUserRoleInWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusManageUserRoleInWorkbenchResult'
+  chorusManageUserRoleInWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusPaginationQuery:
     type: object
     properties:
@@ -239,6 +358,25 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusRemoveUserFromWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRemoveUserFromWorkbenchResult'
+  chorusRemoveUserFromWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
+  chorusRole:
+    type: object
+    properties:
+      name:
+        type: string
+      context:
+        type: object
+        additionalProperties:
+          type: string
   chorusSort:
     type: object
     properties:

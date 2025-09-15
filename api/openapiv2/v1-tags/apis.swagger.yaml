@@ -1063,6 +1063,28 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.idsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+        - name: filter.workspaceId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.search
+          in: query
+          required: false
+          type: string
       tags:
         - UserService
     post:
@@ -1653,6 +1675,146 @@ paths:
           format: uint64
       tags:
         - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/invite:
+    put:
+      summary: Invite a user to a workbench
+      description: This endpoint invites a user to a workbench
+      operationId: WorkbenchService_InviteInWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusInviteInWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkbenchServiceInviteInWorkbenchBody'
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/user/{userId}:
+    delete:
+      summary: Remove a user from a workbench
+      description: This endpoint removes a user from a workbench
+      operationId: WorkbenchService_RemoveUserFromWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusRemoveUserFromWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/user/{userId}/role:
+    post:
+      summary: Manage a user's role in a workbench
+      description: This endpoint manages a user's role in a workbench
+      operationId: WorkbenchService_ManageUserRoleInWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkbenchServiceManageUserRoleInWorkbenchBody'
+      tags:
+        - WorkbenchService
   /api/rest/v1/workspaces:
     get:
       summary: List workspaces
@@ -1884,6 +2046,146 @@ paths:
           format: uint64
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{id}/invite:
+    put:
+      summary: Invite a user to a workspace
+      description: This endpoint invites a user to a workspace
+      operationId: WorkspaceService_InviteInWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusInviteInWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceServiceInviteInWorkspaceBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}/user/{userId}:
+    delete:
+      summary: Remove a user from a workspace
+      description: This endpoint removes a user from a workspace
+      operationId: WorkspaceService_RemoveUserFromWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusRemoveUserFromWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}/user/{userId}/role:
+    post:
+      summary: Manage a user's role in a workspace
+      description: This endpoint manages a user's role in a workspace
+      operationId: WorkspaceService_ManageUserRoleInWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusManageUserRoleInWorkspaceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
+      tags:
+        - WorkspaceService
 definitions:
   AuthenticationServiceAuthenticateOauthRedirectBody:
     type: object
@@ -1897,6 +2199,32 @@ definitions:
   UserServiceResetPasswordBody:
     type: object
     title: Reset Password
+  WorkbenchServiceInviteInWorkbenchBody:
+    type: object
+    properties:
+      userId:
+        type: string
+        format: uint64
+      role:
+        $ref: '#/definitions/chorusRole'
+  WorkbenchServiceManageUserRoleInWorkbenchBody:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusRole'
+  WorkspaceServiceInviteInWorkspaceBody:
+    type: object
+    properties:
+      userId:
+        type: string
+        format: uint64
+      role:
+        $ref: '#/definitions/chorusRole'
+  WorkspaceServiceManageUserRoleInWorkspaceBody:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusRole'
   chorusApp:
     type: object
     properties:
@@ -2241,6 +2569,26 @@ definitions:
     properties:
       publicRegistrationEnabled:
         type: boolean
+  chorusInviteInWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInviteInWorkbenchResult'
+  chorusInviteInWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
+  chorusInviteInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInviteInWorkspaceResult'
+  chorusInviteInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusListAppInstancesReply:
     type: object
     properties:
@@ -2323,6 +2671,26 @@ definitions:
         type: string
   chorusLogoutRequest:
     type: object
+  chorusManageUserRoleInWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusManageUserRoleInWorkbenchResult'
+  chorusManageUserRoleInWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
+  chorusManageUserRoleInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusManageUserRoleInWorkspaceResult'
+  chorusManageUserRoleInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusMarkNotificationsAsReadRequest:
     type: object
     properties:
@@ -2405,6 +2773,26 @@ definitions:
     properties:
       token:
         type: string
+  chorusRemoveUserFromWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRemoveUserFromWorkbenchResult'
+  chorusRemoveUserFromWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
+  chorusRemoveUserFromWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRemoveUserFromWorkspaceResult'
+  chorusRemoveUserFromWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusResetPasswordReply:
     type: object
     properties:
@@ -2550,6 +2938,22 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  chorusUserFilter:
+    type: object
+    properties:
+      idsIn:
+        type: array
+        items:
+          type: string
+          format: uint64
+      workspaceId:
+        type: string
+        format: uint64
+      workbenchId:
+        type: string
+        format: uint64
+      search:
+        type: string
   chorusWorkbench:
     type: object
     properties:
