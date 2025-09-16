@@ -69,41 +69,86 @@ INSERT INTO role_definitions (name) VALUES
 -- +migrate StatementEnd
 
 -- +migrate StatementBegin
-INSERT INTO user_role (userid, roleid)
-SELECT userid, (SELECT id FROM role_definitions WHERE name = 'WorkspaceAdmin') FROM workspaces;
--- +migrate StatementEnd
-
 -- +migrate StatementBegin
+WITH rd AS (
+  SELECT id AS roleid FROM role_definitions WHERE name = 'WorkspaceAdmin'
+),
+src AS (
+  SELECT w.userid, rd.roleid, w.id AS workspace_id,
+         ROW_NUMBER() OVER (PARTITION BY w.userid ORDER BY w.id) AS rn
+  FROM workspaces w
+  CROSS JOIN rd
+),
+ins AS (
+  INSERT INTO user_role (userid, roleid)
+  SELECT userid, roleid
+  FROM src
+  RETURNING id, userid
+),
+num AS (
+  SELECT i.id AS userroleid, i.userid,
+         ROW_NUMBER() OVER (PARTITION BY i.userid ORDER BY i.id) AS rn
+  FROM ins i
+)
 INSERT INTO user_role_context (userroleid, contextdimension, value)
-SELECT ur.id, 'workspace', w.id::text
-FROM workspaces w
-JOIN user_role ur ON ur.userid = w.userid AND ur.roleid = (SELECT id FROM role_definitions WHERE name = 'WorkspaceAdmin')
+SELECT n.userroleid, 'workspace', s.workspace_id::text
+FROM num n
+JOIN src s
+  ON s.userid = n.userid AND s.rn = n.rn
 LEFT JOIN user_role_context urc
-  ON urc.userroleid = ur.id AND urc.contextdimension = 'workspace'
+  ON urc.userroleid = n.userroleid AND urc.contextdimension = 'workspace'
 WHERE urc.userroleid IS NULL;
 -- +migrate StatementEnd
 
--- +migrate StatementBegin
-INSERT INTO user_role (userid, roleid)
-SELECT userid, (SELECT id FROM role_definitions WHERE name = 'WorkbenchAdmin') FROM workbenchs;
 -- +migrate StatementEnd
 
 -- +migrate StatementBegin
+WITH rd AS (
+  SELECT id AS roleid FROM role_definitions WHERE name = 'WorkbenchAdmin'
+),
+src AS (
+  SELECT w.userid, rd.roleid, w.id AS workbench_id, w.workspaceid::text AS workspace_val
+  FROM workbenchs w
+  CROSS JOIN rd
+),
+need AS (
+  SELECT s.*,
+         ROW_NUMBER() OVER (PARTITION BY s.userid ORDER BY s.workbench_id) AS rn
+  FROM src s
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM user_role ur
+    JOIN user_role_context c
+      ON c.userroleid = ur.id
+     AND c.contextdimension = 'workbench'
+     AND c.value = s.workbench_id::text
+    WHERE ur.userid = s.userid
+      AND ur.roleid = s.roleid
+  )
+),
+ins AS (
+  INSERT INTO user_role (userid, roleid)
+  SELECT userid, roleid
+  FROM need
+  RETURNING id, userid
+),
+ins_num AS (
+  SELECT i.id AS userroleid, i.userid,
+         ROW_NUMBER() OVER (PARTITION BY i.userid ORDER BY i.id) AS rn
+  FROM ins i
+),
+pairs AS (
+  SELECT n.userroleid, d.workbench_id::text AS workbench_val, d.workspace_val
+  FROM ins_num n
+  JOIN need d
+    ON d.userid = n.userid AND d.rn = n.rn
+)
 INSERT INTO user_role_context (userroleid, contextdimension, value)
-SELECT ur.id, 'workspace', w.workspaceid::text
-FROM workbenchs w
-JOIN user_role ur ON ur.userid = w.userid AND ur.roleid = (SELECT id FROM role_definitions WHERE name = 'WorkbenchAdmin')
-LEFT JOIN user_role_context urc
-  ON urc.userroleid = ur.id AND urc.contextdimension = 'workspace'
-WHERE urc.userroleid IS NULL;
--- +migrate StatementEnd
-
--- +migrate StatementBegin
-INSERT INTO user_role_context (userroleid, contextdimension, value)
-SELECT ur.id, 'workbench', w.id::text
-FROM workbenchs w
-JOIN user_role ur ON ur.userid = w.userid AND ur.roleid = (SELECT id FROM role_definitions WHERE name = 'WorkbenchAdmin')
-LEFT JOIN user_role_context urc
-  ON urc.userroleid = ur.id AND urc.contextdimension = 'workbench'
-WHERE urc.userroleid IS NULL;
+SELECT p.userroleid, v.dim, v.val
+FROM pairs p
+CROSS JOIN LATERAL (VALUES
+  ('workbench', p.workbench_val),
+  ('workspace', p.workspace_val)
+) AS v(dim, val)
+ON CONFLICT (userroleid, contextdimension) DO NOTHING;
 -- +migrate StatementEnd
