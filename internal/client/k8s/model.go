@@ -336,7 +336,7 @@ type WorkbenchStatusApp struct {
 }
 
 type WorkbenchStatus struct {
-	Server WorkbenchStatusServer         `json:"server"`
+	Server WorkbenchStatusServer         `json:"serverDeployment"`
 	Apps   map[string]WorkbenchStatusApp `json:"apps,omitempty"`
 }
 

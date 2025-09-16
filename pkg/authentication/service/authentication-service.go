@@ -18,6 +18,7 @@ import (
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	choruserrors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
@@ -183,20 +184,20 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 	user, err := a.store.GetActiveUser(ctx, username, "internal")
 	if err != nil {
 		logger.SecLog.Info(ctx, "user not found", zap.String("username", username))
-		return "", 0, &ErrUnauthorized{}
+		return "", 0, choruserrors.NewInvalidCredentialsError()
 	}
 	if user == nil {
-		return "", 0, &ErrUnauthorized{}
+		return "", 0, choruserrors.NewInvalidCredentialsError()
 	}
 
 	if user.Source != "internal" {
 		logger.SecLog.Info(ctx, "user from external source attempted internal password authentication", zap.String("username", username), zap.String("source", user.Source))
-		return "", 0, &ErrUnauthorized{}
+		return "", 0, choruserrors.NewInvalidCredentialsError()
 	}
 
 	if !verifyPassword(user.Password, password) {
 		logger.SecLog.Info(ctx, "user has entered an invalid password", zap.String("username", username))
-		return "", 0, &ErrUnauthorized{}
+		return "", 0, choruserrors.NewInvalidCredentialsError()
 	}
 
 	if user.TotpEnabled && totp == "" {

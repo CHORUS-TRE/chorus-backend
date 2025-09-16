@@ -156,3 +156,39 @@ func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Co
 
 	return c.next.RemoveUserFromWorkspace(ctx, req)
 }
+
+func (c workspaceControllerAuthorization) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.GetWorkspaceFile(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.CreateWorkspaceFile(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) UpdateWorkspaceFile(ctx context.Context, req *chorus.UpdateWorkspaceFileRequest) (*chorus.UpdateWorkspaceFileReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.UpdateWorkspaceFile(ctx, req)
+}
+
+func (c workspaceControllerAuthorization) DeleteWorkspaceFile(ctx context.Context, req *chorus.DeleteWorkspaceFileRequest) (*chorus.DeleteWorkspaceFileReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.DeleteWorkspaceFile(ctx, req)
+}

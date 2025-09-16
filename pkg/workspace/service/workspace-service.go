@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
@@ -21,6 +22,12 @@ type Workspaceer interface {
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
+
+	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
+	GetWorkspaceFileChildren(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error)
+	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
+	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
+	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 }
 
 type Workbencher interface {
@@ -44,6 +51,8 @@ type WorkspaceService struct {
 	client      k8s.K8sClienter
 	workbencher Workbencher
 	userer      Userer
+	filesMu     sync.RWMutex
+	files       map[uint64]map[string]*model.WorkspaceFile
 }
 
 func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
@@ -52,6 +61,7 @@ func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbench
 		client:      client,
 		workbencher: workbencher,
 		userer:      userer,
+		files:       getSampleWorkspaceFiles(),
 	}
 
 	go func() {

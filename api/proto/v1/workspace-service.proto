@@ -107,6 +107,50 @@ message DeleteWorkspaceReply {
 }
 message DeleteWorkspaceResult {}
 
+// File management related messages
+message GetWorkspaceFileRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+}
+message GetWorkspaceFileReply {
+    GetWorkspaceFileResult result = 1;
+}
+message GetWorkspaceFileResult {
+    WorkspaceFile file = 1;
+    repeated WorkspaceFile children = 2;
+}
+
+message CreateWorkspaceFileRequest {
+    uint64 workspaceId = 1;
+    WorkspaceFile file = 2;
+}
+message CreateWorkspaceFileReply {
+    CreateWorkspaceFileResult result = 1;
+}
+message CreateWorkspaceFileResult {
+    WorkspaceFile file = 1;
+}
+
+message UpdateWorkspaceFileRequest {
+    uint64 workspaceId = 1;
+    string oldPath = 2; // For renaming or moving files
+    WorkspaceFile file = 3;
+}
+message UpdateWorkspaceFileReply {
+    UpdateWorkspaceFileResult result = 1;
+}
+message UpdateWorkspaceFileResult {
+    WorkspaceFile file = 1;
+}
+
+message DeleteWorkspaceFileRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+}
+message DeleteWorkspaceFileReply {
+    DeleteWorkspaceFileResult result = 1;
+}
+message DeleteWorkspaceFileResult {}
 
 service WorkspaceService {
     rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceReply) {
@@ -197,6 +241,53 @@ service WorkspaceService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a workspace";
             description: "This endpoint deletes a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    // File management methods
+    rpc GetWorkspaceFile(GetWorkspaceFileRequest) returns (GetWorkspaceFileReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List files in a workspace";
+            description: "This endpoint lists all files at given path within a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc CreateWorkspaceFile(CreateWorkspaceFileRequest) returns (CreateWorkspaceFileReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workspaces/{workspaceId}/files"
+            body: "file"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a file in a workspace";
+            description: "This endpoint creates a file in a workspace at the specified path";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc UpdateWorkspaceFile(UpdateWorkspaceFileRequest) returns (UpdateWorkspaceFileReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/workspaces/{workspaceId}/files/{oldPath=**}"
+            body: "file"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update a file in a workspace";
+            description: "This endpoint updates (rename or moves) a file in a workspace at the specified path";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc DeleteWorkspaceFile(DeleteWorkspaceFileRequest) returns (DeleteWorkspaceFileReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a file in a workspace";
+            description: "This endpoint deletes a file in a workspace at the specified path";
             tags: "WorkspaceService";
         };
     };
