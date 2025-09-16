@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
@@ -26,10 +27,19 @@ func Validation(validate *val.Validate) func(service.Userer) service.Userer {
 }
 
 func (v validation) CreateRole(ctx context.Context, role string) error {
-	if !contains([]string{"admin", "authenticated", "chorus"}, role) {
-		return fmt.Errorf("invalid role '%v', should be on of: %v", role, []string{"admin", "authenticated", "chorus"})
+	allRoles := authorization_model.GetAllRoles()
+	allRolesStr := make([]string, len(allRoles))
+	for i, role := range allRoles {
+		allRolesStr[i] = string(role)
+	}
+	if !contains(allRolesStr, role) {
+		return fmt.Errorf("invalid role '%v', should be one of: %v", role, allRolesStr)
 	}
 	return v.next.CreateRole(ctx, role)
+}
+
+func (v validation) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+	return v.next.CreateUserRoles(ctx, userID, roles)
 }
 
 func (v validation) GetRoles(ctx context.Context) ([]*model.Role, error) {

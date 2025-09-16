@@ -49,16 +49,21 @@ func NewJWTClaimsFactory(logger *logger.ContextLogger) ClaimsFactory {
 //			"sub": string (Subject)
 //	}
 type JWTClaims struct {
-	ID        uint64   `json:"id"`
-	TenantID  uint64   `json:"tenantID"`
-	FirstName string   `json:"firstName"`
-	LastName  string   `json:"lastName"`
-	Roles     []string `json:"roles"`
-	Username  string   `json:"username"`
+	ID        uint64 `json:"id"`
+	TenantID  uint64 `json:"tenantID"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Roles     []Role `json:"roles"`
+	Username  string `json:"username"`
 	ctx       context.Context
 
 	jwt.StandardClaims
 	logger *logger.ContextLogger
+}
+
+type Role struct {
+	Name    string            `json:"name"`
+	Context map[string]string `json:"context"`
 }
 
 func ExtractTenantID(ctx context.Context) (uint64, error) {
@@ -97,7 +102,7 @@ func (c *JWTClaims) Valid() error {
 
 			zap.Uint64("id", c.ID),
 			zap.Uint64("tenant_id", c.TenantID),
-			zap.Strings("roles", c.Roles),
+			zap.Any("roles", c.Roles),
 		)
 		return &ErrInvalidClaims{msg: err.Error()}
 	}
@@ -108,7 +113,7 @@ func (c *JWTClaims) Valid() error {
 
 		zap.Uint64("id", c.ID),
 		zap.Uint64("tenant_id", c.TenantID),
-		zap.Strings("roles", c.Roles),
+		zap.Any("roles", c.Roles),
 	)
 	return nil
 }

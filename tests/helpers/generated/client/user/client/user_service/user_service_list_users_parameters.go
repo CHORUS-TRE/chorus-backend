@@ -62,6 +62,22 @@ UserServiceListUsersParams contains all the parameters to send to the API endpoi
 */
 type UserServiceListUsersParams struct {
 
+	// FilterIdsIn.
+	FilterIdsIn []string
+
+	// FilterSearch.
+	FilterSearch *string
+
+	// FilterWorkbenchID.
+	//
+	// Format: uint64
+	FilterWorkbenchID *string
+
+	// FilterWorkspaceID.
+	//
+	// Format: uint64
+	FilterWorkspaceID *string
+
 	/* PaginationLimit.
 
 	   Optionally limit the number of results (between 1 and 500)
@@ -143,6 +159,50 @@ func (o *UserServiceListUsersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithFilterIdsIn adds the filterIdsIn to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterIdsIn(filterIdsIn []string) *UserServiceListUsersParams {
+	o.SetFilterIdsIn(filterIdsIn)
+	return o
+}
+
+// SetFilterIdsIn adds the filterIdsIn to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterIdsIn(filterIdsIn []string) {
+	o.FilterIdsIn = filterIdsIn
+}
+
+// WithFilterSearch adds the filterSearch to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterSearch(filterSearch *string) *UserServiceListUsersParams {
+	o.SetFilterSearch(filterSearch)
+	return o
+}
+
+// SetFilterSearch adds the filterSearch to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterSearch(filterSearch *string) {
+	o.FilterSearch = filterSearch
+}
+
+// WithFilterWorkbenchID adds the filterWorkbenchID to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterWorkbenchID(filterWorkbenchID *string) *UserServiceListUsersParams {
+	o.SetFilterWorkbenchID(filterWorkbenchID)
+	return o
+}
+
+// SetFilterWorkbenchID adds the filterWorkbenchId to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterWorkbenchID(filterWorkbenchID *string) {
+	o.FilterWorkbenchID = filterWorkbenchID
+}
+
+// WithFilterWorkspaceID adds the filterWorkspaceID to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterWorkspaceID(filterWorkspaceID *string) *UserServiceListUsersParams {
+	o.SetFilterWorkspaceID(filterWorkspaceID)
+	return o
+}
+
+// SetFilterWorkspaceID adds the filterWorkspaceId to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterWorkspaceID(filterWorkspaceID *string) {
+	o.FilterWorkspaceID = filterWorkspaceID
+}
+
 // WithPaginationLimit adds the paginationLimit to the user service list users params
 func (o *UserServiceListUsersParams) WithPaginationLimit(paginationLimit *int64) *UserServiceListUsersParams {
 	o.SetPaginationLimit(paginationLimit)
@@ -205,6 +265,68 @@ func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg
 		return err
 	}
 	var res []error
+
+	if o.FilterIdsIn != nil {
+
+		// binding items for filter.idsIn
+		joinedFilterIdsIn := o.bindParamFilterIdsIn(reg)
+
+		// query array param filter.idsIn
+		if err := r.SetQueryParam("filter.idsIn", joinedFilterIdsIn...); err != nil {
+			return err
+		}
+	}
+
+	if o.FilterSearch != nil {
+
+		// query param filter.search
+		var qrFilterSearch string
+
+		if o.FilterSearch != nil {
+			qrFilterSearch = *o.FilterSearch
+		}
+		qFilterSearch := qrFilterSearch
+		if qFilterSearch != "" {
+
+			if err := r.SetQueryParam("filter.search", qFilterSearch); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.FilterWorkbenchID != nil {
+
+		// query param filter.workbenchId
+		var qrFilterWorkbenchID string
+
+		if o.FilterWorkbenchID != nil {
+			qrFilterWorkbenchID = *o.FilterWorkbenchID
+		}
+		qFilterWorkbenchID := qrFilterWorkbenchID
+		if qFilterWorkbenchID != "" {
+
+			if err := r.SetQueryParam("filter.workbenchId", qFilterWorkbenchID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.FilterWorkspaceID != nil {
+
+		// query param filter.workspaceId
+		var qrFilterWorkspaceID string
+
+		if o.FilterWorkspaceID != nil {
+			qrFilterWorkspaceID = *o.FilterWorkspaceID
+		}
+		qFilterWorkspaceID := qrFilterWorkspaceID
+		if qFilterWorkspaceID != "" {
+
+			if err := r.SetQueryParam("filter.workspaceId", qFilterWorkspaceID); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.PaginationLimit != nil {
 
@@ -289,6 +411,23 @@ func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
+}
+
+// bindParamUserServiceListUsers binds the parameter filter.idsIn
+func (o *UserServiceListUsersParams) bindParamFilterIdsIn(formats strfmt.Registry) []string {
+	filterIdsInIR := o.FilterIdsIn
+
+	var filterIdsInIC []string
+	for _, filterIdsInIIR := range filterIdsInIR { // explode []string
+
+		filterIdsInIIV := filterIdsInIIR // string as string
+		filterIdsInIC = append(filterIdsInIC, filterIdsInIIV)
+	}
+
+	// items.CollectionFormat: "multi"
+	filterIdsInIS := swag.JoinByFormat(filterIdsInIC, "multi")
+
+	return filterIdsInIS
 }
 
 // bindParamUserServiceListUsers binds the parameter pagination.query

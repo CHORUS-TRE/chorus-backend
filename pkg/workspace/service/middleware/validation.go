@@ -24,11 +24,11 @@ func Validation(validate *val.Validate) func(service.Workspaceer) service.Worksp
 	}
 }
 
-func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
+func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, err
 	}
-	return v.next.ListWorkspaces(ctx, tenantID, pagination)
+	return v.next.ListWorkspaces(ctx, tenantID, pagination, filter)
 }
 
 func (v validation) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {

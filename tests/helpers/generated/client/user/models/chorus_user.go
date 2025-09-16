@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -41,6 +42,9 @@ type ChorusUser struct {
 	// roles
 	Roles []string `json:"roles"`
 
+	// roles with context
+	RolesWithContext []*ChorusRole `json:"rolesWithContext"`
+
 	// source
 	Source string `json:"source,omitempty"`
 
@@ -66,6 +70,10 @@ func (m *ChorusUser) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateRolesWithContext(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateUpdatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -88,6 +96,32 @@ func (m *ChorusUser) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ChorusUser) validateRolesWithContext(formats strfmt.Registry) error {
+	if swag.IsZero(m.RolesWithContext) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RolesWithContext); i++ {
+		if swag.IsZero(m.RolesWithContext[i]) { // not required
+			continue
+		}
+
+		if m.RolesWithContext[i] != nil {
+			if err := m.RolesWithContext[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("rolesWithContext" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("rolesWithContext" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *ChorusUser) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
@@ -100,8 +134,42 @@ func (m *ChorusUser) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus user based on context it is used
+// ContextValidate validate this chorus user based on the context it is used
 func (m *ChorusUser) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateRolesWithContext(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusUser) contextValidateRolesWithContext(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.RolesWithContext); i++ {
+
+		if m.RolesWithContext[i] != nil {
+
+			if swag.IsZero(m.RolesWithContext[i]) { // not required
+				return nil
+			}
+
+			if err := m.RolesWithContext[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("rolesWithContext" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("rolesWithContext" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

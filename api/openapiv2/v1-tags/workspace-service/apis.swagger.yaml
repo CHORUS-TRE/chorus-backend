@@ -61,6 +61,14 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.workspaceIdsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
       tags:
         - WorkspaceService
     post:
@@ -146,6 +154,92 @@ paths:
           required: true
           type: string
           format: uint64
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}/invite:
+    put:
+      summary: Invite a user to a workspace
+      description: This endpoint invites a user to a workspace
+      operationId: WorkspaceService_InviteInWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusInviteInWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceServiceInviteInWorkspaceBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}/user/{userId}:
+    delete:
+      summary: Remove a user from a workspace
+      description: This endpoint removes a user from a workspace
+      operationId: WorkspaceService_RemoveUserFromWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusRemoveUserFromWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{id}/user/{userId}/role:
+    post:
+      summary: Manage a user's role in a workspace
+      description: This endpoint manages a user's role in a workspace
+      operationId: WorkspaceService_ManageUserRoleInWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusManageUserRoleInWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{workspaceId}/files:
@@ -262,6 +356,19 @@ paths:
       tags:
         - WorkspaceService
 definitions:
+  WorkspaceServiceInviteInWorkspaceBody:
+    type: object
+    properties:
+      userId:
+        type: string
+        format: uint64
+      role:
+        $ref: '#/definitions/chorusRole'
+  WorkspaceServiceManageUserRoleInWorkspaceBody:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusRole'
   chorusCreateWorkspaceFileReply:
     type: object
     properties:
@@ -321,6 +428,16 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusInviteInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInviteInWorkspaceResult'
+  chorusInviteInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -336,6 +453,16 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkspace'
+  chorusManageUserRoleInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusManageUserRoleInWorkspaceResult'
+  chorusManageUserRoleInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusPaginationQuery:
     type: object
     properties:
@@ -376,6 +503,25 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusRemoveUserFromWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRemoveUserFromWorkspaceResult'
+  chorusRemoveUserFromWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
+  chorusRole:
+    type: object
+    properties:
+      name:
+        type: string
+      context:
+        type: object
+        additionalProperties:
+          type: string
   chorusSort:
     type: object
     properties:
@@ -465,6 +611,14 @@ definitions:
         type: string
         format: byte
         title: File content will be empty for now
+  chorusWorkspaceFilter:
+    type: object
+    properties:
+      workspaceIdsIn:
+        type: array
+        items:
+          type: string
+          format: uint64
   protobufAny:
     type: object
     properties:

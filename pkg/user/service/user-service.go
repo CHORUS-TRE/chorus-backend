@@ -8,13 +8,13 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/mailer"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
@@ -23,6 +23,7 @@ type Userer interface {
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
 	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
 	UpdateUser(ctx context.Context, req UpdateUserReq) (*model.User, error)
@@ -40,6 +41,7 @@ type UserStore interface {
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
 	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
@@ -148,7 +150,7 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) (*model
 		return nil, fmt.Errorf("unable to get user %v: %w", req.User.ID, err)
 	}
 
-	req.User.Roles = filterDuplicateRoles(req.User.Roles)
+	// req.User.Roles = filterDuplicateRoles(req.User.Roles)
 
 	user.FirstName = req.User.FirstName
 	user.LastName = req.User.LastName
@@ -171,7 +173,7 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) (*model
 
 func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error) {
 
-	req.User.Roles = filterDuplicateRoles(req.User.Roles)
+	// req.User.Roles = filterDuplicateRoles(req.User.Roles)
 
 	if err := verifyRoles(req.User.Roles); err != nil {
 		return nil, err
@@ -370,6 +372,17 @@ func (u *UserService) sendMailWithTempPassword(subjectMessage string, tenantID u
 	}
 }
 
+func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+	if err := verifyRoles(roles); err != nil {
+		return fmt.Errorf("role verification failed: %w", err)
+	}
+
+	if err := u.store.CreateUserRoles(ctx, userID, roles); err != nil {
+		return fmt.Errorf("unable to create user roles for user %v: %w", userID, err)
+	}
+	return nil
+}
+
 func (u *UserService) CreateRole(ctx context.Context, role string) error {
 	return u.store.CreateRole(ctx, role)
 }
@@ -378,27 +391,16 @@ func (u *UserService) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return u.store.GetRoles(ctx)
 }
 
-func verifyRoles(roles []model.UserRole) error {
-	for _, role := range roles {
-		if _, ok := model.ValidRoles[role]; !ok {
-			err := &service.InvalidParametersErr{}
-			return fmt.Errorf("invalid role: %s: %w", role, err)
-		}
-	}
+func verifyRoles(roles []authorization_model.Role) error {
+	// TODO: validate role & ctx
+
+	// for _, role := range roles {
+	// 	// if _, ok := model.ValidRoles[role]; !ok {
+	// 	// 	err := &service.InvalidParametersErr{}
+	// 	// 	return fmt.Errorf("invalid role: %s: %w", role, err)
+	// 	// }
+
+	// }
 
 	return nil
-}
-
-func filterDuplicateRoles(roles []model.UserRole) []model.UserRole {
-	roleSet := make(map[model.UserRole]struct{})
-	var filteredRoles []model.UserRole
-
-	for _, role := range roles {
-		if _, ok := roleSet[role]; !ok {
-			roleSet[role] = struct{}{}
-			filteredRoles = append(filteredRoles, role)
-		}
-	}
-
-	return filteredRoles
 }

@@ -60,7 +60,13 @@ type ClientService interface {
 
 	WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceGetWorkbenchOK, error)
 
+	WorkbenchServiceInviteInWorkbench(params *WorkbenchServiceInviteInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceInviteInWorkbenchOK, error)
+
 	WorkbenchServiceListWorkbenchs(params *WorkbenchServiceListWorkbenchsParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchsOK, error)
+
+	WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServiceManageUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbenchOK, error)
+
+	WorkbenchServiceRemoveUserFromWorkbench(params *WorkbenchServiceRemoveUserFromWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbenchOK, error)
 
 	WorkbenchServiceUpdateWorkbench(params *WorkbenchServiceUpdateWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceUpdateWorkbenchOK, error)
 
@@ -185,6 +191,45 @@ func (a *Client) WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkben
 }
 
 /*
+WorkbenchServiceInviteInWorkbench invites a user to a workbench
+
+This endpoint invites a user to a workbench
+*/
+func (a *Client) WorkbenchServiceInviteInWorkbench(params *WorkbenchServiceInviteInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceInviteInWorkbenchOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceInviteInWorkbenchParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_InviteInWorkbench",
+		Method:             "PUT",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}/invite",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceInviteInWorkbenchReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceInviteInWorkbenchOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceInviteInWorkbenchDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkbenchServiceListWorkbenchs lists workbenchs
 
 This endpoint returns a list of workbenchs
@@ -220,6 +265,84 @@ func (a *Client) WorkbenchServiceListWorkbenchs(params *WorkbenchServiceListWork
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenchsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceManageUserRoleInWorkbench manages a user s role in a workbench
+
+This endpoint manages a user's role in a workbench
+*/
+func (a *Client) WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServiceManageUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbenchOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceManageUserRoleInWorkbenchParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_ManageUserRoleInWorkbench",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceManageUserRoleInWorkbenchReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceManageUserRoleInWorkbenchOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceManageUserRoleInWorkbenchDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceRemoveUserFromWorkbench removes a user from a workbench
+
+This endpoint removes a user from a workbench
+*/
+func (a *Client) WorkbenchServiceRemoveUserFromWorkbench(params *WorkbenchServiceRemoveUserFromWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbenchOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceRemoveUserFromWorkbenchParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_RemoveUserFromWorkbench",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}/user/{userId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceRemoveUserFromWorkbenchReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceRemoveUserFromWorkbenchOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceRemoveUserFromWorkbenchDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

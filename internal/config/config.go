@@ -248,21 +248,27 @@ type (
 		} `yaml:"workbench_service"`
 
 		Steward struct {
-			Tenant struct {
-				Enabled bool `yaml:"enabled"`
-			} `yaml:"tenant"`
+			InitTenant struct {
+				Enabled  bool   `yaml:"enabled"`
+				TenantID uint64 `yaml:"tenant_id"`
+			} `yaml:"init_tenant"`
 
-			User struct {
+			InitUser struct {
 				Enabled  bool      `yaml:"enabled"`
+				UserID   uint64    `yaml:"user_id"`
 				Username string    `yaml:"username"`
 				Password Sensitive `yaml:"password"`
-				Roles    []string  `yaml:"roles"`
-			} `yaml:"user"`
+				Roles    []struct {
+					Name    string            `yaml:"name"`
+					Context map[string]string `yaml:"context"`
+				} `yaml:"roles"`
+			} `yaml:"init_user"`
 
-			Workspace struct {
-				Enabled bool   `yaml:"enabled"`
-				Name    string `yaml:"name"`
-			} `yaml:"workspace"`
+			InitWorkspace struct {
+				Enabled     bool   `yaml:"enabled"`
+				WorkspaceID uint64 `yaml:"workspace_id"`
+				Name        string `yaml:"name"`
+			} `yaml:"init_workspace"`
 		} `yaml:"steward"`
 	}
 

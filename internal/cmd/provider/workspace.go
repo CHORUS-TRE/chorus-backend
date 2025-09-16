@@ -9,7 +9,6 @@ import (
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
-	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/store/middleware"
@@ -25,6 +24,7 @@ func ProvideWorkspace() service.Workspaceer {
 			ProvideWorkspaceStore(),
 			ProvideK8sClient(),
 			ProvideWorkbench(),
+			ProvideUser(),
 		)
 		workspace = service_mw.Logging(logger.BizLog)(workspace)
 		workspace = service_mw.Validation(ProvideValidator())(workspace)
@@ -39,7 +39,7 @@ var workspaceController chorus.WorkspaceServiceServer
 func ProvideWorkspaceController() chorus.WorkspaceServiceServer {
 	workspaceControllerOnce.Do(func() {
 		workspaceController = v1.NewWorkspaceController(ProvideWorkspace())
-		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, []string{user_model.RoleAuthenticated.String()})(workspaceController)
+		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceController)
 	})
 	return workspaceController
 }

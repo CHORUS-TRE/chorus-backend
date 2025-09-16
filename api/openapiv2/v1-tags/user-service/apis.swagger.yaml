@@ -61,6 +61,28 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.idsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+        - name: filter.workspaceId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.search
+          in: query
+          required: false
+          type: string
       tags:
         - UserService
     post:
@@ -395,6 +417,15 @@ definitions:
         type: array
         items:
           type: string
+  chorusRole:
+    type: object
+    properties:
+      name:
+        type: string
+      context:
+        type: object
+        additionalProperties:
+          type: string
   chorusSort:
     type: object
     properties:
@@ -448,6 +479,11 @@ definitions:
         type: array
         items:
           type: string
+      rolesWithContext:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusRole'
       totpEnabled:
         type: boolean
       passwordChanged:
@@ -458,6 +494,22 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  chorusUserFilter:
+    type: object
+    properties:
+      idsIn:
+        type: array
+        items:
+          type: string
+          format: uint64
+      workspaceId:
+        type: string
+        format: uint64
+      workbenchId:
+        type: string
+        format: uint64
+      search:
+        type: string
   protobufAny:
     type: object
     properties:

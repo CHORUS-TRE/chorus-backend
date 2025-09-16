@@ -13,7 +13,6 @@ import (
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/notification/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/notification/store/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/store/postgres"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
 var notificationOnce sync.Once
@@ -35,7 +34,7 @@ var notificationController chorus.NotificationServiceServer
 func ProvideNotificationController() chorus.NotificationServiceServer {
 	notificationControllerOnce.Do(func() {
 		notificationController = v1.NewNotificationController(ProvideNotification())
-		notificationController = ctrl_mw.NotificationAuthorizing(logger.SecLog, []string{model.RoleAuthenticated.String()})(notificationController)
+		notificationController = ctrl_mw.NotificationAuthorizing(logger.SecLog, ProvideAuthorizer())(notificationController)
 	})
 	return notificationController
 }

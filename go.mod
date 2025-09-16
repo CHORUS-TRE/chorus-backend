@@ -1,8 +1,11 @@
 module github.com/CHORUS-TRE/chorus-backend
 
+// replace github.com/CHORUS-TRE/chorus-gatekeeper => /home/localadmin/chuv/chorus/chorus-gatekeeper
+
 go 1.24.3
 
 require (
+	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20250911155532-19499a93527c
 	github.com/coocood/freecache v1.2.4
 	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/go-openapi/errors v0.22.1
@@ -21,7 +24,7 @@ require (
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.37.0
+	github.com/onsi/gomega v1.38.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/pquerna/otp v1.4.0
 	github.com/prometheus/client_golang v1.22.0
@@ -137,5 +140,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.7.0 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
+	sigs.k8s.io/yaml v1.4.0
 )

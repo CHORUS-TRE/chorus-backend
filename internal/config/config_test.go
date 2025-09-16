@@ -108,18 +108,21 @@ func TestDecodeSteward(t *testing.T) {
 	s := cfg.Services.Steward
 
 	// Tenant Steward
-	require.True(t, s.Tenant.Enabled)
+	require.True(t, s.InitTenant.Enabled)
+	require.Equal(t, uint64(88888), s.InitTenant.TenantID)
 
 	// User Steward
-	require.True(t, s.User.Enabled)
-	require.Equal(t, "chorus", s.User.Username)
-	require.Equal(t, Sensitive("password"), s.User.Password)
-	require.Len(t, s.User.Roles, 1)
-	require.Equal(t, "authenticated", s.User.Roles[0])
+	require.True(t, s.InitUser.Enabled)
+	require.Equal(t, uint64(88888), s.InitUser.UserID)
+	require.Equal(t, "chorus", s.InitUser.Username)
+	require.Equal(t, Sensitive("password"), s.InitUser.Password)
+	require.Len(t, s.InitUser.Roles, 1)
+	require.Equal(t, "Authenticated", s.InitUser.Roles[0].Name)
 
 	// Workspace Steward
-	require.True(t, s.Workspace.Enabled)
-	require.Equal(t, "Home workspace", s.Workspace.Name)
+	require.True(t, s.InitWorkspace.Enabled)
+	require.Equal(t, uint64(88888), s.InitWorkspace.WorkspaceID)
+	require.Equal(t, "Home workspace", s.InitWorkspace.Name)
 }
 
 func TestDecodeTenants(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
@@ -17,9 +18,12 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
-	var roles []string
-	for _, role := range user.Roles {
-		roles = append(roles, role.String())
+	roles := make([]*chorus.Role, len(user.Roles))
+	rs := make([]string, len(user.Roles))
+	for i, r := range user.Roles {
+		role := RoleFromBusiness(r)
+		roles[i] = &role
+		rs[i] = role.Name
 	}
 
 	return &chorus.User{
@@ -31,9 +35,21 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 		Password:        user.Password,
 		PasswordChanged: user.PasswordChanged,
 		Status:          user.Status.String(),
-		Roles:           roles,
-		TotpEnabled:     user.TotpEnabled,
-		CreatedAt:       ca,
-		UpdatedAt:       ua,
+		// Roles:           rs,
+		RolesWithContext: roles,
+		TotpEnabled:      user.TotpEnabled,
+		CreatedAt:        ca,
+		UpdatedAt:        ua,
 	}, nil
+}
+
+func RoleFromBusiness(role authorization_model.Role) chorus.Role {
+	c := make(map[string]string, len(role.Context))
+	for k, v := range role.Context {
+		c[k.String()] = v
+	}
+	return chorus.Role{
+		Name:    role.Name.String(),
+		Context: c,
+	}
 }

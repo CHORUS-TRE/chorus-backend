@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -79,12 +80,12 @@ func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint6
 
 	var user model.User
 	if err := s.db.GetContext(ctx, &user, query, tenantID, userID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get user: %w", err)
 	}
 
 	roles, err := s.getUserRoles(ctx, userID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get user roles: %w", err)
 	}
 	user.Roles = roles
 
@@ -220,10 +221,6 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 		WHERE userid = $1;
 	`
 
-	const insertUserRoleQuery = `
-		INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
-	`
-
 	// Update User
 	var updatedUser model.User
 	err := tx.GetContext(ctx, &updatedUser, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
@@ -232,52 +229,44 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
 
-	roles, err := s.GetRoles(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get roles: %w", err)
-	}
-
 	// Delete Old User Roles
 	_, err = tx.ExecContext(ctx, deleteUserRolesQuery, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to delete old roles: %w", err)
 	}
 
-	// Add new User Roles
-	var userRoles []model.UserRole
-	for _, ur := range user.Roles {
-		found := false
-		for _, r := range roles {
-			if ur.String() == r.Name {
-				if _, err = tx.ExecContext(ctx, insertUserRoleQuery, user.ID, r.ID); err != nil {
-					return nil, fmt.Errorf("unable to exec in: %w", err)
-				}
-				userRoles = append(userRoles, ur)
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, fmt.Errorf("unknown user role: %v", ur)
-		}
+	err = s.createUserRoles(ctx, tx, user.ID, user.Roles)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create user roles: %w", err)
 	}
 
+	updatedUser.Roles = append(updatedUser.Roles, user.Roles...)
+
 	// Set the roles on the updated user
-	updatedUser.Roles = userRoles
+	// updatedUser.Roles = userRoles
 
 	return &updatedUser, nil
 }
 
 // CreateUser saves the provided user object in the database 'users' table.
 func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
-	const userQuery = `
+	var userQuery = `
 		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
 		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
-	const userRoleQuery = `
-		INSERT INTO user_role (userid, roleid) VALUES ($1, $2);
-	`
+	args := []interface{}{tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret}
+
+	if user.ID != 0 {
+		userQuery = `
+		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, id,
+			createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+		`
+		args = append(args, user.ID)
+	}
+
 	const recoveryCodeQuery = `
 		INSERT INTO totp_recovery_codes (tenantid, userid, code) VALUES ($1, $2, $3);
 	`
@@ -290,41 +279,21 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	}
 
 	var newUser model.User
-	err = tx.GetContext(ctx, &newUser,
-		userQuery, tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret,
-	)
+	err = tx.GetContext(ctx, &newUser, userQuery, args...)
 	if err != nil {
 		return nil, storage.Rollback(tx, err)
 	}
 
-	roles, err := s.GetRoles(ctx)
+	err = s.createUserRoles(ctx, tx, newUser.ID, user.Roles)
 	if err != nil {
 		return nil, storage.Rollback(tx, err)
 	}
+	newUser.Roles = append(newUser.Roles, user.Roles...)
 
-	// For each user role that matches a role insert an entry in the 'user_role' table.
-	var loopErr error
-	for _, ur := range user.Roles {
-		found := false
-		for _, r := range roles {
-			if ur.String() == r.Name {
-				if _, loopErr = tx.ExecContext(ctx, userRoleQuery, newUser.ID, r.ID); loopErr != nil {
-					return nil, storage.Rollback(tx, loopErr)
-				}
-				found = true
-				break
-			}
-		}
-		if !found {
-			loopErr = fmt.Errorf("unknown user role: %v", ur)
-			return nil, storage.Rollback(tx, loopErr)
-		}
-		newUser.Roles = append(newUser.Roles, ur)
-	}
 	// Insert TOTP recovery codes.
 	if user.TotpRecoveryCodes != nil {
 		for _, rc := range user.TotpRecoveryCodes {
-			if _, loopErr = tx.ExecContext(ctx, recoveryCodeQuery, tenantID, newUser.ID, rc); loopErr != nil {
+			if _, loopErr := tx.ExecContext(ctx, recoveryCodeQuery, tenantID, newUser.ID, rc); loopErr != nil {
 				return nil, storage.Rollback(tx, loopErr)
 			}
 		}
@@ -336,19 +305,167 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	return &newUser, nil
 }
 
+func (s *UserStorage) CreateUserRoles(ctx context.Context, userID uint64, userRoles []authorization_model.Role) error {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return fmt.Errorf("unable to begin transaction: %w", err)
+	}
+
+	if err = s.createUserRoles(ctx, tx, userID, userRoles); err != nil {
+		return fmt.Errorf("unable to create user roles: %w", storage.Rollback(tx, err))
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit transaction: %w", err)
+	}
+	return nil
+}
+
+func (s *UserStorage) createUserRoles(ctx context.Context, tx *sqlx.Tx, userID uint64, userRoles []authorization_model.Role) error {
+	const userRoleQuery = `
+		INSERT INTO user_role (userid, roleid) VALUES ($1, $2) RETURNING id;
+	`
+	const userRoleContextQuery = `
+		INSERT INTO user_role_context (userroleid, contextdimension, value) VALUES ($1, $2, $3);
+	`
+
+	roles, err := s.GetRoles(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to get roles: %w", err)
+	}
+
+	// For each user role that matches a role insert an entry in the 'user_role' table.
+	var loopErr error
+	for _, ur := range userRoles {
+		found := false
+		for _, r := range roles {
+			if ur.Name.String() == r.Name {
+				var userRoleID uint64
+
+				loopErr := tx.GetContext(ctx, &userRoleID, userRoleQuery, userID, r.ID)
+				if loopErr != nil {
+					return fmt.Errorf("unable to create user role: %w", loopErr)
+				}
+
+				for dimension, value := range ur.Context {
+					if _, loopErr = tx.ExecContext(ctx, userRoleContextQuery, userRoleID, dimension, value); loopErr != nil {
+						return fmt.Errorf("unable to create user role context: %w", loopErr)
+					}
+				}
+
+				found = true
+				break
+			}
+		}
+		if !found {
+			loopErr = fmt.Errorf("unknown user role: %v", ur)
+			return fmt.Errorf("unable to create user role: %w", loopErr)
+		}
+	}
+
+	return nil
+}
+
+type DBUserRoleContext struct {
+	UserRoleID       uint64
+	ContextDimension string
+	Value            string
+}
+
 // getUserRoles fetches all the roles of a given user.
-func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]model.UserRole, error) {
+// func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
+// 	const query = `
+// SELECT sq.id, sq.name
+// FROM (
+//   SELECT * FROM user_role
+//   JOIN role_definitions
+//   ON user_role.userid = $1 AND user_role.roleid = role_definitions.id
+// ) AS sq;
+// `
+// 	var dbRoles []model.Role
+// 	if err := s.db.SelectContext(ctx, &dbRoles, query, userID); err != nil {
+// 		return nil, fmt.Errorf("failed to fetch roles for user %d: %w", userID, err)
+// 	}
+
+// 	const dimensionsQuery = `
+// SELECT user_role.id AS user_role_id, contextdimension, value
+// FROM user_role_context
+// JOIN user_role
+// ON user_role.userid = $1 AND user_role.id = user_role_context.user_role_id;
+// `
+
+// 	var dimensions []DBUserRoleContext
+// 	if err := s.db.SelectContext(ctx, &dimensions, dimensionsQuery, userID); err != nil {
+// 		return nil, fmt.Errorf("failed to fetch role dimensions for user %d: %w", userID, err)
+// 	}
+
+// 	roles := make([]authorization_model.Role, 0, len(dbRoles))
+// 	for _, r := range dbRoles {
+// 		roleName, err := authorization_model.ToRoleName(r.Name)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		role := authorization_model.Role{
+// 			Name:    roleName,
+// 			Context: authorization_model.Context{},
+// 		}
+
+// 		for _, d := range dimensions {
+// 			if d.UserRoleID == r.ID {
+// 				role.Context[authorization_model.ContextDimension(d.ContextDimension)] = d.Value
+// 			}
+// 		}
+// 		roles = append(roles, role)
+// 	}
+
+//		return roles, nil
+//	}
+func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
 	const query = `
-SELECT name
+SELECT id, name, contextdimension, value
 FROM (
-  SELECT * FROM user_role
-  JOIN roles
-  ON user_role.userid = $1 AND user_role.roleid = roles.id
-);
+  SELECT user_role.id, role_definitions.name, user_role_context.contextdimension, user_role_context.value
+  FROM user_role
+  JOIN role_definitions
+  ON user_role.roleid = role_definitions.id
+  LEFT JOIN user_role_context
+  ON user_role.id = user_role_context.userroleid
+  WHERE user_role.userid = $1
+) AS subquery;
 `
-	var roles []model.UserRole
-	if err := s.db.SelectContext(ctx, &roles, query, userID); err != nil {
-		return nil, err
+
+	var flatRoles []struct {
+		ID               uint64  `db:"id"`
+		Name             string  `db:"name"`
+		ContextDimension *string `db:"contextdimension"`
+		Value            *string `db:"value"`
+	}
+	if err := s.db.SelectContext(ctx, &flatRoles, query, userID); err != nil {
+		return nil, fmt.Errorf("failed to fetch roles for user %d: %w", userID, err)
+	}
+
+	roleMap := make(map[uint64]map[string]string)
+	roleNameMap := make(map[uint64]string)
+	for _, fr := range flatRoles {
+		roleNameMap[fr.ID] = fr.Name
+		_, exists := roleMap[fr.ID]
+		if !exists {
+			roleMap[fr.ID] = make(map[string]string)
+		}
+		if fr.ContextDimension == nil || fr.Value == nil {
+			continue
+		}
+		roleMap[fr.ID][*fr.ContextDimension] = *fr.Value
+	}
+
+	var roles []authorization_model.Role
+	for n, m := range roleMap {
+		roleName := roleNameMap[n]
+		role, err := authorization_model.ToRole(roleName, m)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse role %s: %w", roleName, err)
+		}
+		roles = append(roles, role)
 	}
 	return roles, nil
 }
@@ -356,7 +473,7 @@ FROM (
 // GetRoles queries all stocked roles.
 func (s *UserStorage) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	const query = `
-SELECT id, name FROM roles;
+SELECT id, name FROM role_definitions;
 	`
 	var roles []*model.Role
 	if err := s.db.SelectContext(ctx, &roles, query); err != nil {
@@ -367,10 +484,10 @@ SELECT id, name FROM roles;
 
 func (s *UserStorage) CreateRole(ctx context.Context, role string) error {
 	const query = `
-		insert into roles (name)
+		insert into role_definitions (name)
 			select $1
 		where not exists
-			(select * from roles where name = $1)`
+			(select * from role_definitions where name = $1)`
 
 	_, err := s.db.ExecContext(ctx, query, role)
 	if err != nil {

@@ -8,6 +8,7 @@ import "google/protobuf/empty.proto";
 
 import "common.proto";
 import "workbench.proto";
+import "user.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     info: {
@@ -26,6 +27,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 message ListWorkbenchsRequest {
     PaginationQuery pagination = 1;
+    optional WorkbenchFilter filter = 2;
 }
 message ListWorkbenchsReply {
     ListWorkbenchsResult result = 1;
@@ -33,6 +35,9 @@ message ListWorkbenchsReply {
 }
 message ListWorkbenchsResult {
     repeated Workbench workbenchs = 1;
+}
+message WorkbenchFilter {
+    repeated uint64 workspace_ids_in = 1;
 }
 
 message GetWorkbenchRequest {
@@ -56,6 +61,41 @@ message UpdateWorkbenchReply {
     UpdateWorkbenchResult result = 1;
 }
 message UpdateWorkbenchResult {
+    Workbench workbench = 1;
+}
+
+message InviteInWorkbenchRequest {
+    uint64 id = 1;
+    uint64 userId = 2;
+    Role role = 3;
+}
+message InviteInWorkbenchReply {
+    InviteInWorkbenchResult result = 1;
+}
+message InviteInWorkbenchResult {
+    Workbench workbench = 1;
+}
+
+message ManageUserRoleInWorkbenchRequest {
+    uint64 id = 1;
+    uint64 userId = 2;
+    Role role = 3;
+}
+message ManageUserRoleInWorkbenchReply {
+    ManageUserRoleInWorkbenchResult result = 1;
+}
+message ManageUserRoleInWorkbenchResult {
+    Workbench workbench = 1;
+}
+
+message RemoveUserFromWorkbenchRequest {
+    uint64 id = 1;
+    uint64 userId = 2;
+}
+message RemoveUserFromWorkbenchReply {
+    RemoveUserFromWorkbenchResult result = 1;
+}
+message RemoveUserFromWorkbenchResult {
     Workbench workbench = 1;
 }
 
@@ -115,6 +155,41 @@ service WorkbenchService {
             tags: "WorkbenchService";
         };
     };
+
+    rpc InviteInWorkbench(InviteInWorkbenchRequest) returns (InviteInWorkbenchReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/workbenchs/{id}/invite"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Invite a user to a workbench";
+            description: "This endpoint invites a user to a workbench";
+            tags: "WorkbenchService";
+        };
+    };
+
+    rpc ManageUserRoleInWorkbench(ManageUserRoleInWorkbenchRequest) returns (ManageUserRoleInWorkbenchReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workbenchs/{id}/user/{userId}/role"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Manage a user's role in a workbench";
+            description: "This endpoint manages a user's role in a workbench";
+            tags: "WorkbenchService";
+        };
+    };
+
+    rpc RemoveUserFromWorkbench(RemoveUserFromWorkbenchRequest) returns (RemoveUserFromWorkbenchReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workbenchs/{id}/user/{userId}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Remove a user from a workbench";
+            description: "This endpoint removes a user from a workbench";
+            tags: "WorkbenchService";
+        };
+    }
 
     rpc DeleteWorkbench(DeleteWorkbenchRequest) returns (DeleteWorkbenchReply) {
         option (google.api.http) = {

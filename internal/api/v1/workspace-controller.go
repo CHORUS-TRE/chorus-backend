@@ -8,10 +8,22 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
+	workspace_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// type WorkspaceServiceServer interface {
+// 	GetWorkspace(context.Context, *GetWorkspaceRequest) (*GetWorkspaceReply, error)
+// 	ListWorkspaces(context.Context, *ListWorkspacesRequest) (*ListWorkspacesReply, error)
+// 	CreateWorkspace(context.Context, *Workspace) (*CreateWorkspaceReply, error)
+// 	UpdateWorkspace(context.Context, *Workspace) (*UpdateWorkspaceReply, error)
+// 	InviteInWorkspace(context.Context, *InviteInWorkspaceRequest) (*InviteInWorkspaceReply, error)
+// 	ManageUserRoleInWorkspace(context.Context, *ManageUserRoleInWorkspaceRequest) (*ManageUserRoleInWorkspaceReply, error)
+// 	RemoveUserFromWorkspace(context.Context, *RemoveUserFromWorkspaceRequest) (*RemoveUserFromWorkspaceReply, error)
+// 	DeleteWorkspace(context.Context, *DeleteWorkspaceRequest) (*DeleteWorkspaceReply, error)
+// }
 
 var _ chorus.WorkspaceServiceServer = (*WorkspaceController)(nil)
 
@@ -108,7 +120,12 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination)
+	filter := workspace_service.WorkspaceFilter{}
+	if req.Filter != nil {
+		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
+	}
+
+	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination, filter)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaces': %v", err.Error())
 	}
@@ -162,6 +179,82 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 	}
 
 	return &chorus.CreateWorkspaceReply{Result: &chorus.CreateWorkspaceResult{Workspace: tgWorkspace}}, nil
+}
+
+func (c WorkspaceController) InviteInWorkspace(ctx context.Context, req *chorus.InviteInWorkspaceRequest) (*chorus.InviteInWorkspaceReply, error) {
+	// if req == nil {
+	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
+	// }
+
+	// tenantID, err := jwt_model.ExtractTenantID(ctx)
+	// if err != nil {
+	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	// }
+
+	// workspace, err := c.workspace.InviteInWorkspace(ctx, tenantID, req.Id, req.Email, service.Role(req.Role))
+	// if err != nil {
+	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'InviteInWorkspace': %v", err.Error())
+	// }
+
+	// workspaceProto, err := converter.WorkspaceFromBusiness(workspace)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	// }
+
+	// return &chorus.InviteInWorkspaceReply{Result: &chorus.InviteInWorkspaceResult{Workspace: workspaceProto}}, nil
+	//TODO implement
+	return &chorus.InviteInWorkspaceReply{Result: &chorus.InviteInWorkspaceResult{}}, nil
+}
+
+func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+	// if req == nil {
+	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
+	// }
+
+	// tenantID, err := jwt_model.ExtractTenantID(ctx)
+	// if err != nil {
+	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	// }
+
+	// workspace, err := c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, req.Id, req.UserId, service.Role(req.Role))
+	// if err != nil {
+	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkspace': %v", err.Error())
+	// }
+
+	// workspaceProto, err := converter.WorkspaceFromBusiness(workspace)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	// }
+
+	// return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{Workspace: workspaceProto}}, nil
+
+	//TODO implement
+	return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{}}, nil
+}
+
+func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
+	// if req == nil {
+	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
+	// }
+
+	// tenantID, err := jwt_model.ExtractTenantID(ctx)
+	// if err != nil {
+	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	// }
+
+	// workspace, err := c.workspace.RemoveUserFromWorkspace(ctx, tenantID, req.Id, req.UserId)
+	// if err != nil {
+	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkspace': %v", err.Error())
+	// }
+
+	// workspaceProto, err := converter.WorkspaceFromBusiness(workspace)
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	// }
+	// return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{Workspace: workspaceProto}}, nil
+
+	//TODO implement
+	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{}}, nil
 }
 
 func (c WorkspaceController) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {

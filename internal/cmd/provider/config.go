@@ -101,9 +101,12 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
-	v.SetDefault("services.steward.tenant.enabled", false)
-	v.SetDefault("services.steward.user.enabled", false)
-	v.SetDefault("services.steward.workspace.enabled", false)
+	v.SetDefault("services.steward.init_tenant.enabled", false)
+	v.SetDefault("services.steward.init_tenant.tenant_id", 1)
+	v.SetDefault("services.steward.init_user.enabled", false)
+	v.SetDefault("services.steward.init_user.user_id", 1)
+	v.SetDefault("services.steward.init_workspace.enabled", false)
+	v.SetDefault("services.steward.init_workspace.workspace_id", 1)
 
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", false)

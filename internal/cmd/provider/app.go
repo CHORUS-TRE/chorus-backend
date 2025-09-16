@@ -13,7 +13,6 @@ import (
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/app/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/app/store/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/store/postgres"
-	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
 var appOnce sync.Once
@@ -37,7 +36,7 @@ var appController chorus.AppServiceServer
 func ProvideAppController() chorus.AppServiceServer {
 	appControllerOnce.Do(func() {
 		appController = v1.NewAppController(ProvideAppService())
-		appController = ctrl_mw.AppAuthorizing(logger.SecLog, []string{user_model.RoleAuthenticated.String()})(appController)
+		appController = ctrl_mw.AppAuthorizing(logger.SecLog, ProvideAuthorizer())(appController)
 	})
 	return appController
 }
