@@ -94,18 +94,19 @@ pipeline {
         container(name: 'chorus-ubuntu', shell: '/bin/bash') {
           dir('chorus-dev-ops') {
             checkout scm
-            sh '''
+            sh """
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
               git config --global url."git@github.com:".insteadOf "https://github.com/"
 
-              go test ./...
+              go env -w GOPRIVATE=github.com/CHORUS-TRE/*
+              git config --global url."https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/".insteadOf "https://github.com/"
 
               # golangci-lint run
               
               
               cd docker
               ./build-stage2.sh
-            '''
+            """
           }
         }
       }
