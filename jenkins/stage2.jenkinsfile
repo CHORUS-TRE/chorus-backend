@@ -105,6 +105,9 @@ pipeline {
 
                 # golangci-lint run
 
+                export GIT_USERNAME="${GIT_USERNAME}"
+                export GIT_PASSWORD="${GIT_PASSWORD}"
+
                 cd docker
                 ./build-stage2.sh
               """
