@@ -8,11 +8,13 @@ COPY . /chorus
 ENV GOCACHE="/chorus/.cache/go-build"
 ENV GOMODCACHE="/chorus/.cache/go-mod"
 
-RUN --mount=type=secret,id=GIT_USERNAME \
+RUN --mount=type=cache,target="/chorus/.cache/go-build" \
+    --mount=type=cache,target="/chorus/.cache/go-mod" \
+    --mount=type=secret,id=GIT_USERNAME \
     --mount=type=secret,id=GIT_PASSWORD \
+    [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ] && \
     u="$(cat /run/secrets/GIT_USERNAME)"; \
     p="$(cat /run/secrets/GIT_PASSWORD)"; \
-    [ -n "$u" ] && [ -n "$p" ] && \
     GOPRIVATE=github.com/CHORUS-TRE/* \
     GIT_CONFIG_COUNT=1 \
     GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadof \
