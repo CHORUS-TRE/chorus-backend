@@ -96,6 +96,7 @@ pipeline {
             checkout scm
             sh '''
               PATH="$PATH:$PWD/scripts/tools/linux/bin"
+              git config --global url."git@github.com:".insteadOf "https://github.com/"
 
               go test ./...
 
