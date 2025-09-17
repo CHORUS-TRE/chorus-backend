@@ -97,14 +97,14 @@ pipeline {
               checkout scm
               sh """
                 PATH="$PATH:$PWD/scripts/tools/linux/bin"
-                git config --global url."git@github.com:".insteadOf "https://github.com/"
 
                 go env -w GOPRIVATE=github.com/CHORUS-TRE/*
                 git config --global url."https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/".insteadOf "https://github.com/"
 
+                go test ./...
+
                 # golangci-lint run
-                
-                
+
                 cd docker
                 ./build-stage2.sh
               """
