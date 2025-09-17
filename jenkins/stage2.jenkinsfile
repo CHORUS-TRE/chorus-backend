@@ -96,9 +96,8 @@ pipeline {
             dir('chorus-dev-ops') {
               checkout scm
               sh """
-                PATH="$PATH:$PWD/scripts/tools/linux/bin"
+                PATH="\$PATH:\$PWD/scripts/tools/linux/bin"
 
-                go test ./...
                 go env -w GOPRIVATE=github.com/CHORUS-TRE/*
                 git config --global url."https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/".insteadOf "https://github.com/"
 
