@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -18,6 +19,9 @@ import (
 //
 // swagger:model chorusWorkspaceFile
 type ChorusWorkspaceFile struct {
+
+	// children
+	Children []*ChorusWorkspaceFile `json:"children"`
 
 	// File content will be empty for now
 	// Format: byte
@@ -51,6 +55,10 @@ type ChorusWorkspaceFile struct {
 func (m *ChorusWorkspaceFile) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateChildren(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateCreatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -62,6 +70,32 @@ func (m *ChorusWorkspaceFile) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusWorkspaceFile) validateChildren(formats strfmt.Registry) error {
+	if swag.IsZero(m.Children) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Children); i++ {
+		if swag.IsZero(m.Children[i]) { // not required
+			continue
+		}
+
+		if m.Children[i] != nil {
+			if err := m.Children[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("children" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("children" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -89,8 +123,42 @@ func (m *ChorusWorkspaceFile) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus workspace file based on context it is used
+// ContextValidate validate this chorus workspace file based on the context it is used
 func (m *ChorusWorkspaceFile) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateChildren(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusWorkspaceFile) contextValidateChildren(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Children); i++ {
+
+		if m.Children[i] != nil {
+
+			if swag.IsZero(m.Children[i]) { // not required
+				return nil
+			}
+
+			if err := m.Children[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("children" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("children" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

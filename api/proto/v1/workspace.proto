@@ -34,4 +34,6 @@ message WorkspaceFile {
     google.protobuf.Timestamp updatedAt = 7;
     
     bytes content = 8; // File content will be empty for now
+
+    repeated WorkspaceFile children = 9;
 }

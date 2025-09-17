@@ -2760,11 +2760,6 @@ definitions:
     properties:
       file:
         $ref: '#/definitions/chorusWorkspaceFile'
-      children:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusWorkspaceFile'
   chorusGetWorkspaceReply:
     type: object
     properties:
@@ -3288,6 +3283,11 @@ definitions:
         type: string
         format: byte
         title: File content will be empty for now
+      children:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceFile'
   chorusWorkspaceFilter:
     type: object
     properties:

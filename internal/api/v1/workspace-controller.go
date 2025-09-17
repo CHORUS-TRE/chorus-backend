@@ -289,7 +289,7 @@ func (c WorkspaceController) GetWorkspaceFile(ctx context.Context, req *chorus.G
 			tgChildren = append(tgChildren, tgChild)
 		}
 
-		resp.Result.Children = tgChildren
+		resp.Result.File.Children = tgChildren
 	}
 
 	return resp, nil

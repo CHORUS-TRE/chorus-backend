@@ -117,7 +117,6 @@ message GetWorkspaceFileReply {
 }
 message GetWorkspaceFileResult {
     WorkspaceFile file = 1;
-    repeated WorkspaceFile children = 2;
 }
 
 message CreateWorkspaceFileRequest {
