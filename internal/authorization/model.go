@@ -69,6 +69,7 @@ const (
 	PermissionInitializeTenant PermissionName = "initializeTenant"
 
 	PermissionListUsers      PermissionName = "listUsers"
+	PermissionSearchUsers    PermissionName = "searchUsers"
 	PermissionCreateUser     PermissionName = "createUser"
 	PermissionUpdateUser     PermissionName = "updateUser"
 	PermissionGetMyOwnUser   PermissionName = "getMyOwnUser"
@@ -170,6 +171,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 
 	case string(PermissionListUsers):
 		return PermissionListUsers, nil
+	case string(PermissionSearchUsers):
+		return PermissionSearchUsers, nil
 	case string(PermissionCreateUser):
 		return PermissionCreateUser, nil
 	case string(PermissionUpdateUser):

@@ -170,7 +170,8 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 	}
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
-	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination})
+	filter := UserFilterToBusiness(req.Filter)
+	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination, Filter: filter})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListUsers': %v", err.Error())
 	}
@@ -191,6 +192,18 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 	}
 
 	return &chorus.ListUsersReply{Result: &chorus.ListUsersResult{Users: users}, Pagination: paginationResult}, nil
+}
+
+func UserFilterToBusiness(aFilter *chorus.UserFilter) *service.UserFilter {
+	if aFilter == nil {
+		return nil
+	}
+	return &service.UserFilter{
+		IDsIn:        aFilter.IdsIn,
+		WorkspaceIDs: aFilter.WorkspaceIDs,
+		WorkbenchIDs: aFilter.WorkbenchIDs,
+		Search:       aFilter.Search,
+	}
 }
 
 // CreateUser extracts the user from the request and passes it to the user service.

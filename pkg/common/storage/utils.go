@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -88,4 +89,40 @@ func BuildPaginationClause(pagination *common.Pagination, model common.Sortable)
 			SortOrder: sortOrder,
 		},
 	}
+}
+
+func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) (string, []interface{}) {
+	var clauses []string
+
+	if len(filter.IDsIn) > 0 {
+		clauses = append(clauses, fmt.Sprintf("id = ANY($%d)", len(*args)+1))
+		*args = append(*args, pq.Int64Array(Uint64ToPqInt64(filter.IDsIn)))
+	}
+
+	if len(filter.WorkspaceIDs) > 0 {
+		clauses = append(clauses, fmt.Sprintf(`
+		id IN (
+			SELECT userid FROM user_role WHERE id IN (
+				SELECT userroleid FROM user_role_context WHERE contextdimension='workspace' AND value = ANY($%d)
+			)
+		)`, len(*args)+1))
+		*args = append(*args, pq.Int64Array(Uint64ToPqInt64(filter.WorkspaceIDs)))
+	}
+
+	if len(filter.WorkbenchIDs) > 0 {
+		clauses = append(clauses, fmt.Sprintf(`
+		id IN (
+			SELECT userid FROM user_role WHERE id IN (
+				SELECT userroleid FROM user_role_context WHERE contextdimension='workbench' AND value = ANY($%d)
+			)
+		)`, len(*args)+1))
+		*args = append(*args, pq.Int64Array(Uint64ToPqInt64(filter.WorkbenchIDs)))
+	}
+
+	if filter.Search != nil && *filter.Search != "" {
+		clauses = append(clauses, fmt.Sprintf("(LOWER(firstname) LIKE LOWER($%d) OR LOWER(lastname) LIKE LOWER($%d) OR LOWER(username) LIKE LOWER($%d))", len(*args)+1, len(*args)+1, len(*args)+1))
+		*args = append(*args, "%"+*filter.Search+"%")
+	}
+
+	return strings.Join(clauses, " AND "), nil
 }

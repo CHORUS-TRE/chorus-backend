@@ -44,6 +44,14 @@ type UserUpdateReq struct {
 type ListUsersReq struct {
 	TenantID   uint64
 	Pagination *common.Pagination
+	Filter     *UserFilter
+}
+
+type UserFilter struct {
+	IDsIn        []uint64
+	WorkspaceIDs []uint64
+	WorkbenchIDs []uint64
+	Search       *string
 }
 
 type GetUserReq struct {

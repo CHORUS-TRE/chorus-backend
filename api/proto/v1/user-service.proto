@@ -31,8 +31,8 @@ message ListUsersRequest {
 }
 message UserFilter {
     repeated uint64 idsIn = 1;
-    optional uint64 workspaceId = 2;
-    optional uint64 workbenchId = 3;
+    repeated uint64 workspaceIDs = 2;
+    repeated uint64 workbenchIDs = 3;
     optional string search = 4;
 }
 message ListUsersReply {

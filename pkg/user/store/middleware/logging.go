@@ -26,12 +26,12 @@ func Logging(logger *logger.ContextLogger) func(service.UserStore) service.UserS
 	}
 }
 
-func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.User, *common.PaginationResult, error) {
+func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *service.UserFilter) ([]*model.User, *common.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	users, paginationRes, err := c.next.ListUsers(ctx, tenantID, pagination)
+	users, paginationRes, err := c.next.ListUsers(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

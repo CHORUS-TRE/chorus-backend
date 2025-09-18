@@ -23,11 +23,11 @@ type ChorusUserFilter struct {
 	// search
 	Search string `json:"search,omitempty"`
 
-	// workbench Id
-	WorkbenchID string `json:"workbenchId,omitempty"`
+	// workbench i ds
+	WorkbenchIDs []string `json:"workbenchIDs"`
 
-	// workspace Id
-	WorkspaceID string `json:"workspaceId,omitempty"`
+	// workspace i ds
+	WorkspaceIDs []string `json:"workspaceIDs"`
 }
 
 // Validate validates this chorus user filter

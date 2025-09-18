@@ -38,7 +38,7 @@ type Userer interface {
 }
 
 type UserStore interface {
-	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.User, *common.PaginationResult, error)
+	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *UserFilter) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
@@ -87,7 +87,7 @@ func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret
 }
 
 func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
-	users, pagination, err := u.store.ListUsers(ctx, req.TenantID, req.Pagination)
+	users, pagination, err := u.store.ListUsers(ctx, req.TenantID, req.Pagination, req.Filter)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to query users: %w", err)
 	}

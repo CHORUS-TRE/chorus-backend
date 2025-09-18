@@ -28,11 +28,18 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 }
 
 // ListUsers queries all stocked users that are not 'deleted'.
-func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) (users []*model.User, paginationRes *common.PaginationResult, err error) {
+func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *service.UserFilter) (users []*model.User, paginationRes *common.PaginationResult, err error) {
+	args := []interface{}{tenantID}
+
+	filterClause, args := storage.BuildUserFilterClause(filter, &args)
+
 	// Get total count query
 	countQuery := `SELECT COUNT(*) FROM users WHERE tenantid = $1 AND status != 'deleted'`
+	if filterClause != "" {
+		countQuery += " AND " + filterClause
+	}
 	var totalCount int64
-	if err = s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+	if err = s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
 		return nil, nil, err
 	}
 
@@ -42,6 +49,9 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 		FROM users
 		WHERE tenantid = $1 AND status != 'deleted'
 	`
+	if filterClause != "" {
+		query += " AND " + filterClause + "\n"
+	}
 
 	// Add pagination
 	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.User{})
@@ -58,7 +68,6 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 		paginationRes.Sort = validatedPagination.Sort
 	}
 
-	args := []interface{}{tenantID}
 	if err := s.db.SelectContext(ctx, &users, query, args...); err != nil {
 		return nil, nil, err
 	}

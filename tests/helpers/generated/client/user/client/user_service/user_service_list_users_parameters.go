@@ -68,15 +68,11 @@ type UserServiceListUsersParams struct {
 	// FilterSearch.
 	FilterSearch *string
 
-	// FilterWorkbenchID.
-	//
-	// Format: uint64
-	FilterWorkbenchID *string
+	// FilterWorkbenchIDs.
+	FilterWorkbenchIDs []string
 
-	// FilterWorkspaceID.
-	//
-	// Format: uint64
-	FilterWorkspaceID *string
+	// FilterWorkspaceIDs.
+	FilterWorkspaceIDs []string
 
 	/* PaginationLimit.
 
@@ -181,26 +177,26 @@ func (o *UserServiceListUsersParams) SetFilterSearch(filterSearch *string) {
 	o.FilterSearch = filterSearch
 }
 
-// WithFilterWorkbenchID adds the filterWorkbenchID to the user service list users params
-func (o *UserServiceListUsersParams) WithFilterWorkbenchID(filterWorkbenchID *string) *UserServiceListUsersParams {
-	o.SetFilterWorkbenchID(filterWorkbenchID)
+// WithFilterWorkbenchIDs adds the filterWorkbenchIDs to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterWorkbenchIDs(filterWorkbenchIDs []string) *UserServiceListUsersParams {
+	o.SetFilterWorkbenchIDs(filterWorkbenchIDs)
 	return o
 }
 
-// SetFilterWorkbenchID adds the filterWorkbenchId to the user service list users params
-func (o *UserServiceListUsersParams) SetFilterWorkbenchID(filterWorkbenchID *string) {
-	o.FilterWorkbenchID = filterWorkbenchID
+// SetFilterWorkbenchIDs adds the filterWorkbenchIDs to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterWorkbenchIDs(filterWorkbenchIDs []string) {
+	o.FilterWorkbenchIDs = filterWorkbenchIDs
 }
 
-// WithFilterWorkspaceID adds the filterWorkspaceID to the user service list users params
-func (o *UserServiceListUsersParams) WithFilterWorkspaceID(filterWorkspaceID *string) *UserServiceListUsersParams {
-	o.SetFilterWorkspaceID(filterWorkspaceID)
+// WithFilterWorkspaceIDs adds the filterWorkspaceIDs to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterWorkspaceIDs(filterWorkspaceIDs []string) *UserServiceListUsersParams {
+	o.SetFilterWorkspaceIDs(filterWorkspaceIDs)
 	return o
 }
 
-// SetFilterWorkspaceID adds the filterWorkspaceId to the user service list users params
-func (o *UserServiceListUsersParams) SetFilterWorkspaceID(filterWorkspaceID *string) {
-	o.FilterWorkspaceID = filterWorkspaceID
+// SetFilterWorkspaceIDs adds the filterWorkspaceIDs to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterWorkspaceIDs(filterWorkspaceIDs []string) {
+	o.FilterWorkspaceIDs = filterWorkspaceIDs
 }
 
 // WithPaginationLimit adds the paginationLimit to the user service list users params
@@ -294,37 +290,25 @@ func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg
 		}
 	}
 
-	if o.FilterWorkbenchID != nil {
+	if o.FilterWorkbenchIDs != nil {
 
-		// query param filter.workbenchId
-		var qrFilterWorkbenchID string
+		// binding items for filter.workbenchIDs
+		joinedFilterWorkbenchIDs := o.bindParamFilterWorkbenchIDs(reg)
 
-		if o.FilterWorkbenchID != nil {
-			qrFilterWorkbenchID = *o.FilterWorkbenchID
-		}
-		qFilterWorkbenchID := qrFilterWorkbenchID
-		if qFilterWorkbenchID != "" {
-
-			if err := r.SetQueryParam("filter.workbenchId", qFilterWorkbenchID); err != nil {
-				return err
-			}
+		// query array param filter.workbenchIDs
+		if err := r.SetQueryParam("filter.workbenchIDs", joinedFilterWorkbenchIDs...); err != nil {
+			return err
 		}
 	}
 
-	if o.FilterWorkspaceID != nil {
+	if o.FilterWorkspaceIDs != nil {
 
-		// query param filter.workspaceId
-		var qrFilterWorkspaceID string
+		// binding items for filter.workspaceIDs
+		joinedFilterWorkspaceIDs := o.bindParamFilterWorkspaceIDs(reg)
 
-		if o.FilterWorkspaceID != nil {
-			qrFilterWorkspaceID = *o.FilterWorkspaceID
-		}
-		qFilterWorkspaceID := qrFilterWorkspaceID
-		if qFilterWorkspaceID != "" {
-
-			if err := r.SetQueryParam("filter.workspaceId", qFilterWorkspaceID); err != nil {
-				return err
-			}
+		// query array param filter.workspaceIDs
+		if err := r.SetQueryParam("filter.workspaceIDs", joinedFilterWorkspaceIDs...); err != nil {
+			return err
 		}
 	}
 
@@ -428,6 +412,40 @@ func (o *UserServiceListUsersParams) bindParamFilterIdsIn(formats strfmt.Registr
 	filterIdsInIS := swag.JoinByFormat(filterIdsInIC, "multi")
 
 	return filterIdsInIS
+}
+
+// bindParamUserServiceListUsers binds the parameter filter.workbenchIDs
+func (o *UserServiceListUsersParams) bindParamFilterWorkbenchIDs(formats strfmt.Registry) []string {
+	filterWorkbenchIDsIR := o.FilterWorkbenchIDs
+
+	var filterWorkbenchIDsIC []string
+	for _, filterWorkbenchIDsIIR := range filterWorkbenchIDsIR { // explode []string
+
+		filterWorkbenchIDsIIV := filterWorkbenchIDsIIR // string as string
+		filterWorkbenchIDsIC = append(filterWorkbenchIDsIC, filterWorkbenchIDsIIV)
+	}
+
+	// items.CollectionFormat: "multi"
+	filterWorkbenchIDsIS := swag.JoinByFormat(filterWorkbenchIDsIC, "multi")
+
+	return filterWorkbenchIDsIS
+}
+
+// bindParamUserServiceListUsers binds the parameter filter.workspaceIDs
+func (o *UserServiceListUsersParams) bindParamFilterWorkspaceIDs(formats strfmt.Registry) []string {
+	filterWorkspaceIDsIR := o.FilterWorkspaceIDs
+
+	var filterWorkspaceIDsIC []string
+	for _, filterWorkspaceIDsIIR := range filterWorkspaceIDsIR { // explode []string
+
+		filterWorkspaceIDsIIV := filterWorkspaceIDsIIR // string as string
+		filterWorkspaceIDsIC = append(filterWorkspaceIDsIC, filterWorkspaceIDsIIV)
+	}
+
+	// items.CollectionFormat: "multi"
+	filterWorkspaceIDsIS := swag.JoinByFormat(filterWorkspaceIDsIC, "multi")
+
+	return filterWorkspaceIDsIS
 }
 
 // bindParamUserServiceListUsers binds the parameter pagination.query

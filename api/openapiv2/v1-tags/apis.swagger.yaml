@@ -1071,16 +1071,22 @@ paths:
             type: string
             format: uint64
           collectionFormat: multi
-        - name: filter.workspaceId
+        - name: filter.workspaceIDs
           in: query
           required: false
-          type: string
-          format: uint64
-        - name: filter.workbenchId
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+        - name: filter.workbenchIDs
           in: query
           required: false
-          type: string
-          format: uint64
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
         - name: filter.search
           in: query
           required: false
@@ -3042,12 +3048,16 @@ definitions:
         items:
           type: string
           format: uint64
-      workspaceId:
-        type: string
-        format: uint64
-      workbenchId:
-        type: string
-        format: uint64
+      workspaceIDs:
+        type: array
+        items:
+          type: string
+          format: uint64
+      workbenchIDs:
+        type: array
+        items:
+          type: string
+          format: uint64
       search:
         type: string
   chorusWorkbench:
