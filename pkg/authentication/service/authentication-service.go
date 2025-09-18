@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -290,6 +291,10 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	defer userInfoResp.Body.Close()
 
 	if userInfoResp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(userInfoResp.Body)
+		if err == nil {
+			logger.SecLog.Error(ctx, "failed to get user info: received non-OK response, body", zap.String("body", string(body)))
+		}
 		return "", 0, "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
 	}
 
