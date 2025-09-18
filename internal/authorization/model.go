@@ -29,20 +29,23 @@ const (
 	PermissionGetAppInstance    PermissionName = "getAppInstance"
 	PermissionDeleteAppInstance PermissionName = "deleteAppInstance"
 
-	PermissionListWorkbenchs    PermissionName = "listWorkbenchs"
-	PermissionCreateWorkbench   PermissionName = "createWorkbench"
-	PermissionUpdateWorkbench   PermissionName = "updateWorkbench"
-	PermissionGetWorkbench      PermissionName = "getWorkbench"
-	PermissionStreamWorkbench   PermissionName = "streamWorkbench"
-	PermissionDeleteWorkbench   PermissionName = "deleteWorkbench"
-	PermissionInviteInWorkbench PermissionName = "inviteInWorkbench"
+	PermissionListWorkbenchs         PermissionName = "listWorkbenchs"
+	PermissionCreateWorkbench        PermissionName = "createWorkbench"
+	PermissionUpdateWorkbench        PermissionName = "updateWorkbench"
+	PermissionGetWorkbench           PermissionName = "getWorkbench"
+	PermissionStreamWorkbench        PermissionName = "streamWorkbench"
+	PermissionDeleteWorkbench        PermissionName = "deleteWorkbench"
+	PermissionManageUsersInWorkbench PermissionName = "manageUsersInWorkbench"
 
-	PermissionListWorkspaces    PermissionName = "listWorkspaces"
-	PermissionCreateWorkspace   PermissionName = "createWorkspace"
-	PermissionUpdateWorkspace   PermissionName = "updateWorkspace"
-	PermissionGetWorkspace      PermissionName = "getWorkspace"
-	PermissionDeleteWorkspace   PermissionName = "deleteWorkspace"
-	PermissionInviteInWorkspace PermissionName = "inviteInWorkspace"
+	PermissionListWorkspaces             PermissionName = "listWorkspaces"
+	PermissionCreateWorkspace            PermissionName = "createWorkspace"
+	PermissionUpdateWorkspace            PermissionName = "updateWorkspace"
+	PermissionGetWorkspace               PermissionName = "getWorkspace"
+	PermissionDeleteWorkspace            PermissionName = "deleteWorkspace"
+	PermissionManageUsersInWorkspace     PermissionName = "manageUsersInWorkspace"
+	PermissionUploadFilesToWorkspace     PermissionName = "uploadFilesToWorkspace"
+	PermissionDownloadFilesFromWorkspace PermissionName = "downloadFilesFromWorkspace"
+	PermissionModifyFilesInWorkspace     PermissionName = "modifyFilesInWorkspace"
 
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
@@ -106,8 +109,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionStreamWorkbench, nil
 	case string(PermissionDeleteWorkbench):
 		return PermissionDeleteWorkbench, nil
-	case string(PermissionInviteInWorkbench):
-		return PermissionInviteInWorkbench, nil
+	case string(PermissionManageUsersInWorkbench):
+		return PermissionManageUsersInWorkbench, nil
 
 	case string(PermissionListWorkspaces):
 		return PermissionListWorkspaces, nil
@@ -119,8 +122,14 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionGetWorkspace, nil
 	case string(PermissionDeleteWorkspace):
 		return PermissionDeleteWorkspace, nil
-	case string(PermissionInviteInWorkspace):
-		return PermissionInviteInWorkspace, nil
+	case string(PermissionManageUsersInWorkspace):
+		return PermissionManageUsersInWorkspace, nil
+	case string(PermissionUploadFilesToWorkspace):
+		return PermissionUploadFilesToWorkspace, nil
+	case string(PermissionDownloadFilesFromWorkspace):
+		return PermissionDownloadFilesFromWorkspace, nil
+	case string(PermissionModifyFilesInWorkspace):
+		return PermissionModifyFilesInWorkspace, nil
 
 	case string(PermissionListApps):
 		return PermissionListApps, nil
@@ -289,6 +298,7 @@ const (
 	RoleWorkspaceGuest       RoleName = "WorkspaceGuest"
 	RoleWorkspaceMember      RoleName = "WorkspaceMember"
 	RoleWorkspaceMaintainer  RoleName = "WorkspaceMaintainer"
+	RoleWorkspacePI          RoleName = "WorkspacePI"
 	RoleWorkspaceAdmin       RoleName = "WorkspaceAdmin"
 	RoleWorkbenchViewer      RoleName = "WorkbenchViewer"
 	RoleWorkbenchMember      RoleName = "WorkbenchMember"
@@ -315,6 +325,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleWorkspaceMember, nil
 	case string(RoleWorkspaceMaintainer):
 		return RoleWorkspaceMaintainer, nil
+	case string(RoleWorkspacePI):
+		return RoleWorkspacePI, nil
 	case string(RoleWorkspaceAdmin):
 		return RoleWorkspaceAdmin, nil
 	case string(RoleWorkbenchViewer):
@@ -343,6 +355,7 @@ func GetAllRoles() []RoleName {
 		RoleWorkspaceGuest,
 		RoleWorkspaceMember,
 		RoleWorkspaceMaintainer,
+		RoleWorkspacePI,
 		RoleWorkspaceAdmin,
 		RoleWorkbenchViewer,
 		RoleWorkbenchMember,

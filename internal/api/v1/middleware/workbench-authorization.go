@@ -128,7 +128,7 @@ func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
+	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.
 }
 
 func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
+	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
 	}
