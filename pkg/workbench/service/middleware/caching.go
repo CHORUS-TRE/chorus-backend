@@ -7,6 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 
@@ -122,4 +123,12 @@ func (c *Caching) UpdateAppInstance(ctx context.Context, appInstance *model.AppI
 
 func (c *Caching) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	return c.next.CreateAppInstance(ctx, appInstance)
+}
+
+func (c *Caching) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return c.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+}
+
+func (c *Caching) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error {
+	return c.next.RemoveUserFromWorkbench(ctx, tenantID, userID, workbenchID)
 }

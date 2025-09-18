@@ -8,6 +8,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 
@@ -261,4 +262,48 @@ func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInsta
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return newAppInstance, nil
+}
+
+func (c workbenchServiceLogging) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	now := time.Now()
+
+	err := c.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			logger.WithTenantIDField(tenantID),
+			logger.WithUserIDField(userID),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to manage user role in workbench: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		logger.WithTenantIDField(tenantID),
+		logger.WithUserIDField(userID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c workbenchServiceLogging) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error {
+	now := time.Now()
+
+	err := c.next.RemoveUserFromWorkbench(ctx, tenantID, userID, workbenchID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			logger.WithWorkbenchIDField(workbenchID),
+			logger.WithUserIDField(userID),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to remove user from workbench: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		logger.WithWorkbenchIDField(workbenchID),
+		logger.WithUserIDField(userID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
 }

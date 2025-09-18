@@ -25,10 +25,15 @@ type User struct {
 	TotpSecret        *string
 	TotpRecoveryCodes []string
 
-	Roles []authorization_model.Role
+	Roles []UserRole
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type UserRole struct {
+	authorization_model.Role
+	ID uint64
 }
 
 type UserStatus string

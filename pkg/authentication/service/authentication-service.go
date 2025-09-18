@@ -42,6 +42,7 @@ type Authenticator interface {
 type Userer interface {
 	GetUser(ctx context.Context, req userService.GetUserReq) (*userModel.User, error)
 	CreateUser(ctx context.Context, req userService.CreateUserReq) (*userModel.User, error)
+	CreateUserRoles(ctx context.Context, userID uint64, roles []userModel.UserRole) error
 	GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*userModel.TotpRecoveryCode, error)
 	DeleteTotpRecoveryCode(ctx context.Context, req *userService.DeleteTotpRecoveryCodeReq) error
 }
@@ -333,7 +334,6 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			Source:      providerID,
 			Password:    "",
 			Status:      userModel.UserActive,
-			Roles:       []authorization_model.Role{authorization_model.NewRole(authorization_model.RoleAuthenticated)},
 			TotpEnabled: false,
 		}
 
@@ -345,6 +345,16 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		user, err = a.store.GetActiveUser(ctx, username, providerID)
 		if err != nil {
 			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
+		}
+
+		err = a.userer.CreateUserRoles(ctx, user.ID, []userModel.UserRole{{
+			Role: authorization_model.NewRole(
+				authorization_model.RoleAuthenticated,
+				authorization_model.WithUser(user.ID),
+			),
+		}})
+		if err != nil {
+			return "", 0, "", fmt.Errorf("failed to create user roles: %w", err)
 		}
 	}
 
@@ -427,12 +437,16 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 	if issuedAt.IsZero() {
 		issuedAt = time.Now()
 	}
+	authzRoles := make([]authorization_model.Role, len(user.Roles))
+	for i, r := range user.Roles {
+		authzRoles[i] = r.Role
+	}
 	claims := CustomClaims{
 		ID:        user.ID,
 		TenantID:  user.TenantID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
-		Roles:     user.Roles,
+		Roles:     authzRoles,
 		Username:  user.Username,
 		Source:    user.Source,
 		StandardClaims: jwt.StandardClaims{

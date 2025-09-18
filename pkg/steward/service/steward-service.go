@@ -107,13 +107,13 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
 		return fmt.Errorf("unable to get default user %v: %w", s.conf.Services.Steward.InitUser.UserID, err)
 	}
 
-	roles := make([]authorization_model.Role, len(s.conf.Services.Steward.InitUser.Roles))
+	roles := make([]user_model.UserRole, len(s.conf.Services.Steward.InitUser.Roles))
 	for i, r := range s.conf.Services.Steward.InitUser.Roles {
 		role, err := authorization_model.ToRole(r.Name, r.Context)
 		if err != nil {
 			return fmt.Errorf("unable to convert role %v: %w", r, err)
 		}
-		roles[i] = role
+		roles[i] = user_model.UserRole{Role: role}
 	}
 
 	// Create default user

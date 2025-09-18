@@ -28,6 +28,7 @@ func UserAuthorizing(logger *logger.ContextLogger, authorizer authorization.Auth
 }
 
 func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
+	//TODO implement: fill using dynamic context
 	err := c.IsAuthorized(ctx, authorization.PermissionListUsers)
 	if err != nil {
 		return nil, err

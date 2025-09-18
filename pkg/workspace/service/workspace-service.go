@@ -9,6 +9,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -43,7 +44,7 @@ type WorkspaceStore interface {
 }
 
 type Userer interface {
-	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []user_model.UserRole) error
 }
 
 type WorkspaceService struct {
@@ -150,7 +151,7 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 	}
 
 	r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
-	err = s.userer.CreateUserRoles(ctx, workspace.UserID, []authorization_model.Role{r})
+	err = s.userer.CreateUserRoles(ctx, workspace.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
 	}

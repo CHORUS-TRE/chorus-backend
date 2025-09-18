@@ -2,11 +2,14 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 
 	"google.golang.org/grpc/codes"
@@ -183,95 +186,53 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Wo
 	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Workbench: newWorkbenchProto}}, nil
 }
 
-func (c WorkbenchController) InviteInWorkbench(ctx context.Context, req *chorus.InviteInWorkbenchRequest) (*chorus.InviteInWorkbenchReply, error) {
-	// if req == nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
-	// }
-
-	// tenantID, err := jwt_model.ExtractTenantID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	// }
-
-	// userID, err := jwt_model.ExtractUserID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
-	// }
-
-	// workbench, err := c.workbench.InviteInWorkbench(ctx, tenantID, userID, req.Id, req.UserId, service.Role(req.Role))
-	// if err != nil {
-	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'InviteInWorkbench': %v", err.Error())
-	// }
-
-	// workbenchProto, err := converter.WorkbenchFromBusiness(workbench)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-	// }
-
-	// return &chorus.InviteInWorkbenchReply{Result: &chorus.InviteInWorkbenchResult{Workbench: workbenchProto}}, nil
-
-	//TODO implement
-	return &chorus.InviteInWorkbenchReply{Result: &chorus.InviteInWorkbenchResult{}}, nil
-}
-
 func (c WorkbenchController) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
-	// if req == nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
-	// }
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 
-	// tenantID, err := jwt_model.ExtractTenantID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	// }
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
 
-	// userID, err := jwt_model.ExtractUserID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
-	// }
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
 
-	// workbench, err := c.workbench.ManageUserRoleInWorkbench(ctx, tenantID, userID, req.Id, req.UserId, service.Role(req.Role))
-	// if err != nil {
-	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkbench': %v", err.Error())
-	// }
+	role, err := authorization.ToRole(req.Role.Name, map[string]string{"workspace": fmt.Sprintf("%d", req.Id)})
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
+	}
 
-	// workbenchProto, err := converter.WorkbenchFromBusiness(workbench)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-	// }
+	err = c.workbench.ManageUserRoleInWorkbench(ctx, tenantID, userID, user_model.UserRole{Role: role})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkbench': %v", err.Error())
+	}
 
-	// return &chorus.ManageUserRoleInWorkbenchReply{Result: &chorus.ManageUserRoleInWorkbenchResult{Workbench: workbenchProto}}, nil
-
-	//TODO implement
 	return &chorus.ManageUserRoleInWorkbenchReply{Result: &chorus.ManageUserRoleInWorkbenchResult{}}, nil
 }
 
 func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
-	// if req == nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
-	// }
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 
-	// tenantID, err := jwt_model.ExtractTenantID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	// }
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
 
-	// userID, err := jwt_model.ExtractUserID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
-	// }
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
 
-	// workbench, err := c.workbench.RemoveUserFromWorkbench(ctx, tenantID, userID, req.Id, req.UserId)
-	// if err != nil {
-	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkbench': %v", err.Error())
-	// }
+	err = c.workbench.RemoveUserFromWorkbench(ctx, tenantID, userID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkbench': %v", err.Error())
+	}
 
-	// workbenchProto, err := converter.WorkbenchFromBusiness(workbench)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-	// }
-
-	// return &chorus.RemoveUserFromWorkbenchReply{Result: &chorus.RemoveUserFromWorkbenchResult{Workbench: workbenchProto}}, nil
-
-	//TODO implement
 	return &chorus.RemoveUserFromWorkbenchReply{Result: &chorus.RemoveUserFromWorkbenchResult{}}, nil
 }

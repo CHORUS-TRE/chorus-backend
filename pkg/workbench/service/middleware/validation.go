@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 
@@ -88,4 +89,15 @@ func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.Ap
 		return nil, err
 	}
 	return v.next.CreateAppInstance(ctx, appInstance)
+}
+
+func (v validation) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	if err := v.validate.Struct(role); err != nil {
+		return err
+	}
+	return v.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+}
+
+func (v validation) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error {
+	return v.next.RemoveUserFromWorkbench(ctx, tenantID, userID, workbenchID)
 }

@@ -136,15 +136,6 @@ func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.
 	return c.next.ManageUserRoleInWorkbench(ctx, req)
 }
 
-func (c workbenchControllerAuthorization) InviteInWorkbench(ctx context.Context, req *chorus.InviteInWorkbenchRequest) (*chorus.InviteInWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
-	if err != nil {
-		return nil, err
-	}
-
-	return c.next.InviteInWorkbench(ctx, req)
-}
-
 func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {

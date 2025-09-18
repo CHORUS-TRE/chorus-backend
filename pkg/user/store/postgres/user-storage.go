@@ -12,7 +12,10 @@ import (
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
+
+var _ service.UserStore = (*UserStorage)(nil)
 
 // UserStorage is the handler through which a PostgresDB backend can be queried.
 type UserStorage struct {
@@ -305,7 +308,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	return &newUser, nil
 }
 
-func (s *UserStorage) CreateUserRoles(ctx context.Context, userID uint64, userRoles []authorization_model.Role) error {
+func (s *UserStorage) CreateUserRoles(ctx context.Context, userID uint64, userRoles []model.UserRole) error {
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return fmt.Errorf("unable to begin transaction: %w", err)
@@ -321,7 +324,7 @@ func (s *UserStorage) CreateUserRoles(ctx context.Context, userID uint64, userRo
 	return nil
 }
 
-func (s *UserStorage) createUserRoles(ctx context.Context, tx *sqlx.Tx, userID uint64, userRoles []authorization_model.Role) error {
+func (s *UserStorage) createUserRoles(ctx context.Context, tx *sqlx.Tx, userID uint64, userRoles []model.UserRole) error {
 	const userRoleQuery = `
 		INSERT INTO user_role (userid, roleid) VALUES ($1, $2) RETURNING id;
 	`
@@ -366,6 +369,18 @@ func (s *UserStorage) createUserRoles(ctx context.Context, tx *sqlx.Tx, userID u
 	return nil
 }
 
+func (s *UserStorage) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
+	const query = `
+		DELETE FROM user_role
+		WHERE userid = $1 AND id = ANY($2);
+	`
+	_, err := s.db.ExecContext(ctx, query, userID, userRoleIDs)
+	if err != nil {
+		return fmt.Errorf("unable to remove user roles: %w", err)
+	}
+	return nil
+}
+
 type DBUserRoleContext struct {
 	UserRoleID       uint64
 	ContextDimension string
@@ -373,7 +388,7 @@ type DBUserRoleContext struct {
 }
 
 // getUserRoles fetches all the roles of a given user.
-// func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
+// func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]model.UserRole, error) {
 // 	const query = `
 // SELECT sq.id, sq.name
 // FROM (
@@ -399,13 +414,13 @@ type DBUserRoleContext struct {
 // 		return nil, fmt.Errorf("failed to fetch role dimensions for user %d: %w", userID, err)
 // 	}
 
-// 	roles := make([]authorization_model.Role, 0, len(dbRoles))
+// 	roles := make([]model.UserRole, 0, len(dbRoles))
 // 	for _, r := range dbRoles {
 // 		roleName, err := authorization_model.ToRoleName(r.Name)
 // 		if err != nil {
 // 			return nil, err
 // 		}
-// 		role := authorization_model.Role{
+// 		role := model.UserRole{
 // 			Name:    roleName,
 // 			Context: authorization_model.Context{},
 // 		}
@@ -420,7 +435,7 @@ type DBUserRoleContext struct {
 
 //		return roles, nil
 //	}
-func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
+func (s *UserStorage) getUserRoles(ctx context.Context, userID uint64) ([]model.UserRole, error) {
 	const query = `
 SELECT id, name, contextdimension, value
 FROM (
@@ -458,14 +473,17 @@ FROM (
 		roleMap[fr.ID][*fr.ContextDimension] = *fr.Value
 	}
 
-	var roles []authorization_model.Role
+	var roles []model.UserRole
 	for n, m := range roleMap {
 		roleName := roleNameMap[n]
 		role, err := authorization_model.ToRole(roleName, m)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse role %s: %w", roleName, err)
 		}
-		roles = append(roles, role)
+		roles = append(roles, model.UserRole{
+			Role: role,
+			ID:   n,
+		})
 	}
 	return roles, nil
 }

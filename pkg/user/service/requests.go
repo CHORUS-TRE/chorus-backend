@@ -3,7 +3,6 @@ package service
 import (
 	"time"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
@@ -24,7 +23,7 @@ type UserReq struct {
 	TotpSecret        *string
 	TotpRecoveryCodes []string
 
-	Roles []authorization_model.Role `validate:"min=1"` // 1 element required min
+	Roles []model.UserRole `validate:"min=1"` // 1 element required min
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -39,7 +38,7 @@ type UserUpdateReq struct {
 	Source    string           `validate:"required,generalstring"`
 	Status    model.UserStatus `validate:"required"`
 
-	Roles []authorization_model.Role `validate:"min=1"`
+	Roles []model.UserRole `validate:"min=1"`
 }
 
 type ListUsersReq struct {
