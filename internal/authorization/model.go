@@ -367,6 +367,33 @@ func GetAllRoles() []RoleName {
 	}
 }
 
+func GetWorkspaceRoles() []RoleName {
+	return []RoleName{
+		RoleWorkspaceGuest,
+		RoleWorkspaceMember,
+		RoleWorkspaceMaintainer,
+		RoleWorkspacePI,
+		RoleWorkspaceAdmin,
+	}
+}
+
+func GetWorkbenchRoles() []RoleName {
+	return []RoleName{
+		RoleWorkbenchViewer,
+		RoleWorkbenchMember,
+		RoleWorkbenchAdmin,
+	}
+}
+
+func RoleIn(role RoleName, roles []RoleName) bool {
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+
 type ContextDimension string
 
 const (

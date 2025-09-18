@@ -16,17 +16,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// type WorkbenchServiceServer interface {
-// 	GetWorkbench(context.Context, *GetWorkbenchRequest) (*GetWorkbenchReply, error)
-// 	ListWorkbenchs(context.Context, *ListWorkbenchsRequest) (*ListWorkbenchsReply, error)
-// 	CreateWorkbench(context.Context, *Workbench) (*CreateWorkbenchReply, error)
-// 	UpdateWorkbench(context.Context, *Workbench) (*UpdateWorkbenchReply, error)
-// 	InviteInWorkbench(context.Context, *InviteInWorkbenchRequest) (*InviteInWorkbenchReply, error)
-// 	ManageUserRoleInWorkbench(context.Context, *ManageUserRoleInWorkbenchRequest) (*ManageUserRoleInWorkbenchReply, error)
-// 	RemoveUserFromWorkbench(context.Context, *RemoveUserFromWorkbenchRequest) (*RemoveUserFromWorkbenchReply, error)
-// 	DeleteWorkbench(context.Context, *DeleteWorkbenchRequest) (*DeleteWorkbenchReply, error)
-// }
-
 var _ chorus.WorkbenchServiceServer = (*WorkbenchController)(nil)
 
 // WorkbenchController is the workbench service controller handler.

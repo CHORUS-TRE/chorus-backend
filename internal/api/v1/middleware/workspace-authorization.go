@@ -131,7 +131,16 @@ func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, r
 }
 
 func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
+	roleName, err := authorization.ToRoleName(req.Role.Name)
+	if err != nil {
+		return nil, fmt.Errorf("invalid role name: %w", err)
+	}
+
+	if !authorization.RoleIn(roleName, authorization.GetWorkspaceRoles()) {
+		return nil, fmt.Errorf("user is not authorized to manage role %q in workspace", roleName)
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}

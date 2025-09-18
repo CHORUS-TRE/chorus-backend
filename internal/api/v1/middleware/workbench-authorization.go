@@ -128,7 +128,16 @@ func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
+	roleName, err := authorization.ToRoleName(req.Role.Name)
+	if err != nil {
+		return nil, fmt.Errorf("invalid role name: %w", err)
+	}
+
+	if !authorization.RoleIn(roleName, authorization.GetWorkbenchRoles()) {
+		return nil, fmt.Errorf("user is not authorized to manage role %q in workbench", roleName)
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
 	}
