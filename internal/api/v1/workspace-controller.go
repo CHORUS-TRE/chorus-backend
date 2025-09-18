@@ -2,11 +2,14 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 	workspace_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
@@ -182,54 +185,56 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 }
 
 func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
-	// if req == nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
-	// }
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 
-	// tenantID, err := jwt_model.ExtractTenantID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	// }
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
 
-	// workspace, err := c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, req.Id, req.UserId, service.Role(req.Role))
-	// if err != nil {
-	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkspace': %v", err.Error())
-	// }
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
 
-	// workspaceProto, err := converter.WorkspaceFromBusiness(workspace)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-	// }
+	role, err := authorization.ToRole(req.Role.Name, map[string]string{"workbench": fmt.Sprintf("%d", req.Id)})
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
+	}
 
-	// return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{Workspace: workspaceProto}}, nil
+	err = c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, userID, user_model.UserRole{Role: role})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkspace': %v", err.Error())
+	}
 
-	//TODO implement
 	return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{}}, nil
+
 }
 
 func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
-	// if req == nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "empty request")
-	// }
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 
-	// tenantID, err := jwt_model.ExtractTenantID(ctx)
-	// if err != nil {
-	// 	return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	// }
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
 
-	// workspace, err := c.workspace.RemoveUserFromWorkspace(ctx, tenantID, req.Id, req.UserId)
-	// if err != nil {
-	// 	return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkspace': %v", err.Error())
-	// }
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
 
-	// workspaceProto, err := converter.WorkspaceFromBusiness(workspace)
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-	// }
-	// return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{Workspace: workspaceProto}}, nil
+	err = c.workspace.RemoveUserFromWorkspace(ctx, tenantID, userID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkspace': %v", err.Error())
+	}
 
-	//TODO implement
 	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{}}, nil
+
 }
 
 func (c WorkspaceController) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {

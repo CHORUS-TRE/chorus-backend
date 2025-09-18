@@ -10,6 +10,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -23,6 +24,9 @@ type Workspaceer interface {
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
+
+	ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
 
 	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
 	GetWorkspaceFileChildren(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error)
@@ -45,6 +49,8 @@ type WorkspaceStore interface {
 
 type Userer interface {
 	CreateUserRoles(ctx context.Context, userID uint64, roles []user_model.UserRole) error
+	RemoveUserRoles(ctx context.Context, userID uint64, roleIDs []uint64) error
+	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
 }
 
 type WorkspaceService struct {
@@ -162,4 +168,55 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 	}
 
 	return newWorkspace, nil
+}
+
+func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return fmt.Errorf("unable to get user %v: %w", userID, err)
+	}
+
+	matchingRolesIDs := []uint64{}
+	for _, r := range user.Roles {
+		if r.Context["workspace"] == role.Context["workspace"] {
+			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		}
+	}
+
+	if len(matchingRolesIDs) != 0 {
+		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		if err != nil {
+			return fmt.Errorf("unable to remove existing workspace roles for user %v for workspace %v: %w", userID, tenantID, err)
+		}
+	}
+
+	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
+	if err != nil {
+		return fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", userID, tenantID, err)
+	}
+
+	return nil
+}
+
+func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return fmt.Errorf("unable to get user %v: %w", userID, err)
+	}
+
+	matchingRolesIDs := []uint64{}
+	for _, r := range user.Roles {
+		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) {
+			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		}
+	}
+
+	if len(matchingRolesIDs) != 0 {
+		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		if err != nil {
+			return fmt.Errorf("unable to remove existing workspace roles for user %v for workspace %v: %w", userID, workspaceID, err)
+		}
+	}
+
+	return nil
 }

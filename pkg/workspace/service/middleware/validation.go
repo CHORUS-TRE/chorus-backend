@@ -4,6 +4,7 @@ import (
 	"context"
 
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
@@ -77,4 +78,12 @@ func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64,
 
 func (v validation) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
 	return v.next.DeleteWorkspaceFile(ctx, workspaceID, filePath)
+}
+
+func (v validation) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return v.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+}
+
+func (v validation) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
+	return v.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
 }

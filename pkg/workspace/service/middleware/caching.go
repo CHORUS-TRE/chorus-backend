@@ -6,6 +6,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
@@ -91,4 +92,12 @@ func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, o
 
 func (c *Caching) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
 	return c.next.DeleteWorkspaceFile(ctx, workspaceID, filePath)
+}
+
+func (c *Caching) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+}
+
+func (c *Caching) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
+	return c.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
 }
