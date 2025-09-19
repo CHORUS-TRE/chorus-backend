@@ -7,6 +7,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
@@ -225,6 +226,44 @@ func (c workspaceServiceLogging) DeleteWorkspaceFile(ctx context.Context, worksp
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+
+	return nil
+}
+
+func (c workspaceServiceLogging) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	now := time.Now()
+
+	err := c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to manage user role in workspace: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+
+	return nil
+}
+
+func (c workspaceServiceLogging) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
+	now := time.Now()
+
+	err := c.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to remove user from workspace: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 

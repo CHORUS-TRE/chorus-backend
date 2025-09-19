@@ -28,9 +28,36 @@ func UserAuthorizing(logger *logger.ContextLogger, authorizer authorization.Auth
 }
 
 func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListUsers)
-	if err != nil {
-		return nil, err
+	if req.Filter != nil {
+		for _, id := range req.Filter.IdsIn {
+			err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUser(id))
+			if err != nil {
+				return nil, err
+			}
+		}
+		for _, id := range req.Filter.WorkspaceIDs {
+			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(id))
+			if err != nil {
+				return nil, err
+			}
+		}
+		for _, id := range req.Filter.WorkbenchIDs {
+			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(id))
+			if err != nil {
+				return nil, err
+			}
+		}
+		if req.Filter.Search != nil {
+			err := c.IsAuthorized(ctx, authorization.PermissionSearchUsers)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		err := c.IsAuthorized(ctx, authorization.PermissionListUsers)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.next.ListUsers(ctx, req)

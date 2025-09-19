@@ -19,12 +19,15 @@ import (
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
+
+var _ Workbencher = (*WorkbenchService)(nil)
 
 var (
 	workbenchProxyRequest = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -47,6 +50,9 @@ type Workbencher interface {
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
 	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+
+	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -381,7 +387,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	r := authorization_model.NewRole(authorization_model.RoleWorkbenchAdmin,
 		authorization_model.WithWorkbench(newWorkbench.ID),
 		authorization_model.WithWorkspace(newWorkbench.WorkspaceID))
-	err = s.userer.CreateUserRoles(ctx, workbench.UserID, []authorization_model.Role{r})
+	err = s.userer.CreateUserRoles(ctx, workbench.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", workbench.UserID, newWorkbench.ID, err)
 	}
@@ -412,6 +418,57 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	}
 
 	return newWorkbench, nil
+}
+
+func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return fmt.Errorf("unable to get user %v: %w", userID, err)
+	}
+
+	matchingRolesIDs := []uint64{}
+	for _, r := range user.Roles {
+		if r.Context["workbench"] == role.Context["workbench"] {
+			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		}
+	}
+
+	if len(matchingRolesIDs) != 0 {
+		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		if err != nil {
+			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, tenantID, err)
+		}
+	}
+
+	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
+	if err != nil {
+		return fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", userID, tenantID, err)
+	}
+
+	return nil
+}
+
+func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID uint64, workbenchID uint64) error {
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return fmt.Errorf("unable to get user %v: %w", userID, err)
+	}
+
+	matchingRolesIDs := []uint64{}
+	for _, r := range user.Roles {
+		if r.Context["workbench"] == fmt.Sprintf("%d", workbenchID) {
+			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		}
+	}
+
+	if len(matchingRolesIDs) != 0 {
+		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		if err != nil {
+			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, workbenchID, err)
+		}
+	}
+
+	return nil
 }
 
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {

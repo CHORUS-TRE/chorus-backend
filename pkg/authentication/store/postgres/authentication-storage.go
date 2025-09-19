@@ -42,7 +42,7 @@ WHERE username = $1 AND source = $2 AND status = 'active';
 }
 
 // getRoles fetches all the roles of a given user.
-func (s *AuthenticationStorage) getRoles(ctx context.Context, userID uint64) ([]authorization_model.Role, error) {
+func (s *AuthenticationStorage) getRoles(ctx context.Context, userID uint64) ([]user_model.UserRole, error) {
 	const query = `
 SELECT id, name, contextdimension, value
 FROM (
@@ -80,14 +80,14 @@ FROM (
 		roleMap[fr.ID][*fr.ContextDimension] = *fr.Value
 	}
 
-	var roles []authorization_model.Role
+	var roles []user_model.UserRole
 	for n, m := range roleMap {
 		roleName := roleNameMap[n]
 		role, err := authorization_model.ToRole(roleName, m)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse role %s: %w", roleName, err)
 		}
-		roles = append(roles, role)
+		roles = append(roles, user_model.UserRole{Role: role, ID: n})
 	}
 	return roles, nil
 }

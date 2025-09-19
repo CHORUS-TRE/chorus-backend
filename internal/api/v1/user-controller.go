@@ -9,7 +9,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
@@ -170,7 +170,8 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 	}
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
-	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination})
+	filter := UserFilterToBusiness(req.Filter)
+	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination, Filter: filter})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListUsers': %v", err.Error())
 	}
@@ -193,6 +194,18 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 	return &chorus.ListUsersReply{Result: &chorus.ListUsersResult{Users: users}, Pagination: paginationResult}, nil
 }
 
+func UserFilterToBusiness(aFilter *chorus.UserFilter) *service.UserFilter {
+	if aFilter == nil {
+		return nil
+	}
+	return &service.UserFilter{
+		IDsIn:        aFilter.IdsIn,
+		WorkspaceIDs: aFilter.WorkspaceIDs,
+		WorkbenchIDs: aFilter.WorkbenchIDs,
+		Search:       aFilter.Search,
+	}
+}
+
 // CreateUser extracts the user from the request and passes it to the user service.
 func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
 	if req == nil {
@@ -213,13 +226,21 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
-	user.Roles = []authorization.Role{authorization.NewRole(authorization.RoleAuthenticated)}
-
 	user.Source = "internal"
 
 	res, err := c.user.CreateUser(ctx, service.CreateUserReq{TenantID: tenantID, User: user})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateUser': %v", err.Error())
+	}
+
+	err = c.user.CreateUserRoles(ctx, res.ID, []model.UserRole{{
+		Role: authorization_model.NewRole(
+			authorization_model.RoleAuthenticated,
+			authorization_model.WithUser(res.ID),
+		),
+	}})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateUserRoles': %v", err.Error())
 	}
 
 	tgUser, err := converter.UserFromBusiness(res)

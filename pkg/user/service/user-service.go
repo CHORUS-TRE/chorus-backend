@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/mailer"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
@@ -23,8 +22,10 @@ type Userer interface {
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
 	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
-	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error
+	RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
+	// GetRolesWithContext(ctx context.Context, roleContext map[string]string) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
 	UpdateUser(ctx context.Context, req UpdateUserReq) (*model.User, error)
 	UpdateUserPassword(ctx context.Context, req UpdateUserPasswordReq) error
@@ -37,11 +38,12 @@ type Userer interface {
 }
 
 type UserStore interface {
-	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.User, *common.PaginationResult, error)
+	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *UserFilter) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
-	CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error
+	CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error
+	RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
 	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
@@ -85,7 +87,7 @@ func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret
 }
 
 func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
-	users, pagination, err := u.store.ListUsers(ctx, req.TenantID, req.Pagination)
+	users, pagination, err := u.store.ListUsers(ctx, req.TenantID, req.Pagination, req.Filter)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to query users: %w", err)
 	}
@@ -372,13 +374,23 @@ func (u *UserService) sendMailWithTempPassword(subjectMessage string, tenantID u
 	}
 }
 
-func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
-	if err := verifyRoles(roles); err != nil {
+func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error {
+	err := verifyRoles(roles)
+	if err != nil {
 		return fmt.Errorf("role verification failed: %w", err)
 	}
 
-	if err := u.store.CreateUserRoles(ctx, userID, roles); err != nil {
+	err = u.store.CreateUserRoles(ctx, userID, roles)
+	if err != nil {
 		return fmt.Errorf("unable to create user roles for user %v: %w", userID, err)
+	}
+	return nil
+}
+
+func (u *UserService) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
+	err := u.store.RemoveUserRoles(ctx, userID, userRoleIDs)
+	if err != nil {
+		return fmt.Errorf("unable to remove user roles for user %v: %w", userID, err)
 	}
 	return nil
 }
@@ -391,7 +403,28 @@ func (u *UserService) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return u.store.GetRoles(ctx)
 }
 
-func verifyRoles(roles []authorization_model.Role) error {
+// func (u *UserService) GetRolesWithContext(ctx context.Context, roleContext map[string]string) ([]*model.Role, error) {
+// 	//TODO implement filter at DB level
+// 	roles, err := u.store.GetRoles(ctx, roleContext)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("unable to get roles: %w", err)
+// 	}
+
+// 	matchingRoles := []*model.Role{}
+// 	for _, role := range roles {
+// 		match := true
+// 		for k, v := range roleContext {
+// 			if roleVal, ok := role.Context[k]; !ok || roleVal != v {
+// 				match = false
+// 				break
+// 			}
+// 		}
+// 	}
+
+// 	return matchingRoles, nil
+// }
+
+func verifyRoles(roles []model.UserRole) error {
 	// TODO: validate role & ctx
 
 	// for _, role := range roles {

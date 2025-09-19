@@ -130,17 +130,17 @@ func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, r
 	return c.next.DeleteWorkspace(ctx, req)
 }
 
-func (c workspaceControllerAuthorization) InviteInWorkspace(ctx context.Context, req *chorus.InviteInWorkspaceRequest) (*chorus.InviteInWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkspace, authorization.WithWorkspace(req.Id))
+func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+	roleName, err := authorization.ToRoleName(req.Role.Name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid role name: %w", err)
 	}
 
-	return c.next.InviteInWorkspace(ctx, req)
-}
+	if !authorization.RoleIn(roleName, authorization.GetWorkspaceRoles()) {
+		return nil, fmt.Errorf("user is not authorized to manage role %q in workspace", roleName)
+	}
 
-func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkspace, authorization.WithWorkspace(req.Id))
+	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 }
 
 func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionInviteInWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Co
 }
 
 func (c workspaceControllerAuthorization) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (c workspaceControllerAuthorization) GetWorkspaceFile(ctx context.Context, 
 }
 
 func (c workspaceControllerAuthorization) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (c workspaceControllerAuthorization) CreateWorkspaceFile(ctx context.Contex
 }
 
 func (c workspaceControllerAuthorization) UpdateWorkspaceFile(ctx context.Context, req *chorus.UpdateWorkspaceFileRequest) (*chorus.UpdateWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	err := c.IsAuthorized(ctx, authorization.PermissionModifyFilesInWorkspace, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (c workspaceControllerAuthorization) UpdateWorkspaceFile(ctx context.Contex
 }
 
 func (c workspaceControllerAuthorization) DeleteWorkspaceFile(ctx context.Context, req *chorus.DeleteWorkspaceFileRequest) (*chorus.DeleteWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	err := c.IsAuthorized(ctx, authorization.PermissionModifyFilesInWorkspace, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}

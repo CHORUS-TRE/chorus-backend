@@ -64,18 +64,6 @@ message UpdateWorkspaceResult {
     Workspace workspace = 1;
 }
 
-message InviteInWorkspaceRequest {
-    uint64 id = 1;
-    uint64 userId = 2;
-    Role role = 3;
-}
-message InviteInWorkspaceReply {
-    InviteInWorkspaceResult result = 1;
-}
-message InviteInWorkspaceResult {
-    Workspace workspace = 1;
-}
-
 message ManageUserRoleInWorkspaceRequest {
     uint64 id = 1;
     uint64 userId = 2;
@@ -194,18 +182,6 @@ service WorkspaceService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Update a workspace";
             description: "This endpoint updates a workspace";
-            tags: "WorkspaceService";
-        };
-    };
-
-    rpc InviteInWorkspace(InviteInWorkspaceRequest) returns (InviteInWorkspaceReply) {
-        option (google.api.http) = {
-            put: "/api/rest/v1/workspaces/{id}/invite"
-            body: "*"
-        };
-        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "Invite a user to a workspace";
-            description: "This endpoint invites a user to a workspace";
             tags: "WorkspaceService";
         };
     };

@@ -1071,16 +1071,22 @@ paths:
             type: string
             format: uint64
           collectionFormat: multi
-        - name: filter.workspaceId
+        - name: filter.workspaceIDs
           in: query
           required: false
-          type: string
-          format: uint64
-        - name: filter.workbenchId
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+        - name: filter.workbenchIDs
           in: query
           required: false
-          type: string
-          format: uint64
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
         - name: filter.search
           in: query
           required: false
@@ -1675,51 +1681,6 @@ paths:
           format: uint64
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}/invite:
-    put:
-      summary: Invite a user to a workbench
-      description: This endpoint invites a user to a workbench
-      operationId: WorkbenchService_InviteInWorkbench
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusInviteInWorkbenchReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkbenchServiceInviteInWorkbenchBody'
-      tags:
-        - WorkbenchService
   /api/rest/v1/workbenchs/{id}/user/{userId}:
     delete:
       summary: Remove a user from a workbench
@@ -2046,51 +2007,6 @@ paths:
           format: uint64
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{id}/invite:
-    put:
-      summary: Invite a user to a workspace
-      description: This endpoint invites a user to a workspace
-      operationId: WorkspaceService_InviteInWorkspace
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusInviteInWorkspaceReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkspaceServiceInviteInWorkspaceBody'
-      tags:
-        - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}:
     delete:
       summary: Remove a user from a workspace
@@ -2384,25 +2300,9 @@ definitions:
   UserServiceResetPasswordBody:
     type: object
     title: Reset Password
-  WorkbenchServiceInviteInWorkbenchBody:
-    type: object
-    properties:
-      userId:
-        type: string
-        format: uint64
-      role:
-        $ref: '#/definitions/chorusRole'
   WorkbenchServiceManageUserRoleInWorkbenchBody:
     type: object
     properties:
-      role:
-        $ref: '#/definitions/chorusRole'
-  WorkspaceServiceInviteInWorkspaceBody:
-    type: object
-    properties:
-      userId:
-        type: string
-        format: uint64
       role:
         $ref: '#/definitions/chorusRole'
   WorkspaceServiceManageUserRoleInWorkspaceBody:
@@ -2781,26 +2681,6 @@ definitions:
     properties:
       publicRegistrationEnabled:
         type: boolean
-  chorusInviteInWorkbenchReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusInviteInWorkbenchResult'
-  chorusInviteInWorkbenchResult:
-    type: object
-    properties:
-      workbench:
-        $ref: '#/definitions/chorusWorkbench'
-  chorusInviteInWorkspaceReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusInviteInWorkspaceResult'
-  chorusInviteInWorkspaceResult:
-    type: object
-    properties:
-      workspace:
-        $ref: '#/definitions/chorusWorkspace'
   chorusListAppInstancesReply:
     type: object
     properties:
@@ -3168,12 +3048,16 @@ definitions:
         items:
           type: string
           format: uint64
-      workspaceId:
-        type: string
-        format: uint64
-      workbenchId:
-        type: string
-        format: uint64
+      workspaceIDs:
+        type: array
+        items:
+          type: string
+          format: uint64
+      workbenchIDs:
+        type: array
+        items:
+          type: string
+          format: uint64
       search:
         type: string
   chorusWorkbench:

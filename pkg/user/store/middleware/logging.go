@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -27,12 +26,12 @@ func Logging(logger *logger.ContextLogger) func(service.UserStore) service.UserS
 	}
 }
 
-func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.User, *common.PaginationResult, error) {
+func (c userStorageLogging) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *service.UserFilter) ([]*model.User, *common.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	users, paginationRes, err := c.next.ListUsers(ctx, tenantID, pagination)
+	users, paginationRes, err := c.next.ListUsers(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -130,12 +129,34 @@ func (c userStorageLogging) CreateUser(ctx context.Context, tenantID uint64, use
 	return res, nil
 }
 
-func (c userStorageLogging) CreateUserRoles(ctx context.Context, userID uint64, roles []authorization_model.Role) error {
+func (c userStorageLogging) CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error {
 	c.logger.Debug(ctx, "request started", logger.WithUserIDField(userID))
 
 	now := time.Now()
 
 	err := c.next.CreateUserRoles(ctx, userID, roles)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			logger.WithUserIDField(userID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithUserIDField(userID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c userStorageLogging) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
+	c.logger.Debug(ctx, "request started", logger.WithUserIDField(userID))
+
+	now := time.Now()
+
+	err := c.next.RemoveUserRoles(ctx, userID, userRoleIDs)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithUserIDField(userID),

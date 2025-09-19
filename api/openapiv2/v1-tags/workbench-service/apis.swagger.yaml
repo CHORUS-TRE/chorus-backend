@@ -156,33 +156,6 @@ paths:
           format: uint64
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}/invite:
-    put:
-      summary: Invite a user to a workbench
-      description: This endpoint invites a user to a workbench
-      operationId: WorkbenchService_InviteInWorkbench
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusInviteInWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkbenchServiceInviteInWorkbenchBody'
-      tags:
-        - WorkbenchService
   /api/rest/v1/workbenchs/{id}/user/{userId}:
     delete:
       summary: Remove a user from a workbench
@@ -243,14 +216,6 @@ paths:
       tags:
         - WorkbenchService
 definitions:
-  WorkbenchServiceInviteInWorkbenchBody:
-    type: object
-    properties:
-      userId:
-        type: string
-        format: uint64
-      role:
-        $ref: '#/definitions/chorusRole'
   WorkbenchServiceManageUserRoleInWorkbenchBody:
     type: object
     properties:
@@ -279,16 +244,6 @@ definitions:
       result:
         $ref: '#/definitions/chorusGetWorkbenchResult'
   chorusGetWorkbenchResult:
-    type: object
-    properties:
-      workbench:
-        $ref: '#/definitions/chorusWorkbench'
-  chorusInviteInWorkbenchReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusInviteInWorkbenchResult'
-  chorusInviteInWorkbenchResult:
     type: object
     properties:
       workbench:

@@ -21,7 +21,7 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 	roles := make([]*chorus.Role, len(user.Roles))
 	rs := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
-		role := RoleFromBusiness(r)
+		role := RoleFromBusiness(r.Role)
 		roles[i] = &role
 		rs[i] = role.Name
 	}
