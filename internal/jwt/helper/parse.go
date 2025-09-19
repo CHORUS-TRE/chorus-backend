@@ -1,9 +1,14 @@
 package helper
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	jwt_go "github.com/golang-jwt/jwt"
@@ -65,7 +70,47 @@ func ParseToken(ctx context.Context, tokenString string, keyFunc jwt_go.Keyfunc,
 	if !token.Valid {
 		return nil, ErrTokenInvalid
 	}
+
+	c, ok := token.Claims.(*jwt_model.JWTClaims)
+	if !ok {
+		return nil, ErrTokenInvalid
+	}
+
+	err = DecompressRoles(c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode roles from token: %w", err)
+	}
+
 	return token.Claims, nil
+}
+
+func DecompressRoles(claims *jwt_model.JWTClaims) error {
+	if len(claims.Roles) > 0 || len(claims.R) == 0 {
+		return nil
+	}
+
+	gzBytes, err := base64.StdEncoding.DecodeString(claims.R)
+	if err != nil {
+		return fmt.Errorf("failed to base64-decode roles: %w", err)
+	}
+
+	gr, err := gzip.NewReader(bytes.NewReader(gzBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	out, err := io.ReadAll(gr)
+	if err != nil {
+		return fmt.Errorf("failed to read gzip data: %w", err)
+	}
+	if err := gr.Close(); err != nil {
+		return fmt.Errorf("failed to close gzip reader: %w", err)
+	}
+
+	if err := json.Unmarshal(out, &claims.Roles); err != nil {
+		return fmt.Errorf("failed to unmarshal roles json: %w", err)
+	}
+
+	return nil
 }
 
 // userFromClaims retrieves the first and last name from

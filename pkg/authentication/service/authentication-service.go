@@ -1,8 +1,11 @@
 package service
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -72,6 +75,7 @@ type CustomClaims struct {
 	FirstName string                     `json:"firstName"`
 	LastName  string                     `json:"lastName"`
 	Roles     []authorization_model.Role `json:"roles"`
+	R         string                     `json:"r"` // Roles gz compressed and base64-encoded
 	Username  string                     `json:"username"`
 	Source    string                     `json:"source"`
 
@@ -442,18 +446,30 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 	if issuedAt.IsZero() {
 		issuedAt = time.Now()
 	}
-	authzRoles := make([]authorization_model.Role, len(user.Roles))
-	for i, r := range user.Roles {
-		authzRoles[i] = r.Role
+
+	rolesJSON, err := json.Marshal(user.Roles)
+	if err != nil {
+		return "", err
 	}
+	var rolesJSONGZBuffer bytes.Buffer
+	gz := gzip.NewWriter(&rolesJSONGZBuffer)
+	if _, err := gz.Write(rolesJSON); err != nil {
+		return "", err
+	}
+	if err := gz.Close(); err != nil {
+		return "", err
+	}
+	r := base64.StdEncoding.EncodeToString(rolesJSONGZBuffer.Bytes())
+
 	claims := CustomClaims{
 		ID:        user.ID,
 		TenantID:  user.TenantID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
-		Roles:     authzRoles,
-		Username:  user.Username,
-		Source:    user.Source,
+		// Roles:     user.Roles,
+		R:        r,
+		Username: user.Username,
+		Source:   user.Source,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(expirationTime).Unix(),
 			IssuedAt:  issuedAt.Unix(),

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -188,6 +189,10 @@ func (a AuthenticationController) Logout(ctx context.Context, req *chorus.Logout
 }
 
 func (a AuthenticationController) getSetCookieHeader(token string, expires string) metadata.MD {
+	if len(token) > 4096 {
+		logger.SecLog.Warn(context.Background(), "jwt token size exceeds 4096 bytes, browser will reject cookie", zap.Int("size", len(token)))
+	}
+
 	// return metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; SameSite=None; Expires="+expires)
 	// Path=/; Domain=.dev.chorus-tre.ch; SameSite=None; Secure; HttpOnly";
 	return metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; Domain="+a.cfg.Daemon.HTTP.Headers.CookieDomain+"; SameSite=None; Secure; HttpOnly; Expires="+expires)
