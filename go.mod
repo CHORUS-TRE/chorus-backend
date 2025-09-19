@@ -25,7 +25,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.38.0
-	github.com/opensearch-project/opensearch-go v1.1.0
+	github.com/opensearch-project/opensearch-go/v4 v4.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/prometheus/client_golang v1.22.0
 	github.com/rubenv/sql-migrate v1.8.0
