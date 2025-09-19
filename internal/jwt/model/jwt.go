@@ -53,6 +53,7 @@ type JWTClaims struct {
 	TenantID  uint64 `json:"tenantID"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
+	R         string `json:"r"` // Roles gz compressed and base64-encoded
 	Roles     []Role `json:"roles"`
 	Username  string `json:"username"`
 	ctx       context.Context
