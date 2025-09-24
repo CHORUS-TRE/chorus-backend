@@ -55,6 +55,14 @@ message CreateAppResult {
     App app = 1;
 }
 
+// Create multiple Apps in bulk
+message BulkCreateAppsRequest {
+    repeated App apps = 1;
+}
+message BulkCreateAppsReply {
+    repeated App apps = 1;
+}
+
 // Update App
 message UpdateAppReply {
     UpdateAppResult result = 1;
@@ -104,6 +112,18 @@ service AppService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Create an app";
             description: "This endpoint creates an app";
+            tags: "AppService";
+        };
+    };
+
+    rpc BulkCreateApps(BulkCreateAppsRequest) returns (BulkCreateAppsReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/apps/bulk"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create multiple apps";
+            description: "This endpoint creates multiple apps";
             tags: "AppService";
         };
     };

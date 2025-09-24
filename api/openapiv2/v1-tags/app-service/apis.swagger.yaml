@@ -105,6 +105,28 @@ paths:
             $ref: '#/definitions/chorusApp'
       tags:
         - AppService
+  /api/rest/v1/apps/bulk:
+    post:
+      summary: Create multiple apps
+      description: This endpoint creates multiple apps
+      operationId: AppService_BulkCreateApps
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusBulkCreateAppsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusBulkCreateAppsRequest'
+      tags:
+        - AppService
   /api/rest/v1/apps/{id}:
     get:
       summary: Get an app
@@ -199,6 +221,23 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  chorusBulkCreateAppsReply:
+    type: object
+    properties:
+      apps:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApp'
+  chorusBulkCreateAppsRequest:
+    type: object
+    properties:
+      apps:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApp'
+    title: Create multiple Apps in bulk
   chorusCreateAppReply:
     type: object
     properties:
