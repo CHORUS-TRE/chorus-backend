@@ -95,6 +95,46 @@ func (s *AppStorage) CreateApp(ctx context.Context, tenantID uint64, app *model.
 	return &newApp, nil
 }
 
+func (s *AppStorage) BulkCreateApps(ctx context.Context, tenantID uint64, apps []*model.App) ([]*model.App, error) {
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return nil, fmt.Errorf("unable to begin transaction: %w", err)
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p) // re-throw panic after Rollback
+		} else if err != nil {
+			_ = tx.Rollback() // err is non-nil; don't change it
+		}
+	}()
+
+	const appQuery = `
+		INSERT INTO apps (tenantid, userid, name, description, status, dockerimagename, dockerimagetag, dockerimageregistry, shmsize, kioskconfigurl, maxcpu, mincpu, maxmemory, minmemory, maxephemeralstorage, minephemeralstorage, iconurl, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW()) 
+		RETURNING id, tenantid, userid, name, description, status, dockerimagename, dockerimagetag, dockerimageregistry, shmsize, kioskconfigurl, maxcpu, mincpu, maxmemory, minmemory, maxephemeralstorage, minephemeralstorage, iconurl, createdat, updatedat;
+	`
+
+	var newApps []*model.App
+	for _, app := range apps {
+		var newApp model.App
+		err = tx.GetContext(ctx, &newApp, appQuery,
+			tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.KioskConfigURL, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.MaxEphemeralStorage, app.MinEphemeralStorage, app.IconURL,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("unable to exec bulk insert: %w", err)
+		}
+		newApps = append(newApps, &newApp)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("unable to commit transaction: %w", err)
+	}
+
+	return newApps, nil
+}
+
 func (s *AppStorage) UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	const appUpdateQuery = `
 		UPDATE apps
