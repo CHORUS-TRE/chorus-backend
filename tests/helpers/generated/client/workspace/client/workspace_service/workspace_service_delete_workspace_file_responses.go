@@ -88,12 +88,12 @@ func (o *WorkspaceServiceDeleteWorkspaceFileOK) Code() int {
 
 func (o *WorkspaceServiceDeleteWorkspaceFileOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] workspaceServiceDeleteWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] workspaceServiceDeleteWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceDeleteWorkspaceFileOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] workspaceServiceDeleteWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] workspaceServiceDeleteWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceDeleteWorkspaceFileOK) GetPayload() *models.ChorusDeleteWorkspaceFileReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceServiceDeleteWorkspaceFileDefault) Code() int {
 
 func (o *WorkspaceServiceDeleteWorkspaceFileDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] WorkspaceService_DeleteWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] WorkspaceService_DeleteWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceDeleteWorkspaceFileDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] WorkspaceService_DeleteWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] WorkspaceService_DeleteWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceDeleteWorkspaceFileDefault) GetPayload() *models.RPCStatus {

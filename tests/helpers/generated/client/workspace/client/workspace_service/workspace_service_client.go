@@ -66,6 +66,8 @@ type ClientService interface {
 
 	WorkspaceServiceGetWorkspaceFile(params *WorkspaceServiceGetWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceFileOK, error)
 
+	WorkspaceServiceListWorkspaceFiles(params *WorkspaceServiceListWorkspaceFilesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspaceFilesOK, error)
+
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
 	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
@@ -131,7 +133,7 @@ func (a *Client) WorkspaceServiceCreateWorkspaceFile(params *WorkspaceServiceCre
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_CreateWorkspaceFile",
 		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -209,7 +211,7 @@ func (a *Client) WorkspaceServiceDeleteWorkspaceFile(params *WorkspaceServiceDel
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_DeleteWorkspaceFile",
 		Method:             "DELETE",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -275,9 +277,9 @@ func (a *Client) WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspa
 }
 
 /*
-WorkspaceServiceGetWorkspaceFile lists files in a workspace
+WorkspaceServiceGetWorkspaceFile gets a file in a workspace
 
-This endpoint lists all files at given path within a workspace
+This endpoint retrieves a file at the specified path within a workspace
 */
 func (a *Client) WorkspaceServiceGetWorkspaceFile(params *WorkspaceServiceGetWorkspaceFileParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceFileOK, error) {
 	// TODO: Validate the params before sending
@@ -287,7 +289,7 @@ func (a *Client) WorkspaceServiceGetWorkspaceFile(params *WorkspaceServiceGetWor
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_GetWorkspaceFile",
 		Method:             "GET",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -310,6 +312,45 @@ func (a *Client) WorkspaceServiceGetWorkspaceFile(params *WorkspaceServiceGetWor
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceGetWorkspaceFileDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceListWorkspaceFiles lists files in a workspace at a specified path
+
+This endpoint lists all files at given path within a workspace
+*/
+func (a *Client) WorkspaceServiceListWorkspaceFiles(params *WorkspaceServiceListWorkspaceFilesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspaceFilesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceListWorkspaceFilesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_ListWorkspaceFiles",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{path}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceListWorkspaceFilesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceListWorkspaceFilesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceListWorkspaceFilesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -482,7 +523,7 @@ func (a *Client) WorkspaceServiceUpdateWorkspaceFile(params *WorkspaceServiceUpd
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceService_UpdateWorkspaceFile",
 		Method:             "PUT",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/files/{oldPath}",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{oldPath}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

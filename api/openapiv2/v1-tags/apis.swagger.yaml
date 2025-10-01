@@ -2102,7 +2102,7 @@ paths:
             $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/files:
+  /api/rest/v1/workspaces/{workspaceId}/file:
     post:
       summary: Create a file in a workspace
       description: This endpoint creates a file in a workspace at the specified path
@@ -2147,7 +2147,7 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}:
+  /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
     put:
       summary: Update a file in a workspace
       description: This endpoint updates (rename or moves) a file in a workspace at the specified path
@@ -2198,10 +2198,10 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/files/{path}:
+  /api/rest/v1/workspaces/{workspaceId}/file/{path}:
     get:
-      summary: List files in a workspace
-      description: This endpoint lists all files at given path within a workspace
+      summary: Get a file in a workspace
+      description: This endpoint retrieves a file at the specified path within a workspace
       operationId: WorkspaceService_GetWorkspaceFile
       responses:
         "200":
@@ -2252,6 +2252,51 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkspaceFileReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/files/{path}:
+    get:
+      summary: List files in a workspace at a specified path
+      description: This endpoint lists all files at given path within a workspace
+      operationId: WorkspaceService_ListWorkspaceFiles
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkspaceFilesReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -2741,6 +2786,19 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkbench'
+  chorusListWorkspaceFilesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListWorkspaceFilesResult'
+  chorusListWorkspaceFilesResult:
+    type: object
+    properties:
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceFile'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -3146,9 +3204,10 @@ definitions:
   chorusWorkspaceFile:
     type: object
     properties:
-      name:
-        type: string
       path:
+        type: string
+        title: Unique identifier for the file within the workspace
+      name:
         type: string
       isDirectory:
         type: boolean
@@ -3166,12 +3225,7 @@ definitions:
       content:
         type: string
         format: byte
-        title: File content will be empty for now
-      children:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusWorkspaceFile'
+        title: File content will be empty when listing files
   chorusWorkspaceFilter:
     type: object
     properties:

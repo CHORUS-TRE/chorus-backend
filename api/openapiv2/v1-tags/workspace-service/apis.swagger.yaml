@@ -215,7 +215,7 @@ paths:
             $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/files:
+  /api/rest/v1/workspaces/{workspaceId}/file:
     post:
       summary: Create a file in a workspace
       description: This endpoint creates a file in a workspace at the specified path
@@ -242,7 +242,7 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}:
+  /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
     put:
       summary: Update a file in a workspace
       description: This endpoint updates (rename or moves) a file in a workspace at the specified path
@@ -275,10 +275,10 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/files/{path}:
+  /api/rest/v1/workspaces/{workspaceId}/file/{path}:
     get:
-      summary: List files in a workspace
-      description: This endpoint lists all files at given path within a workspace
+      summary: Get a file in a workspace
+      description: This endpoint retrieves a file at the specified path within a workspace
       operationId: WorkspaceService_GetWorkspaceFile
       responses:
         "200":
@@ -311,6 +311,33 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/files/{path}:
+    get:
+      summary: List files in a workspace at a specified path
+      description: This endpoint lists all files at given path within a workspace
+      operationId: WorkspaceService_ListWorkspaceFiles
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkspaceFilesReply'
         default:
           description: An unexpected error response.
           schema:
@@ -388,6 +415,19 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusListWorkspaceFilesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListWorkspaceFilesResult'
+  chorusListWorkspaceFilesResult:
+    type: object
+    properties:
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceFile'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -540,9 +580,10 @@ definitions:
   chorusWorkspaceFile:
     type: object
     properties:
-      name:
-        type: string
       path:
+        type: string
+        title: Unique identifier for the file within the workspace
+      name:
         type: string
       isDirectory:
         type: boolean
@@ -560,12 +601,7 @@ definitions:
       content:
         type: string
         format: byte
-        title: File content will be empty for now
-      children:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusWorkspaceFile'
+        title: File content will be empty when listing files
   chorusWorkspaceFilter:
     type: object
     properties:

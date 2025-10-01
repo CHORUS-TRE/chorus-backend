@@ -107,6 +107,17 @@ message GetWorkspaceFileResult {
     WorkspaceFile file = 1;
 }
 
+message ListWorkspaceFilesRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+}
+message ListWorkspaceFilesReply {
+    ListWorkspaceFilesResult result = 1;
+}
+message ListWorkspaceFilesResult {
+    repeated WorkspaceFile files = 1;
+}
+
 message CreateWorkspaceFileRequest {
     uint64 workspaceId = 1;
     WorkspaceFile file = 2;
@@ -223,10 +234,21 @@ service WorkspaceService {
     // File management methods
     rpc GetWorkspaceFile(GetWorkspaceFileRequest) returns (GetWorkspaceFileReply) {
         option (google.api.http) = {
+            get: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a file in a workspace";
+            description: "This endpoint retrieves a file at the specified path within a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc ListWorkspaceFiles(ListWorkspaceFilesRequest) returns (ListWorkspaceFilesReply) {
+        option (google.api.http) = {
             get: "/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "List files in a workspace";
+            summary: "List files in a workspace at a specified path";
             description: "This endpoint lists all files at given path within a workspace";
             tags: "WorkspaceService";
         };
@@ -234,7 +256,7 @@ service WorkspaceService {
 
     rpc CreateWorkspaceFile(CreateWorkspaceFileRequest) returns (CreateWorkspaceFileReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces/{workspaceId}/files"
+            post: "/api/rest/v1/workspaces/{workspaceId}/file"
             body: "file"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -246,7 +268,7 @@ service WorkspaceService {
 
     rpc UpdateWorkspaceFile(UpdateWorkspaceFileRequest) returns (UpdateWorkspaceFileReply) {
         option (google.api.http) = {
-            put: "/api/rest/v1/workspaces/{workspaceId}/files/{oldPath=**}"
+            put: "/api/rest/v1/workspaces/{workspaceId}/file/{oldPath=**}"
             body: "file"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -258,7 +280,7 @@ service WorkspaceService {
 
     rpc DeleteWorkspaceFile(DeleteWorkspaceFileRequest) returns (DeleteWorkspaceFileReply) {
         option (google.api.http) = {
-            delete: "/api/rest/v1/workspaces/{workspaceId}/files/{path=**}"
+            delete: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a file in a workspace";

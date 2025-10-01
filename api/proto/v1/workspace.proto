@@ -24,16 +24,15 @@ message Workspace {
 }
 
 message WorkspaceFile {
-    string name = 1;
-    string path = 2;
+    string path = 1; // Unique identifier for the file within the workspace
+
+    string name = 2;
     bool isDirectory = 3;
     int64 size = 4;
     string mimeType = 5;
 
     google.protobuf.Timestamp createdAt = 6;
     google.protobuf.Timestamp updatedAt = 7;
-    
-    bytes content = 8; // File content will be empty for now
 
-    repeated WorkspaceFile children = 9;
+    optional bytes content = 8; // File content will be empty when listing files
 }
