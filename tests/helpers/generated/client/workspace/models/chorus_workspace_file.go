@@ -23,10 +23,6 @@ type ChorusWorkspaceFile struct {
 	// Format: byte
 	Content strfmt.Base64 `json:"content,omitempty"`
 
-	// created at
-	// Format: date-time
-	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
-
 	// is directory
 	IsDirectory bool `json:"isDirectory,omitempty"`
 
@@ -51,10 +47,6 @@ type ChorusWorkspaceFile struct {
 func (m *ChorusWorkspaceFile) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateCreatedAt(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateUpdatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -62,18 +54,6 @@ func (m *ChorusWorkspaceFile) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *ChorusWorkspaceFile) validateCreatedAt(formats strfmt.Registry) error {
-	if swag.IsZero(m.CreatedAt) { // not required
-		return nil
-	}
-
-	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
-		return err
-	}
-
 	return nil
 }
 

@@ -31,8 +31,7 @@ message WorkspaceFile {
     int64 size = 4;
     string mimeType = 5;
 
-    google.protobuf.Timestamp createdAt = 6;
-    google.protobuf.Timestamp updatedAt = 7;
+    google.protobuf.Timestamp updatedAt = 6;
 
-    optional bytes content = 8; // File content will be empty when listing files
+    optional bytes content = 7; // File content will be empty when listing files
 }
