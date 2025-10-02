@@ -19,8 +19,13 @@ This project is the backend of the chorus platform.
 1) install go
 2) pull repo
 3) requirements
-    a) postgres `docker compose -f .devcontainer/docker-compose.yml up -d`
-    b) kind `./scripts/create-local-cluster.sh`
+    * postgres & minio `docker compose -f .devcontainer/docker-compose.yml up -d`
+    * kind `./scripts/create-local-cluster.sh`
+    * setup minio `mc` client with the following commands:
+        ```
+        mc alias set minio http://localhost:9000 minioadmin minioadmin
+        mc mb minio/chorus-data
+        ```
 4) launch go run 
     `go run cmd/chorus/main.go start | go run cmd/logger/main.go`
 5) go to localhost:5000/doc
@@ -71,28 +76,6 @@ Create a complete service (here the workbench service)
 
 ### 10. Tests
 // todo
-
-### 11. Run local s3 minio server
-For the local dev setup, the minio-client is by default using a local s3 server. You can also disable this client using the `enabled` flag in the configuration. To run the local server, use the following commands (replace `/data` with any directory where s3 files should be stored):
-
-* Macos - Homebrew
-```
-brew install minio/stable/minio
-minio server /data
-```
-
-* GNU - WGet
-```
-wget https://dl.min.io/server/minio/release/darwin-amd64/minio
-chmod +x minio
-./minio server /data
-```
-
-The server will be reachable at [localhost:9000](http://localhost:9000) with the default root credentials `minioadmin:minioadmin`. To use the `mc` minio client, you can first run these commands:
-```
-mc alias set localfs http://localhost:9000 minioadmin minioadmin # Setup alias
-mc mb localfs/chorus-data # Create a new bucket
-```
 
 ## License and Usage Restrictions
 
