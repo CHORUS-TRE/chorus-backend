@@ -128,3 +128,24 @@ func (c appStorageLogging) CreateApp(ctx context.Context, tenantID uint64, app *
 	)
 	return newApp, nil
 }
+
+func (c appStorageLogging) BulkCreateApps(ctx context.Context, tenantID uint64, apps []*model.App) ([]*model.App, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	newApps, err := c.next.BulkCreateApps(ctx, tenantID, apps)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithCountField(len(newApps)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return newApps, nil
+}

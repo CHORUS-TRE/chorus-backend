@@ -54,6 +54,8 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	AppServiceBulkCreateApps(params *AppServiceBulkCreateAppsParams, opts ...ClientOption) (*AppServiceBulkCreateAppsOK, error)
+
 	AppServiceCreateApp(params *AppServiceCreateAppParams, opts ...ClientOption) (*AppServiceCreateAppOK, error)
 
 	AppServiceDeleteApp(params *AppServiceDeleteAppParams, opts ...ClientOption) (*AppServiceDeleteAppOK, error)
@@ -65,6 +67,45 @@ type ClientService interface {
 	AppServiceUpdateApp(params *AppServiceUpdateAppParams, opts ...ClientOption) (*AppServiceUpdateAppOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+AppServiceBulkCreateApps creates multiple apps
+
+This endpoint creates multiple apps
+*/
+func (a *Client) AppServiceBulkCreateApps(params *AppServiceBulkCreateAppsParams, opts ...ClientOption) (*AppServiceBulkCreateAppsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAppServiceBulkCreateAppsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AppService_BulkCreateApps",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/apps/bulk",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AppServiceBulkCreateAppsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AppServiceBulkCreateAppsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AppServiceBulkCreateAppsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*

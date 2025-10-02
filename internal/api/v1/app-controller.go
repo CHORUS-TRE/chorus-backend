@@ -7,6 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 
 	"google.golang.org/grpc/codes"
@@ -163,4 +164,47 @@ func (c AppController) CreateApp(ctx context.Context, req *chorus.App) (*chorus.
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 	return &chorus.CreateAppReply{Result: &chorus.CreateAppResult{App: newAppProto}}, nil
+}
+
+// BulkCreateApps extracts the apps from the request and passes them to the app service.
+func (c AppController) BulkCreateApps(ctx context.Context, req *chorus.BulkCreateAppsRequest) (*chorus.BulkCreateAppsReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		tenantID = 1
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		tenantID = 1
+	}
+
+	var apps []*model.App
+	for _, r := range req.Apps {
+		app, err := converter.AppToBusiness(r)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		}
+		app.TenantID = tenantID
+		app.UserID = userID
+		apps = append(apps, app)
+	}
+
+	newApps, err := c.app.BulkCreateApps(ctx, apps)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'BulkCreateApps': %v", err.Error())
+	}
+
+	var newAppsProto []*chorus.App
+	for _, newApp := range newApps {
+		newAppProto, err := converter.AppFromBusiness(newApp)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		}
+		newAppsProto = append(newAppsProto, newAppProto)
+	}
+	return &chorus.BulkCreateAppsReply{Apps: newAppsProto}, nil
 }

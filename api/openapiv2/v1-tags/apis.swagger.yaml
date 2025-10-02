@@ -391,6 +391,46 @@ paths:
             $ref: '#/definitions/chorusApp'
       tags:
         - AppService
+  /api/rest/v1/apps/bulk:
+    post:
+      summary: Create multiple apps
+      description: This endpoint creates multiple apps
+      operationId: AppService_BulkCreateApps
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusBulkCreateAppsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusBulkCreateAppsRequest'
+      tags:
+        - AppService
   /api/rest/v1/apps/{id}:
     get:
       summary: Get an app
@@ -2442,6 +2482,23 @@ definitions:
     properties:
       token:
         type: string
+  chorusBulkCreateAppsReply:
+    type: object
+    properties:
+      apps:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApp'
+  chorusBulkCreateAppsRequest:
+    type: object
+    properties:
+      apps:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApp'
+    title: Create multiple Apps in bulk
   chorusCountUnreadNotificationsReply:
     type: object
     properties:

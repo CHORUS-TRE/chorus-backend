@@ -54,6 +54,15 @@ func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.A
 	return c.next.CreateApp(ctx, req)
 }
 
+func (c appControllerAuthorization) BulkCreateApps(ctx context.Context, req *chorus.BulkCreateAppsRequest) (*chorus.BulkCreateAppsReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateApp)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.BulkCreateApps(ctx, req)
+}
+
 func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.App) (*chorus.UpdateAppReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionUpdateApp)
 	if err != nil {
