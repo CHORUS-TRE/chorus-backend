@@ -58,8 +58,8 @@ func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, fi
 	return v.next.GetWorkspaceFile(ctx, workspaceID, filePath)
 }
 
-func (v validation) GetWorkspaceFileChildren(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
-	return v.next.GetWorkspaceFileChildren(ctx, workspaceID, filePath)
+func (v validation) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
+	return v.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
 }
 
 func (v validation) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {

@@ -254,25 +254,29 @@ func (c WorkspaceController) GetWorkspaceFile(ctx context.Context, req *chorus.G
 
 	resp := &chorus.GetWorkspaceFileReply{Result: &chorus.GetWorkspaceFileResult{File: tgFile}}
 
-	if file.IsDirectory {
-		children, err := c.workspace.GetWorkspaceFileChildren(ctx, req.WorkspaceId, req.Path)
-		if err != nil {
-			return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspaceFileChildren': %v", err.Error())
-		}
+	return resp, nil
+}
 
-		tgChildren := make([]*chorus.WorkspaceFile, 0, len(children))
-		for _, child := range children {
-			tgChild, err := converter.WorkspaceFileFromBusiness(child)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-			}
-			tgChildren = append(tgChildren, tgChild)
-		}
-
-		resp.Result.File.Children = tgChildren
+func (c WorkspaceController) ListWorkspaceFiles(ctx context.Context, req *chorus.ListWorkspaceFilesRequest) (*chorus.ListWorkspaceFilesReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return resp, nil
+	files, err := c.workspace.ListWorkspaceFiles(ctx, req.WorkspaceId, req.Path)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaceFiles at path %s': %v", req.Path, err.Error())
+	}
+
+	tgFiles := make([]*chorus.WorkspaceFile, 0, len(files))
+	for _, file := range files {
+		tgFile, err := converter.WorkspaceFileFromBusiness(file)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		}
+		tgFiles = append(tgFiles, tgFile)
+	}
+
+	return &chorus.ListWorkspaceFilesReply{Result: &chorus.ListWorkspaceFilesResult{Files: tgFiles}}, nil
 }
 
 func (c WorkspaceController) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {

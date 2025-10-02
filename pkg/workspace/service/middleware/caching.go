@@ -78,8 +78,8 @@ func (c *Caching) GetWorkspaceFile(ctx context.Context, workspaceID uint64, file
 	return c.next.GetWorkspaceFile(ctx, workspaceID, filePath)
 }
 
-func (c *Caching) GetWorkspaceFileChildren(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
-	return c.next.GetWorkspaceFileChildren(ctx, workspaceID, filePath)
+func (c *Caching) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
+	return c.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
 }
 
 func (c *Caching) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
