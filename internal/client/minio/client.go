@@ -16,11 +16,12 @@ import (
 var _ MinioClienter = &client{}
 
 type MinioClienter interface {
-	StatObject(objectKey string) (*workspace_model.WorkspaceFile, error)
-	GetObject(objectKey string) (*workspace_model.WorkspaceFile, error)
-	ListObjects(objectKey string) ([]*workspace_model.WorkspaceFile, error)
-	PutObject(objectKey string, content []byte) error
-	DeleteObject(objectKey string) error
+	// Workspace object operations
+	StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
+	GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
+	ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error)
+	PutWorkspaceObject(workspaceID uint64, path string, content []byte) error
+	DeleteWorkspaceObject(workspaceID uint64, path string) error
 }
 
 type client struct {
@@ -51,7 +52,9 @@ func NewClient(cfg config.Config) (*client, error) {
 	}, nil
 }
 
-func (c *client) StatObject(objectKey string) (*workspace_model.WorkspaceFile, error) {
+func (c *client) StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
+	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+
 	objectInfo, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
@@ -65,7 +68,9 @@ func (c *client) StatObject(objectKey string) (*workspace_model.WorkspaceFile, e
 	return &file, nil
 }
 
-func (c *client) GetObject(objectKey string) (*workspace_model.WorkspaceFile, error) {
+func (c *client) GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
+	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+
 	reader, err := c.minioClient.GetObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to get object %s: %w", objectKey, err)
@@ -91,7 +96,9 @@ func (c *client) GetObject(objectKey string) (*workspace_model.WorkspaceFile, er
 	return &file, nil
 }
 
-func (c *client) ListObjects(objectKey string) ([]*workspace_model.WorkspaceFile, error) {
+func (c *client) ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error) {
+	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+
 	files := []*workspace_model.WorkspaceFile{}
 	objectCh := c.minioClient.ListObjects(context.Background(), c.minioClientCfg.BucketName, minio.ListObjectsOptions{
 		Prefix: objectKey,
@@ -110,7 +117,9 @@ func (c *client) ListObjects(objectKey string) ([]*workspace_model.WorkspaceFile
 	return files, nil
 }
 
-func (c *client) PutObject(objectKey string, content []byte) error {
+func (c *client) PutWorkspaceObject(workspaceID uint64, path string, content []byte) error {
+	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+
 	n, err := c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(content), int64(len(content)), minio.PutObjectOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to put object at %s: %w", objectKey, err)
@@ -121,7 +130,9 @@ func (c *client) PutObject(objectKey string, content []byte) error {
 	return nil
 }
 
-func (c *client) DeleteObject(objectKey string) error {
+func (c *client) DeleteWorkspaceObject(workspaceID uint64, path string) error {
+	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+
 	err := c.minioClient.RemoveObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.RemoveObjectOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to delete object at %s: %w", objectKey, err)
