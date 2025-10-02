@@ -3,7 +3,7 @@ package minio
 import "github.com/CHORUS-TRE/chorus-backend/internal/config"
 
 type MinioClientConfig struct {
-	Endpoint        string // e.g., "play.min.io:9000"
+	Endpoint        string
 	AccessKeyID     string
 	SecretAccessKey string
 	UseSSL          bool

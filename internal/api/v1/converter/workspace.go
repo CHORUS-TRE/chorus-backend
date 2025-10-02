@@ -83,6 +83,10 @@ func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.WorkspaceFile, 
 }
 
 func WorkspaceFileFromBusiness(file *model.WorkspaceFile) (*chorus.WorkspaceFile, error) {
+	if file == nil {
+		return nil, fmt.Errorf("unable to convert nil workspace file")
+	}
+
 	ua, err := ToProtoTimestamp(file.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
@@ -33,12 +34,17 @@ func (s *WorkspaceService) CreateWorkspaceFile(ctx context.Context, workspaceID 
 		return nil, fmt.Errorf("unable to create workspace file at path %s: %w", file.Path, err)
 	}
 
-	createdFile, err := s.minioClient.StatObject(toAbsolutePath(workspaceID, file.Path))
-	if err != nil {
-		return nil, fmt.Errorf("unable to get created workspace file at path %s: %w", file.Path, err)
+	result := &model.WorkspaceFile{
+		Path:        file.Path,
+		Name:        file.Name,
+		IsDirectory: file.IsDirectory,
+		Size:        int64(len(file.Content)),
+		MimeType:    file.MimeType,
+		UpdatedAt:   time.Now(),
+		Content:     file.Content,
 	}
 
-	return createdFile, nil
+	return result, nil
 }
 
 func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
