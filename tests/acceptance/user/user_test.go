@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	user "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/client/user_service"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/models"
@@ -53,7 +53,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public", map[string]string{"user": "1"}))
 
 				When("the route GET '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceListUsersParams()
@@ -71,7 +71,7 @@ var _ = Describe("user service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAdmin.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
 
 			When("the route GET '/api/rest/v1/users' is called", func() {
 				setupTables()
@@ -112,7 +112,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAuthenticated.String()))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "1"}))
 
 				When("the route GET '/api/rest/v1/users/{id}' is called", func() {
 
@@ -131,7 +131,7 @@ var _ = Describe("user service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAdmin.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "90000"}))
 
 			When("the route GET '/api/rest/v1/users/{id}' is called", func() {
 				setupTables()
@@ -173,7 +173,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public", map[string]string{"user": "1"}))
 
 				When("the route GET '/api/rest/v1/users/me' is called", func() {
 
@@ -190,7 +190,7 @@ var _ = Describe("user service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the route GET '/api/rest/v1/users/me' is called", func() {
 				setupTables()
@@ -233,7 +233,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAuthenticated.String()))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "1"}))
 
 				When("the route DELETE '/api/rest/v1/users/{id}' is called", func() {
 					req := user.NewUserServiceDeleteUserParams().WithID("90000")
@@ -252,7 +252,7 @@ var _ = Describe("user service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAdmin.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
 
 			When("the route DELETE '/api/rest/v1/users/{id}' is called", func() {
 				setupTables()
@@ -302,7 +302,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAuthenticated.String()))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "1"}))
 
 				When("the route PUT '/api/rest/v1/users' is called", func() {
 					req := user.NewUserServiceUpdateUserParams().WithBody(
@@ -329,7 +329,7 @@ var _ = Describe("user service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAdmin.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
 
 			When("the route PUT '/api/rest/v1/users' is called", func() {
 				setupTables()
@@ -355,34 +355,33 @@ var _ = Describe("user service", func() {
 			})
 		})
 
-		Given("a valid jwt-token", func() {
+		// Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, model.RoleAdmin.String()))
+		// 	auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
 
-			When("the route PUT '/api/rest/v1/users' is called with an invalid role", func() {
-				setupTables()
+		// 	When("the route PUT '/api/rest/v1/users' is called with an invalid role", func() {
+		// 		setupTables()
 
-				req := user.NewUserServiceUpdateUserParams().WithBody(
-					&models.ChorusUser{
-						FirstName: "Bob",
-						ID:        "90000",
-						LastName:  "Smith",
-						Roles:     []string{"admin", "chorus"},
-						Status:    "disabled",
-						Username:  "Bobby",
-					},
-				)
+		// 		req := user.NewUserServiceUpdateUserParams().WithBody(
+		// 			&models.ChorusUser{
+		// 				FirstName: "Bob",
+		// 				ID:        "90000",
+		// 				LastName:  "Smith",
+		// 				Status:    "disabled",
+		// 				Username:  "Bobby",
+		// 			},
+		// 		)
 
-				c := helpers.UserServiceHTTPClient()
-				_, err := c.UserService.UserServiceUpdateUser(req, auth)
+		// 		c := helpers.UserServiceHTTPClient()
+		// 		_, err := c.UserService.UserServiceUpdateUser(req, auth)
 
-				Then("a bad request error should be returned", func() {
-					ExpectAPIErr(err).ShouldNot(BeNil())
-					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusBadRequest)))
-				})
-				cleanTables()
-			})
-		})
+		// 		Then("a bad request error should be returned", func() {
+		// 			ExpectAPIErr(err).ShouldNot(BeNil())
+		// 			Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusBadRequest)))
+		// 		})
+		// 		cleanTables()
+		// 	})
+		// })
 	})
 
 	Describe("update password", func() {
@@ -413,7 +412,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public", map[string]string{"user": "1"}))
 
 				When("the route PUT 'api/rest/v1/users/me/password' is called", func() {
 					req := user.NewUserServiceUpdatePasswordParams().WithBody(
@@ -436,7 +435,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user and a weak password", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the route PUT 'api/rest/v1/users/me/password' is called", func() {
 				setupTables()
@@ -460,7 +459,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user and a strong password without TOTP", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the route PUT 'api/rest/v1/users/me/password' is called", func() {
 				setupTables()
@@ -483,7 +482,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user and a strong password with TOTP", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the route PUT 'api/rest/v1/users/me/password' is called", func() {
 				setupTablesWithTotpUser()
@@ -530,7 +529,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public", map[string]string{"user": "1"}))
 
 				When("the route POST '/api/rest/v1/users/me/totp/reset' is called", func() {
 					req := user.NewUserServiceResetTotpParams().WithBody(
@@ -550,7 +549,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user but a wrong password", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the route POST '/api/rest/v1/users/me/totp/reset' is called", func() {
 				setupTablesWithTotpUser()
@@ -571,7 +570,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user and a correct password", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the route POST '/api/rest/v1/users/me/totp/reset' is called", func() {
 				setupTablesWithTotpUser()
@@ -620,7 +619,7 @@ var _ = Describe("user service", func() {
 
 			Given("an unauthorized role", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public", map[string]string{"user": "1"}))
 
 				When("the route POST '/api/rest/v1/users/me/totp/enable' is called", func() {
 					req := user.NewUserServiceEnableTotpParams().WithBody(
@@ -645,7 +644,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user, a correct password and a correct totp", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the routes POST '/api/rest/v1/users/me/totp/reset' and POST '/api/rest/v1/users/me/totp/enable' are called", func() {
 				setupTablesWithTotpUser()
@@ -685,7 +684,7 @@ var _ = Describe("user service", func() {
 
 		Given("an identified user, a correct password but an incorrect totp", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
 
 			When("the routes POST '/api/rest/v1/users/me/totp/reset' and POST '/api/rest/v1/users/me/totp/enable' are called", func() {
 				setupTablesWithTotpUser()
@@ -743,7 +742,7 @@ var _ = Describe("user service", func() {
 
 		// 	Given("an unauthorized role", func() {
 		// 		setupBaseTables()
-		// 		auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "client"))
+		// 		auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public"))
 
 		// 		When("the route POST '/api/rest/v1/users' is called", func() {
 		// 			req := user.NewUserServiceCreateUserParams().WithBody(
@@ -815,11 +814,13 @@ var _ = Describe("user service", func() {
 		// 		})
 		// 	})
 		// })
-		Given("no auth", func() {
+		Given("a platform manager jwt", func() {
 
 			Given("an empty field in request", func() {
 
 				When("the route POST '/api/rest/v1/users' is called", func() {
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlateformUserManager), map[string]string{}))
+
 					req := user.NewUserServiceCreateUserParams().WithBody(
 						&models.ChorusUser{
 							LastName: "last", Username: "user",
@@ -829,7 +830,7 @@ var _ = Describe("user service", func() {
 					)
 
 					c := helpers.UserServiceHTTPClient()
-					_, err := c.UserService.UserServiceCreateUser(req)
+					_, err := c.UserService.UserServiceCreateUser(req, auth)
 
 					Then("a validation error should be raised", func() {
 						ExpectAPIErr(err).ShouldNot(BeNil())
@@ -845,16 +846,18 @@ var _ = Describe("user service", func() {
 
 				When("the route POST '/api/rest/v1/users' is called", func() {
 					setupBaseTables()
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlateformUserManager), map[string]string{}))
+
 					req := user.NewUserServiceCreateUserParams().WithBody(
 						&models.ChorusUser{
 							FirstName: "first", LastName: "last", Username: "user88888",
-							Password: "pass", Status: "active", Roles: []string{"admin", "authenticated"},
+							Password: "pass", Status: "active",
 							TotpEnabled: true,
 						},
 					)
 
 					c := helpers.UserServiceHTTPClient()
-					resp, err := c.UserService.UserServiceCreateUser(req)
+					resp, err := c.UserService.UserServiceCreateUser(req, auth)
 
 					Then("a user should be returned", func() {
 						ExpectAPIErr(err).Should(BeNil())
@@ -875,7 +878,7 @@ var _ = Describe("user service", func() {
 					req := user.NewUserServiceCreateUserParams().WithBody(
 						&models.ChorusUser{
 							FirstName: "first", LastName: "last", Username: "user",
-							Password: "pass", Status: "status", Roles: []string{"client"},
+							Password: "pass", Status: "status", Roles: []string{"Public"},
 							TotpEnabled: true,
 						},
 					)
@@ -901,10 +904,8 @@ func setupBaseTables() {
 	INSERT INTO tenants (id, name) VALUES (88888, 'test tenant');
 
 
-	INSERT INTO roles (id, name) VALUES (1, 'admin');
-	INSERT INTO roles (id, name) VALUES (2, 'operator');
-	INSERT INTO roles (id, name) VALUES (3, 'chorus');
-	INSERT INTO roles (id, name) VALUES (4, 'authenticated');
+	INSERT INTO role_definitions (id, name) VALUES (101, 'SuperAdmin');
+	INSERT INTO role_definitions (id, name) VALUES (102, 'Authenticated');
 	`
 	helpers.Populate(q)
 }
@@ -920,15 +921,13 @@ func setupTables() {
 	INSERT INTO users (id,tenantid, firstname, lastname, username, password, status, createdat, updatedat)
 	VALUES (90001,88888, 'jane', 'doe', 'jadoe', '$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42', 'disabled', NOW(), NOW());
 
-	INSERT INTO roles (id, name) VALUES (1, 'admin');
-	INSERT INTO roles (id, name) VALUES (2, 'operator');
-	INSERT INTO roles (id, name) VALUES (3, 'chorus');
-	INSERT INTO roles (id, name) VALUES (4, 'authenticated');
+	INSERT INTO role_definitions (id, name) VALUES (101, 'SuperAdmin');
+	INSERT INTO role_definitions (id, name) VALUES (102, 'Authenticated');
 
-	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, 1);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, 2);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90001, 3);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92004, 90001, 4);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, 101);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, 102);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90001, 101);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92004, 90001, 102);
 	`
 	helpers.Populate(q)
 }
@@ -943,14 +942,12 @@ func setupTablesWithTotpUser() {
 	VALUES (90000, 88888, 'hello', 'moto', 'hmoto', '$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO', 'active',
 			NOW(), NOW(), 'ohKtu9PFHMquP5Zemcfb4XFQ8TuYnA5Gk1txooQINWL2AbhonyGW0H66zmX8YdUEDEZPYGjOCDPBOF9W');
 
-	INSERT INTO roles (id, name) VALUES (1, 'admin');
-	INSERT INTO roles (id, name) VALUES (2, 'operator');
-	INSERT INTO roles (id, name) VALUES (3, 'chorus');
-	INSERT INTO roles (id, name) VALUES (4, 'authenticated');
+	INSERT INTO role_definitions (id, name) VALUES (101, 'SuperAdmin');
+	INSERT INTO role_definitions (id, name) VALUES (102, 'Authenticated');
 
-	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, 1);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, 2);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90000, 4);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, 101);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, 101);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90000, 102);
 
 	INSERT INTO totp_recovery_codes (id, userid, tenantid, code)
 	VALUES (88888, 90000, 88888, '0Uu+C4s1i+mrS7pqmI2SHJe+Hcg3l4K/ylusXoIv25RE6qEUyRY='),
@@ -964,10 +961,9 @@ func cleanTables() {
 	DELETE FROM notifications_read_by where tenantid = 88888;
 	DELETE FROM notifications where tenantid = 88888;
 	DELETE FROM totp_recovery_codes where tenantid = 88888;
-	DELETE FROM user_role where id in (92001,92002,92003) OR userid=90000 OR roleid in (1,2,3, 4) OR userid in (SELECT id FROM users WHERE tenantid = 88888 or username='user88888');
-	
+	DELETE FROM user_role where id in (92001,92002,92003) OR userid=90000 OR roleid in (101,102) OR userid in (SELECT id FROM users WHERE tenantid = 88888 or username='user88888');
+	DELETE FROM role_definitions where id in (101,102);
 	DELETE FROM users where tenantid = 88888 or username='user88888';
-	DELETE FROM roles where id in (1,2,3, 4);
 	DELETE FROM tenants where id = 88888;
 	`
 	if _, err := helpers.DB().ExecContext(context.Background(), q); err != nil {

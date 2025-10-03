@@ -23,7 +23,7 @@ type UserReq struct {
 	TotpSecret        *string
 	TotpRecoveryCodes []string
 
-	Roles []model.UserRole `validate:"min=1"` // 1 element required min
+	Roles []model.UserRole
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

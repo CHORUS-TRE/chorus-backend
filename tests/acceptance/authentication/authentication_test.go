@@ -118,9 +118,9 @@ func setupTables() {
 	INSERT INTO users (id, tenantid, firstname, lastname, username, password, status)
 	VALUES (97882, 88888, 'jane', 'doe', 'jadoe', '$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42', 'inactive');
 
-	INSERT INTO roles (id, name) VALUES (98881, 'admin_acc_tests');
-	INSERT INTO roles (id, name) VALUES (98882, 'client_acc_tests');
-	INSERT INTO roles (id, name) VALUES (98883, 'tester_acc_tests');
+	INSERT INTO role_definitions (id, name) VALUES (98881, 'SuperAdmin');
+	INSERT INTO role_definitions (id, name) VALUES (98882, 'Public');
+	INSERT INTO role_definitions (id, name) VALUES (98883, 'Authenticated');
 
 	INSERT INTO user_role (id, userid, roleid) VALUES(99881, 97881, 98881);
 	INSERT INTO user_role (id, userid, roleid) VALUES(99882, 97881, 98882);
@@ -134,7 +134,7 @@ func setupTables() {
 func cleanTables() {
 	q := `
 	DELETE FROM user_role where id in (99881, 99882, 99883);
-	DELETE FROM roles where id in (98881, 98882, 98883);
+	DELETE FROM role_definitions where id in (98881, 98882, 98883);
 	DELETE FROM users where tenantid = 88888;
 	DELETE FROM tenants where id = 88888;
 	`

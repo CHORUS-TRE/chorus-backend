@@ -11,13 +11,13 @@ import (
 	jwt_go "github.com/golang-jwt/jwt"
 )
 
-func CreateJWTToken(id, tenantId uint64, role string) string {
+func CreateJWTToken(id, tenantId uint64, roleName string, roleContext map[string]string) string {
 	claims := &jwt_model.JWTClaims{
 		ID:        id,
 		TenantID:  tenantId,
 		FirstName: "hello",
 		LastName:  "moto",
-		Roles:     []string{role},
+		Roles:     []jwt_model.Role{{Name: roleName, Context: roleContext}},
 		Username:  "hmoto",
 		StandardClaims: jwt_go.StandardClaims{
 			ExpiresAt: time.Now().Add(365 * 24 * time.Hour).Unix(),

@@ -189,10 +189,11 @@ func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationM
 func (a *AuthenticationService) Authenticate(ctx context.Context, username, password, totp string) (string, time.Duration, error) {
 	user, err := a.store.GetActiveUser(ctx, username, "internal")
 	if err != nil {
-		logger.SecLog.Info(ctx, "user not found", zap.String("username", username))
+		logger.SecLog.Info(ctx, "user not found", zap.String("username", username), zap.Error(err))
 		return "", 0, choruserrors.NewInvalidCredentialsError()
 	}
 	if user == nil {
+		logger.SecLog.Info(ctx, "user not found", zap.String("username", username))
 		return "", 0, choruserrors.NewInvalidCredentialsError()
 	}
 
