@@ -122,6 +122,7 @@ type (
 	Clients struct {
 		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
 		DockerClient DockerClient `yaml:"docker_client,omitempty"`
+		MinioClient  MinioClient  `yaml:"minio_client,omitempty"`
 	}
 
 	K8sClient struct {
@@ -148,6 +149,15 @@ type (
 
 	DockerClient struct {
 		Enabled bool `yaml:"enabled,omitempty"`
+	}
+
+	MinioClient struct {
+		Enabled         bool   `yaml:"enabled,omitempty"`
+		Endpoint        string `yaml:"endpoint,omitempty"`
+		AccessKeyID     string `yaml:"access_key_id,omitempty"`
+		SecretAccessKey string `yaml:"secret_access_key,omitempty"`
+		BucketName      string `yaml:"bucket_name,omitempty"`
+		UseSSL          bool   `yaml:"use_ssl,omitempty"`
 	}
 
 	ImagePullSecret struct {

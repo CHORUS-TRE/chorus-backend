@@ -64,10 +64,6 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 }
 
 func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.WorkspaceFile, error) {
-	ca, err := FromProtoTimestamp(file.CreatedAt)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
-	}
 	ua, err := FromProtoTimestamp(file.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
@@ -80,7 +76,6 @@ func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.WorkspaceFile, 
 		Size:        file.Size,
 		MimeType:    file.MimeType,
 
-		CreatedAt: ca,
 		UpdatedAt: ua,
 
 		Content: file.Content,
@@ -88,10 +83,10 @@ func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.WorkspaceFile, 
 }
 
 func WorkspaceFileFromBusiness(file *model.WorkspaceFile) (*chorus.WorkspaceFile, error) {
-	ca, err := ToProtoTimestamp(file.CreatedAt)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
+	if file == nil {
+		return nil, fmt.Errorf("unable to convert nil workspace file")
 	}
+
 	ua, err := ToProtoTimestamp(file.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
@@ -104,7 +99,6 @@ func WorkspaceFileFromBusiness(file *model.WorkspaceFile) (*chorus.WorkspaceFile
 		Size:        file.Size,
 		MimeType:    file.MimeType,
 
-		CreatedAt: ca,
 		UpdatedAt: ua,
 
 		Content: file.Content,

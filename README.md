@@ -19,8 +19,13 @@ This project is the backend of the chorus platform.
 1) install go
 2) pull repo
 3) requirements
-    a) postgres `docker compose -f .devcontainer/docker-compose.yml up -d`
-    b) kind `./scripts/create-local-cluster.sh`
+    * postgres & minio `docker compose -f .devcontainer/docker-compose.yml up -d`
+    * kind `./scripts/create-local-cluster.sh`
+    * setup minio `mc` client with the following commands:
+        ```
+        mc alias set minio http://localhost:9000 minioadmin minioadmin
+        mc mb minio/chorus-data
+        ```
 4) launch go run 
     `go run cmd/chorus/main.go start | go run cmd/logger/main.go`
 5) go to localhost:5000/doc

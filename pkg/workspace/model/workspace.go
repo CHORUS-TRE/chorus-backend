@@ -83,13 +83,13 @@ func (Workspace) IsValidSortType(sortType string) bool {
 }
 
 type WorkspaceFile struct {
+	Path string
+
 	Name        string
-	Path        string
 	IsDirectory bool
 	Size        int64
 	MimeType    string
 
-	CreatedAt time.Time
 	UpdatedAt time.Time
 
 	Content []byte

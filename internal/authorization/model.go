@@ -43,10 +43,10 @@ const (
 	PermissionGetWorkspace               PermissionName = "getWorkspace"
 	PermissionDeleteWorkspace            PermissionName = "deleteWorkspace"
 	PermissionManageUsersInWorkspace     PermissionName = "manageUsersInWorkspace"
+	PermissionListFilesInWorkspace       PermissionName = "listFilesInWorkspace"
 	PermissionUploadFilesToWorkspace     PermissionName = "uploadFilesToWorkspace"
 	PermissionDownloadFilesFromWorkspace PermissionName = "downloadFilesFromWorkspace"
 	PermissionModifyFilesInWorkspace     PermissionName = "modifyFilesInWorkspace"
-	PermissionListFilesInWorkspace       PermissionName = "listFilesInWorkspace"
 
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
@@ -126,14 +126,14 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionDeleteWorkspace, nil
 	case string(PermissionManageUsersInWorkspace):
 		return PermissionManageUsersInWorkspace, nil
+	case string(PermissionListFilesInWorkspace):
+		return PermissionListFilesInWorkspace, nil
 	case string(PermissionUploadFilesToWorkspace):
 		return PermissionUploadFilesToWorkspace, nil
 	case string(PermissionDownloadFilesFromWorkspace):
 		return PermissionDownloadFilesFromWorkspace, nil
 	case string(PermissionModifyFilesInWorkspace):
 		return PermissionModifyFilesInWorkspace, nil
-	case string(PermissionListFilesInWorkspace):
-		return PermissionListFilesInWorkspace, nil
 
 	case string(PermissionListApps):
 		return PermissionListApps, nil

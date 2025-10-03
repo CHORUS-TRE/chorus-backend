@@ -166,6 +166,15 @@ func (c workspaceControllerAuthorization) GetWorkspaceFile(ctx context.Context, 
 	return c.next.GetWorkspaceFile(ctx, req)
 }
 
+func (c workspaceControllerAuthorization) ListWorkspaceFiles(ctx context.Context, req *chorus.ListWorkspaceFilesRequest) (*chorus.ListWorkspaceFilesReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionListFilesInWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ListWorkspaceFiles(ctx, req)
+}
+
 func (c workspaceControllerAuthorization) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {

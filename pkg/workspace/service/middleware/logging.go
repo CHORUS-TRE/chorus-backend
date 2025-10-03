@@ -149,24 +149,25 @@ func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspace
 	return res, nil
 }
 
-func (c workspaceServiceLogging) GetWorkspaceFileChildren(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
+func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
 	now := time.Now()
 
-	res, err := c.next.GetWorkspaceFileChildren(ctx, workspaceID, filePath)
+	files, err := c.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithWorkspaceIDField(workspaceID),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to get workspace file children: %w", err)
+		return nil, fmt.Errorf("unable to list workspace files: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
+		zap.Int("num_files", len(files)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return res, nil
+	return files, nil
 }
 
 func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {

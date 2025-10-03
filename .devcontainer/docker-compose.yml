@@ -11,6 +11,7 @@ services:
   #   command: /bin/sh -c "while sleep 1000; do :; done"
   postgres:
     image: postgres
+    # user: "<UID>:<GID>"  # Replace with your actual UID:GID
     ports:
       - 5432:5432
     environment:
@@ -20,3 +21,15 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ../docker/.postgresvolume:/var/lib/postgresql/data
+  minio:
+    container_name: minio
+    image: minio/minio
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - ../docker/.miniovolume:/data
+    command: server /data --console-address ":9001"

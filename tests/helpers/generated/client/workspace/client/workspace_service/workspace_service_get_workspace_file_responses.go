@@ -88,12 +88,12 @@ func (o *WorkspaceServiceGetWorkspaceFileOK) Code() int {
 
 func (o *WorkspaceServiceGetWorkspaceFileOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] workspaceServiceGetWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] workspaceServiceGetWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceGetWorkspaceFileOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] workspaceServiceGetWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] workspaceServiceGetWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceGetWorkspaceFileOK) GetPayload() *models.ChorusGetWorkspaceFileReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceServiceGetWorkspaceFileDefault) Code() int {
 
 func (o *WorkspaceServiceGetWorkspaceFileDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] WorkspaceService_GetWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] WorkspaceService_GetWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceGetWorkspaceFileDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/files/{path}][%d] WorkspaceService_GetWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/file/{path}][%d] WorkspaceService_GetWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceGetWorkspaceFileDefault) GetPayload() *models.RPCStatus {

@@ -88,12 +88,12 @@ func (o *WorkspaceServiceUpdateWorkspaceFileOK) Code() int {
 
 func (o *WorkspaceServiceUpdateWorkspaceFileOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}][%d] workspaceServiceUpdateWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}][%d] workspaceServiceUpdateWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceUpdateWorkspaceFileOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}][%d] workspaceServiceUpdateWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}][%d] workspaceServiceUpdateWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceUpdateWorkspaceFileOK) GetPayload() *models.ChorusUpdateWorkspaceFileReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceServiceUpdateWorkspaceFileDefault) Code() int {
 
 func (o *WorkspaceServiceUpdateWorkspaceFileDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}][%d] WorkspaceService_UpdateWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}][%d] WorkspaceService_UpdateWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceUpdateWorkspaceFileDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/files/{oldPath}][%d] WorkspaceService_UpdateWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}][%d] WorkspaceService_UpdateWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceUpdateWorkspaceFileDefault) GetPayload() *models.RPCStatus {

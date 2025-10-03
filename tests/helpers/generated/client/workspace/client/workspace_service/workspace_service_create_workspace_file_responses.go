@@ -88,12 +88,12 @@ func (o *WorkspaceServiceCreateWorkspaceFileOK) Code() int {
 
 func (o *WorkspaceServiceCreateWorkspaceFileOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/files][%d] workspaceServiceCreateWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file][%d] workspaceServiceCreateWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceCreateWorkspaceFileOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/files][%d] workspaceServiceCreateWorkspaceFileOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file][%d] workspaceServiceCreateWorkspaceFileOK %s", 200, payload)
 }
 
 func (o *WorkspaceServiceCreateWorkspaceFileOK) GetPayload() *models.ChorusCreateWorkspaceFileReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceServiceCreateWorkspaceFileDefault) Code() int {
 
 func (o *WorkspaceServiceCreateWorkspaceFileDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/files][%d] WorkspaceService_CreateWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file][%d] WorkspaceService_CreateWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceCreateWorkspaceFileDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/files][%d] WorkspaceService_CreateWorkspaceFile default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file][%d] WorkspaceService_CreateWorkspaceFile default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceServiceCreateWorkspaceFileDefault) GetPayload() *models.RPCStatus {
