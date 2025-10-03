@@ -73,3 +73,7 @@ func (c *Caching) UpdateApp(ctx context.Context, app *model.App) (*model.App, er
 func (c *Caching) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
 	return c.next.CreateApp(ctx, app)
 }
+
+func (c *Caching) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*model.App, error) {
+	return c.next.BulkCreateApps(ctx, apps)
+}

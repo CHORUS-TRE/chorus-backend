@@ -52,3 +52,12 @@ func (v validation) CreateApp(ctx context.Context, app *model.App) (*model.App, 
 	}
 	return v.next.CreateApp(ctx, app)
 }
+
+func (v validation) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*model.App, error) {
+	for _, app := range apps {
+		if err := v.validate.Struct(app); err != nil {
+			return nil, err
+		}
+	}
+	return v.next.BulkCreateApps(ctx, apps)
+}

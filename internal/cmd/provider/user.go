@@ -40,7 +40,7 @@ var userController chorus.UserServiceServer
 
 func ProvideUserController() chorus.UserServiceServer {
 	userControllerOnce.Do(func() {
-		userController = v1.NewUserController(ProvideUser(), ProvideConfig())
+		userController = v1.NewUserController(ProvideUser(), ProvideConfig(), ProvideAuthenticator())
 		userController = ctrl_mw.UserAuthorizing(logger.SecLog, ProvideAuthorizer())(userController)
 	})
 	return userController

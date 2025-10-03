@@ -124,3 +124,22 @@ func (c appServiceLogging) CreateApp(ctx context.Context, app *model.App) (*mode
 	)
 	return newApp, nil
 }
+
+func (c appServiceLogging) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*model.App, error) {
+	now := time.Now()
+
+	newApps, err := c.next.BulkCreateApps(ctx, apps)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to bulk create apps: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Int("num_apps", len(newApps)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return newApps, nil
+}

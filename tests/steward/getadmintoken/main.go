@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	_ "github.com/lib/pq"
 )
@@ -15,7 +15,7 @@ import (
 func main() {
 	helpers.Setup()
 
-	token := helpers.CreateJWTToken(1, 88888, model.RoleChorus.String())
+	token := helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*", "workspace": "*", "workbench": "*"})
 
 	fmt.Println("token", token)
 }

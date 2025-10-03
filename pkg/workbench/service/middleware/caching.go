@@ -16,7 +16,7 @@ import (
 
 const (
 	workbenchCacheSize     = 100 * 1024 * 1024 // Max 100MiB stored in memory
-	defaultCacheExpiration = 5
+	defaultCacheExpiration = 1
 	longCacheExpiration    = 60
 )
 

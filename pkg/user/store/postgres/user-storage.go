@@ -31,7 +31,7 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *service.UserFilter) (users []*model.User, paginationRes *common.PaginationResult, err error) {
 	args := []interface{}{tenantID}
 
-	filterClause, args := storage.BuildUserFilterClause(filter, &args)
+	filterClause := storage.BuildUserFilterClause(filter, &args)
 
 	// Get total count query
 	countQuery := `SELECT COUNT(*) FROM users WHERE tenantid = $1 AND status != 'deleted'`
@@ -40,7 +40,7 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 	}
 	var totalCount int64
 	if err = s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to get total count: %w", err)
 	}
 
 	// Get users query
@@ -69,13 +69,13 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 	}
 
 	if err := s.db.SelectContext(ctx, &users, query, args...); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unable to list users select context: %w", err)
 	}
 
 	for _, u := range users {
 		roles, err := s.getUserRoles(ctx, u.ID)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("unable to get user roles: %w", err)
 		}
 		u.Roles = roles
 	}

@@ -14,6 +14,7 @@ type Apper interface {
 	GetApp(ctx context.Context, tenantID, appID uint64) (*model.App, error)
 	ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error)
 	CreateApp(ctx context.Context, app *model.App) (*model.App, error)
+	BulkCreateApps(ctx context.Context, apps []*model.App) ([]*model.App, error)
 	UpdateApp(ctx context.Context, app *model.App) (*model.App, error)
 	DeleteApp(ctx context.Context, tenantId, appId uint64) error
 }
@@ -22,6 +23,7 @@ type AppStore interface {
 	GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error)
 	ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error)
 	CreateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error)
+	BulkCreateApps(ctx context.Context, tenantID uint64, apps []*model.App) ([]*model.App, error)
 	UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error)
 	DeleteApp(ctx context.Context, tenantID uint64, appID uint64) error
 }
@@ -112,6 +114,35 @@ func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 	}()
 
 	return newApp, nil
+}
+
+func (u *AppService) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*model.App, error) {
+	for _, app := range apps {
+		imageRef := dockerImageToString(app)
+
+		// Verify that app image exists using docker client
+		exists, err := u.dockerClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+		if err != nil {
+			return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
+		}
+		if !exists {
+			return nil, fmt.Errorf("app image %s does not exist", imageRef)
+		}
+	}
+
+	newApps, err := u.store.BulkCreateApps(ctx, apps[0].TenantID, apps)
+	if err != nil {
+		return nil, fmt.Errorf("unable to bulk create apps: %w", err)
+	}
+
+	go func() {
+		for _, app := range apps {
+			imageRef := dockerImageToString(app)
+			u.k8sClient.PrePullImageOnAllNodes(imageRef)
+		}
+	}()
+
+	return newApps, nil
 }
 
 // dockerImageToString constructs the full Docker image name
