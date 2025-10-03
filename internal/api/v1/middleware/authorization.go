@@ -43,7 +43,7 @@ func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authorization.R
 
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
-		c.logger.Warn(ctx, "malformed JWT token")
+		c.logger.Warn(ctx, "malformed JWT token", zap.Any("content", ctx.Value(jwt_model.JWTClaimsContextKey)))
 		return nil, nil, status.Error(codes.Unauthenticated, "malformed jwt-token")
 	}
 
@@ -54,6 +54,16 @@ func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authorization.R
 	}
 
 	return aRoles, claims, nil
+}
+
+func (c Authorization) getUserID(ctx context.Context) (uint64, error) {
+	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
+	if !ok {
+		c.logger.Warn(ctx, "malformed JWT token")
+		return 0, status.Error(codes.Unauthenticated, "malformed jwt-token")
+	}
+
+	return claims.ID, nil
 }
 
 func (c Authorization) IsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) error {

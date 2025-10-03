@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	notification "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/client/notification_service"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/models"
@@ -47,7 +47,7 @@ var _ = Describe("notification service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
 
 			When("the route GET '/api/rest/v1/notifications/count' is called", func() {
 				setupTables()
@@ -87,7 +87,7 @@ var _ = Describe("notification service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, model.RoleAuthenticated.String()))
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
 
 			When("the route POST '/api/rest/v1/notifications/read' is called", func() {
 				setupTables()
@@ -146,7 +146,7 @@ var _ = Describe("notification service", func() {
 
 			Given("a valid request", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, model.RoleAuthenticated.String()))
+				auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
 
 				When("the route GET '/api/rest/v1/notifications' is called with default params", func() {
 					setupTables()

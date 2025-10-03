@@ -91,15 +91,15 @@ func BuildPaginationClause(pagination *common.Pagination, model common.Sortable)
 	}
 }
 
-func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) (string, []interface{}) {
+func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) string {
 	var clauses []string
 
-	if len(filter.IDsIn) > 0 {
+	if filter != nil && len(filter.IDsIn) > 0 {
 		clauses = append(clauses, fmt.Sprintf("id = ANY($%d)", len(*args)+1))
 		*args = append(*args, pq.Int64Array(Uint64ToPqInt64(filter.IDsIn)))
 	}
 
-	if len(filter.WorkspaceIDs) > 0 {
+	if filter != nil && len(filter.WorkspaceIDs) > 0 {
 		clauses = append(clauses, fmt.Sprintf(`
 		id IN (
 			SELECT userid FROM user_role WHERE id IN (
@@ -109,7 +109,7 @@ func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) (str
 		*args = append(*args, pq.Int64Array(Uint64ToPqInt64(filter.WorkspaceIDs)))
 	}
 
-	if len(filter.WorkbenchIDs) > 0 {
+	if filter != nil && len(filter.WorkbenchIDs) > 0 {
 		clauses = append(clauses, fmt.Sprintf(`
 		id IN (
 			SELECT userid FROM user_role WHERE id IN (
@@ -119,10 +119,10 @@ func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) (str
 		*args = append(*args, pq.Int64Array(Uint64ToPqInt64(filter.WorkbenchIDs)))
 	}
 
-	if filter.Search != nil && *filter.Search != "" {
+	if filter != nil && filter.Search != nil && *filter.Search != "" {
 		clauses = append(clauses, fmt.Sprintf("(LOWER(firstname) LIKE LOWER($%d) OR LOWER(lastname) LIKE LOWER($%d) OR LOWER(username) LIKE LOWER($%d))", len(*args)+1, len(*args)+1, len(*args)+1))
 		*args = append(*args, "%"+*filter.Search+"%")
 	}
 
-	return strings.Join(clauses, " AND "), nil
+	return strings.Join(clauses, " AND ")
 }

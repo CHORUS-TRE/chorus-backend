@@ -98,19 +98,21 @@ func NewAuthUnaryServerInterceptors(
 			return nil, err
 		}
 
-		if isPublic {
-			// return context.WithValue(ctx, "auth", "public"), nil
-			return ctx, nil
+		returnCtxErr := func(err error) (context.Context, error) {
+			if isPublic {
+				return ctx, nil
+			}
+			return nil, err
 		}
 
 		tokenString, err := grpc_auth.AuthFromMD(ctx, "bearer")
 		if err != nil {
-			return nil, err
+			return returnCtxErr(err)
 		}
 
 		claims, err := jwt_helper.ParseToken(ctx, tokenString, keyFunc, claimsFactory)
 		if err != nil {
-			return nil, status.Errorf(codes.Unauthenticated, "invalid authentication token: %v", err)
+			return returnCtxErr(status.Errorf(codes.Unauthenticated, "invalid authentication token: %v", err))
 		}
 		tenantID := jwt_helper.TenantIDFromClaims(claims)
 		ctx = context.WithValue(ctx, jwt_model.JWTClaimsContextKey, claims)

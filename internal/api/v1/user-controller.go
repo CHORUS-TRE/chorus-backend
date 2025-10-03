@@ -214,17 +214,17 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	modes := c.authenticator.GetAuthenticationModes()
-	internalModePublicRegistration := false
-	for _, mode := range modes {
-		if mode.Type == "internal" && mode.Internal.PublicRegistrationEnabled {
-			internalModePublicRegistration = true
-			break
-		}
-	}
-	if !internalModePublicRegistration {
-		return nil, status.Error(codes.PermissionDenied, "public registration is disabled")
-	}
+	// modes := c.authenticator.GetAuthenticationModes()
+	// internalModePublicRegistration := false
+	// for _, mode := range modes {
+	// 	if mode.Type == "internal" && mode.Internal.PublicRegistrationEnabled {
+	// 		internalModePublicRegistration = true
+	// 		break
+	// 	}
+	// }
+	// if !internalModePublicRegistration {
+	// 	return nil, status.Error(codes.PermissionDenied, "public registration is disabled")
+	// }
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
