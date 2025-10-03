@@ -20,7 +20,7 @@ type MinioClienter interface {
 	StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
 	GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
 	ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error)
-	PutWorkspaceObject(workspaceID uint64, path string, content []byte) error
+	PutWorkspaceObject(workspaceID uint64, path string, content []byte, contentType string) (*workspace_model.WorkspaceFile, error)
 	DeleteWorkspaceObject(workspaceID uint64, path string) error
 }
 
@@ -65,6 +65,8 @@ func (c *client) StatWorkspaceObject(workspaceID uint64, path string) (*workspac
 		return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
 	}
 
+	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully retrieved %s metadata from workspace %d\n", objectKey, workspaceID))
+
 	return &file, nil
 }
 
@@ -93,6 +95,8 @@ func (c *client) GetWorkspaceObject(workspaceID uint64, path string) (*workspace
 	}
 	file.Content = content
 
+	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully downloaded %s from workspace %d\n", objectKey, workspaceID))
+
 	return &file, nil
 }
 
@@ -101,7 +105,8 @@ func (c *client) ListWorkspaceObjects(workspaceID uint64, path string) ([]*works
 
 	files := []*workspace_model.WorkspaceFile{}
 	objectCh := c.minioClient.ListObjects(context.Background(), c.minioClientCfg.BucketName, minio.ListObjectsOptions{
-		Prefix: objectKey,
+		Prefix:       objectKey,
+		WithMetadata: true,
 		// Recursive: true,
 	})
 	for object := range objectCh {
@@ -114,20 +119,38 @@ func (c *client) ListWorkspaceObjects(workspaceID uint64, path string) ([]*works
 		}
 		files = append(files, &file)
 	}
+
+	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully listed objects under %s in workspace %d\n", objectKey, workspaceID))
+
 	return files, nil
 }
 
-func (c *client) PutWorkspaceObject(workspaceID uint64, path string, content []byte) error {
+func (c *client) PutWorkspaceObject(workspaceID uint64, path string, content []byte, contentType string) (*workspace_model.WorkspaceFile, error) {
 	objectKey := WorkspacePathToObjectKey(workspaceID, path)
 
-	n, err := c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(content), int64(len(content)), minio.PutObjectOptions{})
-	if err != nil {
-		return fmt.Errorf("unable to put object at %s: %w", objectKey, err)
+	_, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
+	if err == nil {
+		return nil, fmt.Errorf("object at %s already exists in workspace %d", objectKey, workspaceID)
 	}
 
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully uploaded %s of size %d\n", objectKey, n.Size))
+	_, err = c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(content), int64(len(content)), minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		return nil, fmt.Errorf("unable to put object at %s: %w", objectKey, err)
+	}
 
-	return nil
+	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully uploaded %s in workspace %d\n", objectKey, workspaceID))
+
+	objectInfo, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to verify uploaded object %s: %w", objectKey, err)
+	}
+
+	file, err := c.ObjectToWorkspaceFile(objectInfo)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
+	}
+
+	return &file, nil
 }
 
 func (c *client) DeleteWorkspaceObject(workspaceID uint64, path string) error {
@@ -138,7 +161,7 @@ func (c *client) DeleteWorkspaceObject(workspaceID uint64, path string) error {
 		return fmt.Errorf("unable to delete object at %s: %w", objectKey, err)
 	}
 
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully deleted %s\n", objectKey))
+	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully deleted %s from workspace %d\n", objectKey, workspaceID))
 
 	return nil
 }
