@@ -13,6 +13,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
+	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
@@ -21,13 +22,14 @@ var _ chorus.UserServiceServer = (*UserController)(nil)
 
 // UserController is the user service controller handler.
 type UserController struct {
-	user service.Userer
-	cfg  config.Config
+	user          service.Userer
+	authenticator authentication_service.Authenticator
+	cfg           config.Config
 }
 
 // NewUserController returns a fresh admin service controller instance.
-func NewUserController(user service.Userer, cfg config.Config) UserController {
-	return UserController{user: user, cfg: cfg}
+func NewUserController(user service.Userer, cfg config.Config, authenticator authentication_service.Authenticator) UserController {
+	return UserController{user: user, cfg: cfg, authenticator: authenticator}
 }
 
 func (c UserController) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
@@ -210,6 +212,18 @@ func UserFilterToBusiness(aFilter *chorus.UserFilter) *service.UserFilter {
 func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	modes := c.authenticator.GetAuthenticationModes()
+	internalModePublicRegistration := false
+	for _, mode := range modes {
+		if mode.Type == "internal" && mode.Internal.PublicRegistrationEnabled {
+			internalModePublicRegistration = true
+			break
+		}
+	}
+	if !internalModePublicRegistration {
+		return nil, status.Error(codes.PermissionDenied, "public registration is disabled")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
