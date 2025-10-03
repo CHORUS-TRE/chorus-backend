@@ -6,6 +6,8 @@ filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20251002130202-3ad68c819feb h1:P6+S+RR/QIlkqpIHc0mZPYio+Fgt+JsGLXnIzpvrveM=
 github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20251002130202-3ad68c819feb/go.mod h1:poKm4o0GPoaIx4/6gpp0JM+mlPwuoyWNGqHCV257EHk=
+github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20251003091118-81793668dbe6 h1:6FppnRg43XNlP3d9viAbyaQa00WdGd7bAvabmkqYaxY=
+github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20251003091118-81793668dbe6/go.mod h1:poKm4o0GPoaIx4/6gpp0JM+mlPwuoyWNGqHCV257EHk=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
