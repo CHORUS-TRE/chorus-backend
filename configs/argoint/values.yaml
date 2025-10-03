@@ -1,0 +1,12 @@
+ingress:
+  enabled: true
+  host: "backend.int.chorus-tre.ch"
+
+service:
+  port: 5000
+
+deployment:
+  postgresEnabled: false
+  serviceAccountName: "backend-service-account-chorus-master"
+
+image: harbor.int.chorus-tre.ch/chorus/backend:master
