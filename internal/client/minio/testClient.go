@@ -22,7 +22,7 @@ func (c *testClient) GetWorkspaceObject(workspaceID uint64, path string) (*works
 	return nil, nil
 }
 
-func (c *testClient) PutWorkspaceObject(workspaceID uint64, path string, content []byte, contentType string) (*workspace_model.WorkspaceFile, error) {
+func (c *testClient) PutWorkspaceObject(workspaceID uint64, file *workspace_model.WorkspaceFile) (*workspace_model.WorkspaceFile, error) {
 	return nil, nil
 }
 

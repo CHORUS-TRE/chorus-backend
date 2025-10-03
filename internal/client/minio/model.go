@@ -27,8 +27,12 @@ func (c *client) ObjectToWorkspaceFile(objectInfo minio.ObjectInfo) (workspace_m
 	}, nil
 }
 
-func WorkspacePathToObjectKey(workspaceID uint64, filePath string) string {
-	return fmt.Sprintf("%s%d/%s", WORKSPACE_PREFIX, workspaceID, strings.TrimPrefix(filePath, "/"))
+func WorkspacePathToObjectKey(workspaceID uint64, filePath string, isDirectory bool) string {
+	path := fmt.Sprintf("%s%d/%s", WORKSPACE_PREFIX, workspaceID, strings.TrimPrefix(filePath, "/"))
+	if isDirectory && !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path
 }
 
 func ObjectKeyToWorkspacePath(objectKey string) string {

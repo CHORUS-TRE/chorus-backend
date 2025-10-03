@@ -27,7 +27,7 @@ func (s *WorkspaceService) ListWorkspaceFiles(ctx context.Context, workspaceID u
 }
 
 func (s *WorkspaceService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	createdFile, err := s.minioClient.PutWorkspaceObject(workspaceID, file.Path, file.Content, file.MimeType)
+	createdFile, err := s.minioClient.PutWorkspaceObject(workspaceID, file)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workspace file at path %s: %w", file.Path, err)
 	}
@@ -46,7 +46,7 @@ func (s *WorkspaceService) UpdateWorkspaceFile(ctx context.Context, workspaceID 
 		return nil, fmt.Errorf("unable to update old workspace file at path %s: %w", oldPath, err)
 	}
 
-	file, err = s.minioClient.PutWorkspaceObject(workspaceID, file.Path, file.Content, file.MimeType)
+	file, err = s.minioClient.PutWorkspaceObject(workspaceID, file)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new workspace file at path %s: %w", file.Path, err)
 	}

@@ -20,7 +20,7 @@ type MinioClienter interface {
 	StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
 	GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
 	ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error)
-	PutWorkspaceObject(workspaceID uint64, path string, content []byte, contentType string) (*workspace_model.WorkspaceFile, error)
+	PutWorkspaceObject(workspaceID uint64, file *workspace_model.WorkspaceFile) (*workspace_model.WorkspaceFile, error)
 	DeleteWorkspaceObject(workspaceID uint64, path string) error
 }
 
@@ -53,7 +53,7 @@ func NewClient(cfg config.Config) (*client, error) {
 }
 
 func (c *client) StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
 
 	objectInfo, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *client) StatWorkspaceObject(workspaceID uint64, path string) (*workspac
 }
 
 func (c *client) GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
 
 	reader, err := c.minioClient.GetObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.GetObjectOptions{})
 	if err != nil {
@@ -101,7 +101,7 @@ func (c *client) GetWorkspaceObject(workspaceID uint64, path string) (*workspace
 }
 
 func (c *client) ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
 
 	files := []*workspace_model.WorkspaceFile{}
 	objectCh := c.minioClient.ListObjects(context.Background(), c.minioClientCfg.BucketName, minio.ListObjectsOptions{
@@ -125,15 +125,15 @@ func (c *client) ListWorkspaceObjects(workspaceID uint64, path string) ([]*works
 	return files, nil
 }
 
-func (c *client) PutWorkspaceObject(workspaceID uint64, path string, content []byte, contentType string) (*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+func (c *client) PutWorkspaceObject(workspaceID uint64, file *workspace_model.WorkspaceFile) (*workspace_model.WorkspaceFile, error) {
+	objectKey := WorkspacePathToObjectKey(workspaceID, file.Path, file.IsDirectory)
 
 	_, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
 	if err == nil {
 		return nil, fmt.Errorf("object at %s already exists in workspace %d", objectKey, workspaceID)
 	}
 
-	_, err = c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(content), int64(len(content)), minio.PutObjectOptions{ContentType: contentType})
+	_, err = c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(file.Content), int64(len(file.Content)), minio.PutObjectOptions{ContentType: file.MimeType})
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", objectKey, err)
 	}
@@ -145,16 +145,16 @@ func (c *client) PutWorkspaceObject(workspaceID uint64, path string, content []b
 		return nil, fmt.Errorf("unable to verify uploaded object %s: %w", objectKey, err)
 	}
 
-	file, err := c.ObjectToWorkspaceFile(objectInfo)
+	createdFile, err := c.ObjectToWorkspaceFile(objectInfo)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
 	}
 
-	return &file, nil
+	return &createdFile, nil
 }
 
 func (c *client) DeleteWorkspaceObject(workspaceID uint64, path string) error {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path)
+	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
 
 	err := c.minioClient.RemoveObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.RemoveObjectOptions{})
 	if err != nil {
