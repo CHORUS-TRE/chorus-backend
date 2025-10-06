@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -471,6 +473,51 @@ func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID
 	return nil
 }
 
+type retryRT struct {
+	rt  http.RoundTripper
+	cfg config.Config
+}
+
+func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
+	var lastErr error
+	for i := 0; i < r.cfg.Services.WorkbenchService.RoundTripper.MaxTransientRetry; i++ {
+		resp, err := r.rt.RoundTrip(req)
+		if err == nil {
+			return resp, nil
+		}
+		// retry on common transient network errors
+		if ne, ok := err.(net.Error); ok && ne.Temporary() {
+			lastErr = err
+			logger.TechLog.Warn(context.Background(), "transient network error, retrying", zap.Error(err), zap.Int("attempt", i+1))
+			continue
+		}
+		msg := strings.ToLower(err.Error())
+		if strings.Contains(msg, "connection reset by peer") || strings.Contains(msg, "broken pipe") || strings.Contains(msg, "unexpected eof") || strings.Contains(msg, "read: connection timed out") {
+			lastErr = err
+			logger.TechLog.Warn(context.Background(), "transient network error, retrying", zap.Error(err), zap.Int("attempt", i+1))
+			continue
+		}
+		return nil, err
+	}
+	return nil, lastErr
+}
+
+func (s *WorkbenchService) getRoundtripper() http.RoundTripper {
+	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   s.cfg.Services.WorkbenchService.RoundTripper.DialTimeout,
+			KeepAlive: s.cfg.Services.WorkbenchService.RoundTripper.DialKeepAlive,
+		}).DialContext,
+		ForceAttemptHTTP2:     s.cfg.Services.WorkbenchService.RoundTripper.ForceAttemptHTTP2,
+		MaxIdleConns:          s.cfg.Services.WorkbenchService.RoundTripper.MaxIdleConns,
+		MaxIdleConnsPerHost:   s.cfg.Services.WorkbenchService.RoundTripper.MaxIdleConnsPerHost,
+		IdleConnTimeout:       s.cfg.Services.WorkbenchService.RoundTripper.IdleConnTimeout,
+		TLSHandshakeTimeout:   s.cfg.Services.WorkbenchService.RoundTripper.TLSHandshakeTimeout,
+		ResponseHeaderTimeout: s.cfg.Services.WorkbenchService.RoundTripper.ResponseHeaderTimeout,
+	}
+}
+
 func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	// TODO error handling, port forwarding re-creation, cache eviction, cleaning on cache evit and sig stop
 	s.proxyRWMutex.RLock()
@@ -507,10 +554,16 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
+	tr := s.getRoundtripper()
+	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
 		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		s.proxyRWMutex.Lock()
+		delete(s.proxyCache, proxyID)
+		s.proxyRWMutex.Unlock()
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
+
 	originalDirector := reverseProxy.Director
 
 	reverseProxy.Director = func(req *http.Request) {

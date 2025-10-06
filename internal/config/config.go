@@ -255,6 +255,17 @@ type (
 			StreamProxyEnabled        bool          `yaml:"stream_proxy_enabled"`
 			BackendInK8S              bool          `yaml:"backend_in_k8s"`
 			ProxyHitSaveBatchInterval time.Duration `yaml:"proxy_hit_save_batch_interval"`
+			RoundTripper              struct {
+				DialTimeout           time.Duration `yaml:"dial_timeout"`
+				DialKeepAlive         time.Duration `yaml:"dial_keep_alive"`
+				ForceAttemptHTTP2     bool          `yaml:"force_attempt_http2"`
+				MaxIdleConns          int           `yaml:"max_idle_conns"`
+				MaxIdleConnsPerHost   int           `yaml:"max_idle_conns_per_host"`
+				IdleConnTimeout       time.Duration `yaml:"idle_conn_timeout"`
+				TLSHandshakeTimeout   time.Duration `yaml:"tls_handshake_timeout"`
+				ResponseHeaderTimeout time.Duration `yaml:"response_header_timeout"`
+				MaxTransientRetry     int           `yaml:"max_transient_retry"`
+			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
 
 		Steward struct {
