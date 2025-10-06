@@ -507,6 +507,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
+	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
+		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
+	}
 	originalDirector := reverseProxy.Director
 
 	reverseProxy.Director = func(req *http.Request) {
