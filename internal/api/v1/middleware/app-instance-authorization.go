@@ -47,7 +47,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 }
 
 func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateAppInstance)
+	err := c.IsAuthorized(ctx, authorization.PermissionCreateAppInstance, authorization.WithWorkbench(req.WorkbenchId), authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}
