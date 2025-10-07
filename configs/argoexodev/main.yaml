@@ -33,7 +33,7 @@ storage:
       migration_table_name: tt_migrations
       host: chorus-exodev-backend-db-postgresql
       port: 5432
-      username: backend
+      username: chorus-dev-user
       password: '{{ .postgres_password }}'
       database: chorus
       max_connections: 10
