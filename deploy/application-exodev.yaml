@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chorus-exodev-backend
+  namespace: argocd
+spec:
+  project: chorus-exodev
+  destination:
+    name: chorus-exodev
+    namespace: backend
+  sources:
+    - repoURL: https://github.com/CHORUS-TRE/chorus-backend.git
+      path: deploy/backend
+      targetRevision: HEAD
+      helm:
+        valueFiles:
+          - ../../configs/argoexodev/values.yaml
+        fileParameters:
+          - name: main.yaml
+            path: ../../configs/argoexodev/main.yaml
+        parameters:
+          - name: podLabels.commit-sha
+            value: $ARGOCD_APP_REVISION_SHORT
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - preserveResourcesOnDeletion=true
+      - ServerSideApply=false
