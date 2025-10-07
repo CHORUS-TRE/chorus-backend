@@ -40,10 +40,10 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddRoot(handler, version, started)
 	handler = middleware.AddMetrics(handler, cfg)
 	handler = middleware.AddDoc(handler)
+	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
 		handler = middleware.AddProxyWorkbench(handler, pw, cfg, authorizer, keyFunc, claimsFactory)
 	}
-	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.AuthenticationService.DevAuthEnabled {
 		handler = middleware.AddDevAuth(handler)
 	}
