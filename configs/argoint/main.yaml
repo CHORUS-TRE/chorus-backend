@@ -7,7 +7,7 @@ daemon:
       access_control_allow_origins: 
       - "https://int.chorus-tre.ch"
       - "http://localhost:3000"
-      access_control_allow_origin_wildcard: false
+      access_control_allow_origin_wildcard: true
       access_control_max_age: "600"
       cookie_domain: ".int.chorus-tre.ch"
   jwt:
