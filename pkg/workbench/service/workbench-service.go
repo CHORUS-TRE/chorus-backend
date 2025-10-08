@@ -17,6 +17,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
@@ -570,6 +571,20 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		originalDirector(req)
 
 		req.URL.Path = reg.ReplaceAllString(req.URL.Path, "")
+	}
+
+	reverseProxy.ModifyResponse = func(resp *http.Response) error {
+		req := resp.Request
+		if req != nil {
+			origin := req.Header.Get("Origin")
+			if origin != "" {
+				corsHeaders := middleware.GetCORSHeaders(origin, req.Method, s.cfg)
+				for k, v := range corsHeaders {
+					resp.Header.Set(k, v)
+				}
+			}
+		}
+		return nil
 	}
 
 	proxy := &proxy{
