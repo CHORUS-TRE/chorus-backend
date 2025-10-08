@@ -18,17 +18,34 @@ func AddCORS(h http.Handler, cfg config.Config) http.Handler {
 			zap.String("origin", origin), zap.String("method", r.Method), zap.String("path", r.URL.Path),
 		)
 
-		headers := GetCORSHeaders(origin, r.Method, cfg)
-		for k, v := range headers {
-			w.Header().Set(k, v)
-		}
+		SetCORSHeaders(r, w.Header(), cfg)
 
 		h.ServeHTTP(w, r)
 	})
 }
 
-func GetCORSHeaders(origin string, method string, cfg config.Config) map[string]string {
+func SetCORSHeaders(req *http.Request, target http.Header, cfg config.Config) {
+	if req == nil {
+		return
+	}
+
+	origin := req.Header.Get("Origin")
+	if origin == "" {
+		return
+	}
+
+	headerMap := GetCORSHeaders(req, cfg)
+
+	for k, v := range headerMap {
+		target.Set(k, v)
+	}
+}
+
+func GetCORSHeaders(req *http.Request, cfg config.Config) map[string]string {
 	headers := make(map[string]string)
+
+	origin := req.Header.Get("Origin")
+	method := req.Method
 
 	if isOriginInAllowedList(origin, cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins) {
 		headers["Access-Control-Allow-Origin"] = origin

@@ -574,16 +574,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 
 	reverseProxy.ModifyResponse = func(resp *http.Response) error {
-		req := resp.Request
-		if req != nil {
-			origin := req.Header.Get("Origin")
-			if origin != "" {
-				corsHeaders := middleware.GetCORSHeaders(origin, req.Method, s.cfg)
-				for k, v := range corsHeaders {
-					resp.Header.Set(k, v)
-				}
-			}
-		}
+		middleware.SetCORSHeaders(resp.Request, resp.Header, s.cfg)
 		return nil
 	}
 
