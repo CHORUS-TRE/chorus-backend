@@ -53,6 +53,13 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		return Workbench{}, fmt.Errorf("error parsing tenant ID: %w", err)
 	}
 
+	var status string
+	if wb.Status.ServerDeployment.ServerPod != nil {
+		status = string(wb.Status.ServerDeployment.ServerPod.Status)
+	} else {
+		status = string(WorkbenchServerContainerStatusUnknown)
+	}
+
 	workbench := Workbench{
 		Namespace:               wb.Namespace,
 		TenantID:                tenantID,
@@ -61,7 +68,7 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		UserID:                  c.K8sUserIDToUserID(uint64(wb.Spec.Server.UserID)),
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
-		Status:                  string(wb.Status.ServerDeployment.ServerPod.Status),
+		Status:                  status,
 		Apps:                    apps,
 	}
 
