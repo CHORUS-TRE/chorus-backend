@@ -20,6 +20,10 @@ func AddCORS(h http.Handler, cfg config.Config) http.Handler {
 
 		SetCORSHeaders(r, w.Header(), cfg)
 
+		if r.Method == http.MethodOptions {
+			return
+		}
+
 		h.ServeHTTP(w, r)
 	})
 }
