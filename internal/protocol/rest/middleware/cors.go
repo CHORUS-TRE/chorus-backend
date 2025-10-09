@@ -18,13 +18,28 @@ func AddCORS(h http.Handler, cfg config.Config) http.Handler {
 			zap.String("origin", origin), zap.String("method", r.Method), zap.String("path", r.URL.Path),
 		)
 
-		SetCORSHeaders(r, w.Header(), cfg)
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
+		if isOriginInAllowedList(origin, cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else if cfg.Daemon.HTTP.Headers.AccessControlAllowOriginWildcard {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else if len(cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins) > 0 {
+			w.Header().Set("Access-Control-Allow-Origin", cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins[0])
 		}
 
+		if len(cfg.Daemon.HTTP.Headers.AccessControlAllowOrigins) > 1 || cfg.Daemon.HTTP.Headers.AccessControlAllowOriginWildcard {
+			w.Header().Set("Vary", "Origin") // Avoid cache poisoning
+		}
+
+		w.Header().Set("Access-Control-Max-Age", cfg.Daemon.HTTP.Headers.AccessControlMaxAge)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
+			logger.TechLog.Debug(r.Context(), "Handling preflight OPTIONS request")
+			headers := []string{"Content-Type", "Accept", "Authorization", "Access-Control-Allow-Credentials"}
+			w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+			methods := []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"}
+			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
+			return
+		}
 		h.ServeHTTP(w, r)
 	})
 }
