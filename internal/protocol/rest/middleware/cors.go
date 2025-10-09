@@ -29,11 +29,6 @@ func SetCORSHeaders(req *http.Request, target http.Header, cfg config.Config) {
 		return
 	}
 
-	origin := req.Header.Get("Origin")
-	if origin == "" {
-		return
-	}
-
 	headerMap := GetCORSHeaders(req, cfg)
 
 	for k, v := range headerMap {
