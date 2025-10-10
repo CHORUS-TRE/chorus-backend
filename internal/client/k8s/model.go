@@ -25,6 +25,7 @@ type Workbench struct {
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
 	Status                  string
+	ServerPodStatus         string
 	Apps                    []AppInstance
 }
 
@@ -53,11 +54,11 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		return Workbench{}, fmt.Errorf("error parsing tenant ID: %w", err)
 	}
 
-	var status string
+	var serverPodStatus string
 	if wb.Status.ServerDeployment.ServerPod != nil {
-		status = string(wb.Status.ServerDeployment.ServerPod.Status)
+		serverPodStatus = string(wb.Status.ServerDeployment.ServerPod.Status)
 	} else {
-		status = string(WorkbenchServerContainerStatusUnknown)
+		serverPodStatus = string(WorkbenchServerContainerStatusUnknown)
 	}
 
 	workbench := Workbench{
@@ -68,7 +69,8 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		UserID:                  c.K8sUserIDToUserID(uint64(wb.Spec.Server.UserID)),
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
-		Status:                  status,
+		Status:                  string(wb.Status.ServerDeployment.Status),
+		ServerPodStatus:         serverPodStatus,
 		Apps:                    apps,
 	}
 
