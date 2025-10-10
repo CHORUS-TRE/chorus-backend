@@ -13,12 +13,12 @@ type Workbench struct {
 	UserID      uint64
 	WorkspaceID uint64
 
-	Name        string
-	ShortName   string
-	Description string
-	Status      WorkbenchStatus
-	K8sStatus   WorkbenchServerPodStatus
-	// K8sStatus   K8sWorkbenchStatus
+	Name            string
+	ShortName       string
+	Description     string
+	Status          WorkbenchStatus
+	ServerPodStatus WorkbenchServerPodStatus
+	K8sStatus       K8sWorkbenchStatus
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
