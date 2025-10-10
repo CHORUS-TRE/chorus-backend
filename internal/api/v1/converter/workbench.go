@@ -53,11 +53,12 @@ func WorkbenchFromBusiness(workbench *model.Workbench) (*chorus.Workbench, error
 		UserId:      workbench.UserID,
 		WorkspaceId: workbench.WorkspaceID,
 
-		Name:        workbench.Name,
-		ShortName:   workbench.ShortName,
-		Description: workbench.Description,
-		Status:      workbench.Status.String(),
-		K8SStatus:   workbench.K8sStatus.String(),
+		Name:            workbench.Name,
+		ShortName:       workbench.ShortName,
+		Description:     workbench.Description,
+		Status:          workbench.Status.String(),
+		ServerPodStatus: workbench.ServerPodStatus.String(),
+		K8SStatus:       workbench.K8sStatus.String(),
 
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
 		InitialResolutionHeight: workbench.InitialResolutionHeight,

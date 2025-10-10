@@ -29,7 +29,7 @@ func NewWorkbenchStorage(db *sqlx.DB) *WorkbenchStorage {
 
 func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	const query = `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 			FROM workbenchs
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -57,7 +57,7 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 
 	// Get workbenches query
 	query := `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 		FROM workbenchs
 		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
 	`
@@ -138,7 +138,7 @@ ORDER BY ai.createdat ASC;
 
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 	FROM workbenchs
 WHERE deletedat IS NULL;
 `
@@ -181,14 +181,14 @@ WHERE workbenchs.id = batch_data.id
 // CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchQuery = `
-		INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, k8sstatus, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) 
-		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+		INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, serverpodstatus, k8sstatus, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) 
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	var newWorkbench model.Workbench
 	err := s.db.GetContext(ctx, &newWorkbench, workbenchQuery,
-		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.InitialResolutionWidth, workbench.InitialResolutionHeight, workbench.Status, workbench.K8sStatus,
+		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.InitialResolutionWidth, workbench.InitialResolutionHeight, workbench.Status, workbench.ServerPodStatus, workbench.K8sStatus,
 	)
 	if err != nil {
 		return nil, err
@@ -200,14 +200,14 @@ func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64,
 func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchUpdateQuery = `
 		UPDATE workbenchs
-		SET status = $3, k8sstatus= $4, description = $5, updatedat = NOW()
+		SET status = $3, serverpodstatus = $4, k8sstatus = $5, description = $6, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	// Update workbench
 	var updatedWorkbench model.Workbench
-	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.K8sStatus, workbench.Description)
+	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.ServerPodStatus, workbench.K8sStatus, workbench.Description)
 	if err != nil {
 		return nil, err
 	}

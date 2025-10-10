@@ -13,11 +13,12 @@ type Workbench struct {
 	UserID      uint64
 	WorkspaceID uint64
 
-	Name        string
-	ShortName   string
-	Description string
-	Status      WorkbenchStatus
-	K8sStatus   K8sWorkbenchStatus
+	Name            string
+	ShortName       string
+	Description     string
+	Status          WorkbenchStatus
+	ServerPodStatus WorkbenchServerPodStatus
+	K8sStatus       K8sWorkbenchStatus
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -54,6 +55,23 @@ const (
 )
 
 func (s WorkbenchStatus) String() string {
+	return string(s)
+}
+
+type WorkbenchServerPodStatus string
+
+const (
+	WorkbenchServerPodStatusWaiting     WorkbenchServerPodStatus = "Waiting"
+	WorkbenchServerPodStatusStarting    WorkbenchServerPodStatus = "Starting"
+	WorkbenchServerPodStatusReady       WorkbenchServerPodStatus = "Ready"
+	WorkbenchServerPodStatusFailing     WorkbenchServerPodStatus = "Failing"
+	WorkbenchServerPodStatusRestarting  WorkbenchServerPodStatus = "Restarting"
+	WorkbenchServerPodStatusTerminating WorkbenchServerPodStatus = "Terminating"
+	WorkbenchServerPodStatusTerminated  WorkbenchServerPodStatus = "Terminated"
+	WorkbenchServerPodStatusUnknown     WorkbenchServerPodStatus = "Unknown"
+)
+
+func (s WorkbenchServerPodStatus) String() string {
 	return string(s)
 }
 

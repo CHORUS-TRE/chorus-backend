@@ -25,6 +25,7 @@ type Workbench struct {
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
 	Status                  string
+	ServerPodStatus         string
 	Apps                    []AppInstance
 }
 
@@ -53,6 +54,13 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		return Workbench{}, fmt.Errorf("error parsing tenant ID: %w", err)
 	}
 
+	var serverPodStatus string
+	if wb.Status.ServerDeployment.ServerPod != nil {
+		serverPodStatus = string(wb.Status.ServerDeployment.ServerPod.Status)
+	} else {
+		serverPodStatus = string(WorkbenchServerContainerStatusUnknown)
+	}
+
 	workbench := Workbench{
 		Namespace:               wb.Namespace,
 		TenantID:                tenantID,
@@ -61,7 +69,8 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		UserID:                  c.K8sUserIDToUserID(uint64(wb.Spec.Server.UserID)),
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
-		Status:                  string(wb.Status.Server.Status),
+		Status:                  string(wb.Status.ServerDeployment.Status),
+		ServerPodStatus:         serverPodStatus,
 		Apps:                    apps,
 	}
 
@@ -325,9 +334,30 @@ const (
 	WorkbenchStatusServerStatusFailed      WorkbenchStatusServerStatus = "Failed"
 )
 
+type WorkbenchServerContainerStatus string
+
+const (
+	WorkbenchServerContainerStatusWaiting     WorkbenchServerContainerStatus = "Waiting"
+	WorkbenchServerContainerStatusStarting    WorkbenchServerContainerStatus = "Starting"
+	WorkbenchServerContainerStatusReady       WorkbenchServerContainerStatus = "Ready"
+	WorkbenchServerContainerStatusFailing     WorkbenchServerContainerStatus = "Failing"
+	WorkbenchServerContainerStatusRestarting  WorkbenchServerContainerStatus = "Restarting"
+	WorkbenchServerContainerStatusTerminating WorkbenchServerContainerStatus = "Terminating"
+	WorkbenchServerContainerStatusTerminated  WorkbenchServerContainerStatus = "Terminated"
+	WorkbenchServerContainerStatusUnknown     WorkbenchServerContainerStatus = "Unknown"
+)
+
+type WorkbenchServerPodHealth struct {
+	Status       WorkbenchServerContainerStatus `json:"status"`
+	Ready        bool                           `json:"ready"`
+	RestartCount int32                          `json:"restartCount"`
+	Message      string                         `json:"message,omitempty"`
+}
+
 type WorkbenchStatusServer struct {
-	Revision int                         `json:"revision"`
-	Status   WorkbenchStatusServerStatus `json:"status"`
+	Revision  int                         `json:"revision"`
+	Status    WorkbenchStatusServerStatus `json:"status"`
+	ServerPod *WorkbenchServerPodHealth   `json:"serverPod,omitempty"`
 }
 
 type WorkbenchStatusApp struct {
@@ -336,8 +366,8 @@ type WorkbenchStatusApp struct {
 }
 
 type WorkbenchStatus struct {
-	Server WorkbenchStatusServer         `json:"serverDeployment"`
-	Apps   map[string]WorkbenchStatusApp `json:"apps,omitempty"`
+	ServerDeployment WorkbenchStatusServer         `json:"serverDeployment"`
+	Apps             map[string]WorkbenchStatusApp `json:"apps,omitempty"`
 }
 
 type K8sWorkbench struct {

@@ -163,6 +163,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 			WorkspaceID:             workspaceID,
 			InitialResolutionWidth:  k8sWorkbench.InitialResolutionWidth,
 			InitialResolutionHeight: k8sWorkbench.InitialResolutionHeight,
+			ServerPodStatus:         model.WorkbenchServerPodStatus(k8sWorkbench.ServerPodStatus),
 			K8sStatus:               model.K8sWorkbenchStatus(k8sWorkbench.Status),
 		}
 
