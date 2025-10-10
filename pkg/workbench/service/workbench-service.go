@@ -163,11 +163,10 @@ func (s *WorkbenchService) SetClientWatchers() {
 			WorkspaceID:             workspaceID,
 			InitialResolutionWidth:  k8sWorkbench.InitialResolutionWidth,
 			InitialResolutionHeight: k8sWorkbench.InitialResolutionHeight,
-			K8sStatus:               model.WorkbenchServerPodStatus(k8sWorkbench.Status),
+			K8sStatus:               model.WorkbenchServerPodStatus(k8sWorkbench.ServerPodStatus),
 			// K8sStatus:               model.K8sWorkbenchStatus(k8sWorkbench.Status),
 		}
 
-		logger.TechLog.Debug(context.Background(), "mapping k8s workbench status to workbench status", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.String("k8sStatus", k8sWorkbench.Status))
 		switch k8sWorkbench.Status {
 		case string(k8s.WorkbenchStatusServerStatusRunning):
 			workbench.Status = model.WorkbenchActive
@@ -175,8 +174,6 @@ func (s *WorkbenchService) SetClientWatchers() {
 			workbench.Status = model.WorkbenchActive
 		case string(k8s.WorkbenchStatusServerStatusFailed):
 			workbench.Status = model.WorkbenchDeleted
-		case "":
-			workbench.Status = model.WorkbenchInactive
 		}
 
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
