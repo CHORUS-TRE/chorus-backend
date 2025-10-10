@@ -3198,6 +3198,8 @@ definitions:
         type: string
       status:
         type: string
+      serverPodStatus:
+        type: string
       k8sStatus:
         type: string
       initialResolutionWidth:

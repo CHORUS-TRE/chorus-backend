@@ -15,14 +15,15 @@ message Workbench {
     string shortName = 6;
     string description = 7;
     string status = 8;
-    string k8sStatus = 9;
+    string serverPodStatus = 9;
+    string k8sStatus = 10;
 
-    uint32 initialResolutionWidth = 10;
-    uint32 initialResolutionHeight = 11;
+    uint32 initialResolutionWidth = 11;
+    uint32 initialResolutionHeight = 12;
 
-    // repeated uint64 appInstanceIds = 12;
-    // repeated uint64 appInstances = 13;
-    
-    google.protobuf.Timestamp createdAt = 12;
-    google.protobuf.Timestamp updatedAt = 13;
+    // repeated uint64 appInstanceIds = 13;
+    // repeated uint64 appInstances = 14;
+
+    google.protobuf.Timestamp createdAt = 15;
+    google.protobuf.Timestamp updatedAt = 16;
 }
