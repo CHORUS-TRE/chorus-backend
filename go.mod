@@ -24,7 +24,7 @@ require (
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/lib/pq v1.10.9
 	github.com/minio/minio-go/v7 v7.0.95
-	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/ginkgo/v2 v2.26.0
 	github.com/onsi/gomega v1.38.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/pquerna/otp v1.4.0
