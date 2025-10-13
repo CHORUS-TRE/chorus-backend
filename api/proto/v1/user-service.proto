@@ -81,6 +81,28 @@ message CreateUserResult {
     User user = 1;
 }
 
+message CreateUserRoleRequest {
+    uint64 userId = 1;
+    Role role = 2;
+}
+message CreateUserRoleReply {
+    CreateUserRoleResult result = 1;
+}
+message CreateUserRoleResult {
+    User user = 1;
+}
+
+message DeleteUserRoleRequest {
+    uint64 userId = 1;
+    uint64 roleId = 2;
+}
+message DeleteUserRoleReply {
+    DeleteUserRoleResult result = 1;
+}
+message DeleteUserRoleResult {
+    User user = 1;
+}
+
 // Update User
 message UpdateUserReply {
     UpdateUserResult result = 1;
@@ -185,6 +207,29 @@ service UserService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Update a user";
             description: "This endpoint updates a user";
+            tags: "UserService";
+        };
+    };
+
+    rpc CreateUserRole(CreateUserRoleRequest) returns (CreateUserRoleReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/users/{userId}/role"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a user's role";
+            description: "This endpoint creates a user's role";
+            tags: "UserService";
+        };
+    };
+
+    rpc DeleteUserRole(DeleteUserRoleRequest) returns (DeleteUserRoleReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/users/{userId}/role/{roleId}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a user's role";
+            description: "This endpoint deletes a user's role";
             tags: "UserService";
         };
     };

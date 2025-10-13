@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
 
@@ -21,7 +20,7 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 	roles := make([]*chorus.Role, len(user.Roles))
 	rs := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
-		role := RoleFromBusiness(r.Role)
+		role := RoleFromBusiness(r)
 		roles[i] = &role
 		rs[i] = role.Name
 	}
@@ -43,12 +42,13 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 	}, nil
 }
 
-func RoleFromBusiness(role authorization_model.Role) chorus.Role {
+func RoleFromBusiness(role model.UserRole) chorus.Role {
 	c := make(map[string]string, len(role.Context))
 	for k, v := range role.Context {
 		c[k.String()] = v
 	}
 	return chorus.Role{
+		Id:      role.ID,
 		Name:    role.Name.String(),
 		Context: c,
 	}

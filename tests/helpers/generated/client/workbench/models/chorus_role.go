@@ -20,6 +20,9 @@ type ChorusRole struct {
 	// context
 	Context map[string]string `json:"context,omitempty"`
 
+	// id
+	ID string `json:"id,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
 }

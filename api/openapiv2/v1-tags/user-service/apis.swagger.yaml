@@ -286,7 +286,66 @@ paths:
             $ref: '#/definitions/UserServiceResetPasswordBody'
       tags:
         - UserService
+  /api/rest/v1/users/{userId}/role:
+    post:
+      summary: Create a user's role
+      description: This endpoint creates a user's role
+      operationId: UserService_CreateUserRole
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateUserRoleReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserServiceCreateUserRoleBody'
+      tags:
+        - UserService
+  /api/rest/v1/users/{userId}/role/{roleId}:
+    delete:
+      summary: Delete a user's role
+      description: This endpoint deletes a user's role
+      operationId: UserService_DeleteUserRole
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteUserRoleReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: roleId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - UserService
 definitions:
+  UserServiceCreateUserRoleBody:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusRole'
   UserServiceResetPasswordBody:
     type: object
     title: Reset Password
@@ -301,6 +360,16 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/chorusUser'
+  chorusCreateUserRoleReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateUserRoleResult'
+  chorusCreateUserRoleResult:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
   chorusDeleteUserReply:
     type: object
     properties:
@@ -308,6 +377,16 @@ definitions:
         $ref: '#/definitions/chorusDeleteUserResult'
   chorusDeleteUserResult:
     type: object
+  chorusDeleteUserRoleReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteUserRoleResult'
+  chorusDeleteUserRoleResult:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
   chorusEnableTotpReply:
     type: object
     properties:
@@ -426,6 +505,9 @@ definitions:
   chorusRole:
     type: object
     properties:
+      id:
+        type: string
+        format: uint64
       name:
         type: string
       context:

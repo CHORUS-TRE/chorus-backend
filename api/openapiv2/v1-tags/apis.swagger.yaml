@@ -1490,6 +1490,96 @@ paths:
             $ref: '#/definitions/UserServiceResetPasswordBody'
       tags:
         - UserService
+  /api/rest/v1/users/{userId}/role:
+    post:
+      summary: Create a user's role
+      description: This endpoint creates a user's role
+      operationId: UserService_CreateUserRole
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateUserRoleReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserServiceCreateUserRoleBody'
+      tags:
+        - UserService
+  /api/rest/v1/users/{userId}/role/{roleId}:
+    delete:
+      summary: Delete a user's role
+      description: This endpoint deletes a user's role
+      operationId: UserService_DeleteUserRole
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteUserRoleReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: roleId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - UserService
   /api/rest/v1/workbenchs:
     get:
       summary: List workbenchs
@@ -2382,6 +2472,11 @@ definitions:
         type: string
       code:
         type: string
+  UserServiceCreateUserRoleBody:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusRole'
   UserServiceResetPasswordBody:
     type: object
     title: Reset Password
@@ -2582,6 +2677,16 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/chorusUser'
+  chorusCreateUserRoleReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateUserRoleResult'
+  chorusCreateUserRoleResult:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
   chorusCreateWorkbenchReply:
     type: object
     properties:
@@ -2642,6 +2747,16 @@ definitions:
         $ref: '#/definitions/chorusDeleteUserResult'
   chorusDeleteUserResult:
     type: object
+  chorusDeleteUserRoleReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteUserRoleResult'
+  chorusDeleteUserRoleResult:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/chorusUser'
   chorusDeleteWorkbenchReply:
     type: object
     properties:
@@ -3030,6 +3145,9 @@ definitions:
   chorusRole:
     type: object
     properties:
+      id:
+        type: string
+        format: uint64
       name:
         type: string
       context:

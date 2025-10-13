@@ -108,6 +108,24 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 	return c.next.UpdateUser(ctx, req)
 }
 
+func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *chorus.CreateUserRoleRequest) (*chorus.CreateUserRoleReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionManageUserRoles, authorization.WithUser(req.UserId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.CreateUserRole(ctx, req)
+}
+
+func (c userControllerAuthorization) DeleteUserRole(ctx context.Context, req *chorus.DeleteUserRoleRequest) (*chorus.DeleteUserRoleReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionManageUserRoles, authorization.WithUser(req.UserId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.DeleteUserRole(ctx, req)
+}
+
 func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionDeleteUser, authorization.WithUser(req.Id))
 	if err != nil {
