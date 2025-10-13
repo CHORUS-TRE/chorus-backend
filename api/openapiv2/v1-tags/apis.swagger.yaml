@@ -3030,6 +3030,9 @@ definitions:
   chorusRole:
     type: object
     properties:
+      id:
+        type: string
+        format: uint64
       name:
         type: string
       context:
