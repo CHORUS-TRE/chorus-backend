@@ -69,17 +69,18 @@ const (
 
 	PermissionInitializeTenant PermissionName = "initializeTenant"
 
-	PermissionListUsers      PermissionName = "listUsers"
-	PermissionSearchUsers    PermissionName = "searchUsers"
-	PermissionCreateUser     PermissionName = "createUser"
-	PermissionUpdateUser     PermissionName = "updateUser"
-	PermissionGetMyOwnUser   PermissionName = "getMyOwnUser"
-	PermissionUpdatePassword PermissionName = "updatePassword"
-	PermissionEnableTotp     PermissionName = "enableTotp"
-	PermissionResetTotp      PermissionName = "resetTotp"
-	PermissionGetUser        PermissionName = "getUser"
-	PermissionDeleteUser     PermissionName = "deleteUser"
-	PermissionResetPassword  PermissionName = "resetPassword"
+	PermissionListUsers       PermissionName = "listUsers"
+	PermissionSearchUsers     PermissionName = "searchUsers"
+	PermissionCreateUser      PermissionName = "createUser"
+	PermissionUpdateUser      PermissionName = "updateUser"
+	PermissionGetMyOwnUser    PermissionName = "getMyOwnUser"
+	PermissionUpdatePassword  PermissionName = "updatePassword"
+	PermissionEnableTotp      PermissionName = "enableTotp"
+	PermissionResetTotp       PermissionName = "resetTotp"
+	PermissionGetUser         PermissionName = "getUser"
+	PermissionDeleteUser      PermissionName = "deleteUser"
+	PermissionResetPassword   PermissionName = "resetPassword"
+	PermissionManageUserRoles PermissionName = "manageUserRoles"
 )
 
 func (p PermissionName) String() string {
@@ -194,6 +195,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionDeleteUser, nil
 	case string(PermissionResetPassword):
 		return PermissionResetPassword, nil
+	case string(PermissionManageUserRoles):
+		return PermissionManageUserRoles, nil
 	}
 
 	return "", fmt.Errorf("unknown permission type: %s", p)

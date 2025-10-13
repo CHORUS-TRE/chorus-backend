@@ -56,7 +56,11 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	UserServiceCreateUser(params *UserServiceCreateUserParams, opts ...ClientOption) (*UserServiceCreateUserOK, error)
 
+	UserServiceCreateUserRole(params *UserServiceCreateUserRoleParams, opts ...ClientOption) (*UserServiceCreateUserRoleOK, error)
+
 	UserServiceDeleteUser(params *UserServiceDeleteUserParams, opts ...ClientOption) (*UserServiceDeleteUserOK, error)
+
+	UserServiceDeleteUserRole(params *UserServiceDeleteUserRoleParams, opts ...ClientOption) (*UserServiceDeleteUserRoleOK, error)
 
 	UserServiceEnableTotp(params *UserServiceEnableTotpParams, opts ...ClientOption) (*UserServiceEnableTotpOK, error)
 
@@ -117,6 +121,45 @@ func (a *Client) UserServiceCreateUser(params *UserServiceCreateUserParams, opts
 }
 
 /*
+UserServiceCreateUserRole creates a user s role
+
+This endpoint creates a user's role
+*/
+func (a *Client) UserServiceCreateUserRole(params *UserServiceCreateUserRoleParams, opts ...ClientOption) (*UserServiceCreateUserRoleOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUserServiceCreateUserRoleParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "UserService_CreateUserRole",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/users/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UserServiceCreateUserRoleReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UserServiceCreateUserRoleOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UserServiceCreateUserRoleDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 UserServiceDeleteUser deletes a user
 
 This endpoint deletes a user
@@ -152,6 +195,45 @@ func (a *Client) UserServiceDeleteUser(params *UserServiceDeleteUserParams, opts
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*UserServiceDeleteUserDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+UserServiceDeleteUserRole deletes a user s role
+
+This endpoint deletes a user's role
+*/
+func (a *Client) UserServiceDeleteUserRole(params *UserServiceDeleteUserRoleParams, opts ...ClientOption) (*UserServiceDeleteUserRoleOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUserServiceDeleteUserRoleParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "UserService_DeleteUserRole",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/users/{userId}/role/{roleId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UserServiceDeleteUserRoleReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UserServiceDeleteUserRoleOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UserServiceDeleteUserRoleDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

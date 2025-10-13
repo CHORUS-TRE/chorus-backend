@@ -265,6 +265,75 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 	return &chorus.CreateUserReply{Result: &chorus.CreateUserResult{User: tgUser}}, nil
 }
 
+func (c UserController) CreateUserRole(ctx context.Context, req *chorus.CreateUserRoleRequest) (*chorus.CreateUserRoleReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	role, err := authorization_model.ToRole(req.Role.Name, req.Role.Context)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid role: %v", err.Error())
+	}
+
+	err = c.user.CreateUserRoles(ctx, req.UserId, []model.UserRole{{
+		Role: role,
+	}})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateUserRoles': %v", err.Error())
+	}
+
+	user, err := c.user.GetUser(ctx, service.GetUserReq{
+		TenantID: tenantID,
+		ID:       req.UserId,
+	})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetUser': %v", err.Error())
+	}
+
+	u, err := converter.UserFromBusiness(user)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.CreateUserRoleReply{Result: &chorus.CreateUserRoleResult{User: u}}, nil
+}
+
+func (c UserController) DeleteUserRole(ctx context.Context, req *chorus.DeleteUserRoleRequest) (*chorus.DeleteUserRoleReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	err = c.user.RemoveUserRoles(ctx, req.UserId, []uint64{req.RoleId})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteUserRole': %v", err.Error())
+	}
+
+	user, err := c.user.GetUser(ctx, service.GetUserReq{
+		TenantID: tenantID,
+		ID:       req.UserId,
+	})
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetUser': %v", err.Error())
+	}
+
+	u, err := converter.UserFromBusiness(user)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.DeleteUserRoleReply{Result: &chorus.DeleteUserRoleResult{User: u}}, nil
+}
+
 func (c UserController) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
