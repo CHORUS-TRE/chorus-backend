@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
@@ -383,7 +384,7 @@ func (s *UserStorage) RemoveUserRoles(ctx context.Context, userID uint64, userRo
 		DELETE FROM user_role
 		WHERE userid = $1 AND id = ANY($2);
 	`
-	_, err := s.db.ExecContext(ctx, query, userID, userRoleIDs)
+	_, err := s.db.ExecContext(ctx, query, userID, pq.Array(userRoleIDs))
 	if err != nil {
 		return fmt.Errorf("unable to remove user roles: %w", err)
 	}
