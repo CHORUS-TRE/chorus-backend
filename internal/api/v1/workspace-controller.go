@@ -194,17 +194,12 @@ func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req 
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	userID, err := jwt_model.ExtractUserID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
-	}
-
 	role, err := authorization.ToRole(req.Role.Name, map[string]string{"workbench": fmt.Sprintf("%d", req.Id)})
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
 	}
 
-	err = c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, userID, user_model.UserRole{Role: role})
+	err = c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkspace': %v", err.Error())
 	}
@@ -233,12 +228,7 @@ func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *c
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	userID, err := jwt_model.ExtractUserID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
-	}
-
-	err = c.workspace.RemoveUserFromWorkspace(ctx, tenantID, userID, req.Id)
+	err = c.workspace.RemoveUserFromWorkspace(ctx, tenantID, req.UserId, req.Id)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkspace': %v", err.Error())
 	}
