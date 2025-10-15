@@ -65,6 +65,9 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 
 		for _, attr := range attrs {
 			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
+				if workspaceIDStr == "" {
+					continue
+				}
 				if workspaceIDStr == "*" {
 					fmt.Println("wildcard found, returning all workspaces")
 					req.Filter = nil
