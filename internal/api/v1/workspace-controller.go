@@ -209,7 +209,17 @@ func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req 
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkspace': %v", err.Error())
 	}
 
-	return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{}}, nil
+	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+	}
+
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
 
 }
 
@@ -233,7 +243,17 @@ func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *c
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkspace': %v", err.Error())
 	}
 
-	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{}}, nil
+	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+	}
+
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{Workspace: tgWorkspace}}, nil
 
 }
 
