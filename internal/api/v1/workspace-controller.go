@@ -8,6 +8,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
@@ -113,11 +114,13 @@ func (c WorkspaceController) DeleteWorkspace(ctx context.Context, req *chorus.De
 // ListWorkspaces extracts the retrieved workspaces from the service and inserts them into a reply object.
 func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
 	if req == nil {
+		logger.TechLog.Error(ctx, "empty request")
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("could not extract tenant id from jwt-token: %v", err.Error()))
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
@@ -130,6 +133,7 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination, filter)
 	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("unable to call 'ListWorkspaces': %v", err.Error()))
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaces': %v", err.Error())
 	}
 
@@ -137,6 +141,7 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 	for _, r := range res {
 		workspace, err := converter.WorkspaceFromBusiness(r)
 		if err != nil {
+			logger.TechLog.Error(ctx, fmt.Sprintf("conversion error: %v", err.Error()))
 			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 		}
 		workspaces = append(workspaces, workspace)
