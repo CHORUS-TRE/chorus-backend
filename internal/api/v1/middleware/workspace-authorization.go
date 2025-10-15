@@ -12,7 +12,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/internal/status"
+	"google.golang.org/grpc/status"
 )
 
 var _ chorus.WorkspaceServiceServer = (*workspaceControllerAuthorization)(nil)
