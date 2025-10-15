@@ -11,6 +11,8 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/internal/status"
 )
 
 var _ chorus.WorkspaceServiceServer = (*workspaceControllerAuthorization)(nil)
@@ -39,13 +41,15 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 		for _, id := range req.Filter.WorkspaceIdsIn {
 			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(id))
 			if err != nil {
-				return nil, err
+				logger.TechLog.Error(ctx, fmt.Sprintf("not authorized to access workspace %d: %v", id, err.Error()))
+				return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("not authorized to access workspace %d", id))
 			}
 		}
 	} else {
 		attrs, err := c.GetContextListForPermission(ctx, authorization.PermissionGetWorkspace)
 		if err != nil {
-			return nil, err
+			logger.TechLog.Error(ctx, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
+			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 		}
 
 		fmt.Println("attrs:", attrs)
@@ -71,7 +75,8 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 				}
 				workspaceID, err := strconv.ParseUint(workspaceIDStr, 10, 64)
 				if err != nil {
-					return nil, err
+					logger.TechLog.Error(ctx, fmt.Sprintf("unable to parse workspace ID from context: %v", err.Error()))
+					return nil, status.Error(codes.Internal, fmt.Sprintf("unable to parse workspace ID from context: %v", err.Error()))
 				}
 				fmt.Println("adding workspace ID to filter:", workspaceID)
 				req.Filter.WorkspaceIdsIn = append(req.Filter.WorkspaceIdsIn, workspaceID)
