@@ -41,7 +41,7 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
         p="$(cat /run/secrets/GIT_PASSWORD)" && \
         GOPRIVATE=github.com/CHORUS-TRE/* \
         GIT_CONFIG_COUNT=1 \
-        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadof \
+        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadOf \
         GIT_CONFIG_VALUE_0=https://github.com/ \
         go mod download; \
     else \
