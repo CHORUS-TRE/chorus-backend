@@ -36,13 +36,18 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=secret,id=GIT_USERNAME \
     --mount=type=secret,id=GIT_PASSWORD \
     if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
-        echo "Hi from inside the if statement"; \
-        u="$(cat /run/secrets/GIT_USERNAME)"; \
-        p="$(cat /run/secrets/GIT_PASSWORD)"; \
-        git config --global url."https://${u}:${p}@github.com/".insteadOf "https://github.com/"; \
-        GOPRIVATE=github.com/CHORUS-TRE/* go mod download; \
-    fi && \
-    GOPRIVATE=github.com/CHORUS-TRE/* go mod download
+        echo "Hi from inside, git username: $(cat /run/secrets/GIT_USERNAME)"; \
+        u="$(cat /run/secrets/GIT_USERNAME)" && \
+        p="$(cat /run/secrets/GIT_PASSWORD)" && \
+        GOPRIVATE=github.com/CHORUS-TRE/* \
+        GIT_CONFIG_COUNT=1 \
+        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadof \
+        GIT_CONFIG_VALUE_0=https://github.com/ \
+        go mod download; \
+    else \
+        go mod download; \
+    fi
+    
 
 # Copy the rest of the source code
 COPY . .
