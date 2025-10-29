@@ -48,7 +48,6 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
         go mod download; \
     fi
 
-
 # Copy the rest of the source code
 COPY . .
 
