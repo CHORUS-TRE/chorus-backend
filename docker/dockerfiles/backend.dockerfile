@@ -36,7 +36,7 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=secret,id=GIT_USERNAME \
     --mount=type=secret,id=GIT_PASSWORD \
     if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
-        echo "Fetching private dependencies..."; \
+        echo "Fetching private dependencies..." && \
         u="$(cat /run/secrets/GIT_USERNAME)" && \
         p="$(cat /run/secrets/GIT_PASSWORD)" && \
         GOPRIVATE=github.com/CHORUS-TRE/* \
@@ -47,7 +47,7 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     else \
         go mod download; \
     fi
-    
+ 
 
 # Copy the rest of the source code
 COPY . .
