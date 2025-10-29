@@ -38,12 +38,13 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
         u="$(cat /run/secrets/GIT_USERNAME)"; \
         p="$(cat /run/secrets/GIT_PASSWORD)"; \
-        GOPRIVATE=github.com/CHORUS-TRE/* \
-        GIT_CONFIG_COUNT=1 \
-        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadof \
-        GIT_CONFIG_VALUE_0=https://github.com/ \
+        export GOPRIVATE='github.com/CHORUS-TRE/*'; \
+        export GIT_CONFIG_COUNT=1; \
+        export GIT_CONFIG_KEY_0="url.https://${u}:${p}@github.com/.insteadof"; \
+        export GIT_CONFIG_VALUE_0="https://github.com/"; \
         go mod download; \
     else \
+        export GOPRIVATE='github.com/CHORUS-TRE/*'; \
         go mod download; \
     fi
 
