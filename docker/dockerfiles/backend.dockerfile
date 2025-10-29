@@ -36,7 +36,7 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=secret,id=GIT_USERNAME \
     --mount=type=secret,id=GIT_PASSWORD \
     if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
-        echo "Hi from inside, git username: $(cat /run/secrets/GIT_USERNAME)"; \
+        echo "Fetching private dependencies..."; \
         u="$(cat /run/secrets/GIT_USERNAME)" && \
         p="$(cat /run/secrets/GIT_PASSWORD)" && \
         GOPRIVATE=github.com/CHORUS-TRE/* \
