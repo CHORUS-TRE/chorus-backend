@@ -44,7 +44,6 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
         export GIT_CONFIG_VALUE_0="https://github.com/"; \
         go mod download; \
     else \
-        export GOPRIVATE='github.com/CHORUS-TRE/*'; \
         go mod download; \
     fi
 
