@@ -88,7 +88,7 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 	return workbenchs, paginationRes, nil
 }
 
-func (s *WorkbenchStorage) SetIdleWorkbenchsToDeleted(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
+func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
 	const query = `
 		UPDATE workbenchs
 		SET (status, name, updatedat, deletedat) = ($3, concat(name, $4::TEXT), NOW(), NOW())

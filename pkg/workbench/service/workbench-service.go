@@ -74,7 +74,7 @@ type WorkbenchStore interface {
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
 	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
-	SetIdleWorkbenchsToDeleted(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
+	DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -260,7 +260,7 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 }
 
 func (s *WorkbenchService) cleanIdleWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.SetIdleWorkbenchsToDeleted(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
+	workbenchs, err := s.store.DeleteIdleWorkbenchs(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to query idle workbenchs", zap.Error(err))
 		return

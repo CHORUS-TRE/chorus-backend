@@ -68,12 +68,12 @@ func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, 
 	return res, nil
 }
 
-func (c workbenchStorageLogging) SetIdleWorkbenchsToDeleted(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
+func (c workbenchStorageLogging) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.SetIdleWorkbenchsToDeleted(ctx, idleTimeout)
+	res, err := c.next.DeleteIdleWorkbenchs(ctx, idleTimeout)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
