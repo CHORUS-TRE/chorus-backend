@@ -19,6 +19,7 @@ type Workbench struct {
 	Status          WorkbenchStatus
 	ServerPodStatus WorkbenchServerPodStatus
 	K8sStatus       K8sWorkbenchStatus
+	AccessedAt      time.Time
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32

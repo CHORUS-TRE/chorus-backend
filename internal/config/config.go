@@ -252,10 +252,13 @@ type (
 		} `yaml:"authentication_service"`
 
 		WorkbenchService struct {
-			StreamProxyEnabled        bool          `yaml:"stream_proxy_enabled"`
-			BackendInK8S              bool          `yaml:"backend_in_k8s"`
-			ProxyHitSaveBatchInterval time.Duration `yaml:"proxy_hit_save_batch_interval"`
-			RoundTripper              struct {
+			StreamProxyEnabled         bool           `yaml:"stream_proxy_enabled"`
+			BackendInK8S               bool           `yaml:"backend_in_k8s"`
+			ProxyHitSaveBatchInterval  time.Duration  `yaml:"proxy_hit_save_batch_interval"`
+			WorkbenchIdleNotification  *time.Duration `yaml:"workbench_idle_notification"`
+			WorkbenchIdleTimeout       *time.Duration `yaml:"workbench_idle_timeout"`
+			WorkbenchIdleCheckInterval time.Duration  `yaml:"workbench_idle_check_interval"`
+			RoundTripper               struct {
 				DialTimeout           time.Duration `yaml:"dial_timeout"`
 				DialKeepAlive         time.Duration `yaml:"dial_keep_alive"`
 				ForceAttemptHTTP2     bool          `yaml:"force_attempt_http2"`

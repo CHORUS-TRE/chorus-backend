@@ -88,6 +88,26 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 	return workbenchs, paginationRes, nil
 }
 
+func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
+	const query = `
+		UPDATE workbenchs
+		SET (status, name, updatedat, deletedat) = ($3, concat(name, $4::TEXT), NOW(), NOW())
+		WHERE accessedat IS NOT NULL
+		  AND accessedat < NOW() - INTERVAL '$5 seconds'
+		  AND status != 'deleted'
+		  AND deletedat IS NULL
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+	`
+
+	var deletedWorkbenchs []*model.Workbench
+	err := s.db.SelectContext(ctx, &deletedWorkbenchs, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), int64(idleTimeout.Seconds()))
+	if err != nil {
+		return nil, fmt.Errorf("unable to exec: %w", err)
+	}
+
+	return deletedWorkbenchs, nil
+}
+
 func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {
 	const query = `
 SELECT 

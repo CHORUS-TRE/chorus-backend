@@ -68,6 +68,27 @@ func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, 
 	return res, nil
 }
 
+func (c workbenchStorageLogging) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	res, err := c.next.DeleteIdleWorkbenchs(ctx, idleTimeout)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithCountField(len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (c workbenchStorageLogging) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
