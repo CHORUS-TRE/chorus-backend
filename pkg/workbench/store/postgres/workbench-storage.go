@@ -91,9 +91,9 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
 	const query = `
 		UPDATE workbenchs
-		SET (status, name, updatedat, deletedat) = ($3, concat(name, $4::TEXT), NOW(), NOW())
+		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
 		WHERE accessedat IS NOT NULL
-		  AND accessedat < NOW() - INTERVAL '$5 seconds'
+		  AND accessedat < NOW() - INTERVAL '$3 seconds'
 		  AND status != 'deleted'
 		  AND deletedat IS NULL
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
