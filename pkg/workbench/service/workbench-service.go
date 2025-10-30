@@ -74,6 +74,7 @@ type WorkbenchStore interface {
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
 	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -135,6 +136,22 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 			time.Sleep(cfg.Services.WorkbenchService.ProxyHitSaveBatchInterval + randomDelayToAvoidCollision)
 		}
 	}()
+
+	if s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout != nil {
+		logger.TechLog.Info(context.Background(), "starting workbench idle cleaner", zap.Duration("idleTimeout", *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout), zap.Duration("checkInterval", s.cfg.Services.WorkbenchService.WorkbenchIdleCheckInterval))
+
+		go func() {
+			interval := cfg.Services.WorkbenchService.WorkbenchIdleCheckInterval
+			// sleep a random jitter in initial interval to avoid all instances doing this at the same time
+			jitter := time.Duration(rand.Int64N(int64(interval)))
+			time.Sleep(jitter)
+
+			for {
+				s.cleanIdleWorkbenchs(context.Background())
+				time.Sleep(interval)
+			}
+		}()
+	}
 
 	s.SetClientWatchers()
 
@@ -237,6 +254,28 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 			err := s.syncWorkbench(ctx, workbench)
 			if err != nil {
 				logger.TechLog.Error(ctx, "unable to sync workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			}
+		}(workbench)
+	}
+}
+
+func (s *WorkbenchService) cleanIdleWorkbenchs(ctx context.Context) {
+	workbenchs, err := s.store.DeleteIdleWorkbenchs(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
+	if err != nil {
+		logger.TechLog.Error(ctx, "unable to query idle workbenchs", zap.Error(err))
+		return
+	}
+
+	for _, workbench := range workbenchs {
+		go func(workbench *model.Workbench) {
+			logger.TechLog.Debug(ctx, "cleaning idle workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
+			// err := s.syncWorkbench(ctx, workbench)
+			// if err != nil {
+			// 	logger.TechLog.Error(ctx, "unable to clean idle workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
+			// }
+			err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to delete idle workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			}
 		}(workbench)
 	}
