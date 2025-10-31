@@ -124,7 +124,7 @@ services:
     init_workspace:
       enabled: true
       workspace_id: 1
-      name: Home workspace
+      name: "Home workspace"
   mailer_service:
     smtp:
       user: smtpUser
