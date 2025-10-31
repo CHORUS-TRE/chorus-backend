@@ -36,7 +36,7 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=secret,id=GIT_USERNAME \
     --mount=type=secret,id=GIT_PASSWORD \
     if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
-        echo "Fetching private dependencies..." && \
+        echo "Downloading private dependencies..." && \
         u="$(cat /run/secrets/GIT_USERNAME)" && \
         p="$(cat /run/secrets/GIT_PASSWORD)" && \
         GOPRIVATE=github.com/CHORUS-TRE/* \
@@ -54,7 +54,20 @@ COPY . .
 # Build the application
 RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=cache,target="/chorus/.cache/go-mod" \
-    go build -trimpath -ldflags "$LD_FLAGS" -o /usr/local/bin/chorus ./cmd/chorus
+    --mount=type=secret,id=GIT_USERNAME \
+    --mount=type=secret,id=GIT_PASSWORD \
+    if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
+        echo "Building with private dependencies..." && \
+        u="$(cat /run/secrets/GIT_USERNAME)" && \
+        p="$(cat /run/secrets/GIT_PASSWORD)" && \
+        GOPRIVATE=github.com/CHORUS-TRE/* \
+        GIT_CONFIG_COUNT=1 \
+        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadOf \
+        GIT_CONFIG_VALUE_0=https://github.com/ \
+        go build -trimpath -ldflags "$LD_FLAGS" -o /usr/local/bin/chorus ./cmd/chorus; \
+    else \
+         go build -trimpath -ldflags "$LD_FLAGS" -o /usr/local/bin/chorus ./cmd/chorus; \
+    fi
 
 # Runtime stage - minimal image with only the binary and runtime dependencies
 FROM harbor.build.chorus-tre.ch/docker_proxy/library/ubuntu:24.04
