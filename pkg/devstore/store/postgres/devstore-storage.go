@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/devstore/model"
 	"github.com/jmoiron/sqlx"
 )
@@ -21,7 +22,7 @@ func (s *DevstoreStorage) ListEntries(ctx context.Context, tenantID uint64, scop
 	query := `
 		SELECT id, tenantid, scope, scopeid, "key", "value", createdat, updatedat
 		FROM devstore
-		WHERE tenantid = $1 AND scope = $2 AND scopeid = $3;
+		WHERE tenantid = $1 AND scope = $2 AND scopeid = $3 AND deletedat IS NULL;
 	`
 
 	var entries []*model.DevstoreEntry
@@ -36,7 +37,7 @@ func (s *DevstoreStorage) GetEntry(ctx context.Context, tenantID uint64, scope m
 	query := `
 		SELECT id, tenantid, scope, scopeid, "key", "value", createdat, updatedat
 		FROM devstore
-		WHERE tenantid = $1 AND scope = $2 AND scopeid = $3 AND "key" = $4;
+		WHERE tenantid = $1 AND scope = $2 AND scopeid = $3 AND "key" = $4 AND deletedat IS NULL;
 	`
 
 	var entry model.DevstoreEntry
@@ -65,10 +66,11 @@ func (s *DevstoreStorage) PutEntry(ctx context.Context, tenantID uint64, scope m
 
 func (s *DevstoreStorage) DeleteEntry(ctx context.Context, tenantID uint64, scope model.DevStoreScope, scopeID uint64, key string) error {
 	query := `
-		DELETE FROM devstore
-		WHERE tenantid = $1 AND scope = $2 AND scopeid = $3 AND "key" = $4;
+		UPDATE devstore
+		SET (key, deletedat) = (concat(key, $5::TEXT), NOW())
+		WHERE tenantid = $1 AND scope = $2 AND scopeid = $3 AND "key" = $4 AND deletedat IS NULL;
 	`
 
-	_, err := s.db.ExecContext(ctx, query, tenantID, scope, scopeID, key)
+	_, err := s.db.ExecContext(ctx, query, tenantID, scope, scopeID, key, "-"+uuid.Next())
 	return err
 }

@@ -15,6 +15,7 @@ CREATE TABLE devstore (
 
     createdat TIMESTAMP NULL,
     updatedat TIMESTAMP NULL,
+    deletedat TIMESTAMP NULL,
     
     CONSTRAINT devstore_pkey PRIMARY KEY (id),
     CONSTRAINT tenantcon FOREIGN KEY (tenantid) REFERENCES tenants(id),
