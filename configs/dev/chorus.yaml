@@ -127,7 +127,7 @@ services:
     stream_proxy_enabled: true
     backend_in_k8s: false
     proxy_hit_save_batch_interval: 30s
-    workbench_idle_timeout: 1d
+    workbench_idle_timeout: 24h
 
 # clients:
 #   k8s_client:
