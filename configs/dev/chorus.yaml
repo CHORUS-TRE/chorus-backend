@@ -102,8 +102,10 @@ services:
   steward:
     init_tenant:
       enabled: true
+      tenant_id: 1
     init_user:
       enabled: true
+      user_id: 1
       username: chorus
       password: password
       roles:
@@ -112,6 +114,7 @@ services:
             user: 1
     init_workspace:
       enabled: true
+      workspace_id: 1
       name: Home workspace
   mailer_service:
     smtp:
