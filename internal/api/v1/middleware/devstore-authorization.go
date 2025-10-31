@@ -39,7 +39,7 @@ func (c devstoreControllerAuthorization) GetGlobalEntry(ctx context.Context, req
 }
 
 func (c devstoreControllerAuthorization) PutGlobalEntry(ctx context.Context, req *chorus.PutEntryRequest) (*chorus.PutEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionLogout)
+	err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c devstoreControllerAuthorization) PutGlobalEntry(ctx context.Context, req
 }
 
 func (c devstoreControllerAuthorization) DeleteGlobalEntry(ctx context.Context, req *chorus.DeleteEntryRequest) (*chorus.DeleteEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionLogout)
+	err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (c devstoreControllerAuthorization) GetWorkspaceEntry(ctx context.Context, 
 }
 
 func (c devstoreControllerAuthorization) PutWorkspaceEntry(ctx context.Context, req *chorus.PutWorkspaceEntryRequest) (*chorus.PutEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (c devstoreControllerAuthorization) PutWorkspaceEntry(ctx context.Context, 
 }
 
 func (c devstoreControllerAuthorization) DeleteWorkspaceEntry(ctx context.Context, req *chorus.DeleteWorkspaceEntryRequest) (*chorus.DeleteEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
 	}
