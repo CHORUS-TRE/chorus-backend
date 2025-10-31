@@ -1,0 +1,233 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "public_endpoint.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus dev store service";
+        version: "1.0";
+        contact: {
+            name: "chorus dev store service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListEntriesRequest {}
+message ListEntriesReply {
+    ListEntriesResult result = 1;
+}
+message ListEntriesResult {
+  map<string, string> entries = 1;
+}
+
+message GetEntryRequest {
+    string key = 1;
+}
+message GetEntryReply {
+    GetEntryResult result = 1;
+}
+message GetEntryResult {
+    string key = 1;
+    string value = 2;
+}
+
+message PutEntryRequest {
+    string key = 1;
+    string value = 2;
+}
+message PutEntryReply {
+    PutEntryResult result = 1;
+}
+message PutEntryResult {
+    string key = 1;
+    string value = 2;
+}
+
+message DeleteEntryRequest {
+    string key = 1;
+}
+message DeleteEntryReply {
+    DeleteEntryResult result = 1;
+}
+message DeleteEntryResult {}
+
+message ListWorkspaceEntriesRequest {
+    uint64 id = 1;
+}
+
+message GetWorkspaceEntryRequest {
+    uint64 id = 1;
+    string key = 2;
+}
+
+message PutWorkspaceEntryRequest {
+    uint64 id = 1;
+    string key = 2;
+    string value = 3;
+}
+
+message DeleteWorkspaceEntryRequest {
+    uint64 id = 1;
+    string key = 2;
+}
+
+service DevstoreService {
+    rpc ListGlobalEntries(ListEntriesRequest) returns (ListEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/devstore/global"
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List all key/value entries in the global store";
+            description: "This endpoint retrieves all key/value entries from the global store";
+            tags: "GlobalService";
+            security: {}
+        };
+    };
+
+    rpc GetGlobalEntry(GetEntryRequest) returns (GetEntryReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/devstore/global/{key}"
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a key/value entry from the global store";
+            description: "This endpoint retrieves a key/value entry from the global store by key";
+            tags: "GlobalService";
+            security: {}
+        };
+    };
+
+    rpc PutGlobalEntry(PutEntryRequest) returns (PutEntryReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/devstore/global"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Put a key/value entry in the dev global store";
+            description: "This endpoint allows to put a key/value entry in the dev global store";
+            tags: "GlobalService";
+            security: {}
+        };
+    };
+
+    rpc DeleteGlobalEntry(DeleteEntryRequest) returns (DeleteEntryReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/devstore/global/{key}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a key/value entry from the global store";
+            description: "This endpoint deletes a key/value entry from the global store by key";
+            tags: "GlobalService";
+            security: {}
+        };
+    };
+
+    rpc ListUserEntries(ListEntriesRequest) returns (ListEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/devstore/user"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List all key/value entries in the user store";
+            description: "This endpoint retrieves all key/value entries from the user store";
+            tags: "UserService";
+            security: {}
+        };
+    };
+
+    rpc GetUserEntry(GetEntryRequest) returns (GetEntryReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/devstore/user/{key}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a key/value entry from the user store";
+            description: "This endpoint retrieves a key/value entry from the user store by key";
+            tags: "UserService";
+            security: {}
+        };
+    };
+
+    rpc PutUserEntry(PutEntryRequest) returns (PutEntryReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/devstore/user"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Put a key/value entry in the dev user store";
+            description: "This endpoint allows to put a key/value entry in the dev user store";
+            tags: "UserService";
+            security: {}
+        };
+    };
+
+    rpc DeleteUserEntry(DeleteEntryRequest) returns (DeleteEntryReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/devstore/user/{key}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a key/value entry from the user store";
+            description: "This endpoint deletes a key/value entry from the user store by key";
+            tags: "UserService";
+            security: {}
+        };
+    };
+
+    rpc ListWorkspaceEntries(ListWorkspaceEntriesRequest) returns (ListEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/devstore/workspace/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List all key/value entries in the workspace store";
+            description: "This endpoint retrieves all key/value entries from the workspace store";
+            tags: "WorkspaceService";
+            security: {}
+        };
+    };
+
+    rpc GetWorkspaceEntry(GetWorkspaceEntryRequest) returns (GetEntryReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/devstore/workspace/{id}/{key}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a key/value entry from the workspace store";
+            description: "This endpoint retrieves a key/value entry from the workspace store by key";
+            tags: "WorkspaceService";
+            security: {}
+        };
+    };
+
+    rpc PutWorkspaceEntry(PutWorkspaceEntryRequest) returns (PutEntryReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/devstore/workspace/{id}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Put a key/value entry in the dev workspace store";
+            description: "This endpoint allows to put a key/value entry in the dev workspace store";
+            tags: "WorkspaceService";
+            security: {}
+        };
+    };
+
+    rpc DeleteWorkspaceEntry(DeleteWorkspaceEntryRequest) returns (DeleteEntryReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/devstore/workspace/{id}/{key}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a key/value entry from the workspace store";
+            description: "This endpoint deletes a key/value entry from the workspace store by key";
+            tags: "WorkspaceService";
+            security: {}
+        };
+    };
+}

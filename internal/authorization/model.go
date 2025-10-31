@@ -81,6 +81,9 @@ const (
 	PermissionDeleteUser      PermissionName = "deleteUser"
 	PermissionResetPassword   PermissionName = "resetPassword"
 	PermissionManageUserRoles PermissionName = "manageUserRoles"
+
+	PermissionGetPlatformSettings PermissionName = "getPlatformSettings"
+	PermissionSetPlatformSettings PermissionName = "setPlatformSettings"
 )
 
 func (p PermissionName) String() string {
@@ -197,6 +200,11 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionResetPassword, nil
 	case string(PermissionManageUserRoles):
 		return PermissionManageUserRoles, nil
+
+	case string(PermissionGetPlatformSettings):
+		return PermissionGetPlatformSettings, nil
+	case string(PermissionSetPlatformSettings):
+		return PermissionSetPlatformSettings, nil
 	}
 
 	return "", fmt.Errorf("unknown permission type: %s", p)
@@ -302,20 +310,21 @@ type Role struct {
 type RoleName string
 
 const (
-	RolePublic               RoleName = "Public"
-	RoleAuthenticated        RoleName = "Authenticated"
-	RoleWorkspaceGuest       RoleName = "WorkspaceGuest"
-	RoleWorkspaceMember      RoleName = "WorkspaceMember"
-	RoleWorkspaceMaintainer  RoleName = "WorkspaceMaintainer"
-	RoleWorkspacePI          RoleName = "WorkspacePI"
-	RoleWorkspaceAdmin       RoleName = "WorkspaceAdmin"
-	RoleWorkbenchViewer      RoleName = "WorkbenchViewer"
-	RoleWorkbenchMember      RoleName = "WorkbenchMember"
-	RoleWorkbenchAdmin       RoleName = "WorkbenchAdmin"
-	RoleHealthchecker        RoleName = "Healthchecker"
-	RolePlateformUserManager RoleName = "PlateformUserManager"
-	RoleAppStoreAdmin        RoleName = "AppStoreAdmin"
-	RoleSuperAdmin           RoleName = "SuperAdmin"
+	RolePublic                  RoleName = "Public"
+	RoleAuthenticated           RoleName = "Authenticated"
+	RoleWorkspaceGuest          RoleName = "WorkspaceGuest"
+	RoleWorkspaceMember         RoleName = "WorkspaceMember"
+	RoleWorkspaceMaintainer     RoleName = "WorkspaceMaintainer"
+	RoleWorkspacePI             RoleName = "WorkspacePI"
+	RoleWorkspaceAdmin          RoleName = "WorkspaceAdmin"
+	RoleWorkbenchViewer         RoleName = "WorkbenchViewer"
+	RoleWorkbenchMember         RoleName = "WorkbenchMember"
+	RoleWorkbenchAdmin          RoleName = "WorkbenchAdmin"
+	RoleHealthchecker           RoleName = "Healthchecker"
+	RolePlatformSettingsManager RoleName = "PlatformSettingsManager"
+	RolePlateformUserManager    RoleName = "PlateformUserManager"
+	RoleAppStoreAdmin           RoleName = "AppStoreAdmin"
+	RoleSuperAdmin              RoleName = "SuperAdmin"
 )
 
 func (r RoleName) String() string {
@@ -346,6 +355,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleWorkbenchAdmin, nil
 	case string(RoleHealthchecker):
 		return RoleHealthchecker, nil
+	case string(RolePlatformSettingsManager):
+		return RolePlatformSettingsManager, nil
 	case string(RolePlateformUserManager):
 		return RolePlateformUserManager, nil
 	case string(RoleAppStoreAdmin):
@@ -370,6 +381,7 @@ func GetAllRoles() []RoleName {
 		RoleWorkbenchMember,
 		RoleWorkbenchAdmin,
 		RoleHealthchecker,
+		RolePlatformSettingsManager,
 		RolePlateformUserManager,
 		RoleAppStoreAdmin,
 		RoleSuperAdmin,
