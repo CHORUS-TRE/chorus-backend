@@ -93,7 +93,7 @@ func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout
 		UPDATE workbenchs
 		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
 		WHERE accessedat IS NOT NULL
-		  AND accessedat < NOW() - INTERVAL '$3 seconds'
+		  AND accessedat < NOW() - INTERVAL $3 * INTERVAL '1 second'
 		  AND status != 'deleted'
 		  AND deletedat IS NULL
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
