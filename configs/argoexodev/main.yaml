@@ -109,16 +109,21 @@ services:
             - email
             - roles
   steward:
-    tenant:
+    init_tenant:
       enabled: true
-    user:
+      tenant_id: 1
+    init_user:
       enabled: true
+      user_id: 1
       username: chorus
       password: "{{ .steward_user_password }}"
       roles:
-        - authenticated
-    workspace:
+        - name: Authenticated
+          context:
+            user: 1
+    init_workspace:
       enabled: true
+      workspace_id: 1
       name: "Home workspace"
   mailer_service:
     smtp:
