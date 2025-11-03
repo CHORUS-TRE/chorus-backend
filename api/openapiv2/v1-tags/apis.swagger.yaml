@@ -10,6 +10,7 @@ tags:
   - name: AppInstanceService
   - name: AppService
   - name: AuthenticationService
+  - name: DevstoreService
   - name: HealthService
   - name: NotificationService
   - name: StewardService
@@ -802,6 +803,489 @@ paths:
             $ref: '#/definitions/chorusRefreshTokenRequest'
       tags:
         - AuthenticationService
+  /api/rest/v1/devstore/global:
+    get:
+      summary: List all key/value entries in the global store
+      description: This endpoint retrieves all key/value entries from the global store
+      operationId: DevstoreService_ListGlobalEntries
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListEntriesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - GlobalService
+      security: []
+    post:
+      summary: Put a key/value entry in the dev global store
+      description: This endpoint allows to put a key/value entry in the dev global store
+      operationId: DevstoreService_PutGlobalEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPutEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusPutEntryRequest'
+      tags:
+        - GlobalService
+      security: []
+  /api/rest/v1/devstore/global/{key}:
+    get:
+      summary: Get a key/value entry from the global store
+      description: This endpoint retrieves a key/value entry from the global store by key
+      operationId: DevstoreService_GetGlobalEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - GlobalService
+      security: []
+    delete:
+      summary: Delete a key/value entry from the global store
+      description: This endpoint deletes a key/value entry from the global store by key
+      operationId: DevstoreService_DeleteGlobalEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - GlobalService
+      security: []
+  /api/rest/v1/devstore/user:
+    get:
+      summary: List all key/value entries in the user store
+      description: This endpoint retrieves all key/value entries from the user store
+      operationId: DevstoreService_ListUserEntries
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListEntriesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - UserService
+      security: []
+    post:
+      summary: Put a key/value entry in the dev user store
+      description: This endpoint allows to put a key/value entry in the dev user store
+      operationId: DevstoreService_PutUserEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPutEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusPutEntryRequest'
+      tags:
+        - UserService
+      security: []
+  /api/rest/v1/devstore/user/{key}:
+    get:
+      summary: Get a key/value entry from the user store
+      description: This endpoint retrieves a key/value entry from the user store by key
+      operationId: DevstoreService_GetUserEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - UserService
+      security: []
+    delete:
+      summary: Delete a key/value entry from the user store
+      description: This endpoint deletes a key/value entry from the user store by key
+      operationId: DevstoreService_DeleteUserEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - UserService
+      security: []
+  /api/rest/v1/devstore/workspace/{id}:
+    get:
+      summary: List all key/value entries in the workspace store
+      description: This endpoint retrieves all key/value entries from the workspace store
+      operationId: DevstoreService_ListWorkspaceEntries
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListEntriesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+      security: []
+    post:
+      summary: Put a key/value entry in the dev workspace store
+      description: This endpoint allows to put a key/value entry in the dev workspace store
+      operationId: DevstoreService_PutWorkspaceEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPutEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/DevstoreServicePutWorkspaceEntryBody'
+      tags:
+        - WorkspaceService
+      security: []
+  /api/rest/v1/devstore/workspace/{id}/{key}:
+    get:
+      summary: Get a key/value entry from the workspace store
+      description: This endpoint retrieves a key/value entry from the workspace store by key
+      operationId: DevstoreService_GetWorkspaceEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - WorkspaceService
+      security: []
+    delete:
+      summary: Delete a key/value entry from the workspace store
+      description: This endpoint deletes a key/value entry from the workspace store by key
+      operationId: DevstoreService_DeleteWorkspaceEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteEntryReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - WorkspaceService
+      security: []
   /api/rest/v1/health:
     get:
       summary: Get health check
@@ -2472,6 +2956,13 @@ definitions:
         type: string
       code:
         type: string
+  DevstoreServicePutWorkspaceEntryBody:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
   UserServiceCreateUserRoleBody:
     type: object
     properties:
@@ -2740,6 +3231,13 @@ definitions:
         $ref: '#/definitions/chorusDeleteAppResult'
   chorusDeleteAppResult:
     type: object
+  chorusDeleteEntryReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteEntryResult'
+  chorusDeleteEntryResult:
+    type: object
   chorusDeleteUserReply:
     type: object
     properties:
@@ -2824,6 +3322,18 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusAuthenticationMode'
+  chorusGetEntryReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetEntryResult'
+  chorusGetEntryResult:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
   chorusGetHealthCheckReply:
     type: object
   chorusGetNotificationsReply:
@@ -2928,6 +3438,18 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusApp'
+  chorusListEntriesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListEntriesResult'
+  chorusListEntriesResult:
+    type: object
+    properties:
+      entries:
+        type: object
+        additionalProperties:
+          type: string
   chorusListUsersReply:
     type: object
     properties:
@@ -3083,6 +3605,25 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusPutEntryReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusPutEntryResult'
+  chorusPutEntryRequest:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  chorusPutEntryResult:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
   chorusRefreshTokenReply:
     type: object
     properties:

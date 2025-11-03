@@ -1,0 +1,361 @@
+swagger: "2.0"
+info:
+  title: chorus dev store service
+  version: "1.0"
+  contact:
+    name: chorus dev store service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: DevstoreService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/devstore/global:
+    get:
+      summary: List all key/value entries in the global store
+      description: This endpoint retrieves all key/value entries from the global store
+      operationId: DevstoreService_ListGlobalEntries
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListEntriesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - GlobalService
+      security: []
+    post:
+      summary: Put a key/value entry in the dev global store
+      description: This endpoint allows to put a key/value entry in the dev global store
+      operationId: DevstoreService_PutGlobalEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPutEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusPutEntryRequest'
+      tags:
+        - GlobalService
+      security: []
+  /api/rest/v1/devstore/global/{key}:
+    get:
+      summary: Get a key/value entry from the global store
+      description: This endpoint retrieves a key/value entry from the global store by key
+      operationId: DevstoreService_GetGlobalEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - GlobalService
+      security: []
+    delete:
+      summary: Delete a key/value entry from the global store
+      description: This endpoint deletes a key/value entry from the global store by key
+      operationId: DevstoreService_DeleteGlobalEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - GlobalService
+      security: []
+  /api/rest/v1/devstore/user:
+    get:
+      summary: List all key/value entries in the user store
+      description: This endpoint retrieves all key/value entries from the user store
+      operationId: DevstoreService_ListUserEntries
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListEntriesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - UserService
+      security: []
+    post:
+      summary: Put a key/value entry in the dev user store
+      description: This endpoint allows to put a key/value entry in the dev user store
+      operationId: DevstoreService_PutUserEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPutEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusPutEntryRequest'
+      tags:
+        - UserService
+      security: []
+  /api/rest/v1/devstore/user/{key}:
+    get:
+      summary: Get a key/value entry from the user store
+      description: This endpoint retrieves a key/value entry from the user store by key
+      operationId: DevstoreService_GetUserEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - UserService
+      security: []
+    delete:
+      summary: Delete a key/value entry from the user store
+      description: This endpoint deletes a key/value entry from the user store by key
+      operationId: DevstoreService_DeleteUserEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - UserService
+      security: []
+  /api/rest/v1/devstore/workspace/{id}:
+    get:
+      summary: List all key/value entries in the workspace store
+      description: This endpoint retrieves all key/value entries from the workspace store
+      operationId: DevstoreService_ListWorkspaceEntries
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListEntriesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceService
+      security: []
+    post:
+      summary: Put a key/value entry in the dev workspace store
+      description: This endpoint allows to put a key/value entry in the dev workspace store
+      operationId: DevstoreService_PutWorkspaceEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPutEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/DevstoreServicePutWorkspaceEntryBody'
+      tags:
+        - WorkspaceService
+      security: []
+  /api/rest/v1/devstore/workspace/{id}/{key}:
+    get:
+      summary: Get a key/value entry from the workspace store
+      description: This endpoint retrieves a key/value entry from the workspace store by key
+      operationId: DevstoreService_GetWorkspaceEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - WorkspaceService
+      security: []
+    delete:
+      summary: Delete a key/value entry from the workspace store
+      description: This endpoint deletes a key/value entry from the workspace store by key
+      operationId: DevstoreService_DeleteWorkspaceEntry
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteEntryReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: key
+          in: path
+          required: true
+          type: string
+      tags:
+        - WorkspaceService
+      security: []
+definitions:
+  DevstoreServicePutWorkspaceEntryBody:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  chorusDeleteEntryReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteEntryResult'
+  chorusDeleteEntryResult:
+    type: object
+  chorusGetEntryReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetEntryResult'
+  chorusGetEntryResult:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  chorusListEntriesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListEntriesResult'
+  chorusListEntriesResult:
+    type: object
+    properties:
+      entries:
+        type: object
+        additionalProperties:
+          type: string
+  chorusPutEntryReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusPutEntryResult'
+  chorusPutEntryRequest:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  chorusPutEntryResult:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
