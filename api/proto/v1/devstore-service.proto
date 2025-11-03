@@ -90,7 +90,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List all key/value entries in the global store";
             description: "This endpoint retrieves all key/value entries from the global store";
-            tags: "GlobalService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -103,7 +103,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a key/value entry from the global store";
             description: "This endpoint retrieves a key/value entry from the global store by key";
-            tags: "GlobalService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -116,7 +116,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Put a key/value entry in the dev global store";
             description: "This endpoint allows to put a key/value entry in the dev global store";
-            tags: "GlobalService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -128,7 +128,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a key/value entry from the global store";
             description: "This endpoint deletes a key/value entry from the global store by key";
-            tags: "GlobalService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -140,7 +140,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List all key/value entries in the user store";
             description: "This endpoint retrieves all key/value entries from the user store";
-            tags: "UserService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -152,7 +152,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a key/value entry from the user store";
             description: "This endpoint retrieves a key/value entry from the user store by key";
-            tags: "UserService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -165,7 +165,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Put a key/value entry in the dev user store";
             description: "This endpoint allows to put a key/value entry in the dev user store";
-            tags: "UserService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -177,7 +177,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a key/value entry from the user store";
             description: "This endpoint deletes a key/value entry from the user store by key";
-            tags: "UserService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -189,7 +189,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List all key/value entries in the workspace store";
             description: "This endpoint retrieves all key/value entries from the workspace store";
-            tags: "WorkspaceService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -201,7 +201,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a key/value entry from the workspace store";
             description: "This endpoint retrieves a key/value entry from the workspace store by key";
-            tags: "WorkspaceService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -214,7 +214,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Put a key/value entry in the dev workspace store";
             description: "This endpoint allows to put a key/value entry in the dev workspace store";
-            tags: "WorkspaceService";
+            tags: "DevstoreService";
             security: {}
         };
     };
@@ -226,7 +226,7 @@ service DevstoreService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a key/value entry from the workspace store";
             description: "This endpoint deletes a key/value entry from the workspace store by key";
-            tags: "WorkspaceService";
+            tags: "DevstoreService";
             security: {}
         };
     };
