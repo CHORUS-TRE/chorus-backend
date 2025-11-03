@@ -10,9 +10,7 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/devstore/client/global_service"
-	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/devstore/client/user_service"
-	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/devstore/client/workspace_service"
+	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/devstore/client/devstore_service"
 )
 
 // Default chorus dev store service HTTP client.
@@ -57,9 +55,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *ChorusDevS
 
 	cli := new(ChorusDevStoreService)
 	cli.Transport = transport
-	cli.GlobalService = global_service.New(transport, formats)
-	cli.UserService = user_service.New(transport, formats)
-	cli.WorkspaceService = workspace_service.New(transport, formats)
+	cli.DevstoreService = devstore_service.New(transport, formats)
 	return cli
 }
 
@@ -104,11 +100,7 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // ChorusDevStoreService is a client for chorus dev store service
 type ChorusDevStoreService struct {
-	GlobalService global_service.ClientService
-
-	UserService user_service.ClientService
-
-	WorkspaceService workspace_service.ClientService
+	DevstoreService devstore_service.ClientService
 
 	Transport runtime.ClientTransport
 }
@@ -116,7 +108,5 @@ type ChorusDevStoreService struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *ChorusDevStoreService) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-	c.GlobalService.SetTransport(transport)
-	c.UserService.SetTransport(transport)
-	c.WorkspaceService.SetTransport(transport)
+	c.DevstoreService.SetTransport(transport)
 }

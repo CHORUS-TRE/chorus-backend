@@ -836,7 +836,7 @@ paths:
           schema:
             $ref: '#/definitions/rpcStatus'
       tags:
-        - GlobalService
+        - DevstoreService
       security: []
     post:
       summary: Put a key/value entry in the dev global store
@@ -876,7 +876,7 @@ paths:
           schema:
             $ref: '#/definitions/chorusPutEntryRequest'
       tags:
-        - GlobalService
+        - DevstoreService
       security: []
   /api/rest/v1/devstore/global/{key}:
     get:
@@ -916,7 +916,7 @@ paths:
           required: true
           type: string
       tags:
-        - GlobalService
+        - DevstoreService
       security: []
     delete:
       summary: Delete a key/value entry from the global store
@@ -955,7 +955,7 @@ paths:
           required: true
           type: string
       tags:
-        - GlobalService
+        - DevstoreService
       security: []
   /api/rest/v1/devstore/user:
     get:
@@ -990,7 +990,7 @@ paths:
           schema:
             $ref: '#/definitions/rpcStatus'
       tags:
-        - UserService
+        - DevstoreService
       security: []
     post:
       summary: Put a key/value entry in the dev user store
@@ -1030,7 +1030,7 @@ paths:
           schema:
             $ref: '#/definitions/chorusPutEntryRequest'
       tags:
-        - UserService
+        - DevstoreService
       security: []
   /api/rest/v1/devstore/user/{key}:
     get:
@@ -1070,7 +1070,7 @@ paths:
           required: true
           type: string
       tags:
-        - UserService
+        - DevstoreService
       security: []
     delete:
       summary: Delete a key/value entry from the user store
@@ -1109,7 +1109,7 @@ paths:
           required: true
           type: string
       tags:
-        - UserService
+        - DevstoreService
       security: []
   /api/rest/v1/devstore/workspace/{id}:
     get:
@@ -1150,7 +1150,7 @@ paths:
           type: string
           format: uint64
       tags:
-        - WorkspaceService
+        - DevstoreService
       security: []
     post:
       summary: Put a key/value entry in the dev workspace store
@@ -1195,7 +1195,7 @@ paths:
           schema:
             $ref: '#/definitions/DevstoreServicePutWorkspaceEntryBody'
       tags:
-        - WorkspaceService
+        - DevstoreService
       security: []
   /api/rest/v1/devstore/workspace/{id}/{key}:
     get:
@@ -1240,7 +1240,7 @@ paths:
           required: true
           type: string
       tags:
-        - WorkspaceService
+        - DevstoreService
       security: []
     delete:
       summary: Delete a key/value entry from the workspace store
@@ -1284,7 +1284,7 @@ paths:
           required: true
           type: string
       tags:
-        - WorkspaceService
+        - DevstoreService
       security: []
   /api/rest/v1/health:
     get:
