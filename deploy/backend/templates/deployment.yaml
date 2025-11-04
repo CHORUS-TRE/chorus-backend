@@ -27,16 +27,15 @@ spec:
         - containerPort: 5000
         volumeMounts:
         - name: backend-config
-          mountPath: /chorus/conf
+          mountPath: /config
         {{- if not .Values.deployment.disableMountSecrets }}
         - name: backend-config-secrets
-          mountPath: /chorus/secrets
+          mountPath: /secrets
         {{- end }}
-        command: ["/chorus/bin/chorus"]
         {{- if not .Values.deployment.disableMountSecrets }}
-        args: ["start", "--config", "/chorus/conf/config.yaml", "--config-override", "/chorus/secrets/secrets.yaml"]
+        args: ["start", "--config", "/config/config.yaml", "--config-override", "/secrets/secrets.yaml"]
         {{- else }}
-        args: ["start", "--config", "/chorus/conf/config.yaml"]
+        args: ["start", "--config", "/config/config.yaml"]
         {{- end }}
       {{- if .Values.deployment.postgresEnabled }}
       - name: postgres
