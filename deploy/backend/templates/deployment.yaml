@@ -55,8 +55,10 @@ spec:
           {{- end }}
       {{- end }}
       serviceAccountName: backend-service-account-{{ include "backend.nameid" . }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-      - name: regcred
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
       - name: backend-config
         secret:

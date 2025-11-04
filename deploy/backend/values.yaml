@@ -12,7 +12,9 @@ version: master
 
 replicaCount: 1
 
-imagePullSecrets: []
+imagePullSecrets:
+- name: regcred
+
 fullnameOverride: ""
 
 serviceAccount:
