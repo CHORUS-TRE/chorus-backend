@@ -54,20 +54,20 @@ type Userer interface {
 }
 
 type WorkspaceService struct {
-	store       WorkspaceStore
-	client      k8s.K8sClienter
-	workbencher Workbencher
-	userer      Userer
-	minioClient minio.MinioClienter
+	store        WorkspaceStore
+	client       k8s.K8sClienter
+	workbencher  Workbencher
+	userer       Userer
+	minioClients map[string]minio.MinioClienter
 }
 
-func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, minioClient minio.MinioClienter) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, minioClients map[string]minio.MinioClienter) *WorkspaceService {
 	ws := &WorkspaceService{
-		store:       store,
-		client:      client,
-		workbencher: workbencher,
-		userer:      userer,
-		minioClient: minioClient,
+		store:        store,
+		client:       client,
+		workbencher:  workbencher,
+		userer:       userer,
+		minioClients: minioClients,
 	}
 
 	go func() {
