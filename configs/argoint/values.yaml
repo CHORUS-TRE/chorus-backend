@@ -9,4 +9,4 @@ deployment:
   postgresEnabled: false
   serviceAccountName: "backend-service-account-chorus-master"
 
-image: harbor.int.chorus-tre.ch/chorus/backend:master
+image: harbor.int.chorus-tre.ch/chorus/backend:20251103-23a03fe7
