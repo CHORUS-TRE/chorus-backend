@@ -31,8 +31,8 @@ type client struct {
 	minioClient *minio.Client
 }
 
-func NewClient(cfg config.Config) (*client, error) {
-	clientCfg, err := getMinioClientConfig(cfg)
+func NewClient(cfg config.Config, clientName string) (*client, error) {
+	clientCfg, err := getMinioClientConfig(cfg, clientName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting minio config: %w", err)
 	}
