@@ -120,9 +120,9 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
-		DockerClient DockerClient `yaml:"docker_client,omitempty"`
-		MinioClient  MinioClient  `yaml:"minio_client,omitempty"`
+		K8sClient    K8sClient              `yaml:"k8s_client,omitempty"`
+		DockerClient DockerClient           `yaml:"docker_client,omitempty"`
+		MinioClients map[string]MinioClient `yaml:"minio_clients,omitempty"`
 	}
 
 	K8sClient struct {
@@ -153,6 +153,7 @@ type (
 
 	MinioClient struct {
 		Enabled         bool   `yaml:"enabled,omitempty"`
+		Prefix          string `yaml:"prefix,omitempty"`
 		Endpoint        string `yaml:"endpoint,omitempty"`
 		AccessKeyID     string `yaml:"access_key_id,omitempty"`
 		SecretAccessKey string `yaml:"secret_access_key,omitempty"`
