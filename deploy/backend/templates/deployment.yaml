@@ -1,80 +1,80 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment-backend-{{ include "backend.nameid" . }}
+  name: {{ include "backend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: deployment-backend-{{ include "backend.nameid" . }}
-    nameid: {{ include "backend.nameid" . }}
-    version: {{ .Values.version }}
+    {{- include "backend.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: deployment-backend-{{ include "backend.nameid" . }}
+      {{- include "backend.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        app: deployment-backend-{{ include "backend.nameid" . }}
-        {{- if .Values.podLabels }}
-        {{- toYaml .Values.podLabels | nindent 8 }}
+        {{- include "backend.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      containers:
-      - name: deployment-backend-{{ include "backend.nameid" . }}
-        image: {{ .Values.image }}
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 5000
-        volumeMounts:
-        - name: backend-config
-          mountPath: /config
-        {{- if not .Values.deployment.disableMountSecrets }}
-        - name: backend-config-secrets
-          mountPath: /secrets
-        {{- end }}
-        {{- if not .Values.deployment.disableMountSecrets }}
-        args: ["start", "--config", "/config/config.yaml", "--config-override", "/secrets/secrets.yaml"]
-        {{- else }}
-        args: ["start", "--config", "/config/config.yaml"]
-        {{- end }}
-      {{- if .Values.deployment.postgresEnabled }}
-      - name: postgres
-        image: postgres
-        ports:
-        - containerPort: 5432
-        env:
-        - name: POSTGRES_USER
-          value: admin
-        - name: POSTGRES_PASSWORD
-          value: password
-        - name: POSTGRES_DB
-          {{- if .Values.deployment.postgresDBName }}
-          value: {{ .Values.deployment.postgresDBName }}
-          {{- else }}
-          value: chorus
-          {{- end }}
-      {{- end }}
-      serviceAccountName: backend-service-account-{{ include "backend.nameid" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "backend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          args: ["start", "--config", "/config/config.yaml", "--config-override", "/secrets/secrets.yaml"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          volumeMounts:
+          - name: config
+            mountPath: /config
+          - name: secrets
+            mountPath: /secrets
       volumes:
-      - name: backend-config
-        secret:
-          secretName: backend-config-{{ include "backend.nameid" . }}
+      - name: config
+        configMap:
+          name: {{ include "backend.fullname" . }}
           items:
           - key: config.yaml
             path: config.yaml
-          - key: privkey.pem
-            path: privkey.pem
-          - key: pubkey.pem
-            path: pubkey.pem
-      {{- if not .Values.deployment.disableMountSecrets }}
-      - name: backend-config-secrets
+      - name: secrets
         secret:
-          secretName: backend-secrets
+          secretName: {{ include "backend.fullname" . }}
           items:
           - key: secrets.yaml
             path: secrets.yaml
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
