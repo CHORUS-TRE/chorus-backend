@@ -212,13 +212,13 @@ config:
           order: 2
           openid:
             id: keycloak
-            chorus_backend_host: "https://backend.int.chorus-tre.ch"
+            chorus_backend_host: "https://backend.chorus-tre.ch"
             enable_frontend_redirect: true
-            chorus_frontend_redirect_url: "https://int.chorus-tre.ch/oauthredirect"
-            authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
-            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
-            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
-            logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
+            chorus_frontend_redirect_url: "https://chorus-tre.ch/oauthredirect"
+            authorize_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            token_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logout_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://chorus-tre.ch"
             user_name_claim: "preferred_username"
             # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
             client_id: chorus
