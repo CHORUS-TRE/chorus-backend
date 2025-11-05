@@ -33,11 +33,27 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          args: ["start", "--config", "/config/config.yaml", "--config-override", "/secrets/secrets.yaml"]
+          # TODO: discuss how to improve the startup args
+          args:
+            - start
+            - --config
+            - /config/config.yaml
+            {{- if not .Values.disableMountSecrets }}
+            - --config-override
+            - /secrets/secrets.yaml
+            {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ include "backend.image" . }}
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          {{- with .Values.env }}
+          env:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           ports:
@@ -66,6 +82,7 @@ spec:
           items:
           - key: secrets.yaml
             path: secrets.yaml
+        optional: {{ .Values.disableMountSecrets | default false }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
