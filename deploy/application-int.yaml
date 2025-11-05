@@ -16,9 +16,6 @@ spec:
       helm:
         valueFiles:
           - ../../configs/argoint/values.yaml
-        fileParameters:
-          - name: main.yaml
-            path: ../../configs/argoint/main.yaml
         parameters:
           - name: podLabels.commit-sha
             value: $ARGOCD_APP_REVISION_SHORT
