@@ -1,16 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: service-backend-{{ include "backend.nameid" . }}
+  name: {{ include "backend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: service-backend-{{ include "backend.nameid" . }}
-    version: {{ .Values.version }}
-    nameid: {{ include "backend.nameid" . }}
+    {{- include "backend.labels" . | nindent 4 }}
 spec:
   selector:
-    app: deployment-backend-{{ include "backend.nameid" . }}
+    {{- include "backend.selectorLabels" . | nindent 4 }}
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: {{ .Values.service.port }}
       targetPort: 5000
   type: ClusterIP
