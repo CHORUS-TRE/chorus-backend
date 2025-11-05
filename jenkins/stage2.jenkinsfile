@@ -176,11 +176,12 @@ pipeline {
                     file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
                   ]){
                     sh """
+                      HELM_REL_NAME="chorus-jenkins-backend"
                       echo "KUBECONFIG $KUBECONFIG"
                       kubectl cluster-info
 
                       echo "looking for pod name"
-                      POD_NAME=\$(kubectl get pods -n ci -l app.kubernetes.io/instance=chorus-jenkins-backend -o jsonpath="{.items[0].metadata.name}")
+                      POD_NAME=\$(kubectl get pods -n ci -l app.kubernetes.io/instance=$HELM_REL_NAME -o jsonpath="{.items[0].metadata.name}")
                       
                       echo "waiting 60sec for pod \$POD_NAME to be ready"
                       kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
@@ -188,8 +189,8 @@ pipeline {
 
                       sleep 3
                       
-                      echo "port-forwarding and logging service/chorus-jenkins-backend"
-                      kubectl -n ci port-forward service/chorus-jenkins-backend 5000:5000 &
+                      echo "port-forwarding and logging service/$HELM_REL_NAME"
+                      kubectl -n ci port-forward service/$HELM_REL_NAME 5000:5000 &
                       kubectl -n ci port-forward pod/\$POD_NAME 5432:5432 &
                       kubectl -n ci logs -f pod/\$POD_NAME &
 
