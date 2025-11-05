@@ -12,5 +12,5 @@ spec:
     - name: http
       protocol: TCP
       port: {{ .Values.service.port }}
-      targetPort: 5000
+      targetPort: http
   type: ClusterIP
