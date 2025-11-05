@@ -308,6 +308,9 @@ postgresql:
     enabled: true
     certificatesSecret: backend-db-tls-secret
 
+  metrics:
+    enabled: false
+
   primary:
     persistence:
       size: 8Gi
