@@ -67,8 +67,10 @@ spec:
           volumeMounts:
           - name: config
             mountPath: /config
+          {{- if not .Values.disableMountSecrets }}
           - name: secrets
             mountPath: /secrets
+          {{- end }}
       volumes:
       - name: config
         configMap:
