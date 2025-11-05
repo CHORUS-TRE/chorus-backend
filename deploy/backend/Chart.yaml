@@ -8,5 +8,5 @@ appVersion: 1.16.0
 dependencies:
   - name: postgresql
     version: 0.0.19
-    repository: https://harbor.build.chorus-tre.ch/charts/postgresql
+    repository: oci://harbor.build.chorus-tre.ch/charts
     condition: postgresql.enabled
