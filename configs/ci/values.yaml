@@ -180,7 +180,7 @@ config:
         port: 5432
         username: backend
         password: "ytD9SNHq1K35ygRaN58DQrISHytngAob"  # set in secret
-        database: backend
+        database: chorus
         max_connections: 10
         max_lifetime: 10s
         debug_mode: true
