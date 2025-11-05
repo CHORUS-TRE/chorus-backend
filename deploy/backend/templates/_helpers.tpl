@@ -2,10 +2,6 @@
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "backend.nameid" -}}
-{{- printf "%s-%s" (include "backend.name" .) .Values.version }}
-{{- end }}
-
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
@@ -60,4 +56,18 @@ Create the name of the service account to use
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
+{{- end }}
+
+{{/*
+Service account secret name
+*/}}
+{{- define "backend.serviceAccountSecretName" -}}
+{{ include "backend.serviceAccountName" . }}-token
+{{- end }}
+
+{{/*
+Return the proper image name
+*/}}
+{{- define "backend.image" -}}
+{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
