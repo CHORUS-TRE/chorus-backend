@@ -78,13 +78,14 @@ spec:
           items:
           - key: config.yaml
             path: config.yaml
+      {{- if not .Values.disableMountSecrets }}
       - name: secrets
         secret:
           secretName: {{ include "backend.fullname" . }}
           items:
           - key: secrets.yaml
             path: secrets.yaml
-        optional: {{ .Values.disableMountSecrets | default false }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
