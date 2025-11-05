@@ -1,17 +1,22 @@
 #!/bin/bash
 
 set -e
+HELM_REL_NAME="chorus-jenkins-backend"
 
 helm version
 helm dependency update ./backend
-helm template chorus-jenkins-backend ./backend \
+helm template $HELM_REL_NAME ./backend \
   --namespace "$env" \
   --values ./backend/values.yaml \
   --values ../configs/$env/values.yaml \
   --set-string "image.tag=${IMAGE_TAG}" \
-  > chorus-jenkins-backend.yaml
 
 echo ""
 echo "deploying..."
-kubectl apply -f chorus-jenkins-backend.yaml --namespace "$env"
+helm upgrade --install $HELM_REL_NAME ./backend \
+  --namespace "$env" \
+  --values ./backend/values.yaml \
+  --values ../configs/$env/values.yaml \
+  --set-string "image.tag=${IMAGE_TAG}" \
+
 echo "done"
