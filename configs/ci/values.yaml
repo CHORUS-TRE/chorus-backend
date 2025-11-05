@@ -180,7 +180,7 @@ config:
         port: 5432
         username: backend
         password: "ytD9SNHq1K35ygRaN58DQrISHytngAob"  # set in secret
-        database: chorus
+        database: backend
         max_connections: 10
         max_lifetime: 10s
         debug_mode: true
@@ -212,15 +212,15 @@ config:
           order: 2
           openid:
             id: keycloak
-            chorus_backend_host: "https://backend.int.chorus-tre.ch"
+            chorus_backend_host: "https://backend-jenkins.chorus-tre.ch"
             enable_frontend_redirect: true
-            chorus_frontend_redirect_url: "https://int.chorus-tre.ch/oauthredirect"
-            authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
-            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
-            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
-            logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
+            chorus_frontend_redirect_url: "https://jenkins.chorus-tre.ch/oauthredirect"
+            authorize_url: "https://auth.jenkins.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            token_url: "https://auth.jenkins.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://auth.jenkins.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logout_url: "https://auth.jenkins.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://jenkins.chorus-tre.ch"
             user_name_claim: "preferred_username"
-            # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+            # final_url_format: "https://jenkins.chorus-tre.ch/login?token=%s"
             client_id: chorus
             client_secret: "JLfCbfghXpuv84dsvE9TXBK04mXfCnRl"  # set in secret
             scopes:
@@ -287,7 +287,7 @@ config:
 
 
 postgresql:
-  enabled: false
+  enabled: true
 
   global:
     postgresql:
@@ -312,6 +312,9 @@ postgresql:
     enabled: false
     serviceMonitor:
       enabled: false
+
+  serviceMonitor:
+    enabled: false
 
   primary:
     persistence:
