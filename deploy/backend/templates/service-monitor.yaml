@@ -2,22 +2,32 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: backend-service-monitor
+  name: {{ include "backend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   endpoints:
-  - basicAuth:
+  # TODO: discuss exposing metrics on a different port
+  # than the one used for main service traffic
+  - port: {{ .Values.serviceMonitor.portName | default "http" }}
+    path: {{ .Values.serviceMonitor.path | default "/metrics" }}
+    {{- if .Values.serviceMonitor.basicAuth.enabled }}
+    basicAuth:
       password:
-        name: backend-service-monitor-basic-auth
-        key: password
+        name: {{ .Values.serviceMonitor.basicAuth.secretName | default (printf "%s-monitor-auth" (include "backend.fullname" .)) }}
+        key: {{ .Values.serviceMonitor.basicAuth.passwordKey | default "password" }}
       username:
-        name: backend-service-monitor-basic-auth
-        key: username
-    targetPort: 5000
-    path: /metrics
+        name: {{ .Values.serviceMonitor.basicAuth.secretName | default (printf "%s-monitor-auth" (include "backend.fullname" .)) }}
+        key: {{ .Values.serviceMonitor.basicAuth.usernameKey | default "username" }}
+      {{- end }}
   namespaceSelector:
     matchNames:
-      - backend
+      - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      app: service-backend-chorus-master
+      {{- include "backend.selectorLabels" . | nindent 6 }}
 {{- end }}
