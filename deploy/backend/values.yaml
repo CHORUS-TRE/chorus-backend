@@ -310,6 +310,8 @@ postgresql:
 
   metrics:
     enabled: false
+    serviceMonitor:
+      enabled: false
 
   primary:
     persistence:
