@@ -287,7 +287,7 @@ config:
 
 
 postgresql:
-  enabled: true
+  enabled: false
 
   global:
     postgresql:
@@ -312,9 +312,6 @@ postgresql:
     enabled: false
     serviceMonitor:
       enabled: false
-
-  serviceMonitor:
-    enabled: false
 
   primary:
     persistence:
