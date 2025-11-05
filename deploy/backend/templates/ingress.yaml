@@ -1,28 +1,42 @@
 {{- if .Values.ingress.enabled }}
+{{- $fullName := include "backend.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-backend-{{ include "backend.nameid" . }}
+  name: {{ $fullName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: 20g
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
   tls:
-  - hosts:
-    - {{ .Values.ingress.host }}
-    secretName: backend-ingress-tls
+    {{- range .Values.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+      - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
   rules:
-  - host: {{ .Values.ingress.host }}
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: service-backend-{{ include "backend.nameid" . }}
-            port:
-              number: {{ .Values.service.port }}
-
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType  | default "Prefix" }}
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+          {{- end }}
+    {{- end }}
 {{- end }}
