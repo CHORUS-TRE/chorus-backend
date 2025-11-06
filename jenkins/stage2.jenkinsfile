@@ -181,7 +181,7 @@ pipeline {
                       kubectl cluster-info
 
                       echo "looking for pod name"
-                      POD_NAME=\$(kubectl get pods -n ci -l app.kubernetes.io/instance=$HELM_REL_NAME -o jsonpath="{.items[0].metadata.name}")
+                      POD_NAME=\$(kubectl get pods -n ci -l app.kubernetes.io/name=backend -o jsonpath="{.items[0].metadata.name}")
                       
                       echo "waiting 60sec for pod \$POD_NAME to be ready"
                       kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
