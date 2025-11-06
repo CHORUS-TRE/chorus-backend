@@ -179,7 +179,7 @@ config:
         host: "chorus-jenkins-backend-postgresql"
         port: 5432
         username: backend
-        password: "ytD9SNHq1K35ygRaN58DQrISHytngAob"  # set in secret
+        password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
         database: backend
         max_connections: 10
         max_lifetime: 10s
