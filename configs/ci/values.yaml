@@ -288,45 +288,46 @@ config:
 
 postgresql:
   enabled: false
-
-  global:
-    postgresql:
-      auth:
-        postgresPassword: "FQAVJwPBCAbDRSkEXuIHAUSWjPViKyfF"
-        username: backend
-        password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"
-        database: backend
-        existingSecret: ""
-        secretKeys:
-          adminPasswordKey: "postgres-password"
-          userPasswordKey: "password"
-          replicationPasswordKey: ""
-      service:
-        port: 5432
-
-  tls:
-    enabled: true
-    certificatesSecret: backend-db-tls-secret
-
-  metrics:
-    enabled: false
-    serviceMonitor:
+  postgresql:
+    global:
+      postgresql:
+        auth:
+          postgresPassword: "FQAVJwPBCAbDRSkEXuIHAUSWjPViKyfF"
+          username: backend
+          password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"
+          database: backend
+          existingSecret: ""
+          secretKeys:
+            adminPasswordKey: "postgres-password"
+            userPasswordKey: "password"
+            replicationPasswordKey: ""
+        service:
+          port: 5432
+  
+    tls:
+      enabled: true
+      certificatesSecret: backend-db-tls-secret
+  
+    metrics:
       enabled: false
-
-  primary:
-    persistence:
-      size: 8Gi
-    resourcesPreset: small
-
-  image:
-    # https://hub.docker.com/r/bitnamilegacy/postgresql
-    registry: docker.io
-    repository: bitnamilegacy/postgresql
-    tag: 16.4.0
-
-  certificate:
-    enabled: true
-    secretName: backend-db-tls-secret
-    issuerRef:
-      name: private-ca-cluster-issuer
-      kind: ClusterIssuer
+      serviceMonitor:
+        enabled: false
+  
+    primary:
+      persistence:
+        size: 8Gi
+      resourcesPreset: small
+  
+    image:
+      # https://hub.docker.com/r/bitnamilegacy/postgresql
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
+      tag: 16.4.0
+  
+    certificate:
+      enabled: true
+      secretName: backend-db-tls-secret
+      issuerRef:
+        name: private-ca-cluster-issuer
+        kind: ClusterIssuer
+  
