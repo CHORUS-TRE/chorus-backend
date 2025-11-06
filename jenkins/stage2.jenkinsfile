@@ -176,6 +176,8 @@ pipeline {
                     file([credentialsId: 'registry-auth-docker-config', variable: "DOCKER_CONFIG"]),
                   ]){
                     sh """
+                      set -x
+                      echo "==== TEST STAGE STARTING ===="
                       HELM_REL_NAME="chorus-jenkins-backend"
                       echo "KUBECONFIG $KUBECONFIG"
                       kubectl cluster-info
@@ -189,19 +191,19 @@ pipeline {
 
                       sleep 3
                       
-                      echo "port-forwarding and logging service/$HELM_REL_NAME"
-                      kubectl -n ci port-forward service/$HELM_REL_NAME 5000:5000 &
+                      echo "port-forwarding and logging service/\$HELM_REL_NAME"
+                      kubectl -n ci port-forward service/\$HELM_REL_NAME 5000:5000 &
                       kubectl -n ci port-forward pod/\$POD_NAME 5432:5432 &
                       kubectl -n ci logs -f pod/\$POD_NAME &
                       curl -v http://localhost:5000/health
-                      
+
                       sleep 10
 
-                      kubectl -n ci logs $POD_NAME --tail=50
+                      kubectl -n ci logs \$POD_NAME --tail=50
                       echo ""
                       echo "running acceptance tests"
                       ./scripts/run_acceptance_test.sh
-                      kubectl -n ci logs $POD_NAME --tail=100
+                      kubectl -n ci logs \$POD_NAME --tail=100
                     """
                   }
                 }
