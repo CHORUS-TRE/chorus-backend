@@ -293,6 +293,8 @@ config:
 
 postgresql:
   enabled: true
+  chorusNetworkPolicy:
+    enabled: false
   postgresql:
     global:
       postgresql:
