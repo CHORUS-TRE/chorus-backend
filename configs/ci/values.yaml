@@ -324,7 +324,9 @@ postgresql:
       persistence:
         size: 8Gi
       resourcesPreset: small
-  
+      pdb:
+        created: false
+ 
     image:
       # https://hub.docker.com/r/bitnamilegacy/postgresql
       registry: docker.io
