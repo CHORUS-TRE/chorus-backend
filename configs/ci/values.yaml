@@ -176,7 +176,7 @@ config:
       chorus:
         type: postgres
         migration_table_name: tt_migrations
-        host: ""
+        host: "chorus-jenkins-backend-postgresql"
         port: 5432
         username: backend
         password: "ytD9SNHq1K35ygRaN58DQrISHytngAob"  # set in secret
