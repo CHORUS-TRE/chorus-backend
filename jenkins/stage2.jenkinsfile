@@ -177,7 +177,6 @@ pipeline {
                   ]){
                     sh """
                       set -x
-                      echo "==== TEST STAGE STARTING ===="
                       HELM_REL_NAME="chorus-jenkins-backend"
                       echo "KUBECONFIG $KUBECONFIG"
                       kubectl cluster-info
@@ -199,11 +198,8 @@ pipeline {
 
                       sleep 10
 
-                      kubectl -n ci logs \$POD_NAME --tail=50
-                      echo ""
                       echo "running acceptance tests"
                       ./scripts/run_acceptance_test.sh
-                      kubectl -n ci logs \$POD_NAME --tail=100
                     """
                   }
                 }
