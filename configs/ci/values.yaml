@@ -160,7 +160,12 @@ config:
     jobs:
       job_status_gc:
         enabled: true
-    private_key: "52AVigIl7nzrxSCCRTBGwLwgPkWqRRhU" # set in secret
+    private_key: |
+      -----BEGIN EC PRIVATE KEY-----
+      MHcCAQEEII8kGzWHAJfOs9i/4Itm6XmR/CIb6ePuqx+2waa/U0EuoAoGCCqGSM49
+      AwEHoUQDQgAEg3/teKmW70zuiWjYTOynPqPHLOM7XExQUeOD6WSGdlJph3jZzuXh
+      f3hlc8rjTTQFa/xIsE+FYdpzVv5TB5qJVw==
+      -----END EC PRIVATE KEY-----
     salt: "SNN6lK7wfEHVvN7mAaTI4nH375yQZzV8"
     metrics:
       enabled: false
