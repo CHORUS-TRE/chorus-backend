@@ -193,11 +193,15 @@ pipeline {
                       kubectl -n ci port-forward service/$HELM_REL_NAME 5000:5000 &
                       kubectl -n ci port-forward pod/\$POD_NAME 5432:5432 &
                       kubectl -n ci logs -f pod/\$POD_NAME &
-
+                      curl -v http://localhost:5000/health
+                      
                       sleep 10
 
+                      kubectl -n ci logs $POD_NAME --tail=50
+                      echo ""
                       echo "running acceptance tests"
                       ./scripts/run_acceptance_test.sh
+                      kubectl -n ci logs $POD_NAME --tail=100
                     """
                   }
                 }
