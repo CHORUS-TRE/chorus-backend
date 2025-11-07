@@ -10,8 +10,6 @@ image:
   tag: ""
   imagePullPolicy: IfNotPresent
 
-version: master
-
 replicaCount: 1
 
 imagePullSecrets:
@@ -137,6 +135,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+clusterRole:
+  create: true
 
 # Disable mounting of secrets volume and config override
 # all password will need to be set via the config below
