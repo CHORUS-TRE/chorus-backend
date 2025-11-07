@@ -147,8 +147,7 @@ config:
   daemon:
     title: "template backend"
     http:
-      #host: 0.0.0.0
-      host: acceptance-backend.chorus-backend-acceptance
+      host: 0.0.0.0
       port: 5000
       headers:
         access_control_allow_origins: []
@@ -183,7 +182,7 @@ config:
       chorus:
         type: postgres
         migration_table_name: tt_migrations
-        host: acceptance-postgresql.chorus-backend-acceptance
+        host: acceptance-postgresql
         port: 5432
         username: backend
         password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
