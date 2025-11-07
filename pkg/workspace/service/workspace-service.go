@@ -55,19 +55,19 @@ type Userer interface {
 
 type WorkspaceService struct {
 	store        WorkspaceStore
-	client       k8s.K8sClienter
+	k8sClient    k8s.K8sClienter
 	workbencher  Workbencher
 	userer       Userer
 	minioClients map[string]minio.MinioClienter
 }
 
-func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, minioClients map[string]minio.MinioClienter) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, minioClients map[string]minio.MinioClienter, k8sClient k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
 	ws := &WorkspaceService{
 		store:        store,
-		client:       client,
+		minioClients: minioClients,
+		k8sClient:    k8sClient,
 		workbencher:  workbencher,
 		userer:       userer,
-		minioClients: minioClients,
 	}
 
 	go func() {
@@ -88,13 +88,13 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	for _, workspace := range workspaces {
 		if workspace.Status == model.WorkspaceDeleted {
 			go func() {
-				if err := s.client.DeleteWorkspace(model.GetWorkspaceClusterName(workspace.ID)); err != nil {
+				if err := s.k8sClient.DeleteWorkspace(model.GetWorkspaceClusterName(workspace.ID)); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to update workbench %v: %v", workspace.ID, err))
 				}
 			}()
 		} else {
 			go func() {
-				if err := s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(workspace.ID)); err != nil {
+				if err := s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(workspace.ID)); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to create workspace %v: %v", workspace.ID, err))
 				}
 			}()
@@ -132,7 +132,7 @@ func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, worksp
 		return fmt.Errorf("unable to delete workspace %v: %w", workspaceID, err)
 	}
 
-	err = s.client.DeleteWorkspace(model.GetWorkspaceClusterName(workspaceID))
+	err = s.k8sClient.DeleteWorkspace(model.GetWorkspaceClusterName(workspaceID))
 	if err != nil {
 		return fmt.Errorf("unable to delete workbench %v: %w", workspaceID, err)
 	}
@@ -161,7 +161,7 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		return nil, fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
 	}
 
-	err = s.client.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))
+	err = s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workbench %v: %w", workspace.ID, err)
 	}
