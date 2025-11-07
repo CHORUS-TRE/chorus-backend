@@ -10,8 +10,6 @@ image:
   tag: ""
   imagePullPolicy: IfNotPresent
 
-version: master
-
 replicaCount: 1
 
 imagePullSecrets:
@@ -149,7 +147,8 @@ config:
   daemon:
     title: "template backend"
     http:
-      host: 0.0.0.0
+      #host: 0.0.0.0
+      host: acceptance-backend.chorus-backend-acceptance
       port: 5000
       headers:
         access_control_allow_origins: []
@@ -184,7 +183,7 @@ config:
       chorus:
         type: postgres
         migration_table_name: tt_migrations
-        host: "acceptance-postgresql"
+        host: acceptance-postgresql.chorus-backend-acceptance
         port: 5432
         username: backend
         password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
@@ -329,7 +328,7 @@ postgresql:
         create: false
       networkPolicy:
         enabled: false
- 
+
     image:
       # https://hub.docker.com/r/bitnamilegacy/postgresql
       registry: docker.io
