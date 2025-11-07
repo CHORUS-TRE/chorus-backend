@@ -327,6 +327,8 @@ postgresql:
       resourcesPreset: small
       pdb:
         created: false
+      networkPolicy:
+        enabled: false
  
     image:
       # https://hub.docker.com/r/bitnamilegacy/postgresql
@@ -334,10 +336,9 @@ postgresql:
       repository: bitnamilegacy/postgresql
       tag: 16.4.0
   
-    certificate:
-      enabled: true
-      secretName: backend-db-tls-secret
-      issuerRef:
-        name: private-ca-cluster-issuer
-        kind: ClusterIssuer
-  
+  certificate:
+    enabled: true
+    secretName: backend-db-tls-secret
+    issuerRef:
+      name: private-ca-cluster-issuer
+      kind: ClusterIssuer
