@@ -250,7 +250,7 @@ config:
             context:
               user: 1
       init_workspace:
-        enabled: true
+        enabled: false
         workspace_id: 1
         name: "Home workspace"
     mailer_service:
