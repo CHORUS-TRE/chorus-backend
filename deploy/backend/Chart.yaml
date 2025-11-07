@@ -3,7 +3,7 @@ name: backend
 description: Chorus Backend
 type: application
 version: 0.3.2
-appVersion: 1.16.0
+appVersion: 0.0.0
 
 dependencies:
   - name: postgresql
