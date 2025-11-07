@@ -184,7 +184,7 @@ config:
       chorus:
         type: postgres
         migration_table_name: tt_migrations
-        host: "chorus-ci-backend-postgresql"
+        host: "chorus-ci-postgresql"
         port: 5432
         username: backend
         password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
