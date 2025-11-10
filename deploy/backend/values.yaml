@@ -236,7 +236,7 @@ config:
         enabled: true
         tenant_id: 1
       init_user:
-        enabled: true
+        enabled: false
         user_id: 1
         username: chorus
         password: ""  # set in secret
@@ -245,7 +245,7 @@ config:
             context:
               user: 1
       init_workspace:
-        enabled: true
+        enabled: false
         workspace_id: 1
         name: "Home workspace"
     mailer_service:

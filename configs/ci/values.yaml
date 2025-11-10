@@ -236,13 +236,13 @@ config:
         keycloakdev: {}
     steward:
       init_tenant:
-        enabled: true
+        enabled: false
         tenant_id: 1
       init_user:
-        enabled: true
+        enabled: false
         user_id: 1
         username: chorus
-        password: "YjYRe6kgrzxPzj29vHINCOywQjSUkPUW"  # set in secret
+        password: ""  # set in secret
         roles:
           - name: Authenticated
             context:
