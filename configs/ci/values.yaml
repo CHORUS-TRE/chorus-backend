@@ -296,6 +296,10 @@ postgresql:
     enabled: false
   postgresql:
     global:
+      # Using a storage class
+      # with reclaim policy 'Delete'
+      # for CI
+      defaultStorageClass: "ceph-corbo-rbd-hdd"
       postgresql:
         auth:
           postgresPassword: "FQAVJwPBCAbDRSkEXuIHAUSWjPViKyfF"
