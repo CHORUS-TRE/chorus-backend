@@ -7,5 +7,4 @@ metadata:
     {{- include "backend.labels" . | nindent 4 }}
 data:
   config.yaml: |
-    # Your config content here
     {{- .Values.config | toYaml | nindent 4 }}
