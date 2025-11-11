@@ -20,7 +20,7 @@ type MinioFileStorage struct {
 	minioClient minio.MinioClienter
 }
 
-const workspacePrefix = "workspaces/workspace"
+const workspacePrefix = "/workspaces/workspace"
 const workspacePrefixPattern = `^` + workspacePrefix + `\d+/`
 
 func NewMinioFileStorage(clientName string, client minio.MinioClienter) (*MinioFileStorage, error) {
