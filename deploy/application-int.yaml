@@ -11,8 +11,7 @@ spec:
   sources:
     - repoURL: https://github.com/CHORUS-TRE/chorus-backend.git
       path: deploy/backend
-      #targetRevision: HEAD # TODO: change back to HEAD after testing
-      targetRevision: feat/test-backend-dockerfile-image
+      targetRevision: HEAD
       helm:
         valueFiles:
           - ../../configs/argoint/values.yaml
