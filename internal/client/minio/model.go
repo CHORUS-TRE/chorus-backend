@@ -1,41 +1,64 @@
 package minio
 
 import (
-	"fmt"
 	"path"
-	"regexp"
 	"strings"
+	"time"
 
-	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
-	"github.com/minio/minio-go/v7"
+	workspace_file_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 )
 
-const WORKSPACE_PREFIX = "workspaces/workspace"
-const workspacePrefixPattern = `^` + WORKSPACE_PREFIX + `\d+/`
+type MinioObjectInfo struct {
+	Key          string
+	Size         int64
+	LastModified time.Time
+	MimeType     string
+}
 
-func (c *client) ObjectToWorkspaceFile(objectInfo minio.ObjectInfo) (workspace_model.WorkspaceFile, error) {
-	isDir := strings.HasSuffix(objectInfo.Key, "/")
-	name := path.Base(strings.TrimRight(objectInfo.Key, "/"))
+type MinioObject struct {
+	MinioObjectInfo
+	Content []byte
+}
 
-	return workspace_model.WorkspaceFile{
-		Path:        ObjectKeyToWorkspacePath(objectInfo.Key),
+func MinioObjectInfoToWorkspaceFile(info *MinioObjectInfo) *workspace_file_model.WorkspaceFile {
+	isDir := strings.HasSuffix(info.Key, "/")
+	name := path.Base(strings.TrimRight(info.Key, "/"))
+
+	return &workspace_file_model.WorkspaceFile{
+		Path:        info.Key,
 		Name:        name,
 		IsDirectory: isDir,
-		Size:        objectInfo.Size,
-		MimeType:    objectInfo.ContentType,
-		UpdatedAt:   objectInfo.LastModified,
-	}, nil
-}
-
-func WorkspacePathToObjectKey(workspaceID uint64, filePath string, isDirectory bool) string {
-	path := fmt.Sprintf("%s%d/%s", WORKSPACE_PREFIX, workspaceID, strings.TrimPrefix(filePath, "/"))
-	if isDirectory && !strings.HasSuffix(path, "/") {
-		path += "/"
+		Size:        info.Size,
+		MimeType:    info.MimeType,
+		UpdatedAt:   info.LastModified,
 	}
-	return path
 }
 
-func ObjectKeyToWorkspacePath(objectKey string) string {
-	workspacePattern := regexp.MustCompile(workspacePrefixPattern)
-	return workspacePattern.ReplaceAllString(objectKey, "")
+func MinioObjectToWorkspaceFile(object *MinioObject) *workspace_file_model.WorkspaceFile {
+	file := MinioObjectInfoToWorkspaceFile(&object.MinioObjectInfo)
+	file.Content = object.Content
+
+	return file
+}
+
+func WorkspaceFileToMinioObjectInfo(file *workspace_file_model.WorkspaceFile) *MinioObjectInfo {
+	return &MinioObjectInfo{
+		Key:          file.Path,
+		Size:         file.Size,
+		LastModified: file.UpdatedAt,
+		MimeType:     file.MimeType,
+	}
+}
+
+func WorkspaceFileToMinioObject(file *workspace_file_model.WorkspaceFile) *MinioObject {
+	return &MinioObject{
+		MinioObjectInfo: *WorkspaceFileToMinioObjectInfo(file),
+		Content:         file.Content,
+	}
+}
+
+func WorkspaceFileToMinioObjectWithoutContent(file *workspace_file_model.WorkspaceFile) *MinioObject {
+	return &MinioObject{
+		MinioObjectInfo: *WorkspaceFileToMinioObjectInfo(file),
+	}
 }

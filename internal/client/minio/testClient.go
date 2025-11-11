@@ -2,8 +2,6 @@ package minio
 
 import (
 	"fmt"
-
-	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
 var _ MinioClienter = &testClient{}
@@ -14,22 +12,30 @@ func NewTestClient() *testClient {
 	return &testClient{}
 }
 
-func (c *testClient) StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
+func (c *testClient) GetClientName() string {
+	return "test-minio-client"
+}
+
+func (c *testClient) GetClientPrefix() string {
+	return "/test-client/"
+}
+
+func (c *testClient) GetObject(objectKey string) (*MinioObject, error) {
 	return nil, fmt.Errorf("Minio Test client not yet implemented")
 }
 
-func (c *testClient) ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error) {
+func (c *testClient) StatObject(objectKey string) (*MinioObjectInfo, error) {
 	return nil, fmt.Errorf("Minio Test client not yet implemented")
 }
 
-func (c *testClient) GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
+func (c *testClient) ListObjects(objectKey string) ([]*MinioObjectInfo, error) {
 	return nil, fmt.Errorf("Minio Test client not yet implemented")
 }
 
-func (c *testClient) PutWorkspaceObject(workspaceID uint64, file *workspace_model.WorkspaceFile) (*workspace_model.WorkspaceFile, error) {
+func (c *testClient) PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error) {
 	return nil, fmt.Errorf("Minio Test client not yet implemented")
 }
 
-func (c *testClient) DeleteWorkspaceObject(workspaceID uint64, path string) error {
+func (c *testClient) DeleteObject(objectKey string) error {
 	return fmt.Errorf("Minio Test client not yet implemented")
 }
