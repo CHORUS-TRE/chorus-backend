@@ -7,7 +7,6 @@ import (
 	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
-	minio_client "github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/filestore/minio"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
@@ -45,21 +44,16 @@ var workspaceFileStores map[string]service.WorkspaceFileStore
 
 func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 	workspaceFileStoresOnce.Do(func() {
-		config := ProvideConfig()
-
+		minioClients := ProvideMinioClients()
 		workspaceFileStores = make(map[string]service.WorkspaceFileStore)
 
 		// Minio file stores
-		for storeName := range config.Services.WorkspaceFileService.MinioStores {
-			minioClient, err := minio_client.NewClient(config, storeName)
-			if err != nil {
-				logger.TechLog.Fatal(context.Background(), "failed to create minio client: "+err.Error())
-			}
+		for storeName, minioClient := range minioClients {
 			minioStore, err := minio.NewMinioFileStorage(storeName, minioClient)
 			if err != nil {
 				logger.TechLog.Fatal(context.Background(), "failed to create minio file store: "+err.Error())
 			}
-			workspaceFileStores[minioStore.GetStoreName()] = minioStore
+			workspaceFileStores[storeName] = minioStore
 		}
 
 		// Additional file stores can be added here
