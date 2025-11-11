@@ -20,7 +20,7 @@ type MinioFileStorage struct {
 	minioClient minio.MinioClienter
 }
 
-const workspacePrefix = "/workspaces/workspace"
+const workspacePrefix = "workspaces/workspace"
 const workspacePrefixPattern = `^` + workspacePrefix + `\d+/`
 
 func NewMinioFileStorage(clientName string, client minio.MinioClienter) (*MinioFileStorage, error) {
@@ -47,7 +47,7 @@ func (s *MinioFileStorage) ToStorePath(workspaceID uint64, path string) string {
 	normalized := s.NormalizePath(path)
 	storePath := strings.TrimPrefix(normalized, s.storePrefix)
 	objectKey := fmt.Sprintf("%s%d/%s", workspacePrefix, workspaceID, strings.TrimPrefix(storePath, "/"))
-	return strings.TrimPrefix(s.NormalizePath(objectKey), s.storePrefix)
+	return objectKey
 }
 
 func (s *MinioFileStorage) FromStorePath(workspaceID uint64, storePath string) string {
@@ -69,39 +69,33 @@ func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, workspaceID uint
 }
 
 func (s *MinioFileStorage) StatFile(ctx context.Context, workspaceID uint64, path string) (*model.WorkspaceFile, error) {
-	objectKey := model.WorkspacePathToObjectKey(workspaceID, path)
-
-	objectInfo, err := s.minioClient.StatObject(objectKey)
+	objectInfo, err := s.minioClient.StatObject(path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
+		return nil, fmt.Errorf("unable to stat object %s: %w", path, err)
 	}
 
 	file := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
 
-	logger.TechLog.Info(ctx, fmt.Sprintf("Retrieved metadata for %s from workspace %d", objectKey, workspaceID))
+	logger.TechLog.Info(ctx, fmt.Sprintf("Retrieved metadata for %s from workspace %d", path, workspaceID))
 	return file, nil
 }
 
 func (s *MinioFileStorage) GetFile(ctx context.Context, workspaceID uint64, path string) (*model.WorkspaceFile, error) {
-	objectKey := model.WorkspacePathToObjectKey(workspaceID, path)
-
-	object, err := s.minioClient.GetObject(objectKey)
+	object, err := s.minioClient.GetObject(path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get object %s: %w", objectKey, err)
+		return nil, fmt.Errorf("unable to get object %s: %w", path, err)
 	}
 
 	file := minio.MinioObjectToWorkspaceFile(object)
 
-	logger.TechLog.Info(ctx, fmt.Sprintf("Downloaded %s from workspace %d", objectKey, workspaceID))
+	logger.TechLog.Info(ctx, fmt.Sprintf("Downloaded %s from workspace %d", path, workspaceID))
 	return file, nil
 }
 
 func (s *MinioFileStorage) ListFiles(ctx context.Context, workspaceID uint64, path string) ([]*model.WorkspaceFile, error) {
-	objectKey := model.WorkspacePathToObjectKey(workspaceID, path)
-
-	objects, err := s.minioClient.ListObjects(objectKey)
+	objects, err := s.minioClient.ListObjects(path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list objects with prefix %s: %w", objectKey, err)
+		return nil, fmt.Errorf("unable to list objects with prefix %s: %w", path, err)
 	}
 
 	var files []*model.WorkspaceFile
@@ -115,27 +109,25 @@ func (s *MinioFileStorage) ListFiles(ctx context.Context, workspaceID uint64, pa
 }
 
 func (s *MinioFileStorage) CreateFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	objectKey := model.WorkspacePathToObjectKey(workspaceID, file.Path)
-
 	// Check if exists
-	_, err := s.minioClient.StatObject(objectKey)
+	_, err := s.minioClient.StatObject(file.Path)
 	if err == nil {
-		return nil, fmt.Errorf("object at %s already exists in workspace %d", objectKey, workspaceID)
+		return nil, fmt.Errorf("object at %s already exists in workspace %d", file.Path, workspaceID)
 	}
 
 	// Upload
-	_, err = s.minioClient.PutObject(objectKey, minio.WorkspaceFileToMinioObject(file))
+	_, err = s.minioClient.PutObject(file.Path, minio.WorkspaceFileToMinioObject(file))
 	if err != nil {
-		return nil, fmt.Errorf("unable to put object at %s: %w", objectKey, err)
+		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
 
 	// Verify upload
-	objectInfo, err := s.minioClient.StatObject(objectKey)
+	objectInfo, err := s.minioClient.StatObject(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify created object: %w", err)
 	}
 
-	logger.TechLog.Info(ctx, fmt.Sprintf("Created %s in workspace %d", objectKey, workspaceID))
+	logger.TechLog.Info(ctx, fmt.Sprintf("Created %s in workspace %d", file.Path, workspaceID))
 
 	createdFile := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
 
@@ -143,34 +135,31 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, workspaceID uint64, f
 }
 
 func (s *MinioFileStorage) UpdateFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	oKey := model.WorkspacePathToObjectKey(workspaceID, oldPath)
-	nKey := model.WorkspacePathToObjectKey(workspaceID, file.Path)
-
 	// Check if old file exists
-	_, err := s.minioClient.StatObject(oKey)
+	_, err := s.minioClient.StatObject(oldPath)
 	if err != nil {
-		return nil, fmt.Errorf("object at %s does not exist in workspace %d: %w", oKey, workspaceID, err)
+		return nil, fmt.Errorf("object at %s does not exist in workspace %d: %w", oldPath, workspaceID, err)
 	}
 
 	// Upload new file
-	_, err = s.minioClient.PutObject(nKey, minio.WorkspaceFileToMinioObjectWithoutContent(file))
+	_, err = s.minioClient.PutObject(file.Path, minio.WorkspaceFileToMinioObjectWithoutContent(file))
 	if err != nil {
-		return nil, fmt.Errorf("unable to put object at %s: %w", nKey, err)
+		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
 
 	// Delete old file
-	err = s.minioClient.DeleteObject(oKey)
+	err = s.minioClient.DeleteObject(oldPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to delete old object at %s: %w", oKey, err)
+		return nil, fmt.Errorf("unable to delete old object at %s: %w", oldPath, err)
 	}
 
 	// Verify upload
-	objectInfo, err := s.minioClient.StatObject(nKey)
+	objectInfo, err := s.minioClient.StatObject(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify updated object: %w", err)
 	}
 
-	logger.TechLog.Info(ctx, fmt.Sprintf("Updated %s to %s in workspace %d", oKey, nKey, workspaceID))
+	logger.TechLog.Info(ctx, fmt.Sprintf("Updated %s to %s in workspace %d", oldPath, file.Path, workspaceID))
 
 	updatedFile := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
 
@@ -178,13 +167,11 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, workspaceID uint64, o
 }
 
 func (s *MinioFileStorage) DeleteFile(ctx context.Context, workspaceID uint64, path string) error {
-	objectKey := model.WorkspacePathToObjectKey(workspaceID, path)
-
-	err := s.minioClient.DeleteObject(objectKey)
+	err := s.minioClient.DeleteObject(path)
 	if err != nil {
-		return fmt.Errorf("unable to delete object at %s: %w", objectKey, err)
+		return fmt.Errorf("unable to delete object at %s: %w", path, err)
 	}
 
-	logger.TechLog.Info(ctx, fmt.Sprintf("Deleted %s from workspace %d", objectKey, workspaceID))
+	logger.TechLog.Info(ctx, fmt.Sprintf("Deleted %s from workspace %d", path, workspaceID))
 	return nil
 }
