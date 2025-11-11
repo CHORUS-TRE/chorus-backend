@@ -6,7 +6,6 @@ import (
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -27,12 +26,6 @@ type Workspaceer interface {
 
 	ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
-
-	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
-	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error)
-	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 }
 
 type Workbencher interface {
@@ -54,20 +47,18 @@ type Userer interface {
 }
 
 type WorkspaceService struct {
-	store        WorkspaceStore
-	k8sClient    k8s.K8sClienter
-	workbencher  Workbencher
-	userer       Userer
-	minioClients map[string]minio.MinioClienter
+	store       WorkspaceStore
+	k8sClient   k8s.K8sClienter
+	workbencher Workbencher
+	userer      Userer
 }
 
-func NewWorkspaceService(store WorkspaceStore, minioClients map[string]minio.MinioClienter, k8sClient k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
+func NewWorkspaceService(store WorkspaceStore, k8sClient k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
 	ws := &WorkspaceService{
-		store:        store,
-		minioClients: minioClients,
-		k8sClient:    k8sClient,
-		workbencher:  workbencher,
-		userer:       userer,
+		store:       store,
+		k8sClient:   k8sClient,
+		workbencher: workbencher,
+		userer:      userer,
 	}
 
 	go func() {
