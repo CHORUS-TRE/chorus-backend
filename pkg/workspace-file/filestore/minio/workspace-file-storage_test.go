@@ -71,31 +71,31 @@ func TestToStorePath(t *testing.T) {
 			name:        "strips prefix and adds workspace scope",
 			workspaceID: 1,
 			globalPath:  "/test-client/file.txt",
-			expected:    "workspaces/workspace1/file.txt",
+			expected:    "/workspaces/workspace1/file.txt",
 		},
 		{
 			name:        "handles nested paths",
 			workspaceID: 1,
 			globalPath:  "/test-client/folder/file.txt",
-			expected:    "workspaces/workspace1/folder/file.txt",
+			expected:    "/workspaces/workspace1/folder/file.txt",
 		},
 		{
 			name:        "handles path without leading slash",
 			workspaceID: 1,
 			globalPath:  "test-client/file.txt",
-			expected:    "workspaces/workspace1/file.txt",
+			expected:    "/workspaces/workspace1/file.txt",
 		},
 		{
 			name:        "handles root of store",
 			workspaceID: 1,
 			globalPath:  "/test-client/",
-			expected:    "workspaces/workspace1/",
+			expected:    "/workspaces/workspace1/",
 		},
 		{
 			name:        "different workspace ID",
 			workspaceID: 42,
 			globalPath:  "/test-client/data.json",
-			expected:    "workspaces/workspace42/data.json",
+			expected:    "/workspaces/workspace42/data.json",
 		},
 	}
 
