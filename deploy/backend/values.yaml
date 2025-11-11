@@ -304,16 +304,16 @@ postgresql:
             replicationPasswordKey: ""
         service:
           port: 5432
-  
+
     tls:
       enabled: true
       certificatesSecret: backend-db-tls-secret
-  
+
     metrics:
       enabled: false
       serviceMonitor:
         enabled: false
-  
+
     primary:
       persistence:
         size: 8Gi
@@ -324,7 +324,7 @@ postgresql:
       registry: docker.io
       repository: bitnamilegacy/postgresql
       tag: 16.4.0
-  
+
   certificate:
     enabled: true
     secretName: backend-db-tls-secret
