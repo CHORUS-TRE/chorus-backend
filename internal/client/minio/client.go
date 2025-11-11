@@ -7,8 +7,6 @@ import (
 	"io"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -16,12 +14,14 @@ import (
 var _ MinioClienter = &client{}
 
 type MinioClienter interface {
-	// Workspace object operations
-	StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
-	GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error)
-	ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error)
-	PutWorkspaceObject(workspaceID uint64, file *workspace_model.WorkspaceFile) (*workspace_model.WorkspaceFile, error)
-	DeleteWorkspaceObject(workspaceID uint64, path string) error
+	GetClientName() string
+	GetClientPrefix() string
+
+	StatObject(objectKey string) (*MinioObjectInfo, error)
+	GetObject(objectKey string) (*MinioObject, error)
+	ListObjects(objectKey string) ([]*MinioObjectInfo, error)
+	PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error)
+	DeleteObject(objectKey string) error
 }
 
 type client struct {
@@ -52,27 +52,29 @@ func NewClient(cfg config.Config, clientName string) (*client, error) {
 	}, nil
 }
 
-func (c *client) StatWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
+func (c *client) GetClientName() string {
+	return c.minioClientCfg.Name
+}
 
+func (c *client) GetClientPrefix() string {
+	return c.minioClientCfg.Prefix
+}
+
+func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
 	objectInfo, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
 	}
 
-	file, err := c.ObjectToWorkspaceFile(objectInfo)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
-	}
-
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully retrieved %s metadata from workspace %d\n", objectKey, workspaceID))
-
-	return &file, nil
+	return &MinioObjectInfo{
+		Key:          objectInfo.Key,
+		Size:         objectInfo.Size,
+		LastModified: objectInfo.LastModified,
+		MimeType:     objectInfo.ContentType,
+	}, nil
 }
 
-func (c *client) GetWorkspaceObject(workspaceID uint64, path string) (*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
-
+func (c *client) GetObject(objectKey string) (*MinioObject, error) {
 	reader, err := c.minioClient.GetObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to get object %s: %w", objectKey, err)
@@ -84,84 +86,68 @@ func (c *client) GetWorkspaceObject(workspaceID uint64, path string) (*workspace
 	}
 	defer reader.Close()
 
-	file, err := c.ObjectToWorkspaceFile(stat)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
-	}
-
 	content, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read object content: %w", err)
 	}
-	file.Content = content
 
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully downloaded %s from workspace %d\n", objectKey, workspaceID))
-
-	return &file, nil
+	return &MinioObject{
+		MinioObjectInfo: MinioObjectInfo{
+			Key:          stat.Key,
+			Size:         stat.Size,
+			LastModified: stat.LastModified,
+			MimeType:     stat.ContentType,
+		},
+		Content: content,
+	}, nil
 }
 
-func (c *client) ListWorkspaceObjects(workspaceID uint64, path string) ([]*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
-
-	files := []*workspace_model.WorkspaceFile{}
+func (c *client) ListObjects(objectKey string) ([]*MinioObjectInfo, error) {
+	objects := []*MinioObjectInfo{}
 	objectCh := c.minioClient.ListObjects(context.Background(), c.minioClientCfg.BucketName, minio.ListObjectsOptions{
 		Prefix:       objectKey,
 		WithMetadata: true,
-		// Recursive: true,
 	})
+
 	for object := range objectCh {
 		if object.Err != nil {
-			return nil, fmt.Errorf("error while streaming the response from the object: %w", object.Err)
+			return nil, fmt.Errorf("error listing objects: %w", object.Err)
 		}
-		file, err := c.ObjectToWorkspaceFile(object)
-		if err != nil {
-			return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
-		}
-		files = append(files, &file)
+		objects = append(objects, &MinioObjectInfo{
+			Key:          object.Key,
+			Size:         object.Size,
+			LastModified: object.LastModified,
+			MimeType:     object.ContentType,
+		})
 	}
 
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully listed objects under %s in workspace %d\n", objectKey, workspaceID))
-
-	return files, nil
+	return objects, nil
 }
 
-func (c *client) PutWorkspaceObject(workspaceID uint64, file *workspace_model.WorkspaceFile) (*workspace_model.WorkspaceFile, error) {
-	objectKey := WorkspacePathToObjectKey(workspaceID, file.Path, file.IsDirectory)
-
-	_, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
-	if err == nil {
-		return nil, fmt.Errorf("object at %s already exists in workspace %d", objectKey, workspaceID)
-	}
-
-	_, err = c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(file.Content), int64(len(file.Content)), minio.PutObjectOptions{ContentType: file.MimeType})
+func (c *client) PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error) {
+	_, err := c.minioClient.PutObject(context.Background(), c.minioClientCfg.BucketName, objectKey, bytes.NewReader(object.Content), int64(len(object.Content)), minio.PutObjectOptions{ContentType: object.MimeType})
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", objectKey, err)
 	}
-
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully uploaded %s in workspace %d\n", objectKey, workspaceID))
 
 	objectInfo, err := c.minioClient.StatObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.StatObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify uploaded object %s: %w", objectKey, err)
 	}
 
-	createdFile, err := c.ObjectToWorkspaceFile(objectInfo)
-	if err != nil {
-		return nil, fmt.Errorf("unable to convert object to workspace file: %w", err)
-	}
-
-	return &createdFile, nil
+	return &MinioObjectInfo{
+		Key:          objectInfo.Key,
+		Size:         objectInfo.Size,
+		LastModified: objectInfo.LastModified,
+		MimeType:     objectInfo.ContentType,
+	}, nil
 }
 
-func (c *client) DeleteWorkspaceObject(workspaceID uint64, path string) error {
-	objectKey := WorkspacePathToObjectKey(workspaceID, path, false)
-
+func (c *client) DeleteObject(objectKey string) error {
 	err := c.minioClient.RemoveObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.RemoveObjectOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to delete object at %s: %w", objectKey, err)
 	}
-
-	logger.TechLog.Info(context.Background(), fmt.Sprintf("Successfully deleted %s from workspace %d\n", objectKey, workspaceID))
 
 	return nil
 }
