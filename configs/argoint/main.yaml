@@ -137,19 +137,20 @@ services:
     backend_in_k8s: true
     proxy_hit_save_batch_interval: 30s
     workbench_idle_timeout: 504h #21d
+  workspace_file_service:
+    minio_stores:
+      workspace-archive:
+        enabled: true
+        prefix: workspace-archive
+        endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+        access_key_id: "{{ .s3_access_key }}"
+        secret_access_key: "{{ .s3_secret_access_key }}"
+        bucket_name: chorus-data
+        use_ssl: false
 
 clients:
   docker_client:
-    enabled: true
-  minio_clients:
-    archive:
-      enabled: true
-      prefix: workspace-archive
-      endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-      access_key_id: "{{ .s3_access_key }}"
-      secret_access_key: "{{ .s3_secret_access_key }}"
-      bucket_name: chorus-data
-      use_ssl: false
+    enabled: true  
   k8s_client:
     enabled: true
     sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
