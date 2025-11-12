@@ -145,7 +145,7 @@ func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
 	workspaces, _, err := s.workspaceer.ListWorkspaces(ctx, s.conf.Services.Steward.InitTenant.TenantID, &common_model.Pagination{}, workspace_model.WorkspaceFilter{})
 	if err == nil {
 		for _, workspace := range workspaces {
-			if workspace.Name == s.conf.Services.Steward.InitWorkspace.Name {
+			if workspace.UserID == s.conf.Services.Steward.InitUser.UserID && workspace.Name == s.conf.Services.Steward.InitWorkspace.Name {
 				logger.TechLog.Info(ctx, "default workspace already exists")
 				return nil
 			}
