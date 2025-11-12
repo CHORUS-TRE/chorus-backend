@@ -9,9 +9,12 @@ import (
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	tenant_model "github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -28,7 +31,7 @@ type Userer interface {
 }
 
 type Workspaceer interface {
-	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
+	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter workspace_model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, workspace *workspace_model.Workspace) (*workspace_model.Workspace, error)
 }
 
@@ -78,7 +81,7 @@ func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer, wor
 func (s *StewardService) InitializeDefaultTenant(ctx context.Context) error {
 	_, err := s.tenanter.GetTenant(ctx, s.conf.Services.Steward.InitTenant.TenantID)
 	if err == nil {
-		fmt.Println("default tenant already exists")
+		logger.TechLog.Info(ctx, "default tenant already exists")
 		return nil
 	}
 
@@ -92,14 +95,14 @@ func (s *StewardService) InitializeDefaultTenant(ctx context.Context) error {
 		return fmt.Errorf("unable to initialize default tenant %v: %w", s.conf.Services.Steward.InitTenant.TenantID, initErr)
 	}
 
-	fmt.Println("default tenant successfully initialized")
+	logger.TechLog.Info(ctx, "default tenant successfully initialized")
 	return nil
 }
 
 func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
 	_, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: s.conf.Services.Steward.InitTenant.TenantID, ID: s.conf.Services.Steward.InitUser.UserID})
 	if err == nil {
-		fmt.Println("default user already exists")
+		logger.TechLog.Info(ctx, "default user already exists")
 		return nil
 	}
 
@@ -134,15 +137,19 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
 		return fmt.Errorf("unable to initialize default user %v: %w", s.conf.Services.Steward.InitUser.UserID, createErr)
 	}
 
-	fmt.Println("default user successfully initialized")
+	logger.TechLog.Info(ctx, "default user successfully initialized")
 	return nil
 }
 
 func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
-	_, err := s.workspaceer.GetWorkspace(ctx, s.conf.Services.Steward.InitTenant.TenantID, s.conf.Services.Steward.InitWorkspace.WorkspaceID)
+	workspaces, _, err := s.workspaceer.ListWorkspaces(ctx, s.conf.Services.Steward.InitTenant.TenantID, &common_model.Pagination{}, workspace_model.WorkspaceFilter{})
 	if err == nil {
-		fmt.Println("default workspace already exists")
-		return nil
+		for _, workspace := range workspaces {
+			if workspace.UserID == s.conf.Services.Steward.InitUser.UserID && workspace.Name == s.conf.Services.Steward.InitWorkspace.Name {
+				logger.TechLog.Info(ctx, "default workspace already exists")
+				return nil
+			}
+		}
 	}
 
 	if !errors.Is(err, sql.ErrNoRows) {
@@ -163,7 +170,7 @@ func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
 		return fmt.Errorf("unable to create default workspace %v: %w", s.conf.Services.Steward.InitWorkspace.WorkspaceID, createErr)
 	}
 
-	fmt.Println("default workspace successfully initialized")
+	logger.TechLog.Info(ctx, "default workspace successfully initialized")
 	return nil
 }
 

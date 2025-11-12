@@ -14,13 +14,9 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
-type WorkspaceFilter struct {
-	WorkspaceIDsIn *[]uint64
-}
-
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
-	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
@@ -104,7 +100,7 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	return nil
 }
 
-func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
+func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	workspaces, paginationRes, err := s.store.ListWorkspaces(ctx, tenantID, pagination, filter.WorkspaceIDsIn, false)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to query workspaces: %w", err)
