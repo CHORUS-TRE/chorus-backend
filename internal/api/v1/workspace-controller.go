@@ -11,8 +11,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
-	workspace_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -126,7 +126,7 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	filter := workspace_service.WorkspaceFilter{}
+	filter := workspace_model.WorkspaceFilter{}
 	if req.Filter != nil {
 		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
 	}
