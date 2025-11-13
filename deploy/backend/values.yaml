@@ -288,7 +288,7 @@ config:
 
 
 postgresql:
-  enabled: true
+  enabled: false
   postgresql:
     global:
       postgresql:
