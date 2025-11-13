@@ -291,7 +291,7 @@ type (
 	}
 
 	MinioFileStore struct {
-		Enabled         bool   `yaml:"enabled,omitempty"`
+		Enabled         bool   `yaml:"enabled"`
 		Prefix          string `yaml:"prefix,omitempty"`
 		Endpoint        string `yaml:"endpoint,omitempty"`
 		AccessKeyID     string `yaml:"access_key_id,omitempty"`
