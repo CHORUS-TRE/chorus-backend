@@ -71,11 +71,11 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (WorkspaceFileSt
 
 func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
 	store, err := s.selectFileStore(filePath)
-	storePath := store.ToStorePath(workspaceID, filePath)
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
 	}
+
+	storePath := store.ToStorePath(workspaceID, filePath)
 
 	// For now, only return object Metadata, not the content
 	file, err := store.GetFileMetadata(ctx, workspaceID, storePath)
