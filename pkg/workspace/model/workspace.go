@@ -25,6 +25,10 @@ type Workspace struct {
 	DeletedAt *time.Time
 }
 
+type WorkspaceFilter struct {
+	WorkspaceIDsIn *[]uint64
+}
+
 func (s Workspace) GetClusterName() string {
 	return GetWorkspaceClusterName(s.ID)
 }

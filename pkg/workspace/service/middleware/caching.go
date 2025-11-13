@@ -33,7 +33,7 @@ type Caching struct {
 	next  service.Workspaceer
 }
 
-func (c *Caching) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceFilter) (reply []*model.Workspace, paginationRes *common_model.PaginationResult, err error) {
+func (c *Caching) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) (reply []*model.Workspace, paginationRes *common_model.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination), cache.WithInterface(filter))
 	reply = []*model.Workspace{}
 	paginationRes = &common_model.PaginationResult{}

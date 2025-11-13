@@ -28,7 +28,7 @@ func Logging(logger *logger.ContextLogger) func(service.Workspaceer) service.Wor
 	}
 }
 
-func (c workspaceServiceLogging) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
+func (c workspaceServiceLogging) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListWorkspaces(ctx, tenantID, pagination, filter)
