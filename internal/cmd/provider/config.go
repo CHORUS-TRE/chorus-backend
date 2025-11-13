@@ -119,10 +119,10 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.steward.init_user.user_id", 1)
 	v.SetDefault("services.steward.init_workspace.enabled", false)
 	v.SetDefault("services.steward.init_workspace.workspace_id", 1)
+	v.SetDefault("services.workspace_file_service.minio_stores.test-client.enabled", false)
 
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", false)
-	v.SetDefault("clients.minio_clients.default.enabled", false)
 	v.SetDefault("clients.k8s_client.enabled", false)
 	v.SetDefault("clients.k8s_client.is_watcher", false)
 	v.SetDefault("clients.k8s_client.server_version", "latest")
