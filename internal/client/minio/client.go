@@ -19,7 +19,7 @@ type MinioClienter interface {
 
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
-	ListObjects(objectKey string) ([]*MinioObjectInfo, error)
+	ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error)
 	PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error)
 	DeleteObject(objectKey string) error
 }
@@ -102,11 +102,12 @@ func (c *client) GetObject(objectKey string) (*MinioObject, error) {
 	}, nil
 }
 
-func (c *client) ListObjects(objectKey string) ([]*MinioObjectInfo, error) {
+func (c *client) ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error) {
 	objects := []*MinioObjectInfo{}
 	objectCh := c.minioClient.ListObjects(context.Background(), c.minioClientCfg.BucketName, minio.ListObjectsOptions{
 		Prefix:       objectKey,
 		WithMetadata: true,
+		Recursive:    recursive,
 	})
 
 	for object := range objectCh {

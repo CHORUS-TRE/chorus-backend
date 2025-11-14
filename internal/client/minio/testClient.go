@@ -28,7 +28,7 @@ func (c *testClient) StatObject(objectKey string) (*MinioObjectInfo, error) {
 	return nil, fmt.Errorf("Minio Test client not yet implemented")
 }
 
-func (c *testClient) ListObjects(objectKey string) ([]*MinioObjectInfo, error) {
+func (c *testClient) ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error) {
 	return nil, fmt.Errorf("Minio Test client not yet implemented")
 }
 

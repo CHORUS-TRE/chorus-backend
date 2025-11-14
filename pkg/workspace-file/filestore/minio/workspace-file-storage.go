@@ -93,7 +93,7 @@ func (s *MinioFileStorage) GetFile(ctx context.Context, workspaceID uint64, path
 }
 
 func (s *MinioFileStorage) ListFiles(ctx context.Context, workspaceID uint64, path string) ([]*model.WorkspaceFile, error) {
-	objects, err := s.minioClient.ListObjects(path)
+	objects, err := s.minioClient.ListObjects(path, false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list objects with prefix %s: %w", path, err)
 	}
@@ -142,7 +142,7 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, workspaceID uint64, o
 	}
 
 	// Upload new file
-	_, err = s.minioClient.PutObject(file.Path, minio.WorkspaceFileToMinioObjectWithoutContent(file))
+	_, err = s.minioClient.PutObject(file.Path, minio.WorkspaceFileToMinioObject(file))
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
@@ -167,11 +167,32 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, workspaceID uint64, o
 }
 
 func (s *MinioFileStorage) DeleteFile(ctx context.Context, workspaceID uint64, path string) error {
+	if path[len(path)-1] == '/' {
+		return s.deleteDirectory(ctx, workspaceID, path)
+	}
+
 	err := s.minioClient.DeleteObject(path)
 	if err != nil {
 		return fmt.Errorf("unable to delete object at %s: %w", path, err)
 	}
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Deleted %s from workspace %d", path, workspaceID))
+	return nil
+}
+
+func (s *MinioFileStorage) deleteDirectory(ctx context.Context, workspaceID uint64, path string) error {
+	objects, err := s.minioClient.ListObjects(path, true)
+	if err != nil {
+		return fmt.Errorf("unable to list objects with prefix %s: %w", path, err)
+	}
+
+	for _, objectInfo := range objects {
+		err := s.minioClient.DeleteObject(objectInfo.Key)
+		if err != nil {
+			return fmt.Errorf("unable to delete object at %s: %w", objectInfo.Key, err)
+		}
+	}
+
+	logger.TechLog.Info(ctx, fmt.Sprintf("Deleted directory %s from workspace %d", path, workspaceID))
 	return nil
 }
