@@ -69,6 +69,18 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (WorkspaceFileSt
 	return selectedStore, nil
 }
 
+func (s *WorkspaceFileService) listStores() []*model.WorkspaceFile {
+	var stores []*model.WorkspaceFile
+	for _, store := range s.fileStores {
+		stores = append(stores, &model.WorkspaceFile{
+			Path:        store.GetStorePrefix(),
+			Name:        store.GetStoreName(),
+			IsDirectory: true,
+		})
+	}
+	return stores
+}
+
 func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
 	store, err := s.selectFileStore(filePath)
 	if err != nil {
@@ -88,15 +100,7 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 
 func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
 	if filePath == "" || filePath == "/" {
-		var stores []*model.WorkspaceFile
-		for _, store := range s.fileStores {
-			stores = append(stores, &model.WorkspaceFile{
-				Path:        store.GetStorePrefix(),
-				Name:        store.GetStoreName(),
-				IsDirectory: true,
-			})
-		}
-		return stores, nil
+		return s.listStores(), nil
 	}
 
 	store, err := s.selectFileStore(filePath)
