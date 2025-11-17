@@ -130,3 +130,24 @@ func (c workspaceStorageLogging) CreateWorkspace(ctx context.Context, tenantID u
 
 	return newWorkspace, nil
 }
+
+func (c workspaceStorageLogging) DeleteOldWorkspaces(ctx context.Context, timeout time.Duration) ([]*model.Workspace, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	deletedWorkspaces, err := c.next.DeleteOldWorkspaces(ctx, timeout)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+
+	return deletedWorkspaces, nil
+}

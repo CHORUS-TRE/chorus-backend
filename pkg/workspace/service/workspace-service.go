@@ -3,15 +3,19 @@ package service
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
+	"time"
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
+	"go.uber.org/zap"
 )
 
 type Workspaceer interface {
@@ -38,6 +42,7 @@ type Workbencher interface {
 type WorkspaceStore interface {
 	GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, IDIn *[]uint64, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
+	DeleteOldWorkspaces(ctx context.Context, duration time.Duration) ([]*model.Workspace, error)
 	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
@@ -50,6 +55,7 @@ type Userer interface {
 }
 
 type WorkspaceService struct {
+	cfg         config.Config
 	store       WorkspaceStore
 	client      k8s.K8sClienter
 	workbencher Workbencher
@@ -57,8 +63,9 @@ type WorkspaceService struct {
 	minioClient minio.MinioClienter
 }
 
-func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, minioClient minio.MinioClienter) *WorkspaceService {
+func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, minioClient minio.MinioClienter) *WorkspaceService {
 	ws := &WorkspaceService{
+		cfg:         cfg,
 		store:       store,
 		client:      client,
 		workbencher: workbencher,
@@ -71,6 +78,22 @@ func NewWorkspaceService(store WorkspaceStore, client k8s.K8sClienter, workbench
 			logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to update workspaces: %v", err))
 		}
 	}()
+
+	if ws.cfg.Services.WorkspaceService.EnableKillFixedTimeout {
+		logger.TechLog.Info(context.Background(), "starting workspace idle cleaner", zap.Duration("idleTimeout", ws.cfg.Services.WorkspaceService.KillFixedTimeout), zap.Duration("checkInterval", ws.cfg.Services.WorkspaceService.KillFixedCheckInterval))
+
+		go func() {
+			interval := ws.cfg.Services.WorkspaceService.KillFixedTimeout
+			// sleep a random jitter in initial interval to avoid all instances doing this at the same time
+			jitter := time.Duration(rand.Int64N(int64(interval)))
+			time.Sleep(jitter)
+
+			for {
+				ws.cleanOldWorkspaces(context.Background())
+				time.Sleep(interval)
+			}
+		}()
+	}
 
 	return ws
 }
@@ -98,6 +121,22 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s *WorkspaceService) cleanOldWorkspaces(ctx context.Context) {
+	workspaces, err := s.store.DeleteOldWorkspaces(ctx, s.cfg.Services.WorkspaceService.KillFixedTimeout)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to list workspaces: %v", err))
+		return
+	}
+
+	for _, workspace := range workspaces {
+		go func(workspaceID uint64) {
+			if err := s.client.DeleteWorkspace(model.GetWorkspaceClusterName(workspaceID)); err != nil {
+				logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to delete workspace %v: %v", workspaceID, err))
+			}
+		}(workspace.ID)
+	}
 }
 
 func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
