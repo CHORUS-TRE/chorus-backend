@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -150,4 +151,23 @@ func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64,
 	}
 
 	return nil
+}
+
+func (s *WorkspaceStorage) DeleteOldWorkspaces(ctx context.Context, timeout time.Duration) ([]*model.Workspace, error) {
+	const query = `
+		UPDATE workspaces
+		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
+		WHERE createdat < NOW() - INTERVAL $3 * INTERVAL '1 second'
+		  AND status != 'deleted'
+		  AND deletedat IS NULL
+		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
+	`
+
+	var deletedWorkspaces []*model.Workspace
+	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceDeleted.String(), "-"+uuid.Next(), int64(timeout.Seconds()))
+	if err != nil {
+		return nil, fmt.Errorf("unable to exec: %w", err)
+	}
+
+	return deletedWorkspaces, nil
 }

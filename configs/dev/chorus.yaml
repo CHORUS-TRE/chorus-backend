@@ -128,6 +128,9 @@ services:
     backend_in_k8s: false
     proxy_hit_save_batch_interval: 30s
     workbench_idle_timeout: 24h
+  workspace_service:
+    enable_kill_fixed_timeout: false
+    kill_fixed_timeout: 1h
 
 # clients:
 #   k8s_client:
