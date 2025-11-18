@@ -21,6 +21,7 @@ var workspace service.Workspaceer
 func ProvideWorkspace() service.Workspaceer {
 	workspaceOnce.Do(func() {
 		workspace = service.NewWorkspaceService(
+			ProvideConfig(),
 			ProvideWorkspaceStore(),
 			ProvideK8sClient(),
 			ProvideWorkbench(),
