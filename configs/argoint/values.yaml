@@ -1,142 +1,17 @@
-# Default values for chart.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-fullnameOverride: ""
-nameOverride: ""
-
 image:
   repository: harbor.int.chorus-tre.ch/chorus/backend
-  tag: "20251104-0b8b2b12"
-  imagePullPolicy: IfNotPresent
-
-version: master
-
-replicaCount: 1
-
-imagePullSecrets:
-- name: regcred
-
-# Custom environment variables to be set in the backend container
-# env:
-#   - name: ENV_VAR_NAME
-#     value: "value"
-# envFrom:
-#   - secretRef:
-#       name: my-secret
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-  createSecret: false
-
-podAnnotations: {}
-podLabels: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  tag: latest
+  imagePullPolicy: Always
 
 service:
-  type: ClusterIP
   port: 5000
 
 ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: 20g
   hosts:
     - host: backend.int.chorus-tre.ch
       paths:
         - path: /
           pathType: Prefix
-  tls:
-    - secretName: backend-tls
-      hosts:
-        - backend.int.chorus-tre.ch
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-livenessProbe:
-  httpGet:
-    path: /api/rest/v1/health
-    port: http
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 3
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
-    path: /api/rest/v1/health
-    port: http
-  initialDelaySeconds: 15
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-
-serviceMonitor:
-  enabled: false
-  basicAuth:
-    enabled: false
-    secretName: ""
-    usernameKey: "username"
-    passwordKey: "password"
-  labels:
-    app.kubernetes.io/component: metrics
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
 
 # Disable mounting of secrets volume and config override
 # all password will need to be set via the config below
@@ -150,9 +25,9 @@ config:
       port: 5000
       headers:
         access_control_allow_origins:
-        - "https://int.chorus-tre.ch"
-        - "https://backend.int.chorus-tre.ch"
-        - "http://localhost:3000"
+          - "https://int.chorus-tre.ch"
+          - "https://backend.int.chorus-tre.ch"
+          - "http://localhost:3000"
         access_control_allow_origin_wildcard: true
         access_control_max_age: "600"
         cookie_domain: ".int.chorus-tre.ch"
@@ -164,7 +39,7 @@ config:
       job_status_gc:
         enabled: true
     private_key: "" # set in secret
-    salt: "feast-salutary3-online-slogan-chafe-july-rickety-desktop-from"
+    salt: feast-salutary3-online-slogan-chafe-july-rickety-desktop-from
     metrics:
       enabled: true
       authentication:
@@ -172,18 +47,16 @@ config:
         username: prometheus
         password: "" # set in secret
 
-  # TODO: refactor storage with the postgresql chart values below
-  #       to avoid duplication
   storage:
     datastores:
       chorus:
         type: postgres
         migration_table_name: tt_migrations
-        host: "chorus-int-backend-db-postgresql"
+        host: chorus-int-backend-db-postgresql
         port: 5432
         username: backend
         password: ""  # set in secret
-        database: chorus # TODO: change to "backend" for consitency
+        database: chorus
         max_connections: 10
         max_lifetime: 10s
         debug_mode: true
@@ -231,8 +104,30 @@ config:
               - profile
               - email
               - roles
-        # TODO: check how to handle keycloakdev properly in helm charts
-        keycloakdev: {}
+        keycloakdev:
+          type: openid
+          enabled: true
+          button_text: "Login with CHUV"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 3
+          openid:
+            id: keycloakdev
+          chorus_backend_host: "https://backend.int.chorus-tre.ch"
+          enable_frontend_redirect: true
+          chorus_frontend_redirect_url: "http://localhost:3000/oauthredirect"
+          authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+          token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+          user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+          logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
+          user_name_claim: "preferred_username"
+          # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+          client_id: chorus
+          client_secret: ""  # set in secret
+          scopes:
+            - openid
+            - profile
+            - email
+            - roles
     steward:
       init_tenant:
         enabled: true
@@ -290,49 +185,3 @@ config:
         level: debug
       stdout_business:
         level: debug
-
-
-postgresql:
-  enabled: false # TODO: set to true once we want to deploy postgres with the backend
-
-  global:
-    postgresql:
-      auth:
-        postgresPassword: ""
-        username: backend
-        password: ""
-        database: backend
-        existingSecret: ""
-        secretKeys:
-          adminPasswordKey: "postgres-password"
-          userPasswordKey: "password"
-          replicationPasswordKey: ""
-      service:
-        port: 5432
-
-  tls:
-    enabled: true
-    certificatesSecret: backend-db-tls-secret
-
-  metrics:
-    enabled: false
-    serviceMonitor:
-      enabled: false
-
-  primary:
-    persistence:
-      size: 8Gi
-    resourcesPreset: small
-
-  image:
-    # https://hub.docker.com/r/bitnamilegacy/postgresql
-    registry: docker.io
-    repository: bitnamilegacy/postgresql
-    tag: 16.4.0
-
-  certificate:
-    enabled: true
-    secretName: backend-db-tls-secret
-    issuerRef:
-      name: private-ca-cluster-issuer
-      kind: ClusterIssuer
