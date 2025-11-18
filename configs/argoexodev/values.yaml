@@ -30,7 +30,7 @@ config:
           - "http://localhost:3000"
         access_control_allow_origin_wildcard: true
         access_control_max_age: "600"
-        cookie_domain: ""
+        cookie_domain: ".exodev.chorus-tre.ch"
     jwt:
       secret: "" # set in secret
       expiration_time: 72h
