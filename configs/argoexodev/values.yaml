@@ -122,7 +122,7 @@ config:
             user_name_claim: "preferred_username"
             # final_url_format: "https://exodev.chorus-tre.ch/login?token=%s"
             client_id: chorus
-            client_secret: "<secret>"
+            client_secret: ""  # set in secret
             scopes:
               - openid
               - profile
