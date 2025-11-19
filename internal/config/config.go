@@ -120,8 +120,9 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
-		DockerClient DockerClient `yaml:"docker_client,omitempty"`
+		K8sClient    K8sClient              `yaml:"k8s_client,omitempty"`
+		DockerClient DockerClient           `yaml:"docker_client,omitempty"`
+		MinioClients map[string]MinioClient `yaml:"minio_clients,omitempty"`
 	}
 
 	K8sClient struct {
@@ -148,6 +149,17 @@ type (
 
 	DockerClient struct {
 		Enabled bool `yaml:"enabled,omitempty"`
+	}
+
+	MinioClient struct {
+		Enabled bool `yaml:"enabled"`
+
+		Endpoint        string    `yaml:"endpoint,omitempty"`
+		AccessKeyID     string    `yaml:"access_key_id,omitempty"`
+		SecretAccessKey Sensitive `yaml:"secret_access_key,omitempty"`
+
+		BucketName string `yaml:"bucket_name,omitempty"`
+		UseSSL     bool   `yaml:"use_ssl,omitempty"`
 	}
 
 	ImagePullSecret struct {
@@ -262,7 +274,7 @@ type (
 		} `yaml:"workbench_service"`
 
 		WorkspaceFileService struct {
-			MinioStores map[string]MinioFileStore `yaml:"minio_stores,omitempty"`
+			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
 
 		Steward struct {
@@ -290,14 +302,11 @@ type (
 		} `yaml:"steward"`
 	}
 
-	MinioFileStore struct {
-		Enabled         bool   `yaml:"enabled"`
-		Prefix          string `yaml:"prefix,omitempty"`
-		Endpoint        string `yaml:"endpoint,omitempty"`
-		AccessKeyID     string `yaml:"access_key_id,omitempty"`
-		SecretAccessKey string `yaml:"secret_access_key,omitempty"`
-		BucketName      string `yaml:"bucket_name,omitempty"`
-		UseSSL          bool   `yaml:"use_ssl,omitempty"`
+	WorkspaceFileStore struct {
+		ClientType      string `yaml:"client_type"`
+		ClientName      string `yaml:"client_name"`
+		StorePrefix     string `yaml:"store_prefix,omitempty"`
+		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
 	}
 
 	Mode struct {
