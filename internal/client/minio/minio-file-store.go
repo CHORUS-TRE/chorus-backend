@@ -3,6 +3,7 @@ package minio
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
@@ -71,10 +72,13 @@ func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*model
 }
 
 func (s *MinioFileStorage) CreateFile(ctx context.Context, file *model.File) (*model.File, error) {
-	// Check if exists
-	_, err := s.minioClient.StatObject(file.Path)
-	if err == nil {
-		return nil, fmt.Errorf("object at %s already exists", file.Path)
+	// Check if a directory or file does not already exist at path
+	object, err := s.minioClient.ListObjects(strings.TrimSuffix(file.Path, "/"), false)
+	if err != nil {
+		return nil, fmt.Errorf("unable to check existing objects at %s: %w", file.Path, err)
+	}
+	if len(object) > 0 {
+		return nil, fmt.Errorf("object already exists at %s", file.Path)
 	}
 
 	// Upload
