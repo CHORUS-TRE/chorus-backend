@@ -1,18 +1,15 @@
-package minio
+package service
 
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
-	workspace_file_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 )
 
-var _ workspace_file_service.WorkspaceFileStore = &MinioFileStorage{}
+var _ WorkspaceFileStore = &MinioFileStorage{}
 
 type MinioFileStorage struct {
 	storeName   string
@@ -20,40 +17,12 @@ type MinioFileStorage struct {
 	minioClient minio.MinioClienter
 }
 
-const workspacePrefix = "workspaces/workspace"
-const workspacePrefixPattern = `^` + workspacePrefix + `\d+/`
-
 func NewMinioFileStorage(clientName string, client minio.MinioClienter, clientPrefix string) (*MinioFileStorage, error) {
 	return &MinioFileStorage{
 		storeName:   clientName,
 		storePrefix: clientPrefix,
 		minioClient: client,
 	}, nil
-}
-
-func (s *MinioFileStorage) GetStoreName() string {
-	return s.storeName
-}
-
-func (s *MinioFileStorage) GetStorePrefix() string {
-	return s.storePrefix
-}
-
-func (s *MinioFileStorage) NormalizePath(path string) string {
-	return "/" + strings.TrimPrefix(path, "/")
-}
-
-func (s *MinioFileStorage) ToStorePath(workspaceID uint64, path string) string {
-	normalized := s.NormalizePath(path)
-	storePath := strings.TrimPrefix(normalized, s.storePrefix)
-	objectKey := fmt.Sprintf("%s%d/%s", workspacePrefix, workspaceID, strings.TrimPrefix(storePath, "/"))
-	return objectKey
-}
-
-func (s *MinioFileStorage) FromStorePath(workspaceID uint64, storePath string) string {
-	pattern := regexp.MustCompile(workspacePrefixPattern)
-	objectKey := pattern.ReplaceAllString(storePath, "")
-	return s.storePrefix + strings.TrimPrefix(objectKey, "/")
 }
 
 func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, objectKey string) (*model.WorkspaceFile, error) {

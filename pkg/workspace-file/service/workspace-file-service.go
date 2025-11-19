@@ -38,70 +38,81 @@ type WorkspaceFileStore interface {
 	DeleteFile(ctx context.Context, filePath string) error
 }
 
-type WorkspaceFileStoreCombiner interface {
-	WorkspaceFileStorePathManager
-	WorkspaceFileStore
-}
-
-type fileStore struct {
-	WorkspaceFileStorePathManager
-	WorkspaceFileStore
-}
-
 type WorkspaceFileService struct {
-	fileStores map[string]fileStore
+	fileStores            map[string]WorkspaceFileStore
+	fileStorePathManagers map[string]WorkspaceFileStorePathManager
 }
 
-func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStoreCombiner) *WorkspaceFileService {
-	fs := make(map[string]fileStore)
+func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStporePathManagers map[string]WorkspaceFileStorePathManager) (*WorkspaceFileService, error) {
+	if len(fileStores) != len(fileStporePathManagers) {
+		return nil, fmt.Errorf("file stores and path managers count mismatch")
+	}
+
+	fs := make(map[string]WorkspaceFileStore)
+	fsMgr := make(map[string]WorkspaceFileStorePathManager)
+
 	for name, store := range fileStores {
-		fs[name] = fileStore{
-			WorkspaceFileStorePathManager: store,
-			WorkspaceFileStore:            store,
+		storeMgr, ok := fileStporePathManagers[name]
+		if !ok {
+			return nil, fmt.Errorf("missing path manager for file store %s", name)
 		}
-	}
-	ws := &WorkspaceFileService{
-		fileStores: fs,
+
+		fs[name] = store
+		fsMgr[name] = storeMgr
 	}
 
-	return ws
+	ws := &WorkspaceFileService{
+		fileStores:            fs,
+		fileStorePathManagers: fsMgr,
+	}
+
+	return ws, nil
 }
 
-func (s *WorkspaceFileService) findStore(filePath string) (fileStore, error) {
-	var selectedStore fileStore
+func (s *WorkspaceFileService) findStore(filePath string) (string, error) {
+	var selectedStoreName string
 	maxPrefixLen := 0
 
-	for _, store := range s.fileStores {
-		normalizedPath := store.NormalizePath(filePath)
-		prefix := store.GetStorePrefix()
+	for storeName, storeMgr := range s.fileStorePathManagers {
+		normalizedPath := storeMgr.NormalizePath(filePath)
+		prefix := storeMgr.GetStorePrefix()
 
 		if strings.HasPrefix(normalizedPath, prefix) && len(prefix) > maxPrefixLen {
 			maxPrefixLen = len(prefix)
-			selectedStore = store
+			selectedStoreName = storeName
 		}
 	}
 
-	if selectedStore == (fileStore{}) {
-		return fileStore{}, fmt.Errorf("no suitable file store found for path %s", filePath)
+	if selectedStoreName == "" {
+		return "", fmt.Errorf("no suitable file store found for path %s", filePath)
 	}
 
-	return selectedStore, nil
+	return selectedStoreName, nil
 }
 func (s *WorkspaceFileService) findFileStore(filePath string) (WorkspaceFileStore, error) {
-	return s.findStore(filePath)
+	storeName, err := s.findStore(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.fileStores[storeName], nil
 }
 
 func (s *WorkspaceFileService) findFileStorePathManager(filePath string) (WorkspaceFileStorePathManager, error) {
-	return s.findStore(filePath)
+	storeName, err := s.findStore(filePath)
+	if err != nil {
+		return nil, err
+	}
 
+	return s.fileStorePathManagers[storeName], nil
 }
 
 func (s *WorkspaceFileService) listStores() []*model.WorkspaceFile {
 	var stores []*model.WorkspaceFile
-	for _, store := range s.fileStores {
+	for _, storeMgr := range s.fileStorePathManagers {
 		stores = append(stores, &model.WorkspaceFile{
-			Path:        store.GetStorePrefix(),
-			Name:        store.GetStoreName(),
+			Path:        storeMgr.GetStorePrefix(),
+			Name:        storeMgr.GetStoreName(),
 			IsDirectory: true,
 		})
 	}

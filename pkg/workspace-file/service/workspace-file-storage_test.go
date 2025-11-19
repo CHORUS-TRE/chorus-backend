@@ -1,4 +1,4 @@
-package minio
+package service
 
 import (
 	"context"
@@ -15,7 +15,7 @@ const testClientPrefix = "/test-client/"
 
 func TestNormalizePath(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestNormalizePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := storage.NormalizePath(tt.input)
+			result := storagePathManager.NormalizePath(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -62,7 +62,7 @@ func TestNormalizePath(t *testing.T) {
 
 func TestToStorePath(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestToStorePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := storage.ToStorePath(tt.workspaceID, tt.globalPath)
+			result := storagePathManager.ToStorePath(tt.workspaceID, tt.globalPath)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -115,7 +115,7 @@ func TestToStorePath(t *testing.T) {
 
 func TestFromStorePath(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestFromStorePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := storage.FromStorePath(tt.workspaceID, tt.storePath)
+			result := storagePathManager.FromStorePath(tt.workspaceID, tt.storePath)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -168,7 +168,7 @@ func TestFromStorePath(t *testing.T) {
 
 func TestPathRoundTrip(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,12 +194,12 @@ func TestPathRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Convert to store path and back
-			storePath := storage.ToStorePath(1, tt.globalPath)
-			globalPath := storage.FromStorePath(1, storePath)
+			storePath := storagePathManager.ToStorePath(1, tt.globalPath)
+			globalPath := storagePathManager.FromStorePath(1, storePath)
 
 			// Normalize both for comparison (handle trailing slashes)
-			expected := storage.NormalizePath(tt.globalPath)
-			actual := storage.NormalizePath(globalPath)
+			expected := storagePathManager.NormalizePath(tt.globalPath)
+			actual := storagePathManager.NormalizePath(globalPath)
 
 			assert.Equal(t, expected, actual, "round trip conversion should preserve path")
 		})
@@ -214,11 +214,15 @@ func TestFileLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	// Define test parameters
 	workspaceID := uint64(1)
 	globalPath := "/test-client/testfile.txt"
-	storePath := storage.ToStorePath(workspaceID, globalPath)
+	storePath := storagePathManager.ToStorePath(workspaceID, globalPath)
 	content := []byte("Hello, Minio!")
 
 	// Create file
@@ -269,9 +273,14 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	workspaceID := uint64(1)
 	globalPath := "/test-client/existingfile.txt"
-	storePath := storage.ToStorePath(workspaceID, globalPath)
+	storePath := storagePathManager.ToStorePath(workspaceID, globalPath)
 	content := []byte("Existing file content")
 
 	// Create the file first time
@@ -298,10 +307,14 @@ func TestDirectoryLifeCycle(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	storagePathManager, err := NewMinioFileStoragePathManager("test", client, testClientPrefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	workspaceID := uint64(1)
 	globalDirPath := "/test-client/mydir/"
-	storeDirPath := storage.ToStorePath(workspaceID, globalDirPath)
-
+	storeDirPath := storagePathManager.ToStorePath(workspaceID, globalDirPath)
 	// Create directory
 	_, err = storage.CreateFile(context.Background(), &model.WorkspaceFile{
 		Path:        storeDirPath,
