@@ -21,7 +21,7 @@ type File struct {
 	Content []byte
 }
 
-func MinioObjectInfoToWorkspaceFile(info *miniorawclient.MinioObjectInfo) *File {
+func MinioObjectInfoToFile(info *miniorawclient.MinioObjectInfo) *File {
 	isDir := strings.HasSuffix(info.Key, "/")
 	name := path.Base(strings.TrimRight(info.Key, "/"))
 
@@ -35,14 +35,14 @@ func MinioObjectInfoToWorkspaceFile(info *miniorawclient.MinioObjectInfo) *File 
 	}
 }
 
-func MinioObjectToWorkspaceFile(object *miniorawclient.MinioObject) *File {
-	file := MinioObjectInfoToWorkspaceFile(&object.MinioObjectInfo)
+func MinioObjectToFile(object *miniorawclient.MinioObject) *File {
+	file := MinioObjectInfoToFile(&object.MinioObjectInfo)
 	file.Content = object.Content
 
 	return file
 }
 
-func WorkspaceFileToMinioObjectInfo(file *File) *miniorawclient.MinioObjectInfo {
+func FileToMinioObjectInfo(file *File) *miniorawclient.MinioObjectInfo {
 	return &miniorawclient.MinioObjectInfo{
 		Key:          file.Path,
 		Size:         file.Size,
@@ -51,15 +51,15 @@ func WorkspaceFileToMinioObjectInfo(file *File) *miniorawclient.MinioObjectInfo 
 	}
 }
 
-func WorkspaceFileToMinioObject(file *File) *miniorawclient.MinioObject {
+func FileToMinioObject(file *File) *miniorawclient.MinioObject {
 	return &miniorawclient.MinioObject{
-		MinioObjectInfo: *WorkspaceFileToMinioObjectInfo(file),
+		MinioObjectInfo: *FileToMinioObjectInfo(file),
 		Content:         file.Content,
 	}
 }
 
-func WorkspaceFileToMinioObjectWithoutContent(file *File) *miniorawclient.MinioObject {
+func FileToMinioObjectWithoutContent(file *File) *miniorawclient.MinioObject {
 	return &miniorawclient.MinioObject{
-		MinioObjectInfo: *WorkspaceFileToMinioObjectInfo(file),
+		MinioObjectInfo: *FileToMinioObjectInfo(file),
 	}
 }

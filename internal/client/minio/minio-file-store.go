@@ -37,7 +37,7 @@ func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, objectKey string
 		return nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
 	}
 
-	file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
+	file := model.MinioObjectInfoToFile(objectInfo)
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("retrieved metadata for %s", objectKey))
 	return file, nil
@@ -49,7 +49,7 @@ func (s *MinioFileStorage) GetFile(ctx context.Context, path string) (*model.Fil
 		return nil, fmt.Errorf("unable to get object %s: %w", path, err)
 	}
 
-	file := model.MinioObjectToWorkspaceFile(object)
+	file := model.MinioObjectToFile(object)
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Downloaded %s", path))
 	return file, nil
@@ -63,7 +63,7 @@ func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*model
 
 	var files []*model.File
 	for _, objectInfo := range objects {
-		file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
+		file := model.MinioObjectInfoToFile(objectInfo)
 		files = append(files, file)
 	}
 
@@ -82,7 +82,7 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, file *model.File) (*m
 	}
 
 	// Upload
-	_, err = s.minioClient.PutObject(file.Path, model.WorkspaceFileToMinioObject(file))
+	_, err = s.minioClient.PutObject(file.Path, model.FileToMinioObject(file))
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
@@ -95,7 +95,7 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, file *model.File) (*m
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Created %s", file.Path))
 
-	createdFile := model.MinioObjectInfoToWorkspaceFile(objectInfo)
+	createdFile := model.MinioObjectInfoToFile(objectInfo)
 
 	return createdFile, nil
 }
@@ -108,7 +108,7 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, oldPath string, file 
 	}
 
 	// Upload new file
-	_, err = s.minioClient.PutObject(file.Path, model.WorkspaceFileToMinioObject(file))
+	_, err = s.minioClient.PutObject(file.Path, model.FileToMinioObject(file))
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
@@ -127,7 +127,7 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, oldPath string, file 
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Updated %s to %s", oldPath, file.Path))
 
-	updatedFile := model.MinioObjectInfoToWorkspaceFile(objectInfo)
+	updatedFile := model.MinioObjectInfoToFile(objectInfo)
 
 	return updatedFile, nil
 }
