@@ -50,17 +50,11 @@ var workspaceFileStores map[string]minio.MinioFileStore
 func ProvideWorkspaceFileStores() map[string]minio.MinioFileStore {
 	workspaceFileStoresOnce.Do(func() {
 		minioClients := ProvideMinioClients()
-		cfg := ProvideConfig()
 		workspaceFileStores = make(map[string]minio.MinioFileStore)
 
 		// Minio file stores
 		for storeName, minioClient := range minioClients {
-			clientConfig, ok := cfg.Services.WorkspaceFileService.MinioStores[storeName]
-			if !ok {
-				logger.TechLog.Fatal(context.Background(), "minio client config not found for store: "+storeName)
-			}
-
-			minioStore, err := minio.NewMinioFileStorage(storeName, minioClient, clientConfig.Prefix)
+			minioStore, err := minio.NewMinioFileStorage(minioClient)
 			if err != nil {
 				logger.TechLog.Fatal(context.Background(), "failed to create minio file store: "+err.Error())
 			}
