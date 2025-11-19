@@ -59,7 +59,7 @@ func (c *testClient) ListObjects(prefix string, recursive bool) ([]*MinioObjectI
 				parts := strings.Split(subPath, "/")
 				if len(parts) > 0 {
 					// It's a file or a directory in the current level
-					if len(parts) == 1 && parts[0] != "" {
+					if len(parts) == 1 {
 						results = append(results, &object.MinioObjectInfo)
 					} else if len(parts) > 1 {
 						// It's a subdirectory, add it once
