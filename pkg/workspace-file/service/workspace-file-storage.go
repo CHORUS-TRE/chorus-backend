@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 )
@@ -14,10 +14,10 @@ var _ WorkspaceFileStore = &MinioFileStorage{}
 type MinioFileStorage struct {
 	storeName   string
 	storePrefix string
-	minioClient minio.MinioClienter
+	minioClient miniorawclient.MinioClienter
 }
 
-func NewMinioFileStorage(clientName string, client minio.MinioClienter, clientPrefix string) (*MinioFileStorage, error) {
+func NewMinioFileStorage(clientName string, client miniorawclient.MinioClienter, clientPrefix string) (*MinioFileStorage, error) {
 	return &MinioFileStorage{
 		storeName:   clientName,
 		storePrefix: clientPrefix,

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 )
 
 var _ WorkspaceFileStorePathManager = &MinioFileStoragePathManager{}
@@ -13,13 +13,13 @@ var _ WorkspaceFileStorePathManager = &MinioFileStoragePathManager{}
 type MinioFileStoragePathManager struct {
 	storeName   string
 	storePrefix string
-	minioClient minio.MinioClienter
+	minioClient miniorawclient.MinioClienter
 }
 
 const workspacePrefix = "workspaces/workspace"
 const workspacePrefixPattern = `^` + workspacePrefix + `\d+/`
 
-func NewMinioFileStoragePathManager(clientName string, client minio.MinioClienter, clientPrefix string) (*MinioFileStoragePathManager, error) {
+func NewMinioFileStoragePathManager(clientName string, client miniorawclient.MinioClienter, clientPrefix string) (*MinioFileStoragePathManager, error) {
 	return &MinioFileStoragePathManager{
 		storeName:   clientName,
 		storePrefix: clientPrefix,
