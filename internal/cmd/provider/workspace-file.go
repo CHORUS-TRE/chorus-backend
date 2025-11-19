@@ -8,9 +8,9 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/filestore/minio"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service/middleware"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/store/minio"
 )
 
 var workspaceFileOnce sync.Once

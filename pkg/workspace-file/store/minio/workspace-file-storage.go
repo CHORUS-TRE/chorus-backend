@@ -62,7 +62,7 @@ func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, workspaceID uint
 		return nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
 	}
 
-	file := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
+	file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("retrieved metadata for %s from workspace %d", objectKey, workspaceID))
 	return file, nil
@@ -74,7 +74,7 @@ func (s *MinioFileStorage) StatFile(ctx context.Context, workspaceID uint64, pat
 		return nil, fmt.Errorf("unable to stat object %s: %w", path, err)
 	}
 
-	file := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
+	file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Retrieved metadata for %s from workspace %d", path, workspaceID))
 	return file, nil
@@ -86,7 +86,7 @@ func (s *MinioFileStorage) GetFile(ctx context.Context, workspaceID uint64, path
 		return nil, fmt.Errorf("unable to get object %s: %w", path, err)
 	}
 
-	file := minio.MinioObjectToWorkspaceFile(object)
+	file := model.MinioObjectToWorkspaceFile(object)
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Downloaded %s from workspace %d", path, workspaceID))
 	return file, nil
@@ -100,7 +100,7 @@ func (s *MinioFileStorage) ListFiles(ctx context.Context, workspaceID uint64, pa
 
 	var files []*model.WorkspaceFile
 	for _, objectInfo := range objects {
-		file := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
+		file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 		files = append(files, file)
 	}
 
@@ -116,7 +116,7 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, workspaceID uint64, f
 	}
 
 	// Upload
-	_, err = s.minioClient.PutObject(file.Path, minio.WorkspaceFileToMinioObject(file))
+	_, err = s.minioClient.PutObject(file.Path, model.WorkspaceFileToMinioObject(file))
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
@@ -129,7 +129,7 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, workspaceID uint64, f
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Created %s in workspace %d", file.Path, workspaceID))
 
-	createdFile := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
+	createdFile := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 
 	return createdFile, nil
 }
@@ -142,7 +142,7 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, workspaceID uint64, o
 	}
 
 	// Upload new file
-	_, err = s.minioClient.PutObject(file.Path, minio.WorkspaceFileToMinioObject(file))
+	_, err = s.minioClient.PutObject(file.Path, model.WorkspaceFileToMinioObject(file))
 	if err != nil {
 		return nil, fmt.Errorf("unable to put object at %s: %w", file.Path, err)
 	}
@@ -161,7 +161,7 @@ func (s *MinioFileStorage) UpdateFile(ctx context.Context, workspaceID uint64, o
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Updated %s to %s in workspace %d", oldPath, file.Path, workspaceID))
 
-	updatedFile := minio.MinioObjectInfoToWorkspaceFile(objectInfo)
+	updatedFile := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 
 	return updatedFile, nil
 }
