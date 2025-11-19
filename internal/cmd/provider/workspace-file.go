@@ -40,16 +40,22 @@ func ProvideWorkspaceFileController() chorus.WorkspaceFileServiceServer {
 }
 
 var workspaceFileStoresOnce sync.Once
-var workspaceFileStores map[string]service.WorkspaceFileStore
+var workspaceFileStores map[string]service.WorkspaceFileStoreCombiner
 
-func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
+func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStoreCombiner {
 	workspaceFileStoresOnce.Do(func() {
 		minioClients := ProvideMinioClients()
-		workspaceFileStores = make(map[string]service.WorkspaceFileStore)
+		cfg := ProvideConfig()
+		workspaceFileStores = make(map[string]service.WorkspaceFileStoreCombiner)
 
 		// Minio file stores
 		for storeName, minioClient := range minioClients {
-			minioStore, err := minio.NewMinioFileStorage(storeName, minioClient)
+			clientConfig, ok := cfg.Services.WorkspaceFileService.MinioStores[storeName]
+			if !ok {
+				logger.TechLog.Fatal(context.Background(), "minio client config not found for store: "+storeName)
+			}
+
+			minioStore, err := minio.NewMinioFileStorage(storeName, minioClient, clientConfig.Prefix)
 			if err != nil {
 				logger.TechLog.Fatal(context.Background(), "failed to create minio file store: "+err.Error())
 			}

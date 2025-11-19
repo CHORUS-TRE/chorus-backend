@@ -11,9 +11,11 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/tests/unit"
 )
 
+const testClientPrefix = "/test-client/"
+
 func TestNormalizePath(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +62,7 @@ func TestNormalizePath(t *testing.T) {
 
 func TestToStorePath(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +115,7 @@ func TestToStorePath(t *testing.T) {
 
 func TestFromStorePath(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +168,7 @@ func TestFromStorePath(t *testing.T) {
 
 func TestPathRoundTrip(t *testing.T) {
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,7 +210,7 @@ func TestFileLifecycle(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,7 +264,7 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -291,7 +293,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
+	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,7 +15,6 @@ var _ MinioClienter = &client{}
 
 type MinioClienter interface {
 	GetClientName() string
-	GetClientPrefix() string
 
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
@@ -54,10 +53,6 @@ func NewClient(cfg config.Config, clientName string) (*client, error) {
 
 func (c *client) GetClientName() string {
 	return c.minioClientCfg.Name
-}
-
-func (c *client) GetClientPrefix() string {
-	return c.minioClientCfg.Prefix
 }
 
 func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {

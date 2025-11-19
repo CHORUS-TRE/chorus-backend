@@ -25,10 +25,6 @@ func (c *testClient) GetClientName() string {
 	return "test-minio-client"
 }
 
-func (c *testClient) GetClientPrefix() string {
-	return "/test-client/"
-}
-
 func (c *testClient) GetObject(objectKey string) (*MinioObject, error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()

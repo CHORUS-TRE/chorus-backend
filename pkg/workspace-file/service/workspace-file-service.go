@@ -16,7 +16,7 @@ type WorkspaceFiler interface {
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 }
 
-type WorkspaceFileStore interface {
+type WorkspaceFileStorePathManager interface {
 	// GetStoreName returns a unique identifier for the file store.
 	GetStoreName() string
 	// GetStorePrefix returns the path prefix associated with the file store.
@@ -26,7 +26,9 @@ type WorkspaceFileStore interface {
 	NormalizePath(path string) string
 	ToStorePath(workspaceID uint64, path string) string
 	FromStorePath(workspaceID uint64, storePath string) string
+}
 
+type WorkspaceFileStore interface {
 	// Workspace file operations
 	GetFileMetadata(ctx context.Context, filePath string) (*model.WorkspaceFile, error)
 	GetFile(ctx context.Context, filePath string) (*model.WorkspaceFile, error)
@@ -36,20 +38,37 @@ type WorkspaceFileStore interface {
 	DeleteFile(ctx context.Context, filePath string) error
 }
 
-type WorkspaceFileService struct {
-	fileStores map[string]WorkspaceFileStore
+type WorkspaceFileStoreCombiner interface {
+	WorkspaceFileStorePathManager
+	WorkspaceFileStore
 }
 
-func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore) *WorkspaceFileService {
+type fileStore struct {
+	WorkspaceFileStorePathManager
+	WorkspaceFileStore
+}
+
+type WorkspaceFileService struct {
+	fileStores map[string]fileStore
+}
+
+func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStoreCombiner) *WorkspaceFileService {
+	fs := make(map[string]fileStore)
+	for name, store := range fileStores {
+		fs[name] = fileStore{
+			WorkspaceFileStorePathManager: store,
+			WorkspaceFileStore:            store,
+		}
+	}
 	ws := &WorkspaceFileService{
-		fileStores: fileStores,
+		fileStores: fs,
 	}
 
 	return ws
 }
 
-func (s *WorkspaceFileService) selectFileStore(filePath string) (WorkspaceFileStore, error) {
-	var selectedStore WorkspaceFileStore
+func (s *WorkspaceFileService) findStore(filePath string) (fileStore, error) {
+	var selectedStore fileStore
 	maxPrefixLen := 0
 
 	for _, store := range s.fileStores {
@@ -62,11 +81,19 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (WorkspaceFileSt
 		}
 	}
 
-	if selectedStore == nil {
-		return nil, fmt.Errorf("no suitable file store found for path %s", filePath)
+	if selectedStore == (fileStore{}) {
+		return fileStore{}, fmt.Errorf("no suitable file store found for path %s", filePath)
 	}
 
 	return selectedStore, nil
+}
+func (s *WorkspaceFileService) findFileStore(filePath string) (WorkspaceFileStore, error) {
+	return s.findStore(filePath)
+}
+
+func (s *WorkspaceFileService) findFileStorePathManager(filePath string) (WorkspaceFileStorePathManager, error) {
+	return s.findStore(filePath)
+
 }
 
 func (s *WorkspaceFileService) listStores() []*model.WorkspaceFile {
@@ -82,12 +109,17 @@ func (s *WorkspaceFileService) listStores() []*model.WorkspaceFile {
 }
 
 func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
-	store, err := s.selectFileStore(filePath)
+	store, err := s.findFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
 	}
 
-	storePath := store.ToStorePath(workspaceID, filePath)
+	storePathManager, err := s.findFileStorePathManager(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	storePath := storePathManager.ToStorePath(workspaceID, filePath)
 
 	// For now, only return object Metadata, not the content
 	file, err := store.GetFileMetadata(ctx, storePath)
@@ -103,12 +135,17 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 		return s.listStores(), nil
 	}
 
-	store, err := s.selectFileStore(filePath)
+	store, err := s.findFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
 	}
 
-	storePath := store.ToStorePath(workspaceID, filePath)
+	storePathManager, err := s.findFileStorePathManager(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	storePath := storePathManager.ToStorePath(workspaceID, filePath)
 	storeFiles, err := store.ListFiles(ctx, storePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list workspace files at path %s: %w", filePath, err)
@@ -117,7 +154,7 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 	var files []*model.WorkspaceFile
 	for _, f := range storeFiles {
 		files = append(files, &model.WorkspaceFile{
-			Path:        store.FromStorePath(workspaceID, f.Path),
+			Path:        storePathManager.FromStorePath(workspaceID, f.Path),
 			Name:        f.Name,
 			IsDirectory: f.IsDirectory,
 			Size:        f.Size,
@@ -130,12 +167,17 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 }
 
 func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	store, err := s.selectFileStore(file.Path)
+	store, err := s.findFileStore(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
 	}
 
-	storePath := store.ToStorePath(workspaceID, file.Path)
+	storePathManager, err := s.findFileStorePathManager(file.Path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	storePath := storePathManager.ToStorePath(workspaceID, file.Path)
 	createdFile, err := store.CreateFile(ctx, &model.WorkspaceFile{
 		Path:        storePath,
 		Name:        file.Name,
@@ -148,7 +190,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	return &model.WorkspaceFile{
-		Path:        store.FromStorePath(workspaceID, createdFile.Path),
+		Path:        storePathManager.FromStorePath(workspaceID, createdFile.Path),
 		Name:        createdFile.Name,
 		IsDirectory: createdFile.IsDirectory,
 		Size:        createdFile.Size,
@@ -158,24 +200,34 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 }
 
 func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	oldStore, err := s.selectFileStore(oldPath)
+	oldStore, err := s.findFileStore(oldPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store for old path: %w", err)
 	}
 
-	newStore, err := s.selectFileStore(file.Path)
+	oldStorePathManager, err := s.findFileStorePathManager(oldPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store for old path: %w", err)
+	}
+
+	newStore, err := s.findFileStore(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store for new path: %w", err)
 	}
 
-	oldStorePath := oldStore.ToStorePath(workspaceID, oldPath)
+	newStorePathManager, err := s.findFileStorePathManager(file.Path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store for new path: %w", err)
+	}
+
+	oldStorePath := oldStorePathManager.ToStorePath(workspaceID, oldPath)
 	oldFile, err := oldStore.GetFile(ctx, oldStorePath)
 	if err != nil {
 		return nil, fmt.Errorf("workspace file at path %s does not exist: %w", oldPath, err)
 	}
 
-	if oldStore.GetStoreName() != newStore.GetStoreName() {
-		newStorePath := newStore.ToStorePath(workspaceID, file.Path)
+	if oldStorePathManager.GetStoreName() != newStorePathManager.GetStoreName() {
+		newStorePath := newStorePathManager.ToStorePath(workspaceID, file.Path)
 
 		// Cross-store move
 		createdFile, err := newStore.CreateFile(ctx, &model.WorkspaceFile{
@@ -196,7 +248,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 		}
 
 		return &model.WorkspaceFile{
-			Path:        newStore.FromStorePath(workspaceID, createdFile.Path),
+			Path:        newStorePathManager.FromStorePath(workspaceID, createdFile.Path),
 			Name:        createdFile.Name,
 			IsDirectory: createdFile.IsDirectory,
 			Size:        createdFile.Size,
@@ -222,12 +274,17 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 }
 
 func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
-	store, err := s.selectFileStore(filePath)
+	store, err := s.findFileStore(filePath)
 	if err != nil {
 		return fmt.Errorf("unable to select file store: %w", err)
 	}
 
-	storePath := store.ToStorePath(workspaceID, filePath)
+	storePathManager, err := s.findFileStorePathManager(filePath)
+	if err != nil {
+		return fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	storePath := storePathManager.ToStorePath(workspaceID, filePath)
 	_, stat := store.GetFileMetadata(ctx, storePath)
 	if stat != nil {
 		return fmt.Errorf("workspace file at path %s does not exist: %w", filePath, stat)

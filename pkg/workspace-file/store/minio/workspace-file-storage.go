@@ -23,10 +23,10 @@ type MinioFileStorage struct {
 const workspacePrefix = "workspaces/workspace"
 const workspacePrefixPattern = `^` + workspacePrefix + `\d+/`
 
-func NewMinioFileStorage(clientName string, client minio.MinioClienter) (*MinioFileStorage, error) {
+func NewMinioFileStorage(clientName string, client minio.MinioClienter, clientPrefix string) (*MinioFileStorage, error) {
 	return &MinioFileStorage{
 		storeName:   clientName,
-		storePrefix: client.GetClientPrefix(),
+		storePrefix: clientPrefix,
 		minioClient: client,
 	}, nil
 }
