@@ -21,7 +21,7 @@ func ProvideWorkspaceFile() service.WorkspaceFiler {
 		var err error
 		workspaceFile, err = service.NewWorkspaceFileService(
 			ProvideWorkspaceFileStores(),
-			ProvideWorkspaceFileStorePathManager(),
+			ProvideConfig().Services.WorkspaceFileService.Stores,
 		)
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create workspace file service: "+err.Error())
@@ -45,53 +45,31 @@ func ProvideWorkspaceFileController() chorus.WorkspaceFileServiceServer {
 }
 
 var workspaceFileStoresOnce sync.Once
-var workspaceFileStores map[string]minio.MinioFileStore
+var workspaceFileStores map[string]service.WorkspaceFileStore
 
-func ProvideWorkspaceFileStores() map[string]minio.MinioFileStore {
+func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 	workspaceFileStoresOnce.Do(func() {
+		config := ProvideConfig()
 		minioClients := ProvideMinioClients()
-		workspaceFileStores = make(map[string]minio.MinioFileStore)
-
-		// Minio file stores
-		for storeName, minioClient := range minioClients {
-			minioStore, err := minio.NewMinioFileStorage(minioClient)
-			if err != nil {
-				logger.TechLog.Fatal(context.Background(), "failed to create minio file store: "+err.Error())
+		workspaceFileStores = make(map[string]service.WorkspaceFileStore)
+		for _, storeCfg := range config.Services.WorkspaceFileService.Stores {
+			switch storeCfg.ClientType {
+			case "minio":
+				minioClient, ok := minioClients[storeCfg.ClientName]
+				if !ok {
+					logger.TechLog.Fatal(context.Background(), "minio client not found: "+storeCfg.ClientName)
+				}
+				fileStore, err := minio.NewMinioFileStorage(
+					minioClient,
+				)
+				if err != nil {
+					logger.TechLog.Fatal(context.Background(), "failed to create minio workspace file store: "+err.Error())
+				}
+				workspaceFileStores[storeCfg.ClientName] = fileStore
+			default:
+				logger.TechLog.Fatal(context.Background(), "unsupported workspace file store type: "+storeCfg.ClientType)
 			}
-
-			workspaceFileStores[storeName] = minioStore
 		}
-
-		// Additional file stores can be added here
 	})
 	return workspaceFileStores
-}
-
-var workspaceFileStorePathManagersOnce sync.Once
-var workspaceFileStorePathManagers map[string]service.WorkspaceFileStorePathManager
-
-func ProvideWorkspaceFileStorePathManager() map[string]service.WorkspaceFileStorePathManager {
-	workspaceFileStorePathManagersOnce.Do(func() {
-		minioClients := ProvideMinioClients()
-		cfg := ProvideConfig()
-		workspaceFileStorePathManagers = make(map[string]service.WorkspaceFileStorePathManager)
-
-		// Minio file stores
-		for storeName, minioClient := range minioClients {
-			clientConfig, ok := cfg.Services.WorkspaceFileService.MinioStores[storeName]
-			if !ok {
-				logger.TechLog.Fatal(context.Background(), "minio client config not found for store: "+storeName)
-			}
-
-			minioFileStoragePathManager, err := service.NewMinioFileStoragePathManager(storeName, minioClient, clientConfig.Prefix)
-			if err != nil {
-				logger.TechLog.Fatal(context.Background(), "failed to create minio file store: "+err.Error())
-			}
-
-			workspaceFileStorePathManagers[storeName] = minioFileStoragePathManager
-		}
-
-		// Additional file stores can be added here
-	})
-	return workspaceFileStorePathManagers
 }
