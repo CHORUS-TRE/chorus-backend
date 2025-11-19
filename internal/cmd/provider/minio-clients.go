@@ -17,9 +17,9 @@ func ProvideMinioClients() map[string]miniorawclient.MinioClienter {
 		cfg := ProvideConfig()
 		minioClients = make(map[string]miniorawclient.MinioClienter)
 
-		for clientName := range cfg.Services.WorkspaceFileService.MinioStores {
+		for clientName, _ := range cfg.Clients.MinioClients {
 			var minioClient miniorawclient.MinioClienter
-			if !cfg.Services.WorkspaceFileService.MinioStores[clientName].Enabled {
+			if !cfg.Clients.MinioClients[clientName].Enabled {
 				logger.TechLog.Info(context.Background(), fmt.Sprintf("Minio client '%s' is disabled, using test client", clientName))
 				minioClient = miniorawclient.NewTestClient()
 			} else {
