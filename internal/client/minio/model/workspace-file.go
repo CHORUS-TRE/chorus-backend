@@ -8,7 +8,7 @@ import (
 	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 )
 
-type WorkspaceFile struct {
+type File struct {
 	Path string
 
 	Name        string
@@ -21,11 +21,11 @@ type WorkspaceFile struct {
 	Content []byte
 }
 
-func MinioObjectInfoToWorkspaceFile(info *miniorawclient.MinioObjectInfo) *WorkspaceFile {
+func MinioObjectInfoToWorkspaceFile(info *miniorawclient.MinioObjectInfo) *File {
 	isDir := strings.HasSuffix(info.Key, "/")
 	name := path.Base(strings.TrimRight(info.Key, "/"))
 
-	return &WorkspaceFile{
+	return &File{
 		Path:        info.Key,
 		Name:        name,
 		IsDirectory: isDir,
@@ -35,14 +35,14 @@ func MinioObjectInfoToWorkspaceFile(info *miniorawclient.MinioObjectInfo) *Works
 	}
 }
 
-func MinioObjectToWorkspaceFile(object *miniorawclient.MinioObject) *WorkspaceFile {
+func MinioObjectToWorkspaceFile(object *miniorawclient.MinioObject) *File {
 	file := MinioObjectInfoToWorkspaceFile(&object.MinioObjectInfo)
 	file.Content = object.Content
 
 	return file
 }
 
-func WorkspaceFileToMinioObjectInfo(file *WorkspaceFile) *miniorawclient.MinioObjectInfo {
+func WorkspaceFileToMinioObjectInfo(file *File) *miniorawclient.MinioObjectInfo {
 	return &miniorawclient.MinioObjectInfo{
 		Key:          file.Path,
 		Size:         file.Size,
@@ -51,14 +51,14 @@ func WorkspaceFileToMinioObjectInfo(file *WorkspaceFile) *miniorawclient.MinioOb
 	}
 }
 
-func WorkspaceFileToMinioObject(file *WorkspaceFile) *miniorawclient.MinioObject {
+func WorkspaceFileToMinioObject(file *File) *miniorawclient.MinioObject {
 	return &miniorawclient.MinioObject{
 		MinioObjectInfo: *WorkspaceFileToMinioObjectInfo(file),
 		Content:         file.Content,
 	}
 }
 
-func WorkspaceFileToMinioObjectWithoutContent(file *WorkspaceFile) *miniorawclient.MinioObject {
+func WorkspaceFileToMinioObjectWithoutContent(file *File) *miniorawclient.MinioObject {
 	return &miniorawclient.MinioObject{
 		MinioObjectInfo: *WorkspaceFileToMinioObjectInfo(file),
 	}

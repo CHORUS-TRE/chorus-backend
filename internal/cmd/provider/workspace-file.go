@@ -7,6 +7,7 @@ import (
 	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service/middleware"
@@ -44,13 +45,13 @@ func ProvideWorkspaceFileController() chorus.WorkspaceFileServiceServer {
 }
 
 var workspaceFileStoresOnce sync.Once
-var workspaceFileStores map[string]service.WorkspaceFileStore
+var workspaceFileStores map[string]minio.MinioFileStore
 
-func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
+func ProvideWorkspaceFileStores() map[string]minio.MinioFileStore {
 	workspaceFileStoresOnce.Do(func() {
 		minioClients := ProvideMinioClients()
 		cfg := ProvideConfig()
-		workspaceFileStores = make(map[string]service.WorkspaceFileStore)
+		workspaceFileStores = make(map[string]minio.MinioFileStore)
 
 		// Minio file stores
 		for storeName, minioClient := range minioClients {
@@ -59,7 +60,7 @@ func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 				logger.TechLog.Fatal(context.Background(), "minio client config not found for store: "+storeName)
 			}
 
-			minioStore, err := service.NewMinioFileStorage(storeName, minioClient, clientConfig.Prefix)
+			minioStore, err := minio.NewMinioFileStorage(storeName, minioClient, clientConfig.Prefix)
 			if err != nil {
 				logger.TechLog.Fatal(context.Background(), "failed to create minio file store: "+err.Error())
 			}

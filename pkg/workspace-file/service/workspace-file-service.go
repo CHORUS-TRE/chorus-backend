@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
+	minio "github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 )
 
 type WorkspaceFiler interface {
-	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
-	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error)
-	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
+	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.File, error)
+	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.File, error)
+	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error)
+	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error)
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 }
 
@@ -28,27 +29,17 @@ type WorkspaceFileStorePathManager interface {
 	FromStorePath(workspaceID uint64, storePath string) string
 }
 
-type WorkspaceFileStore interface {
-	// Workspace file operations
-	GetFileMetadata(ctx context.Context, filePath string) (*model.WorkspaceFile, error)
-	GetFile(ctx context.Context, filePath string) (*model.WorkspaceFile, error)
-	ListFiles(ctx context.Context, filePath string) ([]*model.WorkspaceFile, error)
-	CreateFile(ctx context.Context, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	UpdateFile(ctx context.Context, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	DeleteFile(ctx context.Context, filePath string) error
-}
-
 type WorkspaceFileService struct {
-	fileStores            map[string]WorkspaceFileStore
+	fileStores            map[string]minio.MinioFileStore
 	fileStorePathManagers map[string]WorkspaceFileStorePathManager
 }
 
-func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStporePathManagers map[string]WorkspaceFileStorePathManager) (*WorkspaceFileService, error) {
+func NewWorkspaceFileService(fileStores map[string]minio.MinioFileStore, fileStporePathManagers map[string]WorkspaceFileStorePathManager) (*WorkspaceFileService, error) {
 	if len(fileStores) != len(fileStporePathManagers) {
 		return nil, fmt.Errorf("file stores and path managers count mismatch")
 	}
 
-	fs := make(map[string]WorkspaceFileStore)
+	fs := make(map[string]minio.MinioFileStore)
 	fsMgr := make(map[string]WorkspaceFileStorePathManager)
 
 	for name, store := range fileStores {
@@ -89,7 +80,7 @@ func (s *WorkspaceFileService) findStore(filePath string) (string, error) {
 
 	return selectedStoreName, nil
 }
-func (s *WorkspaceFileService) findFileStore(filePath string) (WorkspaceFileStore, error) {
+func (s *WorkspaceFileService) findFileStore(filePath string) (minio.MinioFileStore, error) {
 	storeName, err := s.findStore(filePath)
 	if err != nil {
 		return nil, err
@@ -107,10 +98,10 @@ func (s *WorkspaceFileService) findFileStorePathManager(filePath string) (Worksp
 	return s.fileStorePathManagers[storeName], nil
 }
 
-func (s *WorkspaceFileService) listStores() []*model.WorkspaceFile {
-	var stores []*model.WorkspaceFile
+func (s *WorkspaceFileService) listStores() []*model.File {
+	var stores []*model.File
 	for _, storeMgr := range s.fileStorePathManagers {
-		stores = append(stores, &model.WorkspaceFile{
+		stores = append(stores, &model.File{
 			Path:        storeMgr.GetStorePrefix(),
 			Name:        storeMgr.GetStoreName(),
 			IsDirectory: true,
@@ -119,7 +110,7 @@ func (s *WorkspaceFileService) listStores() []*model.WorkspaceFile {
 	return stores
 }
 
-func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
+func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.File, error) {
 	store, err := s.findFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -141,7 +132,7 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 	return file, nil
 }
 
-func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
+func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.File, error) {
 	if filePath == "" || filePath == "/" {
 		return s.listStores(), nil
 	}
@@ -162,9 +153,9 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 		return nil, fmt.Errorf("unable to list workspace files at path %s: %w", filePath, err)
 	}
 
-	var files []*model.WorkspaceFile
+	var files []*model.File
 	for _, f := range storeFiles {
-		files = append(files, &model.WorkspaceFile{
+		files = append(files, &model.File{
 			Path:        storePathManager.FromStorePath(workspaceID, f.Path),
 			Name:        f.Name,
 			IsDirectory: f.IsDirectory,
@@ -177,7 +168,7 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 	return files, nil
 }
 
-func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error) {
 	store, err := s.findFileStore(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -189,7 +180,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	storePath := storePathManager.ToStorePath(workspaceID, file.Path)
-	createdFile, err := store.CreateFile(ctx, &model.WorkspaceFile{
+	createdFile, err := store.CreateFile(ctx, &model.File{
 		Path:        storePath,
 		Name:        file.Name,
 		IsDirectory: file.IsDirectory,
@@ -200,7 +191,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 		return nil, fmt.Errorf("unable to create workspace file at path %s: %w", file.Path, err)
 	}
 
-	return &model.WorkspaceFile{
+	return &model.File{
 		Path:        storePathManager.FromStorePath(workspaceID, createdFile.Path),
 		Name:        createdFile.Name,
 		IsDirectory: createdFile.IsDirectory,
@@ -210,7 +201,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}, nil
 }
 
-func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error) {
 	oldStore, err := s.findFileStore(oldPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store for old path: %w", err)
@@ -241,7 +232,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 		newStorePath := newStorePathManager.ToStorePath(workspaceID, file.Path)
 
 		// Cross-store move
-		createdFile, err := newStore.CreateFile(ctx, &model.WorkspaceFile{
+		createdFile, err := newStore.CreateFile(ctx, &model.File{
 			Path:        newStorePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -258,7 +249,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 			return nil, fmt.Errorf("unable to delete old workspace file at path %s: %w", oldPath, err)
 		}
 
-		return &model.WorkspaceFile{
+		return &model.File{
 			Path:        newStorePathManager.FromStorePath(workspaceID, createdFile.Path),
 			Name:        createdFile.Name,
 			IsDirectory: createdFile.IsDirectory,
@@ -269,7 +260,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	// Same store move
-	updatedFile, err := oldStore.UpdateFile(ctx, oldStorePath, &model.WorkspaceFile{
+	updatedFile, err := oldStore.UpdateFile(ctx, oldStorePath, &model.File{
 		Path:        oldStorePath,
 		Name:        file.Name,
 		IsDirectory: file.IsDirectory,

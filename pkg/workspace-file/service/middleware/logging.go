@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
 	"go.uber.org/zap"
@@ -26,7 +26,7 @@ func Logging(logger *logger.ContextLogger) func(service.WorkspaceFiler) service.
 	}
 }
 
-func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
+func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.File, error) {
 	now := time.Now()
 
 	res, err := c.next.GetWorkspaceFile(ctx, workspaceID, filePath)
@@ -46,7 +46,7 @@ func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspace
 	return res, nil
 }
 
-func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
+func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.File, error) {
 	now := time.Now()
 
 	files, err := c.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
@@ -67,7 +67,7 @@ func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspa
 	return files, nil
 }
 
-func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error) {
 	now := time.Now()
 
 	newFile, err := c.next.CreateWorkspaceFile(ctx, workspaceID, file)
@@ -88,7 +88,7 @@ func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, worksp
 	return newFile, nil
 }
 
-func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error) {
 	now := time.Now()
 
 	updatedFile, err := c.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)

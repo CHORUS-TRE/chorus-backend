@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
 	val "github.com/go-playground/validator/v10"
@@ -23,22 +23,22 @@ func Validation(validate *val.Validate) func(service.WorkspaceFiler) service.Wor
 	}
 }
 
-func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
+func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.File, error) {
 	return v.next.GetWorkspaceFile(ctx, workspaceID, filePath)
 }
 
-func (v validation) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
+func (v validation) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.File, error) {
 	return v.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
 }
 
-func (v validation) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (v validation) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error) {
 	if err := v.validate.Struct(file); err != nil {
 		return nil, err
 	}
 	return v.next.CreateWorkspaceFile(ctx, workspaceID, file)
 }
 
-func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error) {
 	if err := v.validate.Struct(file); err != nil {
 		return nil, err
 	}

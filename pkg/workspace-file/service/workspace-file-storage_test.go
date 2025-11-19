@@ -6,8 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 	"github.com/CHORUS-TRE/chorus-backend/tests/unit"
 )
 
@@ -15,7 +16,7 @@ func TestFileLifecycle(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := miniorawclient.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storage, err := minio.NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +32,7 @@ func TestFileLifecycle(t *testing.T) {
 	content := []byte("Hello, Minio!")
 
 	// Create file
-	createdFile, err := storage.CreateFile(context.Background(), &model.WorkspaceFile{
+	createdFile, err := storage.CreateFile(context.Background(), &model.File{
 		Path:    storePath,
 		Content: content,
 	})
@@ -73,7 +74,7 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := miniorawclient.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storage, err := minio.NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,14 +90,14 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	content := []byte("Existing file content")
 
 	// Create the file first time
-	_, err = storage.CreateFile(context.Background(), &model.WorkspaceFile{
+	_, err = storage.CreateFile(context.Background(), &model.File{
 		Path:    storePath,
 		Content: content,
 	})
 	assert.NoError(t, err, "initial file creation should not error: %v", err)
 
 	// Attempt to create the same file again
-	_, err = storage.CreateFile(context.Background(), &model.WorkspaceFile{
+	_, err = storage.CreateFile(context.Background(), &model.File{
 		Path:    storePath,
 		Content: content,
 	})
@@ -107,7 +108,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := miniorawclient.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client, testClientPrefix)
+	storage, err := minio.NewMinioFileStorage("test", client, testClientPrefix)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +122,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	globalDirPath := "/test-client/mydir/"
 	storeDirPath := storagePathManager.ToStorePath(workspaceID, globalDirPath)
 	// Create directory
-	_, err = storage.CreateFile(context.Background(), &model.WorkspaceFile{
+	_, err = storage.CreateFile(context.Background(), &model.File{
 		Path:        storeDirPath,
 		IsDirectory: true,
 	})
@@ -142,7 +143,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 
 	// Create a file inside the directory
 	fileInDirPath := storeDirPath + "file.txt"
-	_, err = storage.CreateFile(context.Background(), &model.WorkspaceFile{
+	_, err = storage.CreateFile(context.Background(), &model.File{
 		Path:    fileInDirPath,
 		Content: []byte("File inside directory"),
 	})

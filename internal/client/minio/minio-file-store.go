@@ -1,15 +1,25 @@
-package service
+package minio
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 )
 
-var _ WorkspaceFileStore = &MinioFileStorage{}
+type MinioFileStore interface {
+	// Workspace file operations
+	GetFileMetadata(ctx context.Context, filePath string) (*model.File, error)
+	GetFile(ctx context.Context, filePath string) (*model.File, error)
+	ListFiles(ctx context.Context, filePath string) ([]*model.File, error)
+	CreateFile(ctx context.Context, file *model.File) (*model.File, error)
+	UpdateFile(ctx context.Context, oldPath string, file *model.File) (*model.File, error)
+	DeleteFile(ctx context.Context, filePath string) error
+}
+
+var _ MinioFileStore = &MinioFileStorage{}
 
 type MinioFileStorage struct {
 	storeName   string
@@ -25,7 +35,7 @@ func NewMinioFileStorage(clientName string, client miniorawclient.MinioClienter,
 	}, nil
 }
 
-func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, objectKey string) (*model.WorkspaceFile, error) {
+func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, objectKey string) (*model.File, error) {
 	objectInfo, err := s.minioClient.StatObject(objectKey)
 	if err != nil {
 		return nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
@@ -37,7 +47,7 @@ func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, objectKey string
 	return file, nil
 }
 
-func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*model.WorkspaceFile, error) {
+func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*model.File, error) {
 	objectInfo, err := s.minioClient.StatObject(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to stat object %s: %w", path, err)
@@ -49,7 +59,7 @@ func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*model.Wo
 	return file, nil
 }
 
-func (s *MinioFileStorage) GetFile(ctx context.Context, path string) (*model.WorkspaceFile, error) {
+func (s *MinioFileStorage) GetFile(ctx context.Context, path string) (*model.File, error) {
 	object, err := s.minioClient.GetObject(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get object %s: %w", path, err)
@@ -61,13 +71,13 @@ func (s *MinioFileStorage) GetFile(ctx context.Context, path string) (*model.Wor
 	return file, nil
 }
 
-func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*model.WorkspaceFile, error) {
+func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*model.File, error) {
 	objects, err := s.minioClient.ListObjects(path, false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list objects with prefix %s: %w", path, err)
 	}
 
-	var files []*model.WorkspaceFile
+	var files []*model.File
 	for _, objectInfo := range objects {
 		file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 		files = append(files, file)
@@ -77,7 +87,7 @@ func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*model
 	return files, nil
 }
 
-func (s *MinioFileStorage) CreateFile(ctx context.Context, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (s *MinioFileStorage) CreateFile(ctx context.Context, file *model.File) (*model.File, error) {
 	// Check if exists
 	_, err := s.minioClient.StatObject(file.Path)
 	if err == nil {
@@ -103,7 +113,7 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, file *model.Workspace
 	return createdFile, nil
 }
 
-func (s *MinioFileStorage) UpdateFile(ctx context.Context, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
+func (s *MinioFileStorage) UpdateFile(ctx context.Context, oldPath string, file *model.File) (*model.File, error) {
 	// Check if old file exists
 	_, err := s.minioClient.StatObject(oldPath)
 	if err != nil {
