@@ -35,6 +35,7 @@ serviceAccount:
   name: ""
   createSecret: false
 
+priorityClassName: medium-priority
 podAnnotations: {}
 podLabels: {}
 
