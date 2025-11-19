@@ -16,7 +16,7 @@ func TestFileLifecycle(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := miniorawclient.NewTestClient()
-	storage, err := minio.NewMinioFileStorage("test", client, testClientPrefix)
+	storage, err := minio.NewMinioFileStorage(client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := miniorawclient.NewTestClient()
-	storage, err := minio.NewMinioFileStorage("test", client, testClientPrefix)
+	storage, err := minio.NewMinioFileStorage(client)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	unit.InitTestLogger()
 
 	client := miniorawclient.NewTestClient()
-	storage, err := minio.NewMinioFileStorage("test", client, testClientPrefix)
+	storage, err := minio.NewMinioFileStorage(client)
 	if err != nil {
 		t.Fatal(err)
 	}
