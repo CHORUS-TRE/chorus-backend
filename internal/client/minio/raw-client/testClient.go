@@ -89,6 +89,19 @@ func (c *testClient) PutObject(objectKey string, object *MinioObject) (*MinioObj
 	return &object.MinioObjectInfo, nil
 }
 
+func (c *testClient) MoveObject(oldObjectKey string, newObjectKey string) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	object, ok := c.objects[oldObjectKey]
+	if !ok {
+		return fmt.Errorf("object not found: %s", oldObjectKey)
+	}
+	object.Key = newObjectKey
+	c.objects[newObjectKey] = object
+	delete(c.objects, oldObjectKey)
+	return nil
+}
+
 func (c *testClient) DeleteObject(objectKey string) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
