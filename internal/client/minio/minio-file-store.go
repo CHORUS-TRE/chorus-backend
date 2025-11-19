@@ -10,7 +10,6 @@ import (
 )
 
 type MinioFileStore interface {
-	// Workspace file operations
 	GetFileMetadata(ctx context.Context, filePath string) (*model.File, error)
 	GetFile(ctx context.Context, filePath string) (*model.File, error)
 	ListFiles(ctx context.Context, filePath string) ([]*model.File, error)
@@ -22,15 +21,11 @@ type MinioFileStore interface {
 var _ MinioFileStore = &MinioFileStorage{}
 
 type MinioFileStorage struct {
-	storeName   string
-	storePrefix string
 	minioClient miniorawclient.MinioClienter
 }
 
-func NewMinioFileStorage(clientName string, client miniorawclient.MinioClienter, clientPrefix string) (*MinioFileStorage, error) {
+func NewMinioFileStorage(client miniorawclient.MinioClienter) (*MinioFileStorage, error) {
 	return &MinioFileStorage{
-		storeName:   clientName,
-		storePrefix: clientPrefix,
 		minioClient: client,
 	}, nil
 }
@@ -44,18 +39,6 @@ func (s *MinioFileStorage) GetFileMetadata(ctx context.Context, objectKey string
 	file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("retrieved metadata for %s", objectKey))
-	return file, nil
-}
-
-func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*model.File, error) {
-	objectInfo, err := s.minioClient.StatObject(path)
-	if err != nil {
-		return nil, fmt.Errorf("unable to stat object %s: %w", path, err)
-	}
-
-	file := model.MinioObjectInfoToWorkspaceFile(objectInfo)
-
-	logger.TechLog.Info(ctx, fmt.Sprintf("Retrieved metadata for %s", path))
 	return file, nil
 }
 
