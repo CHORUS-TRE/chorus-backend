@@ -28,12 +28,12 @@ type WorkspaceFileStore interface {
 	FromStorePath(workspaceID uint64, storePath string) string
 
 	// Workspace file operations
-	GetFileMetadata(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
-	GetFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error)
-	ListFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error)
-	CreateFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	UpdateFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
-	DeleteFile(ctx context.Context, workspaceID uint64, filePath string) error
+	GetFileMetadata(ctx context.Context, filePath string) (*model.WorkspaceFile, error)
+	GetFile(ctx context.Context, filePath string) (*model.WorkspaceFile, error)
+	ListFiles(ctx context.Context, filePath string) ([]*model.WorkspaceFile, error)
+	CreateFile(ctx context.Context, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
+	UpdateFile(ctx context.Context, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error)
+	DeleteFile(ctx context.Context, filePath string) error
 }
 
 type WorkspaceFileService struct {
@@ -90,7 +90,7 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 	storePath := store.ToStorePath(workspaceID, filePath)
 
 	// For now, only return object Metadata, not the content
-	file, err := store.GetFileMetadata(ctx, workspaceID, storePath)
+	file, err := store.GetFileMetadata(ctx, storePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get workspace file at path %s: %w", filePath, err)
 	}
@@ -109,7 +109,7 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 	}
 
 	storePath := store.ToStorePath(workspaceID, filePath)
-	storeFiles, err := store.ListFiles(ctx, workspaceID, storePath)
+	storeFiles, err := store.ListFiles(ctx, storePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list workspace files at path %s: %w", filePath, err)
 	}
@@ -136,7 +136,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	storePath := store.ToStorePath(workspaceID, file.Path)
-	createdFile, err := store.CreateFile(ctx, workspaceID, &model.WorkspaceFile{
+	createdFile, err := store.CreateFile(ctx, &model.WorkspaceFile{
 		Path:        storePath,
 		Name:        file.Name,
 		IsDirectory: file.IsDirectory,
@@ -169,7 +169,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	oldStorePath := oldStore.ToStorePath(workspaceID, oldPath)
-	oldFile, err := oldStore.GetFile(ctx, workspaceID, oldStorePath)
+	oldFile, err := oldStore.GetFile(ctx, oldStorePath)
 	if err != nil {
 		return nil, fmt.Errorf("workspace file at path %s does not exist: %w", oldPath, err)
 	}
@@ -178,7 +178,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 		newStorePath := newStore.ToStorePath(workspaceID, file.Path)
 
 		// Cross-store move
-		createdFile, err := newStore.CreateFile(ctx, workspaceID, &model.WorkspaceFile{
+		createdFile, err := newStore.CreateFile(ctx, &model.WorkspaceFile{
 			Path:        newStorePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -189,9 +189,9 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 			return nil, fmt.Errorf("unable to create new workspace file at path %s: %w", file.Path, err)
 		}
 
-		err = oldStore.DeleteFile(ctx, workspaceID, oldStorePath)
+		err = oldStore.DeleteFile(ctx, oldStorePath)
 		if err != nil {
-			_ = newStore.DeleteFile(ctx, workspaceID, newStorePath)
+			_ = newStore.DeleteFile(ctx, newStorePath)
 			return nil, fmt.Errorf("unable to delete old workspace file at path %s: %w", oldPath, err)
 		}
 
@@ -206,7 +206,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	// Same store move
-	updatedFile, err := oldStore.UpdateFile(ctx, workspaceID, oldStorePath, &model.WorkspaceFile{
+	updatedFile, err := oldStore.UpdateFile(ctx, oldStorePath, &model.WorkspaceFile{
 		Path:        oldStorePath,
 		Name:        file.Name,
 		IsDirectory: file.IsDirectory,
@@ -228,12 +228,12 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 	}
 
 	storePath := store.ToStorePath(workspaceID, filePath)
-	_, stat := store.GetFileMetadata(ctx, workspaceID, storePath)
+	_, stat := store.GetFileMetadata(ctx, storePath)
 	if stat != nil {
 		return fmt.Errorf("workspace file at path %s does not exist: %w", filePath, stat)
 	}
 
-	err = store.DeleteFile(ctx, workspaceID, storePath)
+	err = store.DeleteFile(ctx, storePath)
 	if err != nil {
 		return fmt.Errorf("unable to delete workspace file at path %s: %w", filePath, err)
 	}
