@@ -1,6 +1,7 @@
 package miniorawclient
 
 import (
+	"strings"
 	"time"
 )
 
@@ -14,4 +15,11 @@ type MinioObjectInfo struct {
 type MinioObject struct {
 	MinioObjectInfo
 	Content []byte
+}
+
+func NormalizePrefix(prefix string) string {
+	normalizedPrefix := "/" + strings.TrimPrefix(prefix, "/")
+	normalizedPrefix = strings.TrimSuffix(normalizedPrefix, "/") + "/"
+
+	return normalizedPrefix
 }

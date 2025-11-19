@@ -2,7 +2,6 @@ package miniorawclient
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
@@ -25,19 +24,11 @@ func getMinioClientConfig(cfg config.Config, clientName string) (MinioClientConf
 
 	return MinioClientConfig{
 		Name:            clientName,
-		Prefix:          formatClientPrefix(prefix),
+		Prefix:          NormalizePrefix(prefix),
 		Endpoint:        cfg.Services.WorkspaceFileService.MinioStores[clientName].Endpoint,
 		AccessKeyID:     cfg.Services.WorkspaceFileService.MinioStores[clientName].AccessKeyID,
 		SecretAccessKey: cfg.Services.WorkspaceFileService.MinioStores[clientName].SecretAccessKey,
 		UseSSL:          cfg.Services.WorkspaceFileService.MinioStores[clientName].UseSSL,
 		BucketName:      cfg.Services.WorkspaceFileService.MinioStores[clientName].BucketName,
 	}, nil
-}
-
-// Ensures leading and trailing '/' on client prefix
-func formatClientPrefix(prefix string) string {
-	normalizedPrefix := "/" + strings.TrimPrefix(prefix, "/")
-	normalizedPrefix = strings.TrimSuffix(normalizedPrefix, "/") + "/"
-
-	return normalizedPrefix
 }

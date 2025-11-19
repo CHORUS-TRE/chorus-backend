@@ -22,7 +22,7 @@ const workspacePrefixPattern = `^` + workspacePrefix + `\d+/`
 func NewMinioFileStoragePathManager(clientName string, client miniorawclient.MinioClienter, clientPrefix string) (*MinioFileStoragePathManager, error) {
 	return &MinioFileStoragePathManager{
 		storeName:   clientName,
-		storePrefix: clientPrefix,
+		storePrefix: miniorawclient.NormalizePrefix(clientPrefix),
 		minioClient: client,
 	}, nil
 }
