@@ -35,9 +35,17 @@ type WorkspaceFileService struct {
 }
 
 func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStoreConfigs map[string]config.WorkspaceFileStore) (*WorkspaceFileService, error) {
+	configs := make(map[string]config.WorkspaceFileStore)
+
+	for storeName, storeCfg := range fileStoreConfigs {
+		cfg := storeCfg
+		cfg.StorePrefix = "/" + strings.Trim(storeCfg.StorePrefix, "/") + "/"
+		configs[storeName] = cfg
+	}
+
 	ws := &WorkspaceFileService{
 		fileStores:   fileStores,
-		storeConfigs: fileStoreConfigs,
+		storeConfigs: configs,
 	}
 
 	return ws, nil
@@ -144,15 +152,28 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}
 
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
-	createdFile, err := s.fileStores[storeName].CreateFile(ctx, &model.File{
-		Path:        storePath,
-		Name:        file.Name,
-		IsDirectory: file.IsDirectory,
-		MimeType:    file.MimeType,
-		Content:     file.Content,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to create workspace file at path %s: %w", file.Path, err)
+
+	var createdFile *model.File
+	if file.IsDirectory {
+		createdFile, err = s.fileStores[storeName].CreateDirectory(ctx, &model.File{
+			Path:        storePath,
+			Name:        file.Name,
+			IsDirectory: file.IsDirectory,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("unable to create workspace directory at path %s: %w", file.Path, err)
+		}
+	} else {
+		createdFile, err = s.fileStores[storeName].CreateFile(ctx, &model.File{
+			Path:        storePath,
+			Name:        file.Name,
+			IsDirectory: file.IsDirectory,
+			MimeType:    file.MimeType,
+			Content:     file.Content,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("unable to create workspace file at path %s: %w", file.Path, err)
+		}
 	}
 
 	return &model.File{
