@@ -123,13 +123,21 @@ cat <<EOF >configs/dev/files/kind.yaml
 clients:
   docker_client:
     enabled: true
-  minio_client:
-    enabled: true
-    endpoint: localhost:9000
-    access_key_id: minioadmin
-    secret_access_key: minioadmin
-    bucket_name: chorus-data
-    use_ssl: false
+  minio_clients:
+    archive:
+      enabled: true
+      endpoint: localhost:9000
+      access_key_id: minioadmin
+      secret_access_key: minioadmin
+      bucket_name: chorus-data
+      use_ssl: false
+    scratch:
+      enabled: true
+      endpoint: localhost:9000
+      access_key_id: minioadmin
+      secret_access_key: minioadmin
+      bucket_name: chorus-data
+      use_ssl: false
   k8s_client:
     enabled: true
     is_watcher: true

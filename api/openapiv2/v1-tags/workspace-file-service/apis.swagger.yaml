@@ -1,0 +1,249 @@
+swagger: "2.0"
+info:
+  title: chorus workspace file service
+  version: "1.0"
+  contact:
+    name: chorus workspace file service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: WorkspaceFileService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/workspaces/{workspaceId}/file:
+    post:
+      summary: Create a file in a workspace
+      description: This endpoint creates a file in a workspace at the specified path
+      operationId: WorkspaceFileService_CreateWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: file
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceFile'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
+    put:
+      summary: Update a file in a workspace
+      description: This endpoint updates (rename or moves) a file in a workspace at the specified path
+      operationId: WorkspaceFileService_UpdateWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: oldPath
+          description: For renaming or moving files
+          in: path
+          required: true
+          type: string
+          pattern: .+
+        - name: file
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceFile'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/{path}:
+    get:
+      summary: Get a file in a workspace
+      description: This endpoint retrieves a file at the specified path within a workspace
+      operationId: WorkspaceFileService_GetWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - WorkspaceService
+    delete:
+      summary: Delete a file in a workspace
+      description: This endpoint deletes a file in a workspace at the specified path
+      operationId: WorkspaceFileService_DeleteWorkspaceFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteWorkspaceFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/files/{path}:
+    get:
+      summary: List files in a workspace at a specified path
+      description: This endpoint lists all files at given path within a workspace
+      operationId: WorkspaceFileService_ListWorkspaceFiles
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkspaceFilesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - WorkspaceService
+definitions:
+  chorusCreateWorkspaceFileReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateWorkspaceFileResult'
+  chorusCreateWorkspaceFileResult:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusWorkspaceFile'
+  chorusDeleteWorkspaceFileReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteWorkspaceFileResult'
+  chorusDeleteWorkspaceFileResult:
+    type: object
+  chorusGetWorkspaceFileReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkspaceFileResult'
+  chorusGetWorkspaceFileResult:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusWorkspaceFile'
+  chorusListWorkspaceFilesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListWorkspaceFilesResult'
+  chorusListWorkspaceFilesResult:
+    type: object
+    properties:
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceFile'
+  chorusUpdateWorkspaceFileReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateWorkspaceFileResult'
+  chorusUpdateWorkspaceFileResult:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusWorkspaceFile'
+  chorusWorkspaceFile:
+    type: object
+    properties:
+      path:
+        type: string
+        title: Unique identifier for the file within the workspace
+      name:
+        type: string
+      isDirectory:
+        type: boolean
+      size:
+        type: string
+        format: int64
+      mimeType:
+        type: string
+      updatedAt:
+        type: string
+        format: date-time
+      content:
+        type: string
+        format: byte
+        title: File content will be empty when listing files
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

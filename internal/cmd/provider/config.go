@@ -123,7 +123,6 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", false)
-	v.SetDefault("clients.minio_client.enabled", false)
 	v.SetDefault("clients.k8s_client.enabled", false)
 	v.SetDefault("clients.k8s_client.is_watcher", false)
 	v.SetDefault("clients.k8s_client.server_version", "latest")
