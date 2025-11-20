@@ -5,26 +5,26 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
 var minioClientsOnce sync.Once
-var minioClients map[string]minio.MinioClienter
+var minioClients map[string]miniorawclient.MinioClienter
 
-func ProvideMinioClients() map[string]minio.MinioClienter {
+func ProvideMinioClients() map[string]miniorawclient.MinioClienter {
 	minioClientsOnce.Do(func() {
 		cfg := ProvideConfig()
-		minioClients = make(map[string]minio.MinioClienter)
+		minioClients = make(map[string]miniorawclient.MinioClienter)
 
-		for clientName := range cfg.Services.WorkspaceFileService.MinioStores {
-			var minioClient minio.MinioClienter
-			if !cfg.Services.WorkspaceFileService.MinioStores[clientName].Enabled {
+		for clientName, _ := range cfg.Clients.MinioClients {
+			var minioClient miniorawclient.MinioClienter
+			if !cfg.Clients.MinioClients[clientName].Enabled {
 				logger.TechLog.Info(context.Background(), fmt.Sprintf("Minio client '%s' is disabled, using test client", clientName))
-				minioClient = minio.NewTestClient()
+				minioClient = miniorawclient.NewTestClient()
 			} else {
 				var err error
-				minioClient, err = minio.NewClient(cfg, clientName)
+				minioClient, err = miniorawclient.NewClient(cfg, clientName)
 				if err != nil {
 					logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to provide minio client '%s': '%v'", clientName, err))
 				}

@@ -1,4 +1,4 @@
-package minio
+package miniorawclient
 
 import (
 	"bytes"
@@ -14,13 +14,11 @@ import (
 var _ MinioClienter = &client{}
 
 type MinioClienter interface {
-	GetClientName() string
-	GetClientPrefix() string
-
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
 	ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error)
 	PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error)
+	MoveObject(oldObjectKey string, newObjectKey string) error
 	DeleteObject(objectKey string) error
 }
 
@@ -50,14 +48,6 @@ func NewClient(cfg config.Config, clientName string) (*client, error) {
 		minioClientCfg: clientCfg,
 		minioClient:    minioClient,
 	}, nil
-}
-
-func (c *client) GetClientName() string {
-	return c.minioClientCfg.Name
-}
-
-func (c *client) GetClientPrefix() string {
-	return c.minioClientCfg.Prefix
 }
 
 func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
@@ -142,6 +132,30 @@ func (c *client) PutObject(objectKey string, object *MinioObject) (*MinioObjectI
 		LastModified: objectInfo.LastModified,
 		MimeType:     objectInfo.ContentType,
 	}, nil
+}
+
+func (c *client) MoveObject(oldObjectKey string, newObjectKey string) error {
+	src := minio.CopySrcOptions{
+		Bucket: c.minioClientCfg.BucketName,
+		Object: oldObjectKey,
+	}
+
+	dst := minio.CopyDestOptions{
+		Bucket: c.minioClientCfg.BucketName,
+		Object: newObjectKey,
+	}
+
+	_, err := c.minioClient.CopyObject(context.Background(), dst, src)
+	if err != nil {
+		return fmt.Errorf("unable to move object from %s to %s: %w", oldObjectKey, newObjectKey, err)
+	}
+
+	err = c.minioClient.RemoveObject(context.Background(), c.minioClientCfg.BucketName, oldObjectKey, minio.RemoveObjectOptions{})
+	if err != nil {
+		return fmt.Errorf("unable to delete old object at %s after move: %w", oldObjectKey, err)
+	}
+
+	return nil
 }
 
 func (c *client) DeleteObject(objectKey string) error {

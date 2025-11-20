@@ -1,4 +1,4 @@
-package minio
+package service
 
 import (
 	"context"
@@ -7,64 +7,40 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/tests/unit"
 )
 
-func TestNormalizePath(t *testing.T) {
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
+const (
+	testStoreName       = "test"
+	testStorePrefix     = "/test-client/"
+	testWorkspacePrefix = "workspaces/%s"
+)
 
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "path with leading slash",
-			input:    "/archive/file.txt",
-			expected: "/archive/file.txt",
-		},
-		{
-			name:     "path without leading slash",
-			input:    "archive/file.txt",
-			expected: "/archive/file.txt",
-		},
-		{
-			name:     "root path",
-			input:    "/",
-			expected: "/",
-		},
-		{
-			name:     "empty path",
-			input:    "",
-			expected: "/",
-		},
-		{
-			name:     "nested path",
-			input:    "/folder/subfolder/file.txt",
-			expected: "/folder/subfolder/file.txt",
+func createTestService() *WorkspaceFileService {
+	client := miniorawclient.NewTestClient()
+	fileStore, _ := minio.NewMinioFileStorage(client)
+
+	storeConfigs := map[string]config.WorkspaceFileStore{
+		"test": {
+			ClientName:      "test",
+			StorePrefix:     testStorePrefix,
+			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := storage.NormalizePath(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
+	fileStores := map[string]WorkspaceFileStore{
+		"test": fileStore,
 	}
+
+	service, _ := NewWorkspaceFileService(fileStores, storeConfigs)
+	return service
 }
 
 func TestToStorePath(t *testing.T) {
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	s := createTestService()
 	tests := []struct {
 		name        string
 		workspaceID uint64
@@ -105,19 +81,14 @@ func TestToStorePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := storage.ToStorePath(tt.workspaceID, tt.globalPath)
+			result := s.toStorePath(testStoreName, tt.workspaceID, tt.globalPath)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestFromStorePath(t *testing.T) {
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	s := createTestService()
 	tests := []struct {
 		name        string
 		workspaceID uint64
@@ -158,18 +129,14 @@ func TestFromStorePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := storage.FromStorePath(tt.workspaceID, tt.storePath)
+			result := s.fromStorePath(testStoreName, tt.workspaceID, tt.storePath)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
 
 func TestPathRoundTrip(t *testing.T) {
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := createTestService()
 
 	tests := []struct {
 		name       string
@@ -192,14 +159,10 @@ func TestPathRoundTrip(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Convert to store path and back
-			storePath := storage.ToStorePath(1, tt.globalPath)
-			globalPath := storage.FromStorePath(1, storePath)
+			storePath := s.toStorePath(testStoreName, 1, tt.globalPath)
+			globalPath := s.fromStorePath(testStoreName, 1, storePath)
 
-			// Normalize both for comparison (handle trailing slashes)
-			expected := storage.NormalizePath(tt.globalPath)
-			actual := storage.NormalizePath(globalPath)
-
-			assert.Equal(t, expected, actual, "round trip conversion should preserve path")
+			assert.Equal(t, tt.globalPath, globalPath, "round trip conversion should preserve path")
 		})
 	}
 }
@@ -207,20 +170,18 @@ func TestPathRoundTrip(t *testing.T) {
 func TestFileLifecycle(t *testing.T) {
 	unit.InitTestLogger()
 
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := createTestService()
 
 	// Define test parameters
 	workspaceID := uint64(1)
 	globalPath := "/test-client/testfile.txt"
-	storePath := storage.ToStorePath(workspaceID, globalPath)
+	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Hello, Minio!")
 
+	storage := s.fileStores[testStoreName]
+
 	// Create file
-	createdFile, err := storage.CreateFile(context.Background(), workspaceID, &model.WorkspaceFile{
+	createdFile, err := storage.CreateFile(context.Background(), &model.File{
 		Path:    storePath,
 		Content: content,
 	})
@@ -228,17 +189,17 @@ func TestFileLifecycle(t *testing.T) {
 	assert.Equal(t, storePath, createdFile.Path, "created file path should match store path")
 
 	// Get file metadata
-	metadata, err := storage.GetFileMetadata(context.Background(), workspaceID, storePath)
+	metadata, err := storage.StatFile(context.Background(), storePath)
 	assert.NoError(t, err, "getting file metadata should not error: %v", err)
 	assert.Equal(t, int64(len(content)), metadata.Size, "file size should match content length")
 
 	// Get file content
-	retrievedFile, err := storage.GetFile(context.Background(), workspaceID, storePath)
+	retrievedFile, err := storage.GetFile(context.Background(), storePath)
 	assert.NoError(t, err, "getting file content should not error: %v", err)
 	assert.Equal(t, content, retrievedFile.Content, "file content should match original content")
 
 	// List files in directory
-	files, err := storage.ListFiles(context.Background(), workspaceID, "workspaces/workspace1/")
+	files, err := storage.ListFiles(context.Background(), "workspaces/workspace1/")
 	assert.NoError(t, err, "listing files should not error: %v", err)
 	found := false
 	for _, f := range files {
@@ -250,37 +211,34 @@ func TestFileLifecycle(t *testing.T) {
 	assert.True(t, found, "created file should be listed in directory")
 
 	// Delete file
-	err = storage.DeleteFile(context.Background(), workspaceID, storePath)
+	err = storage.DeleteFile(context.Background(), storePath)
 	assert.NoError(t, err, "deleting file should not error: %v", err)
 
 	// Verify deletion
-	_, err = storage.GetFileMetadata(context.Background(), workspaceID, storePath)
+	_, err = storage.StatFile(context.Background(), storePath)
 	assert.Error(t, err, "getting metadata of deleted file should error")
 }
 
 func TestCreateFileAlreadyExists(t *testing.T) {
 	unit.InitTestLogger()
 
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := createTestService()
 
 	workspaceID := uint64(1)
 	globalPath := "/test-client/existingfile.txt"
-	storePath := storage.ToStorePath(workspaceID, globalPath)
+	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Existing file content")
+	storage := s.fileStores[testStoreName]
 
 	// Create the file first time
-	_, err = storage.CreateFile(context.Background(), workspaceID, &model.WorkspaceFile{
+	_, err := storage.CreateFile(context.Background(), &model.File{
 		Path:    storePath,
 		Content: content,
 	})
 	assert.NoError(t, err, "initial file creation should not error: %v", err)
 
 	// Attempt to create the same file again
-	_, err = storage.CreateFile(context.Background(), workspaceID, &model.WorkspaceFile{
+	_, err = storage.CreateFile(context.Background(), &model.File{
 		Path:    storePath,
 		Content: content,
 	})
@@ -290,25 +248,22 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 func TestDirectoryLifeCycle(t *testing.T) {
 	unit.InitTestLogger()
 
-	client := minio.NewTestClient()
-	storage, err := NewMinioFileStorage("test", client)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := createTestService()
 
+	storage := s.fileStores[testStoreName]
 	workspaceID := uint64(1)
 	globalDirPath := "/test-client/mydir/"
-	storeDirPath := storage.ToStorePath(workspaceID, globalDirPath)
+	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
 
 	// Create directory
-	_, err = storage.CreateFile(context.Background(), workspaceID, &model.WorkspaceFile{
+	_, err := storage.CreateDirectory(context.Background(), &model.File{
 		Path:        storeDirPath,
 		IsDirectory: true,
 	})
 	assert.NoError(t, err, "directory creation should not error: %v", err)
 
 	// List files in root to verify directory exists
-	files, err := storage.ListFiles(context.Background(), workspaceID, "workspaces/workspace1/")
+	files, err := storage.ListFiles(context.Background(), "workspaces/workspace1/")
 	assert.NoError(t, err, "listing files should not error: %v", err)
 
 	found := false
@@ -322,7 +277,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 
 	// Create a file inside the directory
 	fileInDirPath := storeDirPath + "file.txt"
-	_, err = storage.CreateFile(context.Background(), workspaceID, &model.WorkspaceFile{
+	_, err = storage.CreateFile(context.Background(), &model.File{
 		Path:    fileInDirPath,
 		Content: []byte("File inside directory"),
 	})
@@ -330,7 +285,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	assert.NoError(t, err, "file creation inside directory should not error: %v", err)
 
 	// List files in the directory
-	dirFiles, err := storage.ListFiles(context.Background(), workspaceID, storeDirPath)
+	dirFiles, err := storage.ListFiles(context.Background(), storeDirPath)
 	assert.NoError(t, err, "listing files in directory should not error: %v", err)
 
 	foundFile := false
@@ -343,14 +298,66 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	assert.True(t, foundFile, "file inside directory should be listed")
 
 	// Delete the directory
-	err = storage.DeleteFile(context.Background(), workspaceID, storeDirPath)
+	err = storage.DeleteDirectory(context.Background(), storeDirPath)
 	assert.NoError(t, err, "deleting directory should not error: %v", err)
 
 	// Verify deletion of directory
-	_, err = storage.GetFileMetadata(context.Background(), workspaceID, storeDirPath)
+	_, err = storage.StatFile(context.Background(), storeDirPath)
 	assert.Error(t, err, "getting metadata of deleted directory should error")
 
 	// Verify deletion of file inside directory
-	_, err = storage.GetFileMetadata(context.Background(), workspaceID, fileInDirPath)
+	_, err = storage.StatFile(context.Background(), fileInDirPath)
 	assert.Error(t, err, "getting metadata of file inside deleted directory should error")
+}
+
+func TestCreateConflictingDirectory(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+
+	storage := s.fileStores[testStoreName]
+
+	workspaceID := uint64(1)
+	globalFilePath := "/test-client/conflict"
+	storeFilePath := s.toStorePath(testStoreName, workspaceID, globalFilePath)
+
+	// Create a file first
+	_, err := storage.CreateFile(context.Background(), &model.File{
+		Path:    storeFilePath,
+		Content: []byte("This is a file"),
+	})
+	assert.NoError(t, err, "initial file creation should not error: %v", err)
+
+	// Attempt to create a directory with the same name
+	_, err = storage.CreateFile(context.Background(), &model.File{
+		Path:        storeFilePath,
+		IsDirectory: true,
+	})
+	assert.Error(t, err, "creating a directory that conflicts with existing file should error")
+}
+
+func TestCreateConflictingFile(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+
+	workspaceID := uint64(1)
+	globalDirPath := "/test-client/conflictdir/"
+	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
+	storage := s.fileStores[testStoreName]
+
+	// Create a directory first
+	_, err := storage.CreateDirectory(context.Background(), &model.File{
+		Path:        storeDirPath,
+		IsDirectory: true,
+	})
+	assert.NoError(t, err, "initial directory creation should not error: %v", err)
+
+	// Attempt to create a file with the same name
+	_, err = storage.CreateFile(context.Background(), &model.File{
+		Path:        storeDirPath,
+		IsDirectory: false,
+		Content:     []byte("This is a file"),
+	})
+	assert.Error(t, err, "creating a file that conflicts with existing directory should error")
 }

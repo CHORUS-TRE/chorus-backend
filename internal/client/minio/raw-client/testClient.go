@@ -1,4 +1,4 @@
-package minio
+package miniorawclient
 
 import (
 	"fmt"
@@ -23,10 +23,6 @@ func NewTestClient() *testClient {
 
 func (c *testClient) GetClientName() string {
 	return "test-minio-client"
-}
-
-func (c *testClient) GetClientPrefix() string {
-	return "/test-client/"
 }
 
 func (c *testClient) GetObject(objectKey string) (*MinioObject, error) {
@@ -63,7 +59,7 @@ func (c *testClient) ListObjects(prefix string, recursive bool) ([]*MinioObjectI
 				parts := strings.Split(subPath, "/")
 				if len(parts) > 0 {
 					// It's a file or a directory in the current level
-					if len(parts) == 1 && parts[0] != "" {
+					if len(parts) == 1 {
 						results = append(results, &object.MinioObjectInfo)
 					} else if len(parts) > 1 {
 						// It's a subdirectory, add it once
@@ -91,6 +87,19 @@ func (c *testClient) PutObject(objectKey string, object *MinioObject) (*MinioObj
 	object.Size = int64(len(object.Content))
 	c.objects[objectKey] = object
 	return &object.MinioObjectInfo, nil
+}
+
+func (c *testClient) MoveObject(oldObjectKey string, newObjectKey string) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	object, ok := c.objects[oldObjectKey]
+	if !ok {
+		return fmt.Errorf("object not found: %s", oldObjectKey)
+	}
+	object.Key = newObjectKey
+	c.objects[newObjectKey] = object
+	delete(c.objects, oldObjectKey)
+	return nil
 }
 
 func (c *testClient) DeleteObject(objectKey string) error {

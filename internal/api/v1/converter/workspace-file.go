@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
 )
 
-func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.WorkspaceFile, error) {
+func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.File, error) {
 	ua, err := FromProtoTimestamp(file.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
-	return &model.WorkspaceFile{
+	return &model.File{
 		Name:        file.Name,
 		Path:        file.Path,
 		IsDirectory: file.IsDirectory,
@@ -26,7 +26,7 @@ func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*model.WorkspaceFile, 
 	}, nil
 }
 
-func WorkspaceFileFromBusiness(file *model.WorkspaceFile) (*chorus.WorkspaceFile, error) {
+func WorkspaceFileFromBusiness(file *model.File) (*chorus.WorkspaceFile, error) {
 	if file == nil {
 		return nil, fmt.Errorf("unable to convert nil workspace file")
 	}
