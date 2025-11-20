@@ -181,13 +181,13 @@ pipeline {
 
                       echo "looking for pod name"
                       POD_NAME=\$(kubectl get pods -n ci -l app=deployment-backend-${RELEASE_NAME} -o jsonpath="{.items[0].metadata.name}")
-                      
+
                       echo "waiting 60sec for pod \$POD_NAME to be ready"
                       kubectl wait --for=condition=ready pod \$POD_NAME -n ci --timeout=60s
                       echo "pod \$POD_NAME is ready"
 
                       sleep 3
-                      
+
                       echo "port-forwarding and logging service/service-backend-${RELEASE_NAME}"
                       kubectl -n ci port-forward service/service-backend-${RELEASE_NAME} 5000:5000 &
                       kubectl -n ci port-forward pod/\$POD_NAME 5432:5432 &
