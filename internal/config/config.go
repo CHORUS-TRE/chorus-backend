@@ -272,11 +272,17 @@ type (
 				MaxTransientRetry     int           `yaml:"max_transient_retry"`
 			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
+    
+    WorkspaceService struct {
+			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
+			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
+			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
+		} `yaml:"workspace_service"`
 
 		WorkspaceFileService struct {
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
-
+		
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`
