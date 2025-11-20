@@ -59,7 +59,7 @@ func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8s
 	ws := &WorkspaceService{
 		cfg:         cfg,
 		store:       store,
-		k8sClient:   k8sClient,
+		k8sClient:   client,
 		workbencher: workbencher,
 		userer:      userer,
 	}
@@ -123,7 +123,7 @@ func (s *WorkspaceService) cleanOldWorkspaces(ctx context.Context) {
 
 	for _, workspace := range workspaces {
 		go func(workspaceID uint64) {
-			if err := s.client.DeleteWorkspace(model.GetWorkspaceClusterName(workspaceID)); err != nil {
+			if err := s.k8sClient.DeleteWorkspace(model.GetWorkspaceClusterName(workspaceID)); err != nil {
 				logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to delete workspace %v: %v", workspaceID, err))
 			}
 		}(workspace.ID)
