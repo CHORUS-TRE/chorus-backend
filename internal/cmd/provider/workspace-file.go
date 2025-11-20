@@ -52,7 +52,7 @@ func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 		config := ProvideConfig()
 		minioClients := ProvideMinioClients()
 		workspaceFileStores = make(map[string]service.WorkspaceFileStore)
-		for _, storeCfg := range config.Services.WorkspaceFileService.Stores {
+		for storeName, storeCfg := range config.Services.WorkspaceFileService.Stores {
 			switch storeCfg.ClientType {
 			case "minio":
 				minioClient, ok := minioClients[storeCfg.ClientName]
@@ -65,7 +65,7 @@ func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 				if err != nil {
 					logger.TechLog.Fatal(context.Background(), "failed to create minio workspace file store: "+err.Error())
 				}
-				workspaceFileStores[storeCfg.ClientName] = fileStore
+				workspaceFileStores[storeName] = fileStore
 			default:
 				logger.TechLog.Fatal(context.Background(), "unsupported workspace file store type: "+storeCfg.ClientType)
 			}
