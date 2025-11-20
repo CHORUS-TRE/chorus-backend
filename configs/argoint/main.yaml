@@ -1,8 +1,13 @@
 daemon:
   title: "template backend"
+  grpc:
+    max_recv_msg_size: 1073741824 # 1GB
+    max_send_msg_size: 1073741824 # 1GB
   http:
     host: 0.0.0.0
     port: 5000
+    max_call_recv_msg_size: 1073741824 # 1GB
+    max_call_send_msg_size: 1073741824 # 1GB
     headers:
       access_control_allow_origins: 
       - "https://int.chorus-tre.ch"
