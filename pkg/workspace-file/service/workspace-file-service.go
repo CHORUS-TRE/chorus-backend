@@ -35,17 +35,9 @@ type WorkspaceFileService struct {
 }
 
 func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStoreConfigs map[string]config.WorkspaceFileStore) (*WorkspaceFileService, error) {
-	configs := make(map[string]config.WorkspaceFileStore)
-
-	for storeName, storeCfg := range fileStoreConfigs {
-		cfg := storeCfg
-		cfg.StorePrefix = "/" + strings.Trim(storeCfg.StorePrefix, "/") + "/"
-		configs[storeName] = cfg
-	}
-
 	ws := &WorkspaceFileService{
 		fileStores:   fileStores,
-		storeConfigs: configs,
+		storeConfigs: fileStoreConfigs,
 	}
 
 	return ws, nil
@@ -54,7 +46,8 @@ func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStore
 func (s *WorkspaceFileService) toStorePath(storeName string, workspaceID uint64, filePath string) string {
 	storeCfg := s.storeConfigs[storeName]
 	normalizedPath := "/" + strings.TrimPrefix(filePath, "/")                                                   // Normalize user path
-	relPath := strings.TrimPrefix(normalizedPath, storeCfg.StorePrefix)                                         // Strip store prefix to get relative path
+	normalizedPrefix := "/" + strings.Trim(storeCfg.StorePrefix, "/") + "/"                                     // Normalize store prefix
+	relPath := strings.TrimPrefix(normalizedPath, normalizedPrefix)                                             // Strip store prefix to get relative path
 	workspaceDir := fmt.Sprintf(storeCfg.WorkspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID)) // Format workspace prefix with workspace ID
 	objectKey := fmt.Sprintf("%s/%s", workspaceDir, strings.TrimPrefix(relPath, "/"))                           // Combine workspace_prefix and relative path
 	return objectKey
@@ -64,7 +57,8 @@ func (s *WorkspaceFileService) fromStorePath(storeName string, workspaceID uint6
 	storeCfg := s.storeConfigs[storeName]
 	workspaceDir := fmt.Sprintf(storeCfg.WorkspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID)) // Format workspace prefix with workspace ID
 	relPath := strings.TrimPrefix(storePath, workspaceDir+"/")                                                  // Strip workspace prefix to get relative path
-	userPath := storeCfg.StorePrefix + strings.TrimPrefix(relPath, "/")                                         // Prepend store prefix to get user path
+	normalizedPrefix := "/" + strings.Trim(storeCfg.StorePrefix, "/") + "/"                                     // Normalize store prefix
+	userPath := normalizedPrefix + strings.TrimPrefix(relPath, "/")                                             // Prepend store prefix to get user path
 	return userPath
 }
 
