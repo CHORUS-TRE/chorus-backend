@@ -150,9 +150,7 @@ func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
 				return nil
 			}
 		}
-	}
-
-	if !errors.Is(err, sql.ErrNoRows) {
+	} else if !errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("unable to get default workspace %v: %w", s.conf.Services.Steward.InitWorkspace.WorkspaceID, err)
 	}
 
