@@ -388,6 +388,8 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 		}
 	}
 
+	logger.TechLog.Debug(ctx, "creating user roles", zap.Uint64("userID", userID), zap.Any("roles", roles), zap.Bool("someRoleIDMissing", someRoleIDMissing))
+
 	if someRoleIDMissing {
 		roles, err := u.store.GetRoles(ctx)
 		if err != nil {
@@ -404,6 +406,8 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 			}
 		}
 	}
+
+	logger.TechLog.Debug(ctx, "finalized user roles", zap.Uint64("userID", userID), zap.Any("roles", roles))
 
 	err = u.store.CreateUserRoles(ctx, userID, roles)
 	if err != nil {
