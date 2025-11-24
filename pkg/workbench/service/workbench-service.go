@@ -496,6 +496,8 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 
 	role.Context["workspace"] = fmt.Sprintf("%d", workbench.WorkspaceID)
 
+	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
+
 	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
 	if err != nil {
 		return fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", userID, tenantID, err)
