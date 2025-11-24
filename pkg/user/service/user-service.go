@@ -391,17 +391,20 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 	logger.TechLog.Debug(ctx, "creating user roles", zap.Uint64("userID", userID), zap.Any("roles", roles), zap.Bool("someRoleIDMissing", someRoleIDMissing))
 
 	if someRoleIDMissing {
-		roles, err := u.store.GetRoles(ctx)
+		allRoles, err := u.store.GetRoles(ctx)
 		if err != nil {
 			return fmt.Errorf("unable to get roles: %w", err)
 		}
 		for _, role := range roles {
 			if role.ID == 0 {
-				for _, r := range roles {
-					if r.Name == role.Name {
+				for _, r := range allRoles {
+					if r.Name == role.Name.String() {
 						role.ID = r.ID
 						break
 					}
+				}
+				if role.ID == 0 {
+					return fmt.Errorf("role ID not found for role name: %s", role.Name)
 				}
 			}
 		}
