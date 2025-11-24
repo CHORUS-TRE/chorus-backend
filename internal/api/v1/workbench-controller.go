@@ -190,7 +190,7 @@ func (c WorkbenchController) ManageUserRoleInWorkbench(ctx context.Context, req 
 		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
 	}
 
-	role, err := authorization.ToRole(req.Role.Name, map[string]string{"workspace": fmt.Sprintf("%d", req.Id)})
+	role, err := authorization.ToRole(req.Role.Name, map[string]string{"workbench": fmt.Sprintf("%d", req.Id)})
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
 	}

@@ -137,7 +137,7 @@ func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.
 	}
 
 	if !authorization.RoleIn(roleName, authorization.GetWorkbenchRoles()) {
-		return nil, fmt.Errorf("user is not authorized to manage role %q in workbench", roleName)
+		return nil, fmt.Errorf("role %q is not a workbench role", roleName)
 	}
 
 	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
