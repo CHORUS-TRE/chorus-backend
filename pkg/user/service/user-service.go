@@ -385,7 +385,7 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 	var allRoles []*model.Role
 
 	// find missing role IDs
-	for _, role := range roles {
+	for i, role := range roles {
 		if role.ID == 0 {
 			if allRoles == nil {
 				allRoles, err = u.store.GetRoles(ctx)
@@ -397,10 +397,11 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 			for _, r := range allRoles {
 				if r.Name == role.Name.String() {
 					role.ID = r.ID
+					roles[i] = role
 					break
 				}
 			}
-			if role.ID == 0 {
+			if roles[i].ID == 0 {
 				return fmt.Errorf("role ID not found for role name: %s", role.Name)
 			}
 		}
