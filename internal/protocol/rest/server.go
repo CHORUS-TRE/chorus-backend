@@ -10,6 +10,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
+	oidcidp "github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware/oidc-idp"
 	jwt_go "github.com/golang-jwt/jwt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -40,6 +41,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = middleware.AddRoot(handler, version, started)
 	handler = middleware.AddMetrics(handler, cfg)
 	handler = middleware.AddDoc(handler)
+	handler = oidcidp.AddOIDC(handler, cfg)
 	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
 		handler = middleware.AddProxyWorkbench(handler, pw, cfg, authorizer, keyFunc, claimsFactory)
@@ -47,7 +49,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	if cfg.Services.AuthenticationService.DevAuthEnabled {
 		handler = middleware.AddDevAuth(handler)
 	}
-	handler = middleware.AddJWTFromCookie(handler)
+	handler = middleware.AddJWTFromCookie(handler, keyFunc, claimsFactory)
 
 	//nolint: staticcheck
 	opts := []grpc.DialOption{

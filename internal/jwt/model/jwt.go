@@ -67,6 +67,14 @@ type Role struct {
 	Context map[string]string `json:"context"`
 }
 
+func ExtractJWTClaims(ctx context.Context) (*JWTClaims, error) {
+	claims, ok := ctx.Value(JWTClaimsContextKey).(*JWTClaims)
+	if !ok {
+		return nil, errors.New("malformed jwt-token")
+	}
+	return claims, nil
+}
+
 func ExtractTenantID(ctx context.Context) (uint64, error) {
 	claims, ok := ctx.Value(JWTClaimsContextKey).(*JWTClaims)
 	if !ok {
