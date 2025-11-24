@@ -380,7 +380,7 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 		return fmt.Errorf("role verification failed: %w", err)
 	}
 
-	logger.TechLog.Debug(ctx, "creating user roles", zap.Uint64("userID", userID), zap.Any("roles", roles), zap.Bool("someRoleIDMissing", someRoleIDMissing))
+	logger.TechLog.Debug(ctx, "creating user roles", zap.Uint64("userID", userID), zap.Any("roles", roles))
 
 	var allRoles []*model.Role
 
