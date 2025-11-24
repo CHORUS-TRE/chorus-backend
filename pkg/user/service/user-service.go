@@ -380,35 +380,6 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 		return fmt.Errorf("role verification failed: %w", err)
 	}
 
-	logger.TechLog.Debug(ctx, "creating user roles", zap.Uint64("userID", userID), zap.Any("roles", roles))
-
-	var allRoles []*model.Role
-
-	// find missing role IDs
-	for i, role := range roles {
-		if role.ID == 0 {
-			if allRoles == nil {
-				allRoles, err = u.store.GetRoles(ctx)
-				if err != nil {
-					return fmt.Errorf("unable to get roles: %w", err)
-				}
-			}
-
-			for _, r := range allRoles {
-				if r.Name == role.Name.String() {
-					role.ID = r.ID
-					roles[i] = role
-					break
-				}
-			}
-			if roles[i].ID == 0 {
-				return fmt.Errorf("role ID not found for role name: %s", role.Name)
-			}
-		}
-	}
-
-	logger.TechLog.Debug(ctx, "finalized user roles", zap.Uint64("userID", userID), zap.Any("roles", roles))
-
 	err = u.store.CreateUserRoles(ctx, userID, roles)
 	if err != nil {
 		return fmt.Errorf("unable to create user roles for user %v: %w", userID, err)
