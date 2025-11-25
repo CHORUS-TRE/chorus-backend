@@ -2762,6 +2762,198 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/upload/init:
+    post:
+      summary: Initiate a multipart upload for a file in a workspace
+      description: This endpoint initiates a multipart upload for a file in a workspace
+      operationId: WorkspaceFileService_InitiateWorkspaceFileUpload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusInitiateWorkspaceFileUploadReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceInitiateWorkspaceFileUploadBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}:
+    post:
+      summary: Upload a part of a file in a workspace
+      description: This endpoint uploads a part of a file in a workspace
+      operationId: WorkspaceFileService_UploadWorkspaceFilePart
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUploadWorkspaceFilePartReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: uploadId
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceUploadWorkspaceFilePartBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort:
+    post:
+      summary: Abort a multipart upload for a file in a workspace
+      description: This endpoint aborts a multipart upload for a file in a workspace
+      operationId: WorkspaceFileService_AbortWorkspaceFileUpload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAbortWorkspaceFileUploadReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: uploadId
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceAbortWorkspaceFileUploadBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete:
+    post:
+      summary: Complete a multipart upload for a file in a workspace
+      description: This endpoint completes a multipart upload for a file in a workspace
+      operationId: WorkspaceFileService_CompleteWorkspaceFileUpload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCompleteWorkspaceFileUploadReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: uploadId
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceCompleteWorkspaceFileUploadBody'
+      tags:
+        - WorkspaceService
   /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
     put:
       summary: Update a file in a workspace
@@ -2977,11 +3169,42 @@ definitions:
     properties:
       role:
         $ref: '#/definitions/chorusRole'
+  WorkspaceFileServiceAbortWorkspaceFileUploadBody:
+    type: object
+  WorkspaceFileServiceCompleteWorkspaceFileUploadBody:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusWorkspaceFile'
+      parts:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceFilePart'
+        title: Parts uploaded
+  WorkspaceFileServiceInitiateWorkspaceFileUploadBody:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusWorkspaceFile'
+    title: Multipart upload related messages
+  WorkspaceFileServiceUploadWorkspaceFilePartBody:
+    type: object
+    properties:
+      part:
+        $ref: '#/definitions/chorusWorkspaceFilePart'
   WorkspaceServiceManageUserRoleInWorkspaceBody:
     type: object
     properties:
       role:
         $ref: '#/definitions/chorusRole'
+  chorusAbortWorkspaceFileUploadReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAbortWorkspaceFileUploadResult'
+  chorusAbortWorkspaceFileUploadResult:
+    type: object
   chorusApp:
     type: object
     properties:
@@ -3131,6 +3354,16 @@ definitions:
           type: object
           $ref: '#/definitions/chorusApp'
     title: Create multiple Apps in bulk
+  chorusCompleteWorkspaceFileUploadReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCompleteWorkspaceFileUploadResult'
+  chorusCompleteWorkspaceFileUploadResult:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusWorkspaceFile'
   chorusCountUnreadNotificationsReply:
     type: object
     properties:
@@ -3402,6 +3635,22 @@ definitions:
     type: object
     properties:
       tenantId:
+        type: string
+        format: uint64
+  chorusInitiateWorkspaceFileUploadReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInitiateWorkspaceFileUploadResult'
+  chorusInitiateWorkspaceFileUploadResult:
+    type: object
+    properties:
+      uploadId:
+        type: string
+      partSize:
+        type: string
+        format: uint64
+      totalParts:
         type: string
         format: uint64
   chorusInternal:
@@ -3778,6 +4027,16 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusUploadWorkspaceFilePartReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUploadWorkspaceFilePartResult'
+  chorusUploadWorkspaceFilePartResult:
+    type: object
+    properties:
+      part:
+        $ref: '#/definitions/chorusWorkspaceFilePart'
   chorusUser:
     type: object
     properties:
@@ -3942,6 +4201,18 @@ definitions:
         type: string
         format: byte
         title: File content will be empty when listing files
+  chorusWorkspaceFilePart:
+    type: object
+    properties:
+      partNumber:
+        type: string
+        format: uint64
+      data:
+        type: string
+        format: byte
+      etag:
+        type: string
+        title: ETag returned by MinIO
   chorusWorkspaceFilter:
     type: object
     properties:

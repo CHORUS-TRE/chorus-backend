@@ -16,3 +16,9 @@ message WorkspaceFile {
 
     optional bytes content = 7; // File content will be empty when listing files
 }
+
+message WorkspaceFilePart {
+    uint64 partNumber = 1;
+    bytes data = 2;
+    string etag = 3; // ETag returned by MinIO
+}

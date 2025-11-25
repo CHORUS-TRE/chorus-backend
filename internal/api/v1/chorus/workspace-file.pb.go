@@ -116,6 +116,69 @@ func (x *WorkspaceFile) GetContent() []byte {
 	return nil
 }
 
+type WorkspaceFilePart struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PartNumber uint64 `protobuf:"varint,1,opt,name=partNumber,proto3" json:"partNumber,omitempty"`
+	Data       []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Etag       string `protobuf:"bytes,3,opt,name=etag,proto3" json:"etag,omitempty"` // ETag returned by MinIO
+}
+
+func (x *WorkspaceFilePart) Reset() {
+	*x = WorkspaceFilePart{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_workspace_file_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WorkspaceFilePart) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkspaceFilePart) ProtoMessage() {}
+
+func (x *WorkspaceFilePart) ProtoReflect() protoreflect.Message {
+	mi := &file_workspace_file_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkspaceFilePart.ProtoReflect.Descriptor instead.
+func (*WorkspaceFilePart) Descriptor() ([]byte, []int) {
+	return file_workspace_file_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *WorkspaceFilePart) GetPartNumber() uint64 {
+	if x != nil {
+		return x.PartNumber
+	}
+	return 0
+}
+
+func (x *WorkspaceFilePart) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *WorkspaceFilePart) GetEtag() string {
+	if x != nil {
+		return x.Etag
+	}
+	return ""
+}
+
 var File_workspace_file_proto protoreflect.FileDescriptor
 
 var file_workspace_file_proto_rawDesc = []byte{
@@ -138,8 +201,14 @@ var file_workspace_file_proto_rawDesc = []byte{
 	0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x1d, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74,
 	0x18, 0x07, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
 	0x74, 0x88, 0x01, 0x01, 0x42, 0x0a, 0x0a, 0x08, 0x5f, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74,
-	0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x3b, 0x63, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x5b, 0x0a, 0x11, 0x57, 0x6f, 0x72, 0x6b, 0x73, 0x70, 0x61, 0x63, 0x65, 0x46, 0x69, 0x6c,
+	0x65, 0x50, 0x61, 0x72, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x74, 0x4e, 0x75, 0x6d,
+	0x62, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x74, 0x4e,
+	0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x65, 0x74, 0x61,
+	0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x65, 0x74, 0x61, 0x67, 0x42, 0x0a, 0x5a,
+	0x08, 0x2e, 0x3b, 0x63, 0x68, 0x6f, 0x72, 0x75, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -154,13 +223,14 @@ func file_workspace_file_proto_rawDescGZIP() []byte {
 	return file_workspace_file_proto_rawDescData
 }
 
-var file_workspace_file_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_workspace_file_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_workspace_file_proto_goTypes = []interface{}{
 	(*WorkspaceFile)(nil),         // 0: chorus.WorkspaceFile
-	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
+	(*WorkspaceFilePart)(nil),     // 1: chorus.WorkspaceFilePart
+	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
 }
 var file_workspace_file_proto_depIdxs = []int32{
-	1, // 0: chorus.WorkspaceFile.updatedAt:type_name -> google.protobuf.Timestamp
+	2, // 0: chorus.WorkspaceFile.updatedAt:type_name -> google.protobuf.Timestamp
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -186,6 +256,18 @@ func file_workspace_file_proto_init() {
 				return nil
 			}
 		}
+		file_workspace_file_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WorkspaceFilePart); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_workspace_file_proto_msgTypes[0].OneofWrappers = []interface{}{}
 	type x struct{}
@@ -194,7 +276,7 @@ func file_workspace_file_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_workspace_file_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
