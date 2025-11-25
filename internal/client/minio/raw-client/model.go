@@ -15,3 +15,13 @@ type MinioObject struct {
 	MinioObjectInfo
 	Content []byte
 }
+
+type MinioObjectPartInfo struct {
+	PartNumber int
+	ETag       string
+}
+
+type MinioObjectPart struct {
+	MinioObjectPartInfo
+	Data []byte
+}
