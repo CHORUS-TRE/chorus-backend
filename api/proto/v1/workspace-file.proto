@@ -9,7 +9,7 @@ message WorkspaceFile {
 
     string name = 2;
     bool isDirectory = 3;
-    int64 size = 4;
+    uint64 size = 4;
     string mimeType = 5;
 
     google.protobuf.Timestamp updatedAt = 6;

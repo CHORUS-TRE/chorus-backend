@@ -4191,7 +4191,7 @@ definitions:
         type: boolean
       size:
         type: string
-        format: int64
+        format: uint64
       mimeType:
         type: string
       updatedAt:

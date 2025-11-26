@@ -13,7 +13,7 @@ type File struct {
 
 	Name        string
 	IsDirectory bool
-	Size        int64
+	Size        uint64
 	MimeType    string
 
 	UpdatedAt time.Time
