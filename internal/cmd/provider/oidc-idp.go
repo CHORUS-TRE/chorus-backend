@@ -7,6 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/store/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/store/postgres"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"go.uber.org/zap"
@@ -54,6 +55,7 @@ func ProvideOIDCIDPAuthnSessionManager() goidc.AuthnSessionManager {
 		default:
 			logger.TechLog.Fatal(context.Background(), "unsupported database type: "+db.Type)
 		}
+		authnSessionManager = middleware.AuthnLogging(logger.BizLog)(authnSessionManager)
 	})
 	return authnSessionManager
 }
@@ -70,6 +72,7 @@ func ProvideOIDCIDPLogoutSessionManager() goidc.LogoutSessionManager {
 		default:
 			logger.TechLog.Fatal(context.Background(), "unsupported database type: "+db.Type)
 		}
+		logoutSessionManager = middleware.LogoutLogging(logger.BizLog)(logoutSessionManager)
 	})
 	return logoutSessionManager
 }
@@ -86,6 +89,7 @@ func ProvideOIDCIDPGrantSessionManager() goidc.GrantSessionManager {
 		default:
 			logger.TechLog.Fatal(context.Background(), "unsupported database type: "+db.Type)
 		}
+		grantSessionManager = middleware.GrantLogging(logger.BizLog)(grantSessionManager)
 	})
 	return grantSessionManager
 }
