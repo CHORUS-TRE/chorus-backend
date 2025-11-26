@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware/oidc-idp/authutil"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/authutil"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"github.com/luikyv/go-oidc/pkg/provider"
 )

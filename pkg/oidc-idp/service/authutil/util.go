@@ -15,7 +15,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware/oidc-idp/ui"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/ui"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"go.uber.org/zap"
 )

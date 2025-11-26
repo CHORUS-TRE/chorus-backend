@@ -10,7 +10,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware/oidc-idp/ui"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/ui"
 	"github.com/google/uuid"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 )
