@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log/slog"
 	"net/http"
 	"slices"
 	"time"
@@ -44,60 +43,7 @@ var (
 	errLogoutCancelled error = errors.New("logout cancelled by the user")
 )
 
-// func ClientMTLS(id string) (*goidc.Client, goidc.JSONWebKeySet) {
-// 	client, jwks := Client(id)
-// 	client.TokenAuthnMethod = goidc.ClientAuthnTLS
-// 	client.TLSSubDistinguishedName = "CN=" + id
-
-// 	return client, jwks
-// }
-
-// func ClientPrivateKeyJWT(id string) (*goidc.Client, goidc.JSONWebKeySet) {
-// 	client, jwks := Client(id)
-// 	client.TokenAuthnMethod = goidc.ClientAuthnPrivateKeyJWT
-// 	return client, jwks
-// }
-
-// func Client(id string) (*goidc.Client, goidc.JSONWebKeySet) {
-// 	// Extract the public client JWKS.
-// 	jwks := privateJWKS(id)
-
-// 	// Extract scopes IDs.
-// 	scopesIDs := make([]string, len(Scopes))
-// 	for i, scope := range Scopes {
-// 		scopesIDs[i] = scope.ID
-// 	}
-
-// 	publicJWKS := jwks.Public()
-// 	return &goidc.Client{
-// 		ID: id,
-// 		ClientMeta: goidc.ClientMeta{
-// 			ScopeIDs:   strings.Join(scopesIDs, " "),
-// 			PublicJWKS: &publicJWKS,
-// 			GrantTypes: []goidc.GrantType{
-// 				goidc.GrantAuthorizationCode,
-// 				goidc.GrantRefreshToken,
-// 				goidc.GrantImplicit,
-// 			},
-// 			ResponseTypes: []goidc.ResponseType{
-// 				goidc.ResponseTypeCode,
-// 				goidc.ResponseTypeCodeAndIDToken,
-// 			},
-// 			RedirectURIs: []string{
-// 				"http://localhost/callback",
-// 				"https://localhost.emobix.co.uk:8443/test/a/goidc/callback",
-// 				"https://localhost.emobix.co.uk:8443/test/a/goidc/callback?dummy1=lorem&dummy2=ipsum",
-// 			},
-// 		},
-// 	}, jwks
-// }
-
 func PrivateJWKSFunc(cfg config.Config) goidc.JWKSFunc {
-	// jwksBytes, err := keys.FS.ReadFile("server.jwks")
-	// if err != nil {
-	// 	logger.TechLog.Fatal(context.Background(), "unable to read server.jwks", zap.Error(err))
-	// }
-
 	jwks := goidc.JSONWebKeySet{
 		Keys: []goidc.JSONWebKey{
 			{
@@ -107,100 +53,11 @@ func PrivateJWKSFunc(cfg config.Config) goidc.JWKSFunc {
 			},
 		},
 	}
-	// if err := json.Unmarshal(jwksBytes, &jwks); err != nil {
-	// 	logger.TechLog.Fatal(context.Background(), "unable to unmarshal server.jwks", zap.Error(err))
-	// }
 
 	return func(ctx context.Context) (goidc.JSONWebKeySet, error) {
 		return jwks, nil
 	}
 }
-
-// func PrivateJWKSFunc() goidc.JWKSFunc {
-// 	jwksBytes, err := keys.FS.ReadFile("server.jwks")
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to read server.jwks", zap.Error(err))
-// 	}
-
-// 	var jwks goidc.JSONWebKeySet
-// 	if err := json.Unmarshal(jwksBytes, &jwks); err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to unmarshal server.jwks", zap.Error(err))
-// 	}
-
-// 	return func(ctx context.Context) (goidc.JSONWebKeySet, error) {
-// 		return jwks, nil
-// 	}
-// }
-
-// func privateJWKS(clientID string) goidc.JSONWebKeySet {
-// 	jwksBytes, err := keys.FS.ReadFile(clientID + ".jwks")
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to read "+clientID+".jwks", zap.Error(err))
-// 	}
-
-// 	var jwks goidc.JSONWebKeySet
-// 	if err := json.Unmarshal(jwksBytes, &jwks); err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to unmarshal "+clientID+".jwks", zap.Error(err))
-// 	}
-
-// 	return jwks
-// }
-
-// func ServerCert() tls.Certificate {
-// 	certBytes, err := keys.FS.ReadFile("server.crt")
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to read server.crt", zap.Error(err))
-// 	}
-
-// 	keyBytes, err := keys.FS.ReadFile("server.key")
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to read server.key", zap.Error(err))
-// 	}
-
-// 	tlsCert, err := tls.X509KeyPair(certBytes, keyBytes)
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to parse server key pair", zap.Error(err))
-// 	}
-
-// 	return tlsCert
-// }
-
-// func ClientCACertPool() *x509.CertPool {
-
-// 	caPool := x509.NewCertPool()
-
-// 	clientOneCert, err := keys.FS.ReadFile("client_one.crt")
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to read client_one.crt", zap.Error(err))
-// 	}
-// 	caPool.AppendCertsFromPEM(clientOneCert)
-
-// 	clientTwoCert, err := keys.FS.ReadFile("client_two.crt")
-// 	if err != nil {
-// 		logger.TechLog.Fatal(context.Background(), "unable to read client_two.crt", zap.Error(err))
-// 	}
-// 	caPool.AppendCertsFromPEM(clientTwoCert)
-
-// 	return caPool
-// }
-
-// func DCRFunc(r *http.Request, _ string, meta *goidc.ClientMeta) error {
-// 	s := make([]string, len(Scopes))
-// 	for i, scope := range Scopes {
-// 		s[i] = scope.ID
-// 	}
-// 	meta.ScopeIDs = strings.Join(s, " ")
-
-// 	if !slices.Contains(meta.GrantTypes, goidc.GrantRefreshToken) {
-// 		meta.GrantTypes = append(meta.GrantTypes, goidc.GrantRefreshToken)
-// 	}
-
-// 	return nil
-// }
-
-// func ValidateInitialTokenFunc(r *http.Request, s string) error {
-// 	return nil
-// }
 
 func TokenOptionsFunc(alg goidc.SignatureAlgorithm) goidc.TokenOptionsFunc {
 	return func(grantInfo goidc.GrantInfo, _ *goidc.Client) goidc.TokenOptions {
@@ -208,31 +65,6 @@ func TokenOptionsFunc(alg goidc.SignatureAlgorithm) goidc.TokenOptionsFunc {
 		return opts
 	}
 }
-
-// func ClientCertFunc(r *http.Request) (*x509.Certificate, error) {
-// 	rawClientCert := r.Header.Get(headerClientCert)
-// 	if rawClientCert == "" {
-// 		return nil, errors.New("the client certificate was not informed")
-// 	}
-
-// 	// Apply URL decoding.
-// 	rawClientCert, err := url.QueryUnescape(rawClientCert)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("could not url decode the client certificate: %w", err)
-// 	}
-
-// 	clientCertPEM, _ := pem.Decode([]byte(rawClientCert))
-// 	if clientCertPEM == nil {
-// 		return nil, errors.New("could not decode the client certificate")
-// 	}
-
-// 	clientCert, err := x509.ParseCertificate(clientCertPEM.Bytes)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("could not parse the client certificate: %w", err)
-// 	}
-
-// 	return clientCert, nil
-// }
 
 func IssueRefreshToken(client *goidc.Client, grantInfo goidc.GrantInfo) bool {
 	return slices.Contains(client.GrantTypes, goidc.GrantRefreshToken)
@@ -277,43 +109,6 @@ func CheckJTIFunc() goidc.CheckJTIFunc {
 	}
 }
 
-// func ClientCertMiddleware(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		if len(r.TLS.PeerCertificates) == 0 {
-// 			next.ServeHTTP(w, r)
-// 			return
-// 		}
-
-// 		pemBlock := &pem.Block{
-// 			Type:  "CERTIFICATE",
-// 			Bytes: r.TLS.PeerCertificates[0].Raw,
-// 		}
-// 		pemBytes := pem.EncodeToMemory(pemBlock)
-
-// 		encodedPem := url.QueryEscape(string(pemBytes))
-// 		r.Header.Set(headerClientCert, encodedPem)
-
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
-
-// func FAPIIDMiddleware(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		interactionID := r.Header.Get(headerXFAPIInteractionID)
-
-// 		// Verify if the interaction ID is valid, generate a new value if not.
-// 		if _, err := uuid.Parse(interactionID); err != nil {
-// 			interactionID = uuid.NewString()
-// 		}
-
-// 		// Return the same interaction ID in the response or a new valid value
-// 		// if the original is invalid.
-// 		w.Header().Add(headerXFAPIInteractionID, interactionID)
-
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
-
 type LogoutPage struct {
 	BaseURL     string
 	CallbackID  string
@@ -332,11 +127,16 @@ func LogoutPolicy() goidc.LogoutPolicy {
 		func(w http.ResponseWriter, r *http.Request, ls *goidc.LogoutSession) (goidc.Status, error) {
 			logout := r.PostFormValue("logout")
 			if logout == "" {
-				slog.Debug("rendering logout page")
+				logger.TechLog.Debug(context.Background(), "rendering logout page", zap.String("callback_id", ls.CallbackID))
+				sess, err := mapify(ls)
+				if err != nil {
+					logger.TechLog.Error(context.Background(), "unable to mapify logout session for rendering", zap.Error(err))
+					return goidc.StatusFailure, fmt.Errorf("unable to render logout page: %w", err)
+				}
 				if err := tmpl.ExecuteTemplate(w, "logout.html", LogoutPage{
 					BaseURL:    Issuer,
 					CallbackID: ls.CallbackID,
-					Session:    mapify(ls),
+					Session:    sess,
 				}); err != nil {
 					return goidc.StatusFailure, err
 				}
@@ -344,13 +144,13 @@ func LogoutPolicy() goidc.LogoutPolicy {
 			}
 
 			if !isTrue(logout) {
-				slog.Debug("user cancelled logout", "logout", logout)
+				logger.TechLog.Debug(context.Background(), "user cancelled logout", zap.String("logout", logout))
 				return goidc.StatusFailure, errLogoutCancelled
 			}
 
 			cookie, err := r.Cookie(cookieUserSessionID)
 			if err != nil {
-				slog.Debug("the session cookie was not found", "error", err)
+				logger.TechLog.Debug(context.Background(), "the session cookie was not found", zap.Error(err))
 				return goidc.StatusSuccess, nil
 			}
 

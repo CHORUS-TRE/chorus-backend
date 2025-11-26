@@ -18,7 +18,7 @@ var oidcidpService service.OIDCProviderService
 func ProvideOIDCIDPService() service.OIDCProviderService {
 	oidcidpServiceOnce.Do(func() {
 		var err error
-		oidcidpService, err = service.NewOIDCProviderService(ProvideConfig(), ProvideOIDCIDPAuthnSessionManager(), ProvideOIDCIDPClientManager(), ProvideOIDCIDPLogoutSessionManager(), ProvideOIDCIDPGrantSessionManager())
+		oidcidpService, err = service.NewOIDCProviderService(ProvideConfig(), ProvideOIDCIDPAuthnSessionManager(), ProvideOIDCIDPClientManager(), ProvideOIDCIDPLogoutSessionManager(), ProvideOIDCIDPGrantSessionManager(), ProvideUser())
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "unable to instantiate OIDC IDP service", zap.Error(err))
 		}

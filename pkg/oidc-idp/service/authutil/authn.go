@@ -1,6 +1,7 @@
 package authutil
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,14 +12,18 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/ui"
+	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	userService "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/google/uuid"
 	"github.com/luikyv/go-oidc/pkg/goidc"
+	"go.uber.org/zap"
 )
 
-func Policy(cfg config.Config) goidc.AuthnPolicy {
+func Policy(cfg config.Config, userService Userer) goidc.AuthnPolicy {
 	tmpl := template.Must(template.ParseFS(ui.FS, "*.html"))
-	authenticator := authenticator{tmpl: tmpl, cfg: cfg}
+	authenticator := authenticator{tmpl: tmpl, cfg: cfg, userService: userService}
 	return goidc.NewPolicy(
 		"main",
 		func(r *http.Request, c *goidc.Client, as *goidc.AuthnSession) bool {
@@ -50,19 +55,20 @@ const (
 	stepIDFinishFlow    string = "step_finish_flow"
 
 	paramAuthTime          string = "auth_time"
+	paramTenantID          string = "tenant_id"
 	paramUserSessionID     string = "user_session_id"
 	paramLogoURI           string = "logo_uri"
 	paramPolicyURI         string = "policy_uri"
 	paramTermsOfServiceURI string = "tos_uri"
 
-	usernameFormParam string = "username"
-	passwordFormParam string = "password"
-	loginFormParam    string = "login"
-	consentFormParam  string = "consent"
+	// usernameFormParam string = "username"
+	// passwordFormParam string = "password"
+	// loginFormParam    string = "login"
+	consentFormParam string = "consent"
 
 	cookieUserSessionID string = "goidc_username"
 
-	correctPassword string = "pass"
+	// correctPassword string = "pass"
 )
 
 var userSessionStore = map[string]userSession{}
@@ -84,9 +90,14 @@ type userSession struct {
 	AuthTime int
 }
 
+type Userer interface {
+	GetUser(ctx context.Context, req userService.GetUserReq) (*userModel.User, error)
+}
+
 type authenticator struct {
-	tmpl *template.Template
-	cfg  config.Config
+	tmpl        *template.Template
+	cfg         config.Config
+	userService Userer
 }
 
 func (a authenticator) authenticate(w http.ResponseWriter, r *http.Request, as *goidc.AuthnSession) (goidc.Status, error) {
@@ -152,6 +163,7 @@ func (a authenticator) loadUser(r *http.Request, as *goidc.AuthnSession) (goidc.
 
 	as.SetUserID(fmt.Sprintf("%d", claims.ID))
 	as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", claims.StandardClaims.IssuedAt))
+	as.StoreParameter(paramTenantID, fmt.Sprintf("%d", claims.TenantID))
 	// as.StoreParameter(paramUserSessionID, session.ID)
 	return goidc.StatusSuccess, nil
 }
@@ -267,127 +279,143 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 	as.SetIDTokenClaimAuthTime(authTime)
 	as.SetIDTokenClaimACR(goidc.ACRMaceIncommonIAPSilver)
 
-	// Add claims based on the claims parameter.
-	if as.Claims != nil {
+	logger.TechLog.Info(context.Background(), "finishing OIDC auth flow", zap.String("subject", as.Subject), zap.Int("auth_time", authTime), zap.Any("claims", as.Claims), zap.String("scopes", as.Scopes), zap.Any("response_type", as.ResponseType))
 
-		// acr claim.
-		if acrClaim, ok := as.Claims.IDToken[goidc.ClaimACR]; ok {
-			as.SetIDTokenClaim(goidc.ClaimACR, acrClaim.Value)
-		}
-		if acrClaim, ok := as.Claims.UserInfo[goidc.ClaimACR]; ok {
-			as.SetUserInfoClaim(goidc.ClaimACR, acrClaim.Value)
-		}
+	// // Add claims based on the claims parameter.
+	// if as.Claims != nil {
 
-		// name claim.
-		if _, ok := as.Claims.IDToken[goidc.ClaimName]; ok {
-			as.SetIDTokenClaim(goidc.ClaimName, "John Michael Doe")
-		}
-		if _, ok := as.Claims.UserInfo[goidc.ClaimName]; ok {
-			as.SetUserInfoClaim(goidc.ClaimName, "John Michael Doe")
-		}
+	// 	// acr claim.
+	// 	if acrClaim, ok := as.Claims.IDToken[goidc.ClaimACR]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimACR, acrClaim.Value)
+	// 	}
+	// 	if acrClaim, ok := as.Claims.UserInfo[goidc.ClaimACR]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimACR, acrClaim.Value)
+	// 	}
 
-		// email claim.
-		if _, ok := as.Claims.IDToken[goidc.ClaimEmail]; ok {
-			as.SetIDTokenClaim(goidc.ClaimEmail, "random@email.com")
-		}
-		if _, ok := as.Claims.UserInfo[goidc.ClaimEmail]; ok {
-			as.SetUserInfoClaim(goidc.ClaimEmail, "random@email.com")
-		}
+	// 	// name claim.
+	// 	if _, ok := as.Claims.IDToken[goidc.ClaimName]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimName, "John Michael Doe")
+	// 	}
+	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimName]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimName, "John Michael Doe")
+	// 	}
 
-		// email_verified claim.
-		if _, ok := as.Claims.IDToken[goidc.ClaimEmailVerified]; ok {
-			as.SetIDTokenClaim(goidc.ClaimEmailVerified, true)
-		}
-		if _, ok := as.Claims.UserInfo[goidc.ClaimEmailVerified]; ok {
-			as.SetUserInfoClaim(goidc.ClaimEmailVerified, true)
-		}
+	// 	// email claim.
+	// 	if _, ok := as.Claims.IDToken[goidc.ClaimEmail]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimEmail, "random@email.com")
+	// 	}
+	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimEmail]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimEmail, "random@email.com")
+	// 	}
 
-		// phone_number claim.
-		if _, ok := as.Claims.IDToken[goidc.ClaimPhoneNumber]; ok {
-			as.SetIDTokenClaim(goidc.ClaimPhoneNumber, "+00 00000000")
-		}
-		if _, ok := as.Claims.UserInfo[goidc.ClaimPhoneNumber]; ok {
-			as.SetUserInfoClaim(goidc.ClaimPhoneNumber, "+00 00000000")
-		}
+	// 	// email_verified claim.
+	// 	if _, ok := as.Claims.IDToken[goidc.ClaimEmailVerified]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimEmailVerified, true)
+	// 	}
+	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimEmailVerified]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimEmailVerified, true)
+	// 	}
 
-		// phone_number_verified claim.
-		if _, ok := as.Claims.IDToken[goidc.ClaimPhoneNumberVerified]; ok {
-			as.SetIDTokenClaim(goidc.ClaimPhoneNumberVerified, true)
-		}
-		if _, ok := as.Claims.UserInfo[goidc.ClaimPhoneNumberVerified]; ok {
-			as.SetUserInfoClaim(goidc.ClaimPhoneNumberVerified, true)
-		}
+	// 	// phone_number claim.
+	// 	if _, ok := as.Claims.IDToken[goidc.ClaimPhoneNumber]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimPhoneNumber, "+00 00000000")
+	// 	}
+	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimPhoneNumber]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimPhoneNumber, "+00 00000000")
+	// 	}
 
-		// address claim.
-		if _, ok := as.Claims.IDToken[goidc.ClaimAddress]; ok {
-			as.SetIDTokenClaim(goidc.ClaimAddress, map[string]any{
-				"street_address": "123 Main St, Suite 500",
-				"locality":       "Springfield",
-				"region":         "IL",
-				"postal_code":    "62701",
-				"country":        "USA",
-			})
-		}
-		if _, ok := as.Claims.UserInfo[goidc.ClaimAddress]; ok {
-			as.SetUserInfoClaim(goidc.ClaimAddress, map[string]any{
-				"street_address": "123 Main St, Suite 500",
-				"locality":       "Springfield",
-				"region":         "IL",
-				"postal_code":    "62701",
-				"country":        "USA",
-			})
-		}
-	}
+	// 	// phone_number_verified claim.
+	// 	if _, ok := as.Claims.IDToken[goidc.ClaimPhoneNumberVerified]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimPhoneNumberVerified, true)
+	// 	}
+	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimPhoneNumberVerified]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimPhoneNumberVerified, true)
+	// 	}
+
+	// 	// address claim.
+	// 	if _, ok := as.Claims.IDToken[goidc.ClaimAddress]; ok {
+	// 		as.SetIDTokenClaim(goidc.ClaimAddress, map[string]any{
+	// 			"street_address": "123 Main St, Suite 500",
+	// 			"locality":       "Springfield",
+	// 			"region":         "IL",
+	// 			"postal_code":    "62701",
+	// 			"country":        "USA",
+	// 		})
+	// 	}
+	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimAddress]; ok {
+	// 		as.SetUserInfoClaim(goidc.ClaimAddress, map[string]any{
+	// 			"street_address": "123 Main St, Suite 500",
+	// 			"locality":       "Springfield",
+	// 			"region":         "IL",
+	// 			"postal_code":    "62701",
+	// 			"country":        "USA",
+	// 		})
+	// 	}
+	// }
 
 	// Add claims based on scope.
 	setClaimFunc := as.SetUserInfoClaim
 	if as.ResponseType == goidc.ResponseTypeIDToken {
 		setClaimFunc = as.SetIDTokenClaim
 	}
-	if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) {
-		setClaimFunc(goidc.ClaimEmail, "random@email.com")
-		setClaimFunc(goidc.ClaimEmailVerified, true)
-	}
-	if strings.Contains(as.Scopes, goidc.ScopePhone.ID) {
-		setClaimFunc(goidc.ClaimPhoneNumber, "+00 00000000")
-		setClaimFunc(goidc.ClaimPhoneNumberVerified, true)
-	}
-	if strings.Contains(as.Scopes, goidc.ScopeAddress.ID) {
-		setClaimFunc(goidc.ClaimAddress, map[string]any{
-			"street_address": "123 Main St, Suite 500",
-			"locality":       "Springfield",
-			"region":         "IL",
-			"postal_code":    "62701",
-			"country":        "USA",
+
+	if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) || strings.Contains(as.Scopes, goidc.ScopeProfile.ID) {
+		userIDStr := as.Subject
+		userID, err := strconv.ParseInt(userIDStr, 10, 64)
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("invalid user ID format: %w", err)
+		}
+		tenantIDStr := as.StoredParameter(paramTenantID).(string)
+		tenantID, err := strconv.ParseInt(tenantIDStr, 10, 64)
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("invalid tenant ID format: %w", err)
+		}
+		user, err := a.userService.GetUser(context.Background(), userService.GetUserReq{
+			ID:       uint64(userID),
+			TenantID: uint64(tenantID),
 		})
-	}
-	if strings.Contains(as.Scopes, goidc.ScopeProfile.ID) {
-		setClaimFunc(goidc.ClaimWebsite, "https://example.com")
-		setClaimFunc(goidc.ClaimZoneInfo, "America/Sao_Paulo")
-		setClaimFunc(goidc.ClaimBirthdate, "1990-01-01")
-		setClaimFunc(goidc.ClaimGender, "male")
-		setClaimFunc(goidc.ClaimProfile, "https://example.com/johndoe")
-		setClaimFunc(goidc.ClaimPreferredUsername, "johndoe")
-		setClaimFunc(goidc.ClaimGivenName, "John")
-		setClaimFunc(goidc.ClaimMiddleName, "Michael")
-		setClaimFunc(goidc.ClaimLocale, "en-US")
-		setClaimFunc(goidc.ClaimPicture, "https://example.com/johndoe/profile.jpg")
-		setClaimFunc(goidc.ClaimUpdatedAt, TimestampNow())
-		setClaimFunc(goidc.ClaimName, "John Michael Doe")
-		setClaimFunc(goidc.ClaimNickname, "Johnny")
-		setClaimFunc(goidc.ClaimFamilyName, "Doe")
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("unable to get user info: %w", err)
+		}
+
+		if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) {
+			setClaimFunc(goidc.ClaimEmail, user.Username)
+			// setClaimFunc(goidc.ClaimEmailVerified, true)
+		}
+
+		if strings.Contains(as.Scopes, goidc.ScopeProfile.ID) {
+			// setClaimFunc(goidc.ClaimWebsite, "https://example.com")
+			// setClaimFunc(goidc.ClaimZoneInfo, "America/Sao_Paulo")
+			// setClaimFunc(goidc.ClaimBirthdate, "1990-01-01")
+			// setClaimFunc(goidc.ClaimGender, "male")
+			// setClaimFunc(goidc.ClaimProfile, "https://example.com/johndoe")
+			setClaimFunc(goidc.ClaimPreferredUsername, user.Username)
+			setClaimFunc(goidc.ClaimGivenName, user.FirstName)
+			// setClaimFunc(goidc.ClaimMiddleName, "Michael")
+			// setClaimFunc(goidc.ClaimLocale, "en-US")
+			// setClaimFunc(goidc.ClaimPicture, "https://example.com/johndoe/profile.jpg")
+			setClaimFunc(goidc.ClaimUpdatedAt, user.UpdatedAt)
+			setClaimFunc(goidc.ClaimName, user.FirstName+" "+user.LastName)
+			// setClaimFunc(goidc.ClaimNickname, "Johnny")
+			setClaimFunc(goidc.ClaimFamilyName, user.LastName)
+		}
 	}
 
 	return goidc.StatusSuccess, nil
 }
 
 func (a authenticator) renderPage(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession) (goidc.Status, error) {
+	sess, err := mapify(as)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "unable to mapify authn session for rendering", zap.Error(err))
+		return goidc.StatusFailure, fmt.Errorf("unable to render page: %w", err)
+	}
 
 	params := authnPage{
 		Subject:    as.Subject,
 		BaseURL:    Issuer,
 		CallbackID: as.CallbackID,
-		Session:    mapify(as),
+		Session:    sess,
 	}
 
 	logoURI := as.StoredParameter(paramLogoURI)
@@ -410,45 +438,45 @@ func (a authenticator) renderPage(w http.ResponseWriter, tmplName string, as *go
 	return goidc.StatusInProgress, nil
 }
 
-func (a authenticator) renderError(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession, err string) (goidc.Status, error) {
+// func (a authenticator) renderError(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession, err string) (goidc.Status, error) {
 
-	params := authnPage{
-		Subject:    as.Subject,
-		BaseURL:    Issuer,
-		CallbackID: as.CallbackID,
-		Session:    mapify(as),
-		Error:      err,
-	}
+// 	params := authnPage{
+// 		Subject:    as.Subject,
+// 		BaseURL:    Issuer,
+// 		CallbackID: as.CallbackID,
+// 		Session:    mapify(as),
+// 		Error:      err,
+// 	}
 
-	logoURI := as.StoredParameter(paramLogoURI)
-	if logoURI != nil {
-		params.LogoURI = logoURI.(string)
-	}
+// 	logoURI := as.StoredParameter(paramLogoURI)
+// 	if logoURI != nil {
+// 		params.LogoURI = logoURI.(string)
+// 	}
 
-	policyURI := as.StoredParameter(paramPolicyURI)
-	if policyURI != nil {
-		params.PolicyURI = policyURI.(string)
-	}
+// 	policyURI := as.StoredParameter(paramPolicyURI)
+// 	if policyURI != nil {
+// 		params.PolicyURI = policyURI.(string)
+// 	}
 
-	termsOfService := as.StoredParameter(paramTermsOfServiceURI)
-	if termsOfService != nil {
-		params.TermsOfServiceURI = termsOfService.(string)
-	}
+// 	termsOfService := as.StoredParameter(paramTermsOfServiceURI)
+// 	if termsOfService != nil {
+// 		params.TermsOfServiceURI = termsOfService.(string)
+// 	}
 
-	w.WriteHeader(http.StatusOK)
-	_ = a.tmpl.ExecuteTemplate(w, tmplName, params)
-	return goidc.StatusInProgress, nil
-}
+// 	w.WriteHeader(http.StatusOK)
+// 	_ = a.tmpl.ExecuteTemplate(w, tmplName, params)
+// 	return goidc.StatusInProgress, nil
+// }
 
-func mapify(as any) map[string]any {
+func mapify(as any) (map[string]any, error) {
 	data, err := json.Marshal(as)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("unable to marshal authn session: %w", err)
 	}
 
 	var m map[string]any
 	if err := json.Unmarshal(data, &m); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("unable to unmarshal authn session: %w", err)
 	}
-	return m
+	return m, nil
 }

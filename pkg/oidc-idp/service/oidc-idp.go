@@ -22,15 +22,17 @@ type oidcProviderService struct {
 	logoutSessionManager goidc.LogoutSessionManager
 	clientManager        goidc.ClientManager
 	grantSessionManager  goidc.GrantSessionManager
+	userService          authutil.Userer
 }
 
-func NewOIDCProviderService(cfg config.Config, authnSessionManager goidc.AuthnSessionManager, clientManager goidc.ClientManager, logoutSessionManager goidc.LogoutSessionManager, grantSessionManager goidc.GrantSessionManager) (OIDCProviderService, error) {
+func NewOIDCProviderService(cfg config.Config, authnSessionManager goidc.AuthnSessionManager, clientManager goidc.ClientManager, logoutSessionManager goidc.LogoutSessionManager, grantSessionManager goidc.GrantSessionManager, userService authutil.Userer) (OIDCProviderService, error) {
 	s := &oidcProviderService{
 		cfg:                  cfg,
 		authnSessionManager:  authnSessionManager,
 		clientManager:        clientManager,
 		logoutSessionManager: logoutSessionManager,
 		grantSessionManager:  grantSessionManager,
+		userService:          userService,
 	}
 
 	err := s.init()
@@ -83,7 +85,7 @@ func (s *oidcProviderService) init() error {
 		// provider.WithDCR(authutil.DCRFunc, authutil.ValidateInitialTokenFunc),
 		provider.WithTokenOptions(authutil.TokenOptionsFunc(goidc.HS256)),
 		provider.WithHTTPClientFunc(authutil.HTTPClient),
-		provider.WithPolicies(authutil.Policy(s.cfg)),
+		provider.WithPolicies(authutil.Policy(s.cfg, s.userService)),
 		provider.WithNotifyErrorFunc(authutil.ErrorLoggingFunc),
 		provider.WithRenderErrorFunc(authutil.RenderError()),
 		provider.WithDisplayValues(authutil.DisplayValues[0], authutil.DisplayValues...),
