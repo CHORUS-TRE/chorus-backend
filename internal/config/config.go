@@ -256,6 +256,8 @@ type (
 		OpenIDConnectProvider struct {
 			Enabled          bool                          `yaml:"enabled"`
 			FrontendLoginURL string                        `yaml:"frontend_login_url"`
+			JWKS             Sensitive                     `yaml:"jwks"`
+			IssuerURL        string                        `yaml:"issuer_url"`
 			Clients          []OpenIDConnectProviderClient `yaml:"clients"`
 		} `yaml:"openid_connect_provider"`
 
@@ -278,8 +280,8 @@ type (
 				MaxTransientRetry     int           `yaml:"max_transient_retry"`
 			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
-    
-    WorkspaceService struct {
+
+		WorkspaceService struct {
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
 			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
@@ -288,7 +290,7 @@ type (
 		WorkspaceFileService struct {
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
-		
+
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`

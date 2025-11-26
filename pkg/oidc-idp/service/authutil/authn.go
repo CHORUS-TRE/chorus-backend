@@ -413,7 +413,7 @@ func (a authenticator) renderPage(w http.ResponseWriter, tmplName string, as *go
 
 	params := authnPage{
 		Subject:    as.Subject,
-		BaseURL:    Issuer,
+		BaseURL:    a.cfg.Services.OpenIDConnectProvider.IssuerURL,
 		CallbackID: as.CallbackID,
 		Session:    sess,
 	}

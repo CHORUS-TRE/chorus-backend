@@ -5,6 +5,7 @@ package authutil
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -19,21 +20,15 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	Issuer string = "http://localhost:5000/openid-connect"
-	// MTLSHost                 string = "https://matls-auth.localhost"
-	// headerClientCert         string = "X-Client-Cert"
-	// headerXFAPIInteractionID string = "X-Fapi-Interaction-Id"
-)
-
 var (
 	Scopes = []goidc.Scope{
-		goidc.ScopeOpenID, goidc.ScopeOfflineAccess, goidc.ScopeProfile,
-		goidc.ScopeEmail, goidc.ScopeAddress, goidc.ScopePhone,
+		goidc.ScopeOpenID,
+		goidc.ScopeOfflineAccess,
+		goidc.ScopeProfile,
+		goidc.ScopeEmail,
 	}
 	Claims = []string{
-		goidc.ClaimEmail, goidc.ClaimEmailVerified, goidc.ClaimPhoneNumber,
-		goidc.ClaimPhoneNumberVerified, goidc.ClaimAddress,
+		goidc.ClaimEmail,
 	}
 	ACRs          = []goidc.ACR{goidc.ACRMaceIncommonIAPBronze, goidc.ACRMaceIncommonIAPSilver}
 	DisplayValues = []goidc.DisplayValue{goidc.DisplayValuePage, goidc.DisplayValuePopUp}
@@ -44,14 +39,10 @@ var (
 )
 
 func PrivateJWKSFunc(cfg config.Config) goidc.JWKSFunc {
-	jwks := goidc.JSONWebKeySet{
-		Keys: []goidc.JSONWebKey{
-			{
-				Algorithm: "HS256",
-				KeyID:     "chorus-backend-key",
-				Key:       []byte(cfg.Daemon.JWT.Secret.PlainText()),
-			},
-		},
+	var jwks goidc.JSONWebKeySet
+	err := json.Unmarshal([]byte(cfg.Services.OpenIDConnectProvider.JWKS.PlainText()), &jwks)
+	if err != nil {
+		logger.TechLog.Fatal(context.Background(), "unable to unmarshal private test server key", zap.Error(err))
 	}
 
 	return func(ctx context.Context) (goidc.JSONWebKeySet, error) {
@@ -116,7 +107,7 @@ type LogoutPage struct {
 	Session     map[string]any
 }
 
-func LogoutPolicy() goidc.LogoutPolicy {
+func LogoutPolicy(cfg config.Config) goidc.LogoutPolicy {
 
 	tmpl := template.Must(template.ParseFS(ui.FS, "logout.html"))
 	return goidc.NewLogoutPolicy(
@@ -134,7 +125,7 @@ func LogoutPolicy() goidc.LogoutPolicy {
 					return goidc.StatusFailure, fmt.Errorf("unable to render logout page: %w", err)
 				}
 				if err := tmpl.ExecuteTemplate(w, "logout.html", LogoutPage{
-					BaseURL:    Issuer,
+					BaseURL:    cfg.Services.OpenIDConnectProvider.IssuerURL,
 					CallbackID: ls.CallbackID,
 					Session:    sess,
 				}); err != nil {

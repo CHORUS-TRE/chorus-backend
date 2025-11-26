@@ -48,32 +48,23 @@ func (s *oidcProviderService) init() error {
 		return nil
 	}
 
-	// authnSessionStorage := storage.NewAuthnSessionManager(1000)
-	// clientStorage, err := storage.NewClientManager(s.cfg)
-	// if err != nil {
-	// 	logger.TechLog.Fatal(context.Background(), "unable to instantiate client storage for OIDC provider", zap.Error(err))
-	// }
-	// grantSessionStorage := storage.NewGrantSessionManager(1000)
-	// logoutSessionStorage := storage.NewLogoutSessionManager(1000)
-
 	op, err := provider.New(
 		goidc.ProfileOpenID,
-		authutil.Issuer,
+		s.cfg.Services.OpenIDConnectProvider.IssuerURL,
 		authutil.PrivateJWKSFunc(s.cfg),
 		provider.WithScopes(authutil.Scopes...),
-		provider.WithIDTokenSignatureAlgs(goidc.HS256, goidc.None),
-		provider.WithUserInfoSignatureAlgs(goidc.HS256, goidc.None),
+		provider.WithIDTokenSignatureAlgs(goidc.RS256, goidc.None),
+		provider.WithUserInfoSignatureAlgs(goidc.RS256, goidc.None),
 		provider.WithPAR(nil, 10),
-		provider.WithJAR(goidc.HS256, goidc.None),
+		provider.WithJAR(goidc.RS256, goidc.None),
 		provider.WithJARByReference(false),
-		provider.WithJARM(goidc.HS256),
+		provider.WithJARM(goidc.RS256),
 		provider.WithTokenAuthnMethods(
 			goidc.ClientAuthnSecretBasic,
 			goidc.ClientAuthnSecretPost,
 			goidc.ClientAuthnPrivateKeyJWT,
 		),
-		// provider.WithPrivateKeyJWTSignatureAlgs(goidc.HS256),
-		provider.WithSecretJWTSignatureAlgs(goidc.HS256),
+		provider.WithPrivateKeyJWTSignatureAlgs(goidc.RS256),
 		provider.WithIssuerResponseParameter(),
 		provider.WithClaimsParameter(),
 		provider.WithPKCE(goidc.CodeChallengeMethodSHA256),
@@ -83,14 +74,14 @@ func (s *oidcProviderService) init() error {
 		provider.WithClaims(authutil.Claims[0], authutil.Claims...),
 		provider.WithACRs(authutil.ACRs[0], authutil.ACRs...),
 		// provider.WithDCR(authutil.DCRFunc, authutil.ValidateInitialTokenFunc),
-		provider.WithTokenOptions(authutil.TokenOptionsFunc(goidc.HS256)),
+		provider.WithTokenOptions(authutil.TokenOptionsFunc(goidc.RS256)),
 		provider.WithHTTPClientFunc(authutil.HTTPClient),
 		provider.WithPolicies(authutil.Policy(s.cfg, s.userService)),
 		provider.WithNotifyErrorFunc(authutil.ErrorLoggingFunc),
 		provider.WithRenderErrorFunc(authutil.RenderError()),
 		provider.WithDisplayValues(authutil.DisplayValues[0], authutil.DisplayValues...),
 		provider.WithSubIdentifierTypes(goidc.SubIdentifierPublic, goidc.SubIdentifierPairwise),
-		provider.WithLogout(authutil.HandleLogout(), authutil.LogoutPolicy()),
+		provider.WithLogout(authutil.HandleLogout(), authutil.LogoutPolicy(s.cfg)),
 		provider.WithAuthnSessionStorage(s.authnSessionManager),
 		provider.WithClientStorage(s.clientManager),
 		provider.WithGrantSessionStorage(s.grantSessionManager),
