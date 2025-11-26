@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -469,6 +470,16 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 		return fmt.Errorf("unable to get user %v: %w", userID, err)
 	}
 
+	workbenchID, err := strconv.ParseUint(role.Context["workbench"], 10, 64)
+	if err != nil {
+		return fmt.Errorf("unable to parse workbench ID %v: %w", role.Context["workbench"], err)
+	}
+
+	workbench, err := s.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return fmt.Errorf("unable to get workbench %v: %w", role.Context["workbench"], err)
+	}
+
 	matchingRolesIDs := []uint64{}
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == role.Context["workbench"] {
@@ -482,6 +493,10 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, tenantID, err)
 		}
 	}
+
+	role.Context["workspace"] = fmt.Sprintf("%d", workbench.WorkspaceID)
+
+	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
 
 	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
 	if err != nil {

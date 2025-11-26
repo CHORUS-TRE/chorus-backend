@@ -6,8 +6,10 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"go.uber.org/zap"
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -355,10 +357,14 @@ func (s *UserStorage) createUserRoles(ctx context.Context, tx *sqlx.Tx, userID u
 			if ur.Name.String() == r.Name {
 				var userRoleID uint64
 
+				logger.TechLog.Debug(ctx, "creating user role", zap.Uint64("userID", userID), zap.String("roleName", r.Name), zap.Any("context", ur.Context))
+
 				loopErr := tx.GetContext(ctx, &userRoleID, userRoleQuery, userID, r.ID)
 				if loopErr != nil {
 					return fmt.Errorf("unable to create user role: %w", loopErr)
 				}
+
+				logger.TechLog.Debug(ctx, "created user role", zap.Uint64("userRoleID", userRoleID))
 
 				for dimension, value := range ur.Context {
 					if _, loopErr = tx.ExecContext(ctx, userRoleContextQuery, userRoleID, dimension, value); loopErr != nil {

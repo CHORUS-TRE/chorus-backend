@@ -120,9 +120,9 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
-		DockerClient DockerClient `yaml:"docker_client,omitempty"`
-		MinioClient  MinioClient  `yaml:"minio_client,omitempty"`
+		K8sClient    K8sClient              `yaml:"k8s_client,omitempty"`
+		DockerClient DockerClient           `yaml:"docker_client,omitempty"`
+		MinioClients map[string]MinioClient `yaml:"minio_clients,omitempty"`
 	}
 
 	K8sClient struct {
@@ -152,12 +152,14 @@ type (
 	}
 
 	MinioClient struct {
-		Enabled         bool   `yaml:"enabled,omitempty"`
-		Endpoint        string `yaml:"endpoint,omitempty"`
-		AccessKeyID     string `yaml:"access_key_id,omitempty"`
-		SecretAccessKey string `yaml:"secret_access_key,omitempty"`
-		BucketName      string `yaml:"bucket_name,omitempty"`
-		UseSSL          bool   `yaml:"use_ssl,omitempty"`
+		Enabled bool `yaml:"enabled"`
+
+		Endpoint        string    `yaml:"endpoint,omitempty"`
+		AccessKeyID     string    `yaml:"access_key_id,omitempty"`
+		SecretAccessKey Sensitive `yaml:"secret_access_key,omitempty"`
+
+		BucketName string `yaml:"bucket_name,omitempty"`
+		UseSSL     bool   `yaml:"use_ssl,omitempty"`
 	}
 
 	ImagePullSecret struct {
@@ -276,13 +278,17 @@ type (
 				MaxTransientRetry     int           `yaml:"max_transient_retry"`
 			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
-
-		WorkspaceService struct {
+    
+    WorkspaceService struct {
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
 			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
 		} `yaml:"workspace_service"`
 
+		WorkspaceFileService struct {
+			Stores map[string]WorkspaceFileStore `yaml:"stores"`
+		} `yaml:"workspace_file_service"`
+		
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`
@@ -306,6 +312,13 @@ type (
 				Name        string `yaml:"name"`
 			} `yaml:"init_workspace"`
 		} `yaml:"steward"`
+	}
+
+	WorkspaceFileStore struct {
+		ClientType      string `yaml:"client_type"`
+		ClientName      string `yaml:"client_name"`
+		StorePrefix     string `yaml:"store_prefix,omitempty"`
+		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
 	}
 
 	Mode struct {

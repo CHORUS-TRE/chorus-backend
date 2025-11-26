@@ -16,6 +16,7 @@ tags:
   - name: StewardService
   - name: UserService
   - name: WorkbenchService
+  - name: WorkspaceFileService
   - name: WorkspaceService
 schemes:
   - http
@@ -2720,7 +2721,7 @@ paths:
     post:
       summary: Create a file in a workspace
       description: This endpoint creates a file in a workspace at the specified path
-      operationId: WorkspaceService_CreateWorkspaceFile
+      operationId: WorkspaceFileService_CreateWorkspaceFile
       responses:
         "200":
           description: A successful response.
@@ -2765,7 +2766,7 @@ paths:
     put:
       summary: Update a file in a workspace
       description: This endpoint updates (rename or moves) a file in a workspace at the specified path
-      operationId: WorkspaceService_UpdateWorkspaceFile
+      operationId: WorkspaceFileService_UpdateWorkspaceFile
       responses:
         "200":
           description: A successful response.
@@ -2816,7 +2817,7 @@ paths:
     get:
       summary: Get a file in a workspace
       description: This endpoint retrieves a file at the specified path within a workspace
-      operationId: WorkspaceService_GetWorkspaceFile
+      operationId: WorkspaceFileService_GetWorkspaceFile
       responses:
         "200":
           description: A successful response.
@@ -2860,7 +2861,7 @@ paths:
     delete:
       summary: Delete a file in a workspace
       description: This endpoint deletes a file in a workspace at the specified path
-      operationId: WorkspaceService_DeleteWorkspaceFile
+      operationId: WorkspaceFileService_DeleteWorkspaceFile
       responses:
         "200":
           description: A successful response.
@@ -2905,7 +2906,7 @@ paths:
     get:
       summary: List files in a workspace at a specified path
       description: This endpoint lists all files at given path within a workspace
-      operationId: WorkspaceService_ListWorkspaceFiles
+      operationId: WorkspaceFileService_ListWorkspaceFiles
       responses:
         "200":
           description: A successful response.
