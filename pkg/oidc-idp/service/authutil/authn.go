@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
@@ -130,7 +131,7 @@ func (a authenticator) loadUser(r *http.Request, as *goidc.AuthnSession) (goidc.
 	// Never do this in production, it's just an example.
 	// if as.IDTokenHintClaims != nil {
 	// 	as.Subject = as.IDTokenHintClaims[goidc.ClaimSubject].(string)
-	// 	as.StoreParameter(paramAuthTime, as.IDTokenHintClaims[goidc.ClaimAuthTime])
+	// 	as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", as.IDTokenHintClaims[goidc.ClaimAuthTime]))
 	// }
 
 	// cookie, err := r.Cookie(cookieUserSessionID)
@@ -150,7 +151,7 @@ func (a authenticator) loadUser(r *http.Request, as *goidc.AuthnSession) (goidc.
 	}
 
 	as.SetUserID(fmt.Sprintf("%d", claims.ID))
-	as.StoreParameter(paramAuthTime, int(claims.StandardClaims.IssuedAt))
+	as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", claims.StandardClaims.IssuedAt))
 	// as.StoreParameter(paramUserSessionID, session.ID)
 	return goidc.StatusSuccess, nil
 }
@@ -171,8 +172,12 @@ func (a authenticator) login(w http.ResponseWriter, r *http.Request, as *goidc.A
 	// If the max age is exceeded or 'auth_time' is unavailable, force re-authentication.
 	if as.MaxAuthnAgeSecs != nil {
 		maxAgeSecs := *as.MaxAuthnAgeSecs
-		authTime := as.StoredParameter(paramAuthTime)
-		if authTime == nil || TimestampNow() > authTime.(int)+maxAgeSecs {
+		authTimeStr := as.StoredParameter(paramAuthTime)
+		authTime, err := strconv.Atoi(fmt.Sprintf("%v", authTimeStr))
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("invalid auth time format: %w", err)
+		}
+		if TimestampNow() > authTime+maxAgeSecs {
 			mustAuthenticate = true
 		}
 	}
@@ -204,7 +209,7 @@ func (a authenticator) login(w http.ResponseWriter, r *http.Request, as *goidc.A
 	// }
 
 	// as.SetUserID(username)
-	// as.StoreParameter(paramAuthTime, TimestampNow())
+	// as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", TimestampNow()))
 	// return goidc.StatusSuccess, nil
 }
 
@@ -213,10 +218,15 @@ func (a authenticator) createUserSession(w http.ResponseWriter, as *goidc.AuthnS
 	if id := as.StoredParameter(paramUserSessionID); id != nil {
 		sessionID = id.(string)
 	}
+	authTimeStr := as.StoredParameter(paramAuthTime).(string)
+	authTime, err := strconv.Atoi(authTimeStr)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("invalid auth time format: %w", err)
+	}
 	userSessionStore[sessionID] = userSession{
 		ID:       sessionID,
 		Subject:  as.Subject,
-		AuthTime: as.StoredParameter(paramAuthTime).(int),
+		AuthTime: authTime,
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieUserSessionID,
@@ -249,7 +259,12 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 	as.GrantResources(as.Resources)
 	as.GrantAuthorizationDetails(as.AuthDetails)
 
-	as.SetIDTokenClaimAuthTime(as.Storage[paramAuthTime].(int))
+	authTimeStr := as.StoredParameter(paramAuthTime).(string)
+	authTime, err := strconv.Atoi(authTimeStr)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("invalid auth time format: %w", err)
+	}
+	as.SetIDTokenClaimAuthTime(authTime)
 	as.SetIDTokenClaimACR(goidc.ACRMaceIncommonIAPSilver)
 
 	// Add claims based on the claims parameter.
