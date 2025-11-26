@@ -6,7 +6,7 @@ import (
 
 type MinioObjectInfo struct {
 	Key          string
-	Size         int64
+	Size         uint64
 	LastModified time.Time
 	MimeType     string
 }

@@ -72,7 +72,7 @@ func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
 
 	return &MinioObjectInfo{
 		Key:          objectInfo.Key,
-		Size:         objectInfo.Size,
+		Size:         uint64(objectInfo.Size),
 		LastModified: objectInfo.LastModified,
 		MimeType:     objectInfo.ContentType,
 	}, nil
@@ -98,7 +98,7 @@ func (c *client) GetObject(objectKey string) (*MinioObject, error) {
 	return &MinioObject{
 		MinioObjectInfo: MinioObjectInfo{
 			Key:          stat.Key,
-			Size:         stat.Size,
+			Size:         uint64(stat.Size),
 			LastModified: stat.LastModified,
 			MimeType:     stat.ContentType,
 		},
@@ -120,7 +120,7 @@ func (c *client) ListObjects(objectKey string, recursive bool) ([]*MinioObjectIn
 		}
 		objects = append(objects, &MinioObjectInfo{
 			Key:          object.Key,
-			Size:         object.Size,
+			Size:         uint64(object.Size),
 			LastModified: object.LastModified,
 			MimeType:     object.ContentType,
 		})
@@ -142,7 +142,7 @@ func (c *client) PutObject(objectKey string, object *MinioObject) (*MinioObjectI
 
 	return &MinioObjectInfo{
 		Key:          objectInfo.Key,
-		Size:         objectInfo.Size,
+		Size:         uint64(objectInfo.Size),
 		LastModified: objectInfo.LastModified,
 		MimeType:     objectInfo.ContentType,
 	}, nil
@@ -219,7 +219,7 @@ func (c *client) CompleteMultipartUpload(uploadId string, parts []*MinioObjectPa
 	return &MinioObject{
 		MinioObjectInfo: MinioObjectInfo{
 			Key:          uploadInfo.Key,
-			Size:         uploadInfo.Size,
+			Size:         uint64(uploadInfo.Size),
 			LastModified: uploadInfo.LastModified,
 		},
 	}, nil

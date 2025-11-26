@@ -86,7 +86,7 @@ func (c *testClient) PutObject(objectKey string, object *MinioObject) (*MinioObj
 	defer c.mutex.Unlock()
 	object.LastModified = time.Now()
 	object.Key = objectKey
-	object.Size = int64(len(object.Content))
+	object.Size = uint64(len(object.Content))
 	c.objects[objectKey] = object
 	return &object.MinioObjectInfo, nil
 }
