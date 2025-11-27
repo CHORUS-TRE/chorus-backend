@@ -42,126 +42,6 @@ paths:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/file/upload/init:
-    post:
-      summary: Initiate a multipart upload for a file in a workspace
-      description: This endpoint initiates a multipart upload for a file in a workspace
-      operationId: WorkspaceFileService_InitiateWorkspaceFileUpload
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusInitiateWorkspaceFileUploadReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkspaceFileServiceInitiateWorkspaceFileUploadBody'
-      tags:
-        - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}:
-    post:
-      summary: Upload a part of a file in a workspace
-      description: This endpoint uploads a part of a file in a workspace
-      operationId: WorkspaceFileService_UploadWorkspaceFilePart
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusUploadWorkspaceFilePartReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: uploadId
-          in: path
-          required: true
-          type: string
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkspaceFileServiceUploadWorkspaceFilePartBody'
-      tags:
-        - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort:
-    post:
-      summary: Abort a multipart upload for a file in a workspace
-      description: This endpoint aborts a multipart upload for a file in a workspace
-      operationId: WorkspaceFileService_AbortWorkspaceFileUpload
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusAbortWorkspaceFileUploadReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: uploadId
-          in: path
-          required: true
-          type: string
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkspaceFileServiceAbortWorkspaceFileUploadBody'
-      tags:
-        - WorkspaceService
-  /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete:
-    post:
-      summary: Complete a multipart upload for a file in a workspace
-      description: This endpoint completes a multipart upload for a file in a workspace
-      operationId: WorkspaceFileService_CompleteWorkspaceFileUpload
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusCompleteWorkspaceFileUploadReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: workspaceId
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: uploadId
-          in: path
-          required: true
-          type: string
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/WorkspaceFileServiceCompleteWorkspaceFileUploadBody'
-      tags:
-        - WorkspaceService
   /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
     put:
       summary: Update a file in a workspace
@@ -248,6 +128,140 @@ paths:
           pattern: .+
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload:
+    post:
+      summary: Initiate a multipart upload for a file in a workspace
+      description: This endpoint initiates a multipart upload for a file in a workspace
+      operationId: WorkspaceFileService_InitiateWorkspaceFileUpload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusInitiateWorkspaceFileUploadReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceInitiateWorkspaceFileUploadBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}:
+    delete:
+      summary: Abort a multipart upload for a file in a workspace
+      description: This endpoint aborts a multipart upload for a file in a workspace
+      operationId: WorkspaceFileService_AbortWorkspaceFileUpload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAbortWorkspaceFileUploadReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+        - name: uploadId
+          in: path
+          required: true
+          type: string
+      tags:
+        - WorkspaceService
+    put:
+      summary: Upload a part of a file in a workspace
+      description: This endpoint uploads a part of a file in a workspace
+      operationId: WorkspaceFileService_UploadWorkspaceFilePart
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUploadWorkspaceFilePartReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+        - name: uploadId
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceUploadWorkspaceFilePartBody'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete:
+    post:
+      summary: Complete a multipart upload for a file in a workspace
+      description: This endpoint completes a multipart upload for a file in a workspace
+      operationId: WorkspaceFileService_CompleteWorkspaceFileUpload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCompleteWorkspaceFileUploadReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+        - name: uploadId
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkspaceFileServiceCompleteWorkspaceFileUploadBody'
+      tags:
+        - WorkspaceService
   /api/rest/v1/workspaces/{workspaceId}/files/{path}:
     get:
       summary: List files in a workspace at a specified path
@@ -276,8 +290,6 @@ paths:
       tags:
         - WorkspaceService
 definitions:
-  WorkspaceFileServiceAbortWorkspaceFileUploadBody:
-    type: object
   WorkspaceFileServiceCompleteWorkspaceFileUploadBody:
     type: object
     properties:
@@ -288,7 +300,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkspaceFilePart'
-        title: Parts uploaded
   WorkspaceFileServiceInitiateWorkspaceFileUploadBody:
     type: object
     properties:

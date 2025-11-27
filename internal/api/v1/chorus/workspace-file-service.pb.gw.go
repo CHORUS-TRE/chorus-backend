@@ -311,6 +311,14 @@ func request_WorkspaceFileService_InitiateWorkspaceFileUpload_0(ctx context.Cont
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
 	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
+	}
 	msg, err := client.InitiateWorkspaceFileUpload(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
@@ -332,6 +340,14 @@ func local_request_WorkspaceFileService_InitiateWorkspaceFileUpload_0(ctx contex
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
 	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
+	}
 	msg, err := server.InitiateWorkspaceFileUpload(ctx, &protoReq)
 	return msg, metadata, err
 }
@@ -352,6 +368,14 @@ func request_WorkspaceFileService_UploadWorkspaceFilePart_0(ctx context.Context,
 	protoReq.WorkspaceId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
+	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	val, ok = pathParams["uploadId"]
 	if !ok {
@@ -382,6 +406,14 @@ func local_request_WorkspaceFileService_UploadWorkspaceFilePart_0(ctx context.Co
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
 	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
+	}
 	val, ok = pathParams["uploadId"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "uploadId")
@@ -410,6 +442,14 @@ func request_WorkspaceFileService_CompleteWorkspaceFileUpload_0(ctx context.Cont
 	protoReq.WorkspaceId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
+	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	val, ok = pathParams["uploadId"]
 	if !ok {
@@ -440,6 +480,14 @@ func local_request_WorkspaceFileService_CompleteWorkspaceFileUpload_0(ctx contex
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
 	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
+	}
 	val, ok = pathParams["uploadId"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "uploadId")
@@ -458,9 +506,7 @@ func request_WorkspaceFileService_AbortWorkspaceFileUpload_0(ctx context.Context
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
+	io.Copy(io.Discard, req.Body)
 	val, ok := pathParams["workspaceId"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspaceId")
@@ -468,6 +514,14 @@ func request_WorkspaceFileService_AbortWorkspaceFileUpload_0(ctx context.Context
 	protoReq.WorkspaceId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
+	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	val, ok = pathParams["uploadId"]
 	if !ok {
@@ -487,9 +541,6 @@ func local_request_WorkspaceFileService_AbortWorkspaceFileUpload_0(ctx context.C
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
 	val, ok := pathParams["workspaceId"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "workspaceId")
@@ -497,6 +548,14 @@ func local_request_WorkspaceFileService_AbortWorkspaceFileUpload_0(ctx context.C
 	protoReq.WorkspaceId, err = runtime.Uint64(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "workspaceId", err)
+	}
+	val, ok = pathParams["path"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "path")
+	}
+	protoReq.Path, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "path", err)
 	}
 	val, ok = pathParams["uploadId"]
 	if !ok {
@@ -622,7 +681,7 @@ func RegisterWorkspaceFileServiceHandlerServer(ctx context.Context, mux *runtime
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/InitiateWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/init"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/InitiateWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -636,13 +695,13 @@ func RegisterWorkspaceFileServiceHandlerServer(ctx context.Context, mux *runtime
 		}
 		forward_WorkspaceFileService_InitiateWorkspaceFileUpload_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_WorkspaceFileService_UploadWorkspaceFilePart_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_WorkspaceFileService_UploadWorkspaceFilePart_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/UploadWorkspaceFilePart", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/UploadWorkspaceFilePart", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -662,7 +721,7 @@ func RegisterWorkspaceFileServiceHandlerServer(ctx context.Context, mux *runtime
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/CompleteWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/CompleteWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}/complete"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -676,13 +735,13 @@ func RegisterWorkspaceFileServiceHandlerServer(ctx context.Context, mux *runtime
 		}
 		forward_WorkspaceFileService_CompleteWorkspaceFileUpload_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_WorkspaceFileService_AbortWorkspaceFileUpload_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodDelete, pattern_WorkspaceFileService_AbortWorkspaceFileUpload_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/AbortWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceFileService/AbortWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -825,7 +884,7 @@ func RegisterWorkspaceFileServiceHandlerClient(ctx context.Context, mux *runtime
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/InitiateWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/init"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/InitiateWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -838,11 +897,11 @@ func RegisterWorkspaceFileServiceHandlerClient(ctx context.Context, mux *runtime
 		}
 		forward_WorkspaceFileService_InitiateWorkspaceFileUpload_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_WorkspaceFileService_UploadWorkspaceFilePart_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPut, pattern_WorkspaceFileService_UploadWorkspaceFilePart_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/UploadWorkspaceFilePart", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/UploadWorkspaceFilePart", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -859,7 +918,7 @@ func RegisterWorkspaceFileServiceHandlerClient(ctx context.Context, mux *runtime
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/CompleteWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/CompleteWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}/complete"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -872,11 +931,11 @@ func RegisterWorkspaceFileServiceHandlerClient(ctx context.Context, mux *runtime
 		}
 		forward_WorkspaceFileService_CompleteWorkspaceFileUpload_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_WorkspaceFileService_AbortWorkspaceFileUpload_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodDelete, pattern_WorkspaceFileService_AbortWorkspaceFileUpload_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/AbortWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceFileService/AbortWorkspaceFileUpload", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -898,10 +957,10 @@ var (
 	pattern_WorkspaceFileService_CreateWorkspaceFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file"}, ""))
 	pattern_WorkspaceFileService_UpdateWorkspaceFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "oldPath"}, ""))
 	pattern_WorkspaceFileService_DeleteWorkspaceFile_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "path"}, ""))
-	pattern_WorkspaceFileService_InitiateWorkspaceFileUpload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6, 2, 7}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "upload", "init"}, ""))
-	pattern_WorkspaceFileService_UploadWorkspaceFilePart_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "upload", "uploadId"}, ""))
-	pattern_WorkspaceFileService_CompleteWorkspaceFileUpload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "upload", "uploadId", "complete"}, ""))
-	pattern_WorkspaceFileService_AbortWorkspaceFileUpload_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "upload", "uploadId", "abort"}, ""))
+	pattern_WorkspaceFileService_InitiateWorkspaceFileUpload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "path", "upload"}, ""))
+	pattern_WorkspaceFileService_UploadWorkspaceFilePart_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "path", "upload", "uploadId"}, ""))
+	pattern_WorkspaceFileService_CompleteWorkspaceFileUpload_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8, 2, 9}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "path", "upload", "uploadId", "complete"}, ""))
+	pattern_WorkspaceFileService_AbortWorkspaceFileUpload_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 3, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "rest", "v1", "workspaces", "workspaceId", "file", "path", "upload", "uploadId"}, ""))
 )
 
 var (

@@ -88,12 +88,12 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadOK) Code() int {
 
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/init][%d] workspaceFileServiceInitiateWorkspaceFileUploadOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload][%d] workspaceFileServiceInitiateWorkspaceFileUploadOK %s", 200, payload)
 }
 
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/init][%d] workspaceFileServiceInitiateWorkspaceFileUploadOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload][%d] workspaceFileServiceInitiateWorkspaceFileUploadOK %s", 200, payload)
 }
 
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadOK) GetPayload() *models.ChorusInitiateWorkspaceFileUploadReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadDefault) Code() int {
 
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/init][%d] WorkspaceFileService_InitiateWorkspaceFileUpload default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload][%d] WorkspaceFileService_InitiateWorkspaceFileUpload default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/init][%d] WorkspaceFileService_InitiateWorkspaceFileUpload default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload][%d] WorkspaceFileService_InitiateWorkspaceFileUpload default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadDefault) GetPayload() *models.RPCStatus {

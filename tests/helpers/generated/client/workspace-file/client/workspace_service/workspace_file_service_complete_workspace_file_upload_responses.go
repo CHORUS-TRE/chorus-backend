@@ -88,12 +88,12 @@ func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadOK) Code() int {
 
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete][%d] workspaceFileServiceCompleteWorkspaceFileUploadOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete][%d] workspaceFileServiceCompleteWorkspaceFileUploadOK %s", 200, payload)
 }
 
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete][%d] workspaceFileServiceCompleteWorkspaceFileUploadOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete][%d] workspaceFileServiceCompleteWorkspaceFileUploadOK %s", 200, payload)
 }
 
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadOK) GetPayload() *models.ChorusCompleteWorkspaceFileUploadReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) Code() int {
 
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete][%d] WorkspaceFileService_CompleteWorkspaceFileUpload default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete][%d] WorkspaceFileService_CompleteWorkspaceFileUpload default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete][%d] WorkspaceFileService_CompleteWorkspaceFileUpload default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete][%d] WorkspaceFileService_CompleteWorkspaceFileUpload default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) GetPayload() *models.RPCStatus {

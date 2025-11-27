@@ -87,8 +87,8 @@ func (a *Client) WorkspaceFileServiceAbortWorkspaceFileUpload(params *WorkspaceF
 	}
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceFileService_AbortWorkspaceFileUpload",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -127,7 +127,7 @@ func (a *Client) WorkspaceFileServiceCompleteWorkspaceFileUpload(params *Workspa
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceFileService_CompleteWorkspaceFileUpload",
 		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -283,7 +283,7 @@ func (a *Client) WorkspaceFileServiceInitiateWorkspaceFileUpload(params *Workspa
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceFileService_InitiateWorkspaceFileUpload",
 		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/upload/init",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -399,8 +399,8 @@ func (a *Client) WorkspaceFileServiceUploadWorkspaceFilePart(params *WorkspaceFi
 	}
 	op := &runtime.ClientOperation{
 		ID:                 "WorkspaceFileService_UploadWorkspaceFilePart",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}",
+		Method:             "PUT",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

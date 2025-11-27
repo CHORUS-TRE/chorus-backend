@@ -88,12 +88,12 @@ func (o *WorkspaceFileServiceAbortWorkspaceFileUploadOK) Code() int {
 
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort][%d] workspaceFileServiceAbortWorkspaceFileUploadOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}][%d] workspaceFileServiceAbortWorkspaceFileUploadOK %s", 200, payload)
 }
 
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort][%d] workspaceFileServiceAbortWorkspaceFileUploadOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}][%d] workspaceFileServiceAbortWorkspaceFileUploadOK %s", 200, payload)
 }
 
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadOK) GetPayload() *models.ChorusAbortWorkspaceFileUploadReply {
@@ -162,12 +162,12 @@ func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) Code() int {
 
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort][%d] WorkspaceFileService_AbortWorkspaceFileUpload default %s", o._statusCode, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}][%d] WorkspaceFileService_AbortWorkspaceFileUpload default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort][%d] WorkspaceFileService_AbortWorkspaceFileUpload default %s", o._statusCode, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}][%d] WorkspaceFileService_AbortWorkspaceFileUpload default %s", o._statusCode, payload)
 }
 
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) GetPayload() *models.RPCStatus {

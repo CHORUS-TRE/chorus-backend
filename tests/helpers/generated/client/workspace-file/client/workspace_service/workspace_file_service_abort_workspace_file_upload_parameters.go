@@ -14,8 +14,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace-file/models"
 )
 
 // NewWorkspaceFileServiceAbortWorkspaceFileUploadParams creates a new WorkspaceFileServiceAbortWorkspaceFileUploadParams object,
@@ -63,8 +61,8 @@ WorkspaceFileServiceAbortWorkspaceFileUploadParams contains all the parameters t
 */
 type WorkspaceFileServiceAbortWorkspaceFileUploadParams struct {
 
-	// Body.
-	Body models.WorkspaceFileServiceAbortWorkspaceFileUploadBody
+	// Path.
+	Path string
 
 	// UploadID.
 	UploadID string
@@ -127,15 +125,15 @@ func (o *WorkspaceFileServiceAbortWorkspaceFileUploadParams) SetHTTPClient(clien
 	o.HTTPClient = client
 }
 
-// WithBody adds the body to the workspace file service abort workspace file upload params
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadParams) WithBody(body models.WorkspaceFileServiceAbortWorkspaceFileUploadBody) *WorkspaceFileServiceAbortWorkspaceFileUploadParams {
-	o.SetBody(body)
+// WithPath adds the path to the workspace file service abort workspace file upload params
+func (o *WorkspaceFileServiceAbortWorkspaceFileUploadParams) WithPath(path string) *WorkspaceFileServiceAbortWorkspaceFileUploadParams {
+	o.SetPath(path)
 	return o
 }
 
-// SetBody adds the body to the workspace file service abort workspace file upload params
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadParams) SetBody(body models.WorkspaceFileServiceAbortWorkspaceFileUploadBody) {
-	o.Body = body
+// SetPath adds the path to the workspace file service abort workspace file upload params
+func (o *WorkspaceFileServiceAbortWorkspaceFileUploadParams) SetPath(path string) {
+	o.Path = path
 }
 
 // WithUploadID adds the uploadID to the workspace file service abort workspace file upload params
@@ -167,10 +165,10 @@ func (o *WorkspaceFileServiceAbortWorkspaceFileUploadParams) WriteToRequest(r ru
 		return err
 	}
 	var res []error
-	if o.Body != nil {
-		if err := r.SetBodyParam(o.Body); err != nil {
-			return err
-		}
+
+	// path param path
+	if err := r.SetPathParam("path", o.Path); err != nil {
+		return err
 	}
 
 	// path param uploadId

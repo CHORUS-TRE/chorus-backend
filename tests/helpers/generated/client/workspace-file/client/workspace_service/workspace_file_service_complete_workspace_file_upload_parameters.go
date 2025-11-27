@@ -66,6 +66,9 @@ type WorkspaceFileServiceCompleteWorkspaceFileUploadParams struct {
 	// Body.
 	Body *models.WorkspaceFileServiceCompleteWorkspaceFileUploadBody
 
+	// Path.
+	Path string
+
 	// UploadID.
 	UploadID string
 
@@ -138,6 +141,17 @@ func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadParams) SetBody(body *mo
 	o.Body = body
 }
 
+// WithPath adds the path to the workspace file service complete workspace file upload params
+func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadParams) WithPath(path string) *WorkspaceFileServiceCompleteWorkspaceFileUploadParams {
+	o.SetPath(path)
+	return o
+}
+
+// SetPath adds the path to the workspace file service complete workspace file upload params
+func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadParams) SetPath(path string) {
+	o.Path = path
+}
+
 // WithUploadID adds the uploadID to the workspace file service complete workspace file upload params
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadParams) WithUploadID(uploadID string) *WorkspaceFileServiceCompleteWorkspaceFileUploadParams {
 	o.SetUploadID(uploadID)
@@ -171,6 +185,11 @@ func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadParams) WriteToRequest(r
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
 		}
+	}
+
+	// path param path
+	if err := r.SetPathParam("path", o.Path); err != nil {
+		return err
 	}
 
 	// path param uploadId

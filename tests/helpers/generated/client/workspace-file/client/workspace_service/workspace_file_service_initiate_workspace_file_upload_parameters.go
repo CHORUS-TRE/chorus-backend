@@ -66,6 +66,9 @@ type WorkspaceFileServiceInitiateWorkspaceFileUploadParams struct {
 	// Body.
 	Body *models.WorkspaceFileServiceInitiateWorkspaceFileUploadBody
 
+	// Path.
+	Path string
+
 	// WorkspaceID.
 	//
 	// Format: uint64
@@ -135,6 +138,17 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetBody(body *mo
 	o.Body = body
 }
 
+// WithPath adds the path to the workspace file service initiate workspace file upload params
+func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WithPath(path string) *WorkspaceFileServiceInitiateWorkspaceFileUploadParams {
+	o.SetPath(path)
+	return o
+}
+
+// SetPath adds the path to the workspace file service initiate workspace file upload params
+func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetPath(path string) {
+	o.Path = path
+}
+
 // WithWorkspaceID adds the workspaceID to the workspace file service initiate workspace file upload params
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WithWorkspaceID(workspaceID string) *WorkspaceFileServiceInitiateWorkspaceFileUploadParams {
 	o.SetWorkspaceID(workspaceID)
@@ -157,6 +171,11 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WriteToRequest(r
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
 		}
+	}
+
+	// path param path
+	if err := r.SetPathParam("path", o.Path); err != nil {
+		return err
 	}
 
 	// path param workspaceId

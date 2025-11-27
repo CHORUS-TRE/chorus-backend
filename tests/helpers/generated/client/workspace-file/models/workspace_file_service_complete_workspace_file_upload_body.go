@@ -22,7 +22,7 @@ type WorkspaceFileServiceCompleteWorkspaceFileUploadBody struct {
 	// file
 	File *ChorusWorkspaceFile `json:"file,omitempty"`
 
-	// Parts uploaded
+	// parts
 	Parts []*ChorusWorkspaceFilePart `json:"parts"`
 }
 

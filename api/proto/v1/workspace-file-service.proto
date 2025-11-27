@@ -80,7 +80,8 @@ message DeleteWorkspaceFileResult {}
 // Multipart upload related messages
 message InitiateWorkspaceFileUploadRequest {
     uint64 workspaceId = 1;
-    WorkspaceFile file = 2;
+    string path = 2;
+    WorkspaceFile file = 3;
 }
 message InitiateWorkspaceFileUploadReply {
     InitiateWorkspaceFileUploadResult result = 1;
@@ -93,8 +94,9 @@ message InitiateWorkspaceFileUploadResult {
 
 message UploadWorkspaceFilePartRequest {
     uint64 workspaceId = 1;
-    string uploadId = 2;
-    WorkspaceFilePart part = 3;
+    string path = 2;
+    string uploadId = 3;
+    WorkspaceFilePart part = 4;
 }
 message UploadWorkspaceFilePartReply {
     UploadWorkspaceFilePartResult result = 1;
@@ -105,9 +107,10 @@ message UploadWorkspaceFilePartResult {
 
 message CompleteWorkspaceFileUploadRequest {
     uint64 workspaceId = 1;
-    string uploadId = 2;
-    WorkspaceFile file = 3;
-    repeated WorkspaceFilePart parts = 4; // Parts uploaded
+    string path = 2;
+    string uploadId = 3;
+    WorkspaceFile file = 4;
+    repeated WorkspaceFilePart parts = 5;
 }
 message CompleteWorkspaceFileUploadReply {
     CompleteWorkspaceFileUploadResult result = 1;
@@ -118,7 +121,8 @@ message CompleteWorkspaceFileUploadResult {
 
 message AbortWorkspaceFileUploadRequest {
     uint64 workspaceId = 1;
-    string uploadId = 2;
+    string path = 2;
+    string uploadId = 3;
 }
 message AbortWorkspaceFileUploadReply {
     AbortWorkspaceFileUploadResult result = 1;
@@ -187,7 +191,7 @@ service WorkspaceFileService {
     // Multipart upload methods
     rpc InitiateWorkspaceFileUpload(InitiateWorkspaceFileUploadRequest) returns (InitiateWorkspaceFileUploadReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces/{workspaceId}/file/upload/init"
+            post: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -199,7 +203,7 @@ service WorkspaceFileService {
 
     rpc UploadWorkspaceFilePart(UploadWorkspaceFilePartRequest) returns (UploadWorkspaceFilePartReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}"
+            put: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -211,7 +215,7 @@ service WorkspaceFileService {
 
     rpc CompleteWorkspaceFileUpload(CompleteWorkspaceFileUploadRequest) returns (CompleteWorkspaceFileUploadReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/complete"
+            post: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}/complete"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -223,8 +227,7 @@ service WorkspaceFileService {
 
     rpc AbortWorkspaceFileUpload(AbortWorkspaceFileUploadRequest) returns (AbortWorkspaceFileUploadReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces/{workspaceId}/file/upload/{uploadId}/abort"
-            body: "*"
+            delete: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Abort a multipart upload for a file in a workspace";
