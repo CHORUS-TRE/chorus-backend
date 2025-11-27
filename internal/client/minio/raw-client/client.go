@@ -22,7 +22,7 @@ type MinioClienter interface {
 	DeleteObject(objectKey string) error
 	NewMultipartUpload(objectKey string, objectSize uint64) (string, error)
 	PutObjectPart(uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error)
-	CompleteMultipartUpload(uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error)
+	CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error)
 	AbortMultipartUpload(uploadId string) error
 }
 
@@ -202,7 +202,7 @@ func (c *client) PutObjectPart(uploadId string, partNumber int, data []byte) (*M
 	}, nil
 }
 
-func (c *client) CompleteMultipartUpload(uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error) {
+func (c *client) CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error) {
 	var completeParts []minio.CompletePart
 	for _, part := range parts {
 		completeParts = append(completeParts, minio.CompletePart{
@@ -211,7 +211,7 @@ func (c *client) CompleteMultipartUpload(uploadId string, parts []*MinioObjectPa
 		})
 	}
 
-	uploadInfo, err := c.minioCore.CompleteMultipartUpload(context.Background(), c.minioClientCfg.BucketName, "", uploadId, completeParts, minio.PutObjectOptions{})
+	uploadInfo, err := c.minioCore.CompleteMultipartUpload(context.Background(), c.minioClientCfg.BucketName, objectKey, uploadId, completeParts, minio.PutObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to complete multipart upload %s: %w", uploadId, err)
 	}

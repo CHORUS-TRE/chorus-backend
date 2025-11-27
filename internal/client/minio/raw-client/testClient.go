@@ -117,7 +117,7 @@ func (c *testClient) DeleteObject(objectKey string) error {
 func (c *testClient) NewMultipartUpload(objectKey string, objectSize uint64) (string, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	uploadID := fmt.Sprintf("upload-%s-%d", objectKey, time.Now().UnixNano())
+	uploadID := fmt.Sprintf("upload-%d", time.Now().UnixNano())
 	c.uploads[uploadID] = []*MinioObjectPartInfo{}
 	return uploadID, nil
 }
@@ -142,7 +142,7 @@ func (c *testClient) PutObjectPart(uploadId string, partNumber int, data []byte)
 	}, nil
 }
 
-func (c *testClient) CompleteMultipartUpload(uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error) {
+func (c *testClient) CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	_, ok := c.uploads[uploadId]
@@ -153,7 +153,7 @@ func (c *testClient) CompleteMultipartUpload(uploadId string, parts []*MinioObje
 	// For testing purposes, we just create an empty object
 	object := &MinioObject{
 		MinioObjectInfo: MinioObjectInfo{
-			Key:          fmt.Sprintf("completed-%s", uploadId),
+			Key:          objectKey,
 			Size:         0,
 			LastModified: time.Now(),
 			MimeType:     "",
