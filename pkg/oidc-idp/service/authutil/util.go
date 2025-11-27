@@ -21,12 +21,6 @@ import (
 )
 
 var (
-	Scopes = []goidc.Scope{
-		goidc.ScopeOpenID,
-		goidc.ScopeOfflineAccess,
-		goidc.ScopeProfile,
-		goidc.ScopeEmail,
-	}
 	Claims = []string{
 		goidc.ClaimEmail,
 	}

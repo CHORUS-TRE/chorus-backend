@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/authutil"
 	"github.com/luikyv/go-oidc/pkg/goidc"
@@ -18,6 +19,7 @@ type OIDCProviderService interface {
 type oidcProviderService struct {
 	cfg                  config.Config
 	op                   *provider.Provider
+	authorizer           authorization.Authorizer
 	authnSessionManager  goidc.AuthnSessionManager
 	logoutSessionManager goidc.LogoutSessionManager
 	clientManager        goidc.ClientManager
@@ -25,9 +27,10 @@ type oidcProviderService struct {
 	userService          authutil.Userer
 }
 
-func NewOIDCProviderService(cfg config.Config, authnSessionManager goidc.AuthnSessionManager, clientManager goidc.ClientManager, logoutSessionManager goidc.LogoutSessionManager, grantSessionManager goidc.GrantSessionManager, userService authutil.Userer) (OIDCProviderService, error) {
+func NewOIDCProviderService(cfg config.Config, authorizer authorization.Authorizer, authnSessionManager goidc.AuthnSessionManager, clientManager goidc.ClientManager, logoutSessionManager goidc.LogoutSessionManager, grantSessionManager goidc.GrantSessionManager, userService authutil.Userer) (OIDCProviderService, error) {
 	s := &oidcProviderService{
 		cfg:                  cfg,
+		authorizer:           authorizer,
 		authnSessionManager:  authnSessionManager,
 		clientManager:        clientManager,
 		logoutSessionManager: logoutSessionManager,
@@ -48,11 +51,16 @@ func (s *oidcProviderService) init() error {
 		return nil
 	}
 
+	scopes := []goidc.Scope{}
+	for _, scopeStr := range s.cfg.Services.OpenIDConnectProvider.Scopes {
+		scopes = append(scopes, goidc.NewScope(scopeStr))
+	}
+
 	op, err := provider.New(
 		goidc.ProfileOpenID,
 		s.cfg.Services.OpenIDConnectProvider.IssuerURL,
 		authutil.PrivateJWKSFunc(s.cfg),
-		provider.WithScopes(authutil.Scopes...),
+		provider.WithScopes(scopes...),
 		provider.WithIDTokenSignatureAlgs(goidc.RS256, goidc.None),
 		provider.WithUserInfoSignatureAlgs(goidc.RS256, goidc.None),
 		provider.WithPAR(nil, 10),
@@ -76,7 +84,7 @@ func (s *oidcProviderService) init() error {
 		// provider.WithDCR(authutil.DCRFunc, authutil.ValidateInitialTokenFunc),
 		provider.WithTokenOptions(authutil.TokenOptionsFunc(goidc.RS256)),
 		provider.WithHTTPClientFunc(authutil.HTTPClient),
-		provider.WithPolicies(authutil.Policy(s.cfg, s.userService)),
+		provider.WithPolicies(authutil.Policy(s.cfg, s.userService, s.authorizer)),
 		provider.WithNotifyErrorFunc(authutil.ErrorLoggingFunc),
 		provider.WithRenderErrorFunc(authutil.RenderError()),
 		provider.WithDisplayValues(authutil.DisplayValues[0], authutil.DisplayValues...),

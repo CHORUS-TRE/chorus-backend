@@ -110,6 +110,11 @@ services:
     # frontend_login_url: "http://localhost:3000/login"
     frontend_login_url: "http://localhost:5000/dev-auth"
     issuer_url: "http://localhost:5000/openid-connect"
+    scopes: 
+      - openid
+      - profile
+      - email
+      - roles
     jwks: |
       {
         "keys": [
@@ -174,6 +179,7 @@ services:
     backend_in_k8s: false
     proxy_hit_save_batch_interval: 30s
     workbench_idle_timeout: 24h
+    workbench_idle_check_interval: 10s
   workspace_service:
     enable_kill_fixed_timeout: false
     kill_fixed_timeout: 1h

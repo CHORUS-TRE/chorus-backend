@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	jwt "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/ui"
@@ -21,9 +24,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func Policy(cfg config.Config, userService Userer) goidc.AuthnPolicy {
+func Policy(cfg config.Config, userService Userer, authorizer authorization.Authorizer) goidc.AuthnPolicy {
 	tmpl := template.Must(template.ParseFS(ui.FS, "*.html"))
-	authenticator := authenticator{tmpl: tmpl, cfg: cfg, userService: userService}
+	authenticator := authenticator{tmpl: tmpl, cfg: cfg, userService: userService, authorizer: authorizer}
 	return goidc.NewPolicy(
 		"main",
 		func(r *http.Request, c *goidc.Client, as *goidc.AuthnSession) bool {
@@ -56,6 +59,7 @@ const (
 
 	paramAuthTime          string = "auth_time"
 	paramTenantID          string = "tenant_id"
+	paramRoles             string = "roles"
 	paramUserSessionID     string = "user_session_id"
 	paramLogoURI           string = "logo_uri"
 	paramPolicyURI         string = "policy_uri"
@@ -96,6 +100,7 @@ type Userer interface {
 
 type authenticator struct {
 	tmpl        *template.Template
+	authorizer  authorization.Authorizer
 	cfg         config.Config
 	userService Userer
 }
@@ -138,32 +143,38 @@ func (a authenticator) authenticate(w http.ResponseWriter, r *http.Request, as *
 }
 
 func (a authenticator) loadUser(r *http.Request, as *goidc.AuthnSession) (goidc.Status, error) {
-
-	// Never do this in production, it's just an example.
-	// if as.IDTokenHintClaims != nil {
-	// 	as.Subject = as.IDTokenHintClaims[goidc.ClaimSubject].(string)
-	// 	as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", as.IDTokenHintClaims[goidc.ClaimAuthTime]))
-	// }
-
-	// cookie, err := r.Cookie(cookieUserSessionID)
-	// if err != nil {
-	// 	return goidc.StatusSuccess, nil
-	// }
-
-	// session, ok := userSessionStore[cookie.Value]
-	// if !ok {
-	// 	return goidc.StatusSuccess, nil
-	// }
-
 	ctx := r.Context()
 	claims, err := jwt_model.ExtractJWTClaims(ctx)
 	if err != nil {
 		return goidc.StatusSuccess, nil
 	}
 
+	clientID := as.ClientID
+	var client *config.OpenIDConnectProviderClient
+	for _, c := range a.cfg.Services.OpenIDConnectProvider.Clients {
+		if c.ID == clientID {
+			client = &c
+			break
+		}
+	}
+	if client == nil {
+		return goidc.StatusFailure, errors.New("client not found")
+	}
+
+	if client.OnlyPreLoggedForClient {
+		if claims.ForClient != clientID {
+			return goidc.StatusFailure, errors.New("user not pre-logged for this client")
+		}
+	}
+
 	as.SetUserID(fmt.Sprintf("%d", claims.ID))
 	as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", claims.StandardClaims.IssuedAt))
 	as.StoreParameter(paramTenantID, fmt.Sprintf("%d", claims.TenantID))
+	rs, err := json.Marshal(claims.Roles)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("unable to marshal roles: %w", err)
+	}
+	as.StoreParameter(paramRoles, string(rs))
 	// as.StoreParameter(paramUserSessionID, session.ID)
 	return goidc.StatusSuccess, nil
 }
@@ -200,29 +211,6 @@ func (a authenticator) login(w http.ResponseWriter, r *http.Request, as *goidc.A
 	w.Header().Set("Location", a.cfg.Services.OpenIDConnectProvider.FrontendLoginURL)
 	w.WriteHeader(http.StatusFound)
 	return goidc.StatusInProgress, nil
-
-	// a.renderPage(w, "redirect")
-
-	// _ = r.ParseForm()
-
-	// login := r.PostFormValue(loginFormParam)
-	// if login == "" {
-	// 	return a.renderPage(w, "login.html", as)
-	// }
-
-	// if !isTrue(login) {
-	// 	return goidc.StatusFailure, errors.New("consent not granted")
-	// }
-
-	// username := r.PostFormValue(usernameFormParam)
-	// password := r.PostFormValue(passwordFormParam)
-	// if password != correctPassword {
-	// 	return a.renderError(w, "login.html", as, fmt.Sprintf("invalid password, try '%s'", correctPassword))
-	// }
-
-	// as.SetUserID(username)
-	// as.StoreParameter(paramAuthTime, fmt.Sprintf("%d", TimestampNow()))
-	// return goidc.StatusSuccess, nil
 }
 
 func (a authenticator) createUserSession(w http.ResponseWriter, as *goidc.AuthnSession) (goidc.Status, error) {
@@ -281,85 +269,13 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 
 	logger.TechLog.Info(context.Background(), "finishing OIDC auth flow", zap.String("subject", as.Subject), zap.Int("auth_time", authTime), zap.Any("claims", as.Claims), zap.String("scopes", as.Scopes), zap.Any("response_type", as.ResponseType))
 
-	// // Add claims based on the claims parameter.
-	// if as.Claims != nil {
-
-	// 	// acr claim.
-	// 	if acrClaim, ok := as.Claims.IDToken[goidc.ClaimACR]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimACR, acrClaim.Value)
-	// 	}
-	// 	if acrClaim, ok := as.Claims.UserInfo[goidc.ClaimACR]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimACR, acrClaim.Value)
-	// 	}
-
-	// 	// name claim.
-	// 	if _, ok := as.Claims.IDToken[goidc.ClaimName]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimName, "John Michael Doe")
-	// 	}
-	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimName]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimName, "John Michael Doe")
-	// 	}
-
-	// 	// email claim.
-	// 	if _, ok := as.Claims.IDToken[goidc.ClaimEmail]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimEmail, "random@email.com")
-	// 	}
-	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimEmail]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimEmail, "random@email.com")
-	// 	}
-
-	// 	// email_verified claim.
-	// 	if _, ok := as.Claims.IDToken[goidc.ClaimEmailVerified]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimEmailVerified, true)
-	// 	}
-	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimEmailVerified]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimEmailVerified, true)
-	// 	}
-
-	// 	// phone_number claim.
-	// 	if _, ok := as.Claims.IDToken[goidc.ClaimPhoneNumber]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimPhoneNumber, "+00 00000000")
-	// 	}
-	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimPhoneNumber]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimPhoneNumber, "+00 00000000")
-	// 	}
-
-	// 	// phone_number_verified claim.
-	// 	if _, ok := as.Claims.IDToken[goidc.ClaimPhoneNumberVerified]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimPhoneNumberVerified, true)
-	// 	}
-	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimPhoneNumberVerified]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimPhoneNumberVerified, true)
-	// 	}
-
-	// 	// address claim.
-	// 	if _, ok := as.Claims.IDToken[goidc.ClaimAddress]; ok {
-	// 		as.SetIDTokenClaim(goidc.ClaimAddress, map[string]any{
-	// 			"street_address": "123 Main St, Suite 500",
-	// 			"locality":       "Springfield",
-	// 			"region":         "IL",
-	// 			"postal_code":    "62701",
-	// 			"country":        "USA",
-	// 		})
-	// 	}
-	// 	if _, ok := as.Claims.UserInfo[goidc.ClaimAddress]; ok {
-	// 		as.SetUserInfoClaim(goidc.ClaimAddress, map[string]any{
-	// 			"street_address": "123 Main St, Suite 500",
-	// 			"locality":       "Springfield",
-	// 			"region":         "IL",
-	// 			"postal_code":    "62701",
-	// 			"country":        "USA",
-	// 		})
-	// 	}
-	// }
-
 	// Add claims based on scope.
 	setClaimFunc := as.SetUserInfoClaim
 	if as.ResponseType == goidc.ResponseTypeIDToken {
 		setClaimFunc = as.SetIDTokenClaim
 	}
 
-	if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) || strings.Contains(as.Scopes, goidc.ScopeProfile.ID) {
+	if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) || strings.Contains(as.Scopes, goidc.ScopeProfile.ID) || strings.Contains(as.Scopes, "roles") {
 		userIDStr := as.Subject
 		userID, err := strconv.ParseInt(userIDStr, 10, 64)
 		if err != nil {
@@ -380,24 +296,70 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 
 		if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) {
 			setClaimFunc(goidc.ClaimEmail, user.Username)
-			// setClaimFunc(goidc.ClaimEmailVerified, true)
 		}
 
 		if strings.Contains(as.Scopes, goidc.ScopeProfile.ID) {
-			// setClaimFunc(goidc.ClaimWebsite, "https://example.com")
-			// setClaimFunc(goidc.ClaimZoneInfo, "America/Sao_Paulo")
-			// setClaimFunc(goidc.ClaimBirthdate, "1990-01-01")
-			// setClaimFunc(goidc.ClaimGender, "male")
-			// setClaimFunc(goidc.ClaimProfile, "https://example.com/johndoe")
 			setClaimFunc(goidc.ClaimPreferredUsername, user.Username)
 			setClaimFunc(goidc.ClaimGivenName, user.FirstName)
-			// setClaimFunc(goidc.ClaimMiddleName, "Michael")
-			// setClaimFunc(goidc.ClaimLocale, "en-US")
-			// setClaimFunc(goidc.ClaimPicture, "https://example.com/johndoe/profile.jpg")
 			setClaimFunc(goidc.ClaimUpdatedAt, user.UpdatedAt)
 			setClaimFunc(goidc.ClaimName, user.FirstName+" "+user.LastName)
-			// setClaimFunc(goidc.ClaimNickname, "Johnny")
 			setClaimFunc(goidc.ClaimFamilyName, user.LastName)
+		}
+		if strings.Contains(as.Scopes, "roles") {
+			rolesStr := as.StoredParameter(paramRoles).(string)
+			var jwtRoles []jwt.Role
+			if err := json.Unmarshal([]byte(rolesStr), &jwtRoles); err != nil {
+				return goidc.StatusFailure, fmt.Errorf("unable to unmarshal roles: %w", err)
+			}
+
+			roles := []string{}
+
+			userRoles := []authorization.Role{}
+			for _, r := range jwtRoles {
+				ur, err := authorization.ToRole(r.Name, r.Context)
+				if err != nil {
+					return goidc.StatusFailure, fmt.Errorf("unable to convert jwt role to auth role: %w", err)
+				}
+				userRoles = append(userRoles, ur)
+			}
+
+			userWorkspacesMap := map[string]struct{}{}
+			userWorkspaces := []string{}
+			for _, r := range jwtRoles {
+				if w, ok := r.Context["workspace"]; ok {
+					if _, ok := userWorkspacesMap[w]; !ok {
+						userWorkspacesMap[w] = struct{}{}
+						userWorkspaces = append(userWorkspaces, w)
+					}
+				}
+			}
+
+			sort.Slice(userWorkspaces, func(i, j int) bool {
+				w1ID, err := strconv.ParseUint(userWorkspaces[i], 10, 64)
+				w2ID, err2 := strconv.ParseUint(userWorkspaces[j], 10, 64)
+				if err != nil || err2 != nil {
+					return userWorkspaces[i] < userWorkspaces[j]
+				}
+				return w1ID < w2ID
+			})
+
+			for _, w := range userWorkspaces {
+				permission := authorization.NewPermission(authorization.PermissionModifyFilesInWorkspace, authorization.WithWorkspace(w))
+				logger.TechLog.Debug(context.Background(), "checking user role for workspace", zap.String("workspace", w), zap.Uint64("user_id", uint64(userID)), zap.Any("permission", permission), zap.Any("user_roles", userRoles))
+				authorized, err := a.authorizer.IsUserAllowed(userRoles, permission)
+				if err != nil {
+					logger.TechLog.Error(context.Background(), "authorization check error", zap.Error(err))
+					continue
+				}
+				if !authorized {
+					continue
+				}
+
+				rj := "workspace" + w
+
+				roles = append(roles, rj)
+			}
+			setClaimFunc("roles", roles)
 		}
 	}
 

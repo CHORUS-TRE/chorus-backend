@@ -258,6 +258,7 @@ type (
 			FrontendLoginURL string                        `yaml:"frontend_login_url"`
 			JWKS             Sensitive                     `yaml:"jwks"`
 			IssuerURL        string                        `yaml:"issuer_url"`
+			Scopes           []string                      `yaml:"scopes"`
 			Clients          []OpenIDConnectProviderClient `yaml:"clients"`
 		} `yaml:"openid_connect_provider"`
 
@@ -364,6 +365,8 @@ type (
 		RegistrationToken  string `yaml:"registration_token"`
 		CreatedAtTimestamp int    `yaml:"created_at"`
 		ExpiresAtTimestamp int    `yaml:"expires_at"`
+
+		OnlyPreLoggedForClient bool `yaml:"only_pre_logged_for_client"`
 
 		IsFederated                bool     `yaml:"is_federated"`
 		FederationRegistrationType string   `yaml:"federation_registration_type"` // automatic or explicit

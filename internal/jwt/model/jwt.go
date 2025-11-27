@@ -56,6 +56,7 @@ type JWTClaims struct {
 	R         string `json:"r"` // Roles gz compressed and base64-encoded
 	Roles     []Role `json:"roles"`
 	Username  string `json:"username"`
+	ForClient string `json:"forClient"`
 	ctx       context.Context
 
 	jwt.StandardClaims
