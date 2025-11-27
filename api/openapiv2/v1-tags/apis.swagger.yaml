@@ -2761,7 +2761,7 @@ paths:
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
-        - WorkspaceService
+        - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
     put:
       summary: Update a file in a workspace
@@ -2812,7 +2812,7 @@ paths:
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
       tags:
-        - WorkspaceService
+        - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{path}:
     get:
       summary: Get a file in a workspace
@@ -2857,7 +2857,7 @@ paths:
           type: string
           pattern: .+
       tags:
-        - WorkspaceService
+        - WorkspaceFileService
     delete:
       summary: Delete a file in a workspace
       description: This endpoint deletes a file in a workspace at the specified path
@@ -2901,7 +2901,7 @@ paths:
           type: string
           pattern: .+
       tags:
-        - WorkspaceService
+        - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/files/{path}:
     get:
       summary: List files in a workspace at a specified path
@@ -2946,7 +2946,7 @@ paths:
           type: string
           pattern: .+
       tags:
-        - WorkspaceService
+        - WorkspaceFileService
 definitions:
   AuthenticationServiceAuthenticateOauthRedirectBody:
     type: object

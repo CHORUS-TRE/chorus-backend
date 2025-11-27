@@ -10,7 +10,7 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace-file/client/workspace_service"
+	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace-file/client/workspace_file_service"
 )
 
 // Default chorus workspace file service HTTP client.
@@ -55,7 +55,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *ChorusWork
 
 	cli := new(ChorusWorkspaceFileService)
 	cli.Transport = transport
-	cli.WorkspaceService = workspace_service.New(transport, formats)
+	cli.WorkspaceFileService = workspace_file_service.New(transport, formats)
 	return cli
 }
 
@@ -100,7 +100,7 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // ChorusWorkspaceFileService is a client for chorus workspace file service
 type ChorusWorkspaceFileService struct {
-	WorkspaceService workspace_service.ClientService
+	WorkspaceFileService workspace_file_service.ClientService
 
 	Transport runtime.ClientTransport
 }
@@ -108,5 +108,5 @@ type ChorusWorkspaceFileService struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *ChorusWorkspaceFileService) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-	c.WorkspaceService.SetTransport(transport)
+	c.WorkspaceFileService.SetTransport(transport)
 }
