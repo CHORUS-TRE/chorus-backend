@@ -138,7 +138,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a file in a workspace";
             description: "This endpoint retrieves a file at the specified path within a workspace";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -149,7 +149,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List files in a workspace at a specified path";
             description: "This endpoint lists all files at given path within a workspace";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -161,7 +161,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Create a file in a workspace";
             description: "This endpoint creates a file in a workspace at the specified path";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -173,7 +173,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Update a file in a workspace";
             description: "This endpoint updates (rename or moves) a file in a workspace at the specified path";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -184,7 +184,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a file in a workspace";
             description: "This endpoint deletes a file in a workspace at the specified path";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -197,7 +197,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Initiate a multipart upload for a file in a workspace";
             description: "This endpoint initiates a multipart upload for a file in a workspace";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     }
 
@@ -209,7 +209,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Upload a part of a file in a workspace";
             description: "This endpoint uploads a part of a file in a workspace";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -221,7 +221,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Complete a multipart upload for a file in a workspace";
             description: "This endpoint completes a multipart upload for a file in a workspace";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 
@@ -232,7 +232,7 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Abort a multipart upload for a file in a workspace";
             description: "This endpoint aborts a multipart upload for a file in a workspace";
-            tags: "WorkspaceService";
+            tags: "WorkspaceFileService";
         };
     };
 }
