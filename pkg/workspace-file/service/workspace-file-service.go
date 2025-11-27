@@ -16,6 +16,10 @@ type WorkspaceFiler interface {
 	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error)
 	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error)
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
+	InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error)
+	UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error)
+	CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error)
+	AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error
 }
 
 type WorkspaceFileStore interface {
@@ -27,6 +31,10 @@ type WorkspaceFileStore interface {
 	MoveFile(ctx context.Context, oldPath string, newPath string) (*model.File, error)
 	DeleteFile(ctx context.Context, path string) error
 	DeleteDirectory(ctx context.Context, dirPath string) error
+	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
+	UploadPart(ctx context.Context, uploadID string, part *model.FilePart) (*model.FilePart, error)
+	CompleteMultipartUpload(ctx context.Context, file *model.File, uploadID string, parts []*model.FilePart) (*model.File, error)
+	AbortMultipartUpload(ctx context.Context, uploadID string) error
 }
 
 type WorkspaceFileService struct {
@@ -275,6 +283,76 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 		if err != nil {
 			return fmt.Errorf("unable to delete workspace file at path %s: %w", filePath, err)
 		}
+	}
+
+	return nil
+}
+
+func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error) {
+	storeName, err := s.selectFileStore(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	store := s.fileStores[storeName]
+	storePath := s.toStorePath(storeName, workspaceID, file.Path)
+
+	uploadInfo, err := store.InitiateMultipartUpload(ctx, &model.File{
+		Path:        storePath,
+		Name:        file.Name,
+		IsDirectory: file.IsDirectory,
+		MimeType:    file.MimeType,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to initiate multipart upload for file at path %s: %w", file.Path, err)
+	}
+
+	return uploadInfo, nil
+}
+
+func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error) {
+	storeName, err := s.selectFileStore(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	store := s.fileStores[storeName]
+
+	uploadedPart, err := store.UploadPart(ctx, uploadID, part)
+	if err != nil {
+		return nil, fmt.Errorf("unable to upload part number %d for upload ID %s at path %s: %w", part.PartNumber, uploadID, filePath, err)
+	}
+
+	return uploadedPart, nil
+}
+
+func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error) {
+	storeName, err := s.selectFileStore(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	store := s.fileStores[storeName]
+
+	completedFile, err := store.CompleteMultipartUpload(ctx, file, uploadID, parts)
+	if err != nil {
+		return nil, fmt.Errorf("unable to complete multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
+	}
+
+	return completedFile, nil
+}
+
+func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error {
+	storeName, err := s.selectFileStore(filePath)
+	if err != nil {
+		return fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	store := s.fileStores[storeName]
+
+	err = store.AbortMultipartUpload(ctx, uploadID)
+	if err != nil {
+		return fmt.Errorf("unable to abort multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
 	}
 
 	return nil

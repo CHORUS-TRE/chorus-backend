@@ -361,3 +361,79 @@ func TestCreateConflictingFile(t *testing.T) {
 	})
 	assert.Error(t, err, "creating a file that conflicts with existing directory should error")
 }
+
+func TestFileUpload(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+
+	workspaceID := uint64(1)
+	globalPath := "/test-client/largefile.txt"
+	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
+	fileSize := uint64(10 * 1024 * 1024) // 10 MB
+	storage := s.fileStores[testStoreName]
+
+	// Initiate multipart upload
+	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &model.File{
+		Path:        storePath,
+		IsDirectory: false,
+		Size:        fileSize,
+	})
+	assert.NoError(t, err, "initiating multipart upload should not error: %v", err)
+	assert.NotEmpty(t, uploadInfo.UploadID, "upload ID should not be empty")
+
+	// Upload parts
+	partSize := uint64(uploadInfo.PartSize)
+	var parts []*model.FilePart
+	for partNumber := uint64(1); partNumber <= uploadInfo.TotalParts; partNumber++ {
+		partData := make([]byte, partSize)
+		if partNumber == uploadInfo.TotalParts {
+			lastPartSize := int(fileSize - (partNumber-1)*partSize)
+			partData = make([]byte, lastPartSize)
+		}
+		part, err := storage.UploadPart(context.Background(), uploadInfo.UploadID, &model.FilePart{
+			PartNumber: partNumber,
+			Data:       partData,
+		})
+		assert.NoError(t, err, "uploading part %d should not error: %v", partNumber, err)
+		assert.NotEmpty(t, part.ETag, "part should have an ETag")
+		parts = append(parts, part)
+	}
+
+	// Complete multipart upload
+	uploadedFile, err := storage.CompleteMultipartUpload(context.Background(), &model.File{
+		Path:        storePath,
+		IsDirectory: false,
+		Size:        fileSize,
+	}, uploadInfo.UploadID, parts)
+	assert.NoError(t, err, "completing multipart upload should not error: %v", err)
+	assert.Equal(t, storePath, uploadedFile.Path, "uploaded file path should match")
+
+	// Retrieve and verify uploaded file
+	_, err = storage.StatFile(context.Background(), storePath)
+	assert.NoError(t, err, "retrieving uploaded file should not error: %v", err)
+}
+
+func TestAbortFileUpload(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+
+	workspaceID := uint64(1)
+	globalPath := "/test-client/abortfile.txt"
+	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
+	storage := s.fileStores[testStoreName]
+
+	// Initiate multipart upload
+	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &model.File{
+		Path:        storePath,
+		IsDirectory: false,
+		Size:        5 * 1024 * 1024, // 5 MB file
+	})
+	assert.NoError(t, err, "initiating multipart upload should not error: %v", err)
+	assert.NotEmpty(t, uploadInfo.UploadID, "upload ID should not be empty")
+
+	// Abort multipart upload
+	err = storage.AbortMultipartUpload(context.Background(), uploadInfo.UploadID)
+	assert.NoError(t, err, "aborting multipart upload should not error: %v", err)
+}
