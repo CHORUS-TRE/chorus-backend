@@ -191,7 +191,7 @@ func TestFileLifecycle(t *testing.T) {
 	// Get file metadata
 	metadata, err := storage.StatFile(context.Background(), storePath)
 	assert.NoError(t, err, "getting file metadata should not error: %v", err)
-	assert.Equal(t, int64(len(content)), metadata.Size, "file size should match content length")
+	assert.Equal(t, uint64(len(content)), metadata.Size, "file size should match content length")
 
 	// Get file content
 	retrievedFile, err := storage.GetFile(context.Background(), storePath)
