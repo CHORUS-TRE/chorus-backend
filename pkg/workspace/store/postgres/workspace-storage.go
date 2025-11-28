@@ -157,14 +157,14 @@ func (s *WorkspaceStorage) DeleteOldWorkspaces(ctx context.Context, timeout time
 	const query = `
 		UPDATE workspaces
 		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
-		WHERE createdat < NOW() - INTERVAL $3 * INTERVAL '1 second'
+		WHERE createdat < NOW() - $3::INTERVAL
 		  AND status != 'deleted'
 		  AND deletedat IS NULL
 		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
 	`
 
 	var deletedWorkspaces []*model.Workspace
-	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceDeleted.String(), "-"+uuid.Next(), int64(timeout.Seconds()))
+	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(timeout.Seconds())))
 	if err != nil {
 		return nil, fmt.Errorf("unable to exec: %w", err)
 	}
