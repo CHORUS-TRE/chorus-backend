@@ -48,3 +48,30 @@ func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64,
 func (v validation) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
 	return v.next.DeleteWorkspaceFile(ctx, workspaceID, filePath)
 }
+
+func (v validation) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error) {
+	if err := v.validate.Struct(file); err != nil {
+		return nil, err
+	}
+	return v.next.InitiateWorkspaceFileUpload(ctx, workspaceID, filePath, file)
+}
+
+func (v validation) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error) {
+	if err := v.validate.Struct(part); err != nil {
+		return nil, err
+	}
+	return v.next.UploadWorkspaceFilePart(ctx, workspaceID, filePath, uploadID, part)
+}
+
+func (v validation) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
+	for _, part := range parts {
+		if err := v.validate.Struct(part); err != nil {
+			return nil, err
+		}
+	}
+	return v.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
+}
+
+func (v validation) AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error {
+	return v.next.AbortWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID)
+}

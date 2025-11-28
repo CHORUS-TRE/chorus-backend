@@ -50,3 +50,19 @@ func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, o
 func (c *Caching) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
 	return c.next.DeleteWorkspaceFile(ctx, workspaceID, filePath)
 }
+
+func (c *Caching) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error) {
+	return c.next.InitiateWorkspaceFileUpload(ctx, workspaceID, filePath, file)
+}
+
+func (c *Caching) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error) {
+	return c.next.UploadWorkspaceFilePart(ctx, workspaceID, filePath, uploadID, part)
+}
+
+func (c *Caching) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
+	return c.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
+}
+
+func (c *Caching) AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error {
+	return c.next.AbortWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID)
+}

@@ -74,3 +74,39 @@ func (c workspaceFileControllerAuthorization) DeleteWorkspaceFile(ctx context.Co
 
 	return c.next.DeleteWorkspaceFile(ctx, req)
 }
+
+func (c workspaceFileControllerAuthorization) InitiateWorkspaceFileUpload(ctx context.Context, req *chorus.InitiateWorkspaceFileUploadRequest) (*chorus.InitiateWorkspaceFileUploadReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.InitiateWorkspaceFileUpload(ctx, req)
+}
+
+func (c workspaceFileControllerAuthorization) UploadWorkspaceFilePart(ctx context.Context, req *chorus.UploadWorkspaceFilePartRequest) (*chorus.UploadWorkspaceFilePartReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.UploadWorkspaceFilePart(ctx, req)
+}
+
+func (c workspaceFileControllerAuthorization) CompleteWorkspaceFileUpload(ctx context.Context, req *chorus.CompleteWorkspaceFileUploadRequest) (*chorus.CompleteWorkspaceFileUploadReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.CompleteWorkspaceFileUpload(ctx, req)
+}
+
+func (c workspaceFileControllerAuthorization) AbortWorkspaceFileUpload(ctx context.Context, req *chorus.AbortWorkspaceFileUploadRequest) (*chorus.AbortWorkspaceFileUploadReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.AbortWorkspaceFileUpload(ctx, req)
+}
