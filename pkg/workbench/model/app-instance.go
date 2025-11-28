@@ -22,6 +22,8 @@ type AppInstance struct {
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
 
+	KioskConfigJWTToken string
+
 	AppName                *string
 	AppDockerImageRegistry *string
 	AppDockerImageName     *string
@@ -29,6 +31,7 @@ type AppInstance struct {
 
 	AppShmSize             *string
 	AppKioskConfigURL      *string
+	AppKioskConfigJWTURL   *string
 	AppMaxCPU              *string
 	AppMinCPU              *string
 	AppMaxMemory           *string

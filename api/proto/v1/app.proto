@@ -27,8 +27,10 @@ message App {
     string maxEphemeralStorage = 16;
     string minEphemeralStorage = 17;
     string kioskConfigURL = 18;
-    string iconURL = 19;
+    string kioskConfigJWTURL = 19;
+    string kioskConfigJWTOIDCClientID = 20;
+    string iconURL = 21;
 
-    google.protobuf.Timestamp createdAt = 20;
-    google.protobuf.Timestamp updatedAt = 21;
+    google.protobuf.Timestamp createdAt = 22;
+    google.protobuf.Timestamp updatedAt = 23;
 }

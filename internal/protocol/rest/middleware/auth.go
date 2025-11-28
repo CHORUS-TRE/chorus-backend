@@ -11,7 +11,7 @@ import (
 	jwt_go "github.com/golang-jwt/jwt"
 )
 
-func AddJWTFromCookie(h http.Handler) http.Handler {
+func AddJWTFromCookie(h http.Handler, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jwt := r.Header.Get("Authorization")
 		if jwt == "" {
@@ -21,7 +21,9 @@ func AddJWTFromCookie(h http.Handler) http.Handler {
 			}
 		}
 
-		h.ServeHTTP(w, r)
+		ctx := GetContextWithAuth(r.Context(), r, keyFunc, claimsFactory)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

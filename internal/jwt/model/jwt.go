@@ -56,6 +56,7 @@ type JWTClaims struct {
 	R         string `json:"r"` // Roles gz compressed and base64-encoded
 	Roles     []Role `json:"roles"`
 	Username  string `json:"username"`
+	ForClient string `json:"forClient"`
 	ctx       context.Context
 
 	jwt.StandardClaims
@@ -65,6 +66,14 @@ type JWTClaims struct {
 type Role struct {
 	Name    string            `json:"name"`
 	Context map[string]string `json:"context"`
+}
+
+func ExtractJWTClaims(ctx context.Context) (*JWTClaims, error) {
+	claims, ok := ctx.Value(JWTClaimsContextKey).(*JWTClaims)
+	if !ok {
+		return nil, errors.New("malformed jwt-token")
+	}
+	return claims, nil
 }
 
 func ExtractTenantID(ctx context.Context) (uint64, error) {

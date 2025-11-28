@@ -41,6 +41,12 @@ type ChorusApp struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// kiosk config j w t o ID c client ID
+	KioskConfigJWTOIDCClientID string `json:"kioskConfigJWTOIDCClientID,omitempty"`
+
+	// kiosk config j w t URL
+	KioskConfigJWTURL string `json:"kioskConfigJWTURL,omitempty"`
+
 	// kiosk config URL
 	KioskConfigURL string `json:"kioskConfigURL,omitempty"`
 
