@@ -63,16 +63,13 @@ func (v validation) UploadWorkspaceFilePart(ctx context.Context, workspaceID uin
 	return v.next.UploadWorkspaceFilePart(ctx, workspaceID, filePath, uploadID, part)
 }
 
-func (v validation) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error) {
-	if err := v.validate.Struct(file); err != nil {
-		return nil, err
-	}
+func (v validation) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
 	for _, part := range parts {
 		if err := v.validate.Struct(part); err != nil {
 			return nil, err
 		}
 	}
-	return v.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, file, parts)
+	return v.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
 }
 
 func (v validation) AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error {

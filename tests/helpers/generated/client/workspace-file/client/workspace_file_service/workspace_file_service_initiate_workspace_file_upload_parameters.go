@@ -63,8 +63,8 @@ WorkspaceFileServiceInitiateWorkspaceFileUploadParams contains all the parameter
 */
 type WorkspaceFileServiceInitiateWorkspaceFileUploadParams struct {
 
-	// Body.
-	Body *models.WorkspaceFileServiceInitiateWorkspaceFileUploadBody
+	// File.
+	File *models.ChorusWorkspaceFile
 
 	// Path.
 	Path string
@@ -127,15 +127,15 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetHTTPClient(cl
 	o.HTTPClient = client
 }
 
-// WithBody adds the body to the workspace file service initiate workspace file upload params
-func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WithBody(body *models.WorkspaceFileServiceInitiateWorkspaceFileUploadBody) *WorkspaceFileServiceInitiateWorkspaceFileUploadParams {
-	o.SetBody(body)
+// WithFile adds the file to the workspace file service initiate workspace file upload params
+func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WithFile(file *models.ChorusWorkspaceFile) *WorkspaceFileServiceInitiateWorkspaceFileUploadParams {
+	o.SetFile(file)
 	return o
 }
 
-// SetBody adds the body to the workspace file service initiate workspace file upload params
-func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetBody(body *models.WorkspaceFileServiceInitiateWorkspaceFileUploadBody) {
-	o.Body = body
+// SetFile adds the file to the workspace file service initiate workspace file upload params
+func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetFile(file *models.ChorusWorkspaceFile) {
+	o.File = file
 }
 
 // WithPath adds the path to the workspace file service initiate workspace file upload params
@@ -167,8 +167,8 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WriteToRequest(r
 		return err
 	}
 	var res []error
-	if o.Body != nil {
-		if err := r.SetBodyParam(o.Body); err != nil {
+	if o.File != nil {
+		if err := r.SetBodyParam(o.File); err != nil {
 			return err
 		}
 	}

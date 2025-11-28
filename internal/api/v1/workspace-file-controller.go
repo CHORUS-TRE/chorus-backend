@@ -176,11 +176,6 @@ func (c WorkspaceFileController) CompleteWorkspaceFileUpload(ctx context.Context
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	file, err := converter.WorkspaceFileToBusiness(req.File)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-	}
-
 	var parts []*model.FilePart
 	for _, tgPart := range req.Parts {
 		part, err := converter.WorkspaceFilePartToBusiness(tgPart)
@@ -190,7 +185,7 @@ func (c WorkspaceFileController) CompleteWorkspaceFileUpload(ctx context.Context
 		parts = append(parts, part)
 	}
 
-	uploadedFile, err := c.workspaceFile.CompleteWorkspaceFileUpload(ctx, req.WorkspaceId, req.Path, req.UploadId, file, parts)
+	uploadedFile, err := c.workspaceFile.CompleteWorkspaceFileUpload(ctx, req.WorkspaceId, req.Path, req.UploadId, parts)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CompleteWorkspaceFileUpload': %v", err.Error())
 	}

@@ -401,11 +401,7 @@ func TestFileUpload(t *testing.T) {
 	}
 
 	// Complete multipart upload
-	uploadedFile, err := storage.CompleteMultipartUpload(context.Background(), &model.File{
-		Path:        storePath,
-		IsDirectory: false,
-		Size:        fileSize,
-	}, uploadInfo.UploadID, parts)
+	uploadedFile, err := storage.CompleteMultipartUpload(context.Background(), storePath, uploadInfo.UploadID, parts)
 	assert.NoError(t, err, "completing multipart upload should not error: %v", err)
 	assert.Equal(t, storePath, uploadedFile.Path, "uploaded file path should match")
 

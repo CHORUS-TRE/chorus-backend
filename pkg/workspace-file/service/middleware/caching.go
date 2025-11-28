@@ -59,8 +59,8 @@ func (c *Caching) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint6
 	return c.next.UploadWorkspaceFilePart(ctx, workspaceID, filePath, uploadID, part)
 }
 
-func (c *Caching) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error) {
-	return c.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, file, parts)
+func (c *Caching) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
+	return c.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
 }
 
 func (c *Caching) AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error {

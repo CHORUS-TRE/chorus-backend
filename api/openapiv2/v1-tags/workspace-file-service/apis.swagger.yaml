@@ -153,11 +153,11 @@ paths:
           required: true
           type: string
           pattern: .+
-        - name: body
+        - name: file
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkspaceFileServiceInitiateWorkspaceFileUploadBody'
+            $ref: '#/definitions/chorusWorkspaceFile'
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}:
@@ -219,11 +219,11 @@ paths:
           in: path
           required: true
           type: string
-        - name: body
+        - name: part
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkspaceFileServiceUploadWorkspaceFilePartBody'
+            $ref: '#/definitions/chorusWorkspaceFilePart'
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete:
@@ -255,11 +255,14 @@ paths:
           in: path
           required: true
           type: string
-        - name: body
+        - name: parts
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkspaceFileServiceCompleteWorkspaceFileUploadBody'
+            type: array
+            items:
+              type: object
+              $ref: '#/definitions/chorusWorkspaceFilePart'
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/files/{path}:
@@ -290,27 +293,6 @@ paths:
       tags:
         - WorkspaceFileService
 definitions:
-  WorkspaceFileServiceCompleteWorkspaceFileUploadBody:
-    type: object
-    properties:
-      file:
-        $ref: '#/definitions/chorusWorkspaceFile'
-      parts:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusWorkspaceFilePart'
-  WorkspaceFileServiceInitiateWorkspaceFileUploadBody:
-    type: object
-    properties:
-      file:
-        $ref: '#/definitions/chorusWorkspaceFile'
-    title: Multipart upload related messages
-  WorkspaceFileServiceUploadWorkspaceFilePartBody:
-    type: object
-    properties:
-      part:
-        $ref: '#/definitions/chorusWorkspaceFilePart'
   chorusAbortWorkspaceFileUploadReply:
     type: object
     properties:

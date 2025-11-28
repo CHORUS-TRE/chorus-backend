@@ -44,7 +44,7 @@ type MinioFileStore interface {
 	UploadPart(ctx context.Context, uploadId string, part *model.FilePart) (*model.FilePart, error)
 
 	// Complete a multipart upload after all parts of a file have been uploaded.
-	CompleteMultipartUpload(ctx context.Context, file *model.File, uploadId string, parts []*model.FilePart) (*model.File, error)
+	CompleteMultipartUpload(ctx context.Context, path string, uploadId string, parts []*model.FilePart) (*model.File, error)
 
 	// Abort a multipart upload, discarding all uploaded parts.
 	AbortMultipartUpload(ctx context.Context, uploadId string) error
@@ -317,13 +317,13 @@ func (s *MinioFileStorage) UploadPart(ctx context.Context, uploadId string, part
 	}, nil
 }
 
-func (s *MinioFileStorage) CompleteMultipartUpload(ctx context.Context, file *model.File, uploadId string, parts []*model.FilePart) (*model.File, error) {
+func (s *MinioFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*model.FilePart) (*model.File, error) {
 	var completeParts []*miniorawclient.MinioObjectPartInfo
 	for _, part := range parts {
 		completeParts = append(completeParts, model.FilePartToMinioObjectPartInfo(part))
 	}
 
-	uploadInfo, err := s.minioClient.CompleteMultipartUpload(file.Path, uploadId, completeParts)
+	uploadInfo, err := s.minioClient.CompleteMultipartUpload(filePath, uploadId, completeParts)
 	if err != nil {
 		return nil, fmt.Errorf("unable to complete multipart upload %s: %w", uploadId, err)
 	}

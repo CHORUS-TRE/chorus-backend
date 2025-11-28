@@ -109,7 +109,6 @@ message CompleteWorkspaceFileUploadRequest {
     uint64 workspaceId = 1;
     string path = 2;
     string uploadId = 3;
-    WorkspaceFile file = 4;
     repeated WorkspaceFilePart parts = 5;
 }
 message CompleteWorkspaceFileUploadReply {
@@ -192,7 +191,7 @@ service WorkspaceFileService {
     rpc InitiateWorkspaceFileUpload(InitiateWorkspaceFileUploadRequest) returns (InitiateWorkspaceFileUploadReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload"
-            body: "*"
+            body: "file"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Initiate a multipart upload for a file in a workspace";
@@ -204,7 +203,7 @@ service WorkspaceFileService {
     rpc UploadWorkspaceFilePart(UploadWorkspaceFilePartRequest) returns (UploadWorkspaceFilePartReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"
-            body: "*"
+            body: "part"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Upload a part of a file in a workspace";
@@ -216,7 +215,7 @@ service WorkspaceFileService {
     rpc CompleteWorkspaceFileUpload(CompleteWorkspaceFileUploadRequest) returns (CompleteWorkspaceFileUploadReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}/complete"
-            body: "*"
+            body: "parts"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Complete a multipart upload for a file in a workspace";

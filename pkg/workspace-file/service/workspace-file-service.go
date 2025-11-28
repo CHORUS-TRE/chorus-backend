@@ -18,7 +18,7 @@ type WorkspaceFiler interface {
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 	InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error)
 	UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error)
-	CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error)
+	CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error)
 	AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error
 }
 
@@ -33,7 +33,7 @@ type WorkspaceFileStore interface {
 	DeleteDirectory(ctx context.Context, dirPath string) error
 	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
 	UploadPart(ctx context.Context, uploadID string, part *model.FilePart) (*model.FilePart, error)
-	CompleteMultipartUpload(ctx context.Context, file *model.File, uploadID string, parts []*model.FilePart) (*model.File, error)
+	CompleteMultipartUpload(ctx context.Context, path string, uploadID string, parts []*model.FilePart) (*model.File, error)
 	AbortMultipartUpload(ctx context.Context, uploadID string) error
 }
 
@@ -326,7 +326,7 @@ func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, work
 	return uploadedPart, nil
 }
 
-func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error) {
+func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -334,7 +334,7 @@ func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, 
 
 	store := s.fileStores[storeName]
 
-	completedFile, err := store.CompleteMultipartUpload(ctx, file, uploadID, parts)
+	completedFile, err := store.CompleteMultipartUpload(ctx, filePath, uploadID, parts)
 	if err != nil {
 		return nil, fmt.Errorf("unable to complete multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
 	}

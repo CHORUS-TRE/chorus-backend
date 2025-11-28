@@ -172,10 +172,10 @@ func (c workspaceServiceLogging) UploadWorkspaceFilePart(ctx context.Context, wo
 	return uploadedPart, nil
 }
 
-func (c workspaceServiceLogging) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, file *model.File, parts []*model.FilePart) (*model.File, error) {
+func (c workspaceServiceLogging) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
 	now := time.Now()
 
-	completedFile, err := c.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, file, parts)
+	completedFile, err := c.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithWorkspaceIDField(workspaceID),
