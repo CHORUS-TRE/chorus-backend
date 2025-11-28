@@ -38,6 +38,24 @@ func (a authenticationServiceLogging) GetAuthenticationModes() []model.Authentic
 	return res
 }
 
+func (a authenticationServiceLogging) GetShortLivedTokenForClient(ctx context.Context, oidcClientID string, workspaceID uint64) (string, time.Duration, error) {
+	now := time.Now()
+
+	res, t, err := a.next.GetShortLivedTokenForClient(ctx, oidcClientID, workspaceID)
+	if err != nil {
+		a.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return res, t, err
+	}
+
+	a.logger.Info(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, t, nil
+}
+
 func (a authenticationServiceLogging) Authenticate(ctx context.Context, username, password, totp string) (string, time.Duration, error) {
 	now := time.Now()
 

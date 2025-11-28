@@ -22,6 +22,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
+	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
@@ -102,8 +103,9 @@ type WorkbenchService struct {
 	store  WorkbenchStore
 	client k8s.K8sClienter
 
-	apper  app_service.Apper
-	userer user_service.Userer
+	apper         app_service.Apper
+	userer        user_service.Userer
+	authenticator authentication_service.Authenticator
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
@@ -112,14 +114,15 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
 		client: client,
 
-		apper:  apper,
-		userer: userer,
+		apper:         apper,
+		userer:        userer,
+		authenticator: authenticator,
 
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),

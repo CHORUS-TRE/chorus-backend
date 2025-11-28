@@ -213,6 +213,10 @@ definitions:
         type: string
       kioskConfigURL:
         type: string
+      kioskConfigJWTURL:
+        type: string
+      kioskConfigJWTOIDCClientID:
+        type: string
       iconURL:
         type: string
       createdAt:
