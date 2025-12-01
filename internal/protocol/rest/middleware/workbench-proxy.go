@@ -4,8 +4,10 @@ import (
 	"context"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 
 	embed "github.com/CHORUS-TRE/chorus-backend/api"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
@@ -73,7 +75,20 @@ func AddDevAuth(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		if r.RequestURI == "/dev-auth" {
+		u, err := url.Parse(r.RequestURI)
+		if err != nil {
+			h.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		if u.Path == "/dev-auth" {
+			u.Path = "/dev-auth/"
+			handler := http.RedirectHandler(u.String(), http.StatusFound)
+			handler.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
+
+		if strings.HasPrefix(r.RequestURI, "/dev-auth") {
 			handler := http.StripPrefix("/dev-auth", http.FileServer(fs))
 			handler.ServeHTTP(w, r.WithContext(ctx))
 			return

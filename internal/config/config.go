@@ -368,6 +368,8 @@ type (
 
 		OnlyPreLoggedForClient bool `yaml:"only_pre_logged_for_client"`
 
+		GrantAutoApproved bool `yaml:"grant_auto_approved"`
+
 		IsFederated                bool     `yaml:"is_federated"`
 		FederationRegistrationType string   `yaml:"federation_registration_type"` // automatic or explicit
 		FederationTrustMarkIDs     []string `yaml:"federation_trust_mark_ids"`

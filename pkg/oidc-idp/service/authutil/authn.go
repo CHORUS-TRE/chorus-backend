@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -65,14 +67,15 @@ const (
 	paramPolicyURI         string = "policy_uri"
 	paramTermsOfServiceURI string = "tos_uri"
 
-	// usernameFormParam string = "username"
-	// passwordFormParam string = "password"
-	// loginFormParam    string = "login"
+	usernameFormParam string = "username"
+	passwordFormParam string = "password"
+	loginFormParam    string = "login"
+
 	consentFormParam string = "consent"
 
 	cookieUserSessionID string = "goidc_username"
 
-	// correctPassword string = "pass"
+	correctPassword string = "pass"
 )
 
 var userSessionStore = map[string]userSession{}
@@ -116,6 +119,9 @@ func (a authenticator) authenticate(w http.ResponseWriter, r *http.Request, as *
 
 	if as.StoredParameter(paramStepID) == stepIDLogin {
 		if status, err := a.login(w, r, as); status != goidc.StatusSuccess {
+			if status == goidc.StatusInProgress {
+				as.StoreParameter(paramStepID, stepIDLoadUser)
+			}
 			return status, err
 		}
 		as.StoreParameter(paramStepID, stepIDCreateSession)
@@ -208,9 +214,61 @@ func (a authenticator) login(w http.ResponseWriter, r *http.Request, as *goidc.A
 		return goidc.StatusSuccess, nil
 	}
 
-	w.Header().Set("Location", a.cfg.Services.OpenIDConnectProvider.FrontendLoginURL)
+	u, err := url.Parse(a.cfg.Services.OpenIDConnectProvider.IssuerURL)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("unable to parse request URI: %w", err)
+	}
+	u.Path = path.Join(u.Path, "authorize", as.CallbackID, "load_user")
+	callbackURL := u.String()
+	callbackURLEncoded := url.QueryEscape(callbackURL)
+
+	w.Header().Set("Location", a.cfg.Services.OpenIDConnectProvider.FrontendLoginURL+"?callback_url="+callbackURLEncoded)
 	w.WriteHeader(http.StatusFound)
 	return goidc.StatusInProgress, nil
+
+	// // If the user is unknown and the client requested no prompt for credentials,
+	// // return a login-required error.
+	// if as.Subject == "" && as.Prompt == goidc.PromptTypeNone {
+	// 	return goidc.StatusFailure, goidc.NewError(goidc.ErrorCodeLoginRequired, "user not logged in, cannot use prompt none")
+	// }
+
+	// // Determine if authentication is required.
+	// // Authentication is required if the user's identity is unknown or if the
+	// // client explicitly requested a login.
+	// mustAuthenticate := as.Subject == "" || as.Prompt == goidc.PromptTypeLogin
+	// // Additionally, check if the client specified a max age for the session.
+	// // If the max age is exceeded or 'auth_time' is unavailable, force re-authentication.
+	// if as.MaxAuthnAgeSecs != nil {
+	// 	maxAgeSecs := *as.MaxAuthnAgeSecs
+	// 	authTime := as.StoredParameter(paramAuthTime)
+	// 	if authTime == nil || TimestampNow() > authTime.(int)+maxAgeSecs {
+	// 		mustAuthenticate = true
+	// 	}
+	// }
+	// if !mustAuthenticate {
+	// 	return goidc.StatusSuccess, nil
+	// }
+
+	// _ = r.ParseForm()
+
+	// login := r.PostFormValue(loginFormParam)
+	// if login == "" {
+	// 	return a.renderPage(w, "login.html", as)
+	// }
+
+	// if !isTrue(login) {
+	// 	return goidc.StatusFailure, errors.New("consent not granted")
+	// }
+
+	// username := r.PostFormValue(usernameFormParam)
+	// password := r.PostFormValue(passwordFormParam)
+	// if password != correctPassword {
+	// 	return a.renderError(w, "login.html", as, fmt.Sprintf("invalid password, try '%s'", correctPassword))
+	// }
+
+	// as.SetUserID(username)
+	// as.StoreParameter(paramAuthTime, TimestampNow())
+	// return goidc.StatusSuccess, nil
 }
 
 func (a authenticator) createUserSession(w http.ResponseWriter, as *goidc.AuthnSession) (goidc.Status, error) {
@@ -239,8 +297,24 @@ func (a authenticator) createUserSession(w http.ResponseWriter, as *goidc.AuthnS
 }
 
 func (a authenticator) grantConsent(w http.ResponseWriter, r *http.Request, as *goidc.AuthnSession) (goidc.Status, error) {
+	clientID := as.ClientID
+	var client *config.OpenIDConnectProviderClient
+	for _, c := range a.cfg.Services.OpenIDConnectProvider.Clients {
+		if c.ID == clientID {
+			client = &c
+			break
+		}
+	}
+	if client == nil {
+		return goidc.StatusFailure, errors.New("client not found")
+	}
+	if client.GrantAutoApproved {
+		return goidc.StatusSuccess, nil
+	}
 
 	_ = r.ParseForm()
+
+	logger.TechLog.Debug(context.Background(), "consent request", zap.Any("as", as))
 
 	consented := r.PostFormValue(consentFormParam)
 	if consented == "" {
@@ -400,35 +474,41 @@ func (a authenticator) renderPage(w http.ResponseWriter, tmplName string, as *go
 	return goidc.StatusInProgress, nil
 }
 
-// func (a authenticator) renderError(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession, err string) (goidc.Status, error) {
+func (a authenticator) renderError(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession, displayedErr string) (goidc.Status, error) {
 
-// 	params := authnPage{
-// 		Subject:    as.Subject,
-// 		BaseURL:    Issuer,
-// 		CallbackID: as.CallbackID,
-// 		Session:    mapify(as),
-// 		Error:      err,
-// 	}
+	s, err := mapify(as)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "unable to mapify authn session for rendering", zap.Error(err))
+		return goidc.StatusFailure, fmt.Errorf("unable to render error page: %w", err)
+	}
 
-// 	logoURI := as.StoredParameter(paramLogoURI)
-// 	if logoURI != nil {
-// 		params.LogoURI = logoURI.(string)
-// 	}
+	params := authnPage{
+		Subject:    as.Subject,
+		BaseURL:    a.cfg.Services.OpenIDConnectProvider.IssuerURL,
+		CallbackID: as.CallbackID,
+		Session:    s,
+		Error:      displayedErr,
+	}
 
-// 	policyURI := as.StoredParameter(paramPolicyURI)
-// 	if policyURI != nil {
-// 		params.PolicyURI = policyURI.(string)
-// 	}
+	logoURI := as.StoredParameter(paramLogoURI)
+	if logoURI != nil {
+		params.LogoURI = logoURI.(string)
+	}
 
-// 	termsOfService := as.StoredParameter(paramTermsOfServiceURI)
-// 	if termsOfService != nil {
-// 		params.TermsOfServiceURI = termsOfService.(string)
-// 	}
+	policyURI := as.StoredParameter(paramPolicyURI)
+	if policyURI != nil {
+		params.PolicyURI = policyURI.(string)
+	}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	_ = a.tmpl.ExecuteTemplate(w, tmplName, params)
-// 	return goidc.StatusInProgress, nil
-// }
+	termsOfService := as.StoredParameter(paramTermsOfServiceURI)
+	if termsOfService != nil {
+		params.TermsOfServiceURI = termsOfService.(string)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = a.tmpl.ExecuteTemplate(w, tmplName, params)
+	return goidc.StatusInProgress, nil
+}
 
 func mapify(as any) (map[string]any, error) {
 	data, err := json.Marshal(as)
