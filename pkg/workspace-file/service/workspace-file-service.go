@@ -335,8 +335,9 @@ func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, 
 	}
 
 	store := s.fileStores[storeName]
+	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
-	completedFile, err := store.CompleteMultipartUpload(ctx, filePath, uploadID, parts)
+	completedFile, err := store.CompleteMultipartUpload(ctx, storePath, uploadID, parts)
 	if err != nil {
 		return nil, fmt.Errorf("unable to complete multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
 	}
@@ -351,8 +352,9 @@ func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, wor
 	}
 
 	store := s.fileStores[storeName]
+	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
-	err = store.AbortMultipartUpload(ctx, filePath, uploadID)
+	err = store.AbortMultipartUpload(ctx, storePath, uploadID)
 	if err != nil {
 		return fmt.Errorf("unable to abort multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
 	}
