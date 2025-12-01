@@ -5,30 +5,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"net/url"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/ui"
-	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
-	userService "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/google/uuid"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"go.uber.org/zap"
 )
 
 func Policy(cfg config.Config, userService Userer, authorizer authorization.Authorizer) goidc.AuthnPolicy {
-	tmpl := template.Must(template.ParseFS(ui.FS, "*.html"))
-	authenticator := authenticator{tmpl: tmpl, cfg: cfg, userService: userService, authorizer: authorizer}
+	authenticator := authenticator{cfg: cfg, userService: userService, authorizer: authorizer}
 	return goidc.NewPolicy(
 		"main",
 		func(r *http.Request, c *goidc.Client, as *goidc.AuthnSession) bool {
@@ -67,29 +63,12 @@ const (
 	paramPolicyURI         string = "policy_uri"
 	paramTermsOfServiceURI string = "tos_uri"
 
-	usernameFormParam string = "username"
-	passwordFormParam string = "password"
-	loginFormParam    string = "login"
-
 	consentFormParam string = "consent"
 
 	cookieUserSessionID string = "goidc_username"
-
-	correctPassword string = "pass"
 )
 
 var userSessionStore = map[string]userSession{}
-
-type authnPage struct {
-	Subject           string
-	BaseURL           string
-	CallbackID        string
-	LogoURI           string
-	PolicyURI         string
-	TermsOfServiceURI string
-	Error             string
-	Session           map[string]any
-}
 
 type userSession struct {
 	ID       string
@@ -98,11 +77,14 @@ type userSession struct {
 }
 
 type Userer interface {
-	GetUser(ctx context.Context, req userService.GetUserReq) (*userModel.User, error)
+	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
+
+	UpsertGrants(ctx context.Context, grants []user_model.UserGrant) error
+	DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error
+	GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]user_model.UserGrant, error)
 }
 
 type authenticator struct {
-	tmpl        *template.Template
 	authorizer  authorization.Authorizer
 	cfg         config.Config
 	userService Userer
@@ -150,7 +132,7 @@ func (a authenticator) authenticate(w http.ResponseWriter, r *http.Request, as *
 
 func (a authenticator) loadUser(r *http.Request, as *goidc.AuthnSession) (goidc.Status, error) {
 	ctx := r.Context()
-	claims, err := jwt_model.ExtractJWTClaims(ctx)
+	claims, err := jwt.ExtractJWTClaims(ctx)
 	if err != nil {
 		return goidc.StatusSuccess, nil
 	}
@@ -214,61 +196,16 @@ func (a authenticator) login(w http.ResponseWriter, r *http.Request, as *goidc.A
 		return goidc.StatusSuccess, nil
 	}
 
-	u, err := url.Parse(a.cfg.Services.OpenIDConnectProvider.IssuerURL)
+	callbackURL, err := callbackURL(a.cfg, "authorize", as.CallbackID, "load_user", nil)
 	if err != nil {
-		return goidc.StatusFailure, fmt.Errorf("unable to parse request URI: %w", err)
+		return goidc.StatusFailure, fmt.Errorf("unable to build callback URL: %w", err)
 	}
-	u.Path = path.Join(u.Path, "authorize", as.CallbackID, "load_user")
-	callbackURL := u.String()
-	callbackURLEncoded := url.QueryEscape(callbackURL)
+	err = redirect(a.cfg, w, "login", callbackURL, nil)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("unable to redirect to login page: %w", err)
+	}
 
-	w.Header().Set("Location", a.cfg.Services.OpenIDConnectProvider.FrontendLoginURL+"?callback_url="+callbackURLEncoded)
-	w.WriteHeader(http.StatusFound)
 	return goidc.StatusInProgress, nil
-
-	// // If the user is unknown and the client requested no prompt for credentials,
-	// // return a login-required error.
-	// if as.Subject == "" && as.Prompt == goidc.PromptTypeNone {
-	// 	return goidc.StatusFailure, goidc.NewError(goidc.ErrorCodeLoginRequired, "user not logged in, cannot use prompt none")
-	// }
-
-	// // Determine if authentication is required.
-	// // Authentication is required if the user's identity is unknown or if the
-	// // client explicitly requested a login.
-	// mustAuthenticate := as.Subject == "" || as.Prompt == goidc.PromptTypeLogin
-	// // Additionally, check if the client specified a max age for the session.
-	// // If the max age is exceeded or 'auth_time' is unavailable, force re-authentication.
-	// if as.MaxAuthnAgeSecs != nil {
-	// 	maxAgeSecs := *as.MaxAuthnAgeSecs
-	// 	authTime := as.StoredParameter(paramAuthTime)
-	// 	if authTime == nil || TimestampNow() > authTime.(int)+maxAgeSecs {
-	// 		mustAuthenticate = true
-	// 	}
-	// }
-	// if !mustAuthenticate {
-	// 	return goidc.StatusSuccess, nil
-	// }
-
-	// _ = r.ParseForm()
-
-	// login := r.PostFormValue(loginFormParam)
-	// if login == "" {
-	// 	return a.renderPage(w, "login.html", as)
-	// }
-
-	// if !isTrue(login) {
-	// 	return goidc.StatusFailure, errors.New("consent not granted")
-	// }
-
-	// username := r.PostFormValue(usernameFormParam)
-	// password := r.PostFormValue(passwordFormParam)
-	// if password != correctPassword {
-	// 	return a.renderError(w, "login.html", as, fmt.Sprintf("invalid password, try '%s'", correctPassword))
-	// }
-
-	// as.SetUserID(username)
-	// as.StoreParameter(paramAuthTime, TimestampNow())
-	// return goidc.StatusSuccess, nil
 }
 
 func (a authenticator) createUserSession(w http.ResponseWriter, as *goidc.AuthnSession) (goidc.Status, error) {
@@ -312,17 +249,88 @@ func (a authenticator) grantConsent(w http.ResponseWriter, r *http.Request, as *
 		return goidc.StatusSuccess, nil
 	}
 
-	_ = r.ParseForm()
+	user, err := a.GetUserFromSession(as)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("unable to get user info: %w", err)
+	}
+
+	grants, err := a.userService.GetUserGrants(r.Context(), user.TenantID, user.ID, clientID)
+	if err != nil {
+		return goidc.StatusFailure, fmt.Errorf("unable to get user grants: %w", err)
+	}
+
+	requiredScopes := []string{}
+	for _, s := range strings.Split(as.Scopes, " ") {
+		if s == "openid" {
+			continue
+		}
+		requiredScopes = append(requiredScopes, s)
+	}
+
+	scopesToGrant := []string{}
+	for _, rs := range requiredScopes {
+		found := false
+		for _, g := range grants {
+			if g.Scope == rs {
+				found = true
+				break
+			}
+		}
+		if !found {
+			scopesToGrant = append(scopesToGrant, rs)
+		}
+	}
+
+	if len(scopesToGrant) == 0 {
+		return goidc.StatusSuccess, nil
+	}
 
 	logger.TechLog.Debug(context.Background(), "consent request", zap.Any("as", as))
 
-	consented := r.PostFormValue(consentFormParam)
+	consented := r.URL.Query().Get(consentFormParam)
 	if consented == "" {
-		return a.renderPage(w, "consent.html", as)
+		v := url.Values{}
+		scopesJSON, err := json.Marshal(scopesToGrant)
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("unable to marshal scopes to grant: %w", err)
+		}
+
+		v.Set("scopes", string(scopesJSON))
+		v.Set("client_name", client.Name)
+
+		callbackURL, err := callbackURL(a.cfg, "authorize", as.CallbackID, "grant", nil)
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("unable to build callback URL: %w", err)
+		}
+		err = redirect(a.cfg, w, "grant", callbackURL, v)
+		if err != nil {
+			return goidc.StatusFailure, fmt.Errorf("unable to redirect to consent page: %w", err)
+		}
+
+		return goidc.StatusInProgress, nil
 	}
 
 	if !isTrue(consented) {
 		return goidc.StatusFailure, errors.New("consent not granted")
+	}
+
+	newGrants := []user_model.UserGrant{}
+	var grantedUntil *time.Time
+	if client.GrantDuration != nil {
+		t := time.Now().Add(*client.GrantDuration)
+		grantedUntil = &t
+	}
+	for _, s := range scopesToGrant {
+		newGrants = append(newGrants, user_model.UserGrant{
+			TenantID:     user.TenantID,
+			UserID:       user.ID,
+			ClientID:     client.ID,
+			Scope:        s,
+			GrantedUntil: grantedUntil,
+		})
+	}
+	if err := a.userService.UpsertGrants(r.Context(), newGrants); err != nil {
+		return goidc.StatusFailure, fmt.Errorf("unable to upsert user grants: %w", err)
 	}
 
 	return goidc.StatusSuccess, nil
@@ -350,20 +358,7 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 	}
 
 	if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) || strings.Contains(as.Scopes, goidc.ScopeProfile.ID) || strings.Contains(as.Scopes, "roles") {
-		userIDStr := as.Subject
-		userID, err := strconv.ParseInt(userIDStr, 10, 64)
-		if err != nil {
-			return goidc.StatusFailure, fmt.Errorf("invalid user ID format: %w", err)
-		}
-		tenantIDStr := as.StoredParameter(paramTenantID).(string)
-		tenantID, err := strconv.ParseInt(tenantIDStr, 10, 64)
-		if err != nil {
-			return goidc.StatusFailure, fmt.Errorf("invalid tenant ID format: %w", err)
-		}
-		user, err := a.userService.GetUser(context.Background(), userService.GetUserReq{
-			ID:       uint64(userID),
-			TenantID: uint64(tenantID),
-		})
+		user, err := a.GetUserFromSession(as)
 		if err != nil {
 			return goidc.StatusFailure, fmt.Errorf("unable to get user info: %w", err)
 		}
@@ -419,7 +414,7 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 
 			for _, w := range userWorkspaces {
 				permission := authorization.NewPermission(authorization.PermissionModifyFilesInWorkspace, authorization.WithWorkspace(w))
-				logger.TechLog.Debug(context.Background(), "checking user role for workspace", zap.String("workspace", w), zap.Uint64("user_id", uint64(userID)), zap.Any("permission", permission), zap.Any("user_roles", userRoles))
+				logger.TechLog.Debug(context.Background(), "checking user role for workspace", zap.String("workspace", w), zap.Uint64("user_id", uint64(user.ID)), zap.Any("permission", permission), zap.Any("user_roles", userRoles))
 				authorized, err := a.authorizer.IsUserAllowed(userRoles, permission)
 				if err != nil {
 					logger.TechLog.Error(context.Background(), "authorization check error", zap.Error(err))
@@ -440,85 +435,24 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 	return goidc.StatusSuccess, nil
 }
 
-func (a authenticator) renderPage(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession) (goidc.Status, error) {
-	sess, err := mapify(as)
+func (a authenticator) GetUserFromSession(as *goidc.AuthnSession) (*user_model.User, error) {
+	userIDStr := as.Subject
+	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
-		logger.TechLog.Error(context.Background(), "unable to mapify authn session for rendering", zap.Error(err))
-		return goidc.StatusFailure, fmt.Errorf("unable to render page: %w", err)
+		return nil, fmt.Errorf("invalid user ID format: %w", err)
 	}
-
-	params := authnPage{
-		Subject:    as.Subject,
-		BaseURL:    a.cfg.Services.OpenIDConnectProvider.IssuerURL,
-		CallbackID: as.CallbackID,
-		Session:    sess,
-	}
-
-	logoURI := as.StoredParameter(paramLogoURI)
-	if logoURI != nil {
-		params.LogoURI = logoURI.(string)
-	}
-
-	policyURI := as.StoredParameter(paramPolicyURI)
-	if policyURI != nil {
-		params.PolicyURI = policyURI.(string)
-	}
-
-	termsOfService := as.StoredParameter(paramTermsOfServiceURI)
-	if termsOfService != nil {
-		params.TermsOfServiceURI = termsOfService.(string)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	_ = a.tmpl.ExecuteTemplate(w, tmplName, params)
-	return goidc.StatusInProgress, nil
-}
-
-func (a authenticator) renderError(w http.ResponseWriter, tmplName string, as *goidc.AuthnSession, displayedErr string) (goidc.Status, error) {
-
-	s, err := mapify(as)
+	tenantIDStr := as.StoredParameter(paramTenantID).(string)
+	tenantID, err := strconv.ParseInt(tenantIDStr, 10, 64)
 	if err != nil {
-		logger.TechLog.Error(context.Background(), "unable to mapify authn session for rendering", zap.Error(err))
-		return goidc.StatusFailure, fmt.Errorf("unable to render error page: %w", err)
+		return nil, fmt.Errorf("invalid tenant ID format: %w", err)
 	}
-
-	params := authnPage{
-		Subject:    as.Subject,
-		BaseURL:    a.cfg.Services.OpenIDConnectProvider.IssuerURL,
-		CallbackID: as.CallbackID,
-		Session:    s,
-		Error:      displayedErr,
-	}
-
-	logoURI := as.StoredParameter(paramLogoURI)
-	if logoURI != nil {
-		params.LogoURI = logoURI.(string)
-	}
-
-	policyURI := as.StoredParameter(paramPolicyURI)
-	if policyURI != nil {
-		params.PolicyURI = policyURI.(string)
-	}
-
-	termsOfService := as.StoredParameter(paramTermsOfServiceURI)
-	if termsOfService != nil {
-		params.TermsOfServiceURI = termsOfService.(string)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	_ = a.tmpl.ExecuteTemplate(w, tmplName, params)
-	return goidc.StatusInProgress, nil
-}
-
-func mapify(as any) (map[string]any, error) {
-	data, err := json.Marshal(as)
+	user, err := a.userService.GetUser(context.Background(), user_service.GetUserReq{
+		ID:       uint64(userID),
+		TenantID: uint64(tenantID),
+	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to marshal authn session: %w", err)
+		return nil, fmt.Errorf("unable to get user info: %w", err)
 	}
 
-	var m map[string]any
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal authn session: %w", err)
-	}
-	return m, nil
+	return user, nil
 }

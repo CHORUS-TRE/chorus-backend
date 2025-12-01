@@ -557,7 +557,8 @@ func (s *UserStorage) UpsertGrants(ctx context.Context, grants []model.UserGrant
 		ON CONFLICT (tenantid, userid, clientid, scope)
 		DO UPDATE SET
 			granteduntil = EXCLUDED.granteduntil,
-			updatedat = NOW();
+			updatedat = NOW(),
+			deletedat = NULL;
 	`, strings.Join(valueStrings, ", "))
 
 	if _, err := s.db.ExecContext(ctx, query, valueArgs...); err != nil {

@@ -12,11 +12,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type ClientManager struct {
+type clientManager struct {
 	Clients map[string]*goidc.Client
 }
 
-func NewClientManager(cfg config.Config) (*ClientManager, error) {
+var _ goidc.ClientManager = &clientManager{}
+
+func NewClientManager(cfg config.Config) (*clientManager, error) {
 	cs := make(map[string]*goidc.Client, len(cfg.Services.OpenIDConnectProvider.Clients))
 
 	for _, c := range cfg.Services.OpenIDConnectProvider.Clients {
@@ -65,20 +67,19 @@ func NewClientManager(cfg config.Config) (*ClientManager, error) {
 		cs[c.ID] = client
 	}
 
-	return &ClientManager{
+	return &clientManager{
 		Clients: cs,
 	}, nil
 }
 
-func (m *ClientManager) Save(ctx context.Context, c *goidc.Client) error {
+func (m *clientManager) Save(ctx context.Context, c *goidc.Client) error {
 	logger.TechLog.Error(ctx, "Save should not be called on client manager", zap.Any("client", c))
 	return errors.New("not implemented")
 }
 
-func (m *ClientManager) Client(ctx context.Context, id string) (*goidc.Client, error) {
+func (m *clientManager) Client(ctx context.Context, id string) (*goidc.Client, error) {
 	logger.TechLog.Info(ctx, "Fetching client from in-memory storage", zap.String("client_id", id))
 
-	// fmt.Println(m.Clients)
 	for k, c := range m.Clients {
 		logger.TechLog.Debug(ctx, "Available client", zap.String("client_id", k), zap.String("client_name", c.ClientMeta.Name))
 	}
@@ -98,9 +99,7 @@ func (m *ClientManager) Client(ctx context.Context, id string) (*goidc.Client, e
 	return c, nil
 }
 
-func (m *ClientManager) Delete(_ context.Context, id string) error {
+func (m *clientManager) Delete(_ context.Context, id string) error {
 	logger.TechLog.Error(context.Background(), "Should not be called, deleting client from in-memory storage", zap.String("client_id", id))
 	return errors.New("not implemented")
 }
-
-// var _ goidc.ClientManager = NewClientManager()

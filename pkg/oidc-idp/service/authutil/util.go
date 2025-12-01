@@ -8,14 +8,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
+	"net/url"
+	"path"
 	"slices"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/ui"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"go.uber.org/zap"
 )
@@ -28,9 +28,36 @@ var (
 	DisplayValues = []goidc.DisplayValue{goidc.DisplayValuePage, goidc.DisplayValuePopUp}
 )
 
-var (
-	errLogoutCancelled error = errors.New("logout cancelled by the user")
-)
+func callbackURL(cfg config.Config, policyBase, callbackID, authorizePage string, v url.Values) (string, error) {
+	u, err := url.Parse(cfg.Services.OpenIDConnectProvider.IssuerURL)
+	if err != nil {
+		return "", fmt.Errorf("unable to parse request URI: %w", err)
+	}
+	u.Path = path.Join(u.Path, policyBase, callbackID, authorizePage)
+	if v != nil {
+		u.RawQuery = v.Encode()
+	}
+	return u.String(), nil
+}
+
+func redirect(cfg config.Config, w http.ResponseWriter, interactionPage, callbackURL string, v url.Values) error {
+	cu, err := url.Parse(cfg.Services.OpenIDConnectProvider.FrontendInteractionsURL)
+	if err != nil {
+		return fmt.Errorf("unable to parse interaction base URL: %w", err)
+	}
+
+	if v == nil {
+		v = url.Values{}
+	}
+	v.Set("callback_url", callbackURL)
+	v.Set("page", interactionPage)
+	cu.RawQuery = v.Encode()
+
+	w.Header().Set("Location", cu.String())
+	w.WriteHeader(http.StatusFound)
+
+	return nil
+}
 
 func PrivateJWKSFunc(cfg config.Config) goidc.JWKSFunc {
 	var jwks goidc.JSONWebKeySet
@@ -70,16 +97,18 @@ func ErrorLoggingFunc(ctx context.Context, err error) {
 	logger.TechLog.Error(ctx, "OIDC provider error", zap.Error(err))
 }
 
-func RenderError() goidc.RenderErrorFunc {
-	tmpl := template.Must(template.ParseFS(ui.FS, "*.html"))
-	return func(w http.ResponseWriter, r *http.Request, err error) error {
-		w.WriteHeader(http.StatusOK)
-		_ = tmpl.ExecuteTemplate(w, "error.html", authnPage{
-			Error: err.Error(),
-		})
+func RenderError(cfg config.Config) goidc.RenderErrorFunc {
+	return func(w http.ResponseWriter, r *http.Request, errToDisplay error) error {
+		v := url.Values{}
+		v.Set("error", errToDisplay.Error())
+
+		err := redirect(cfg, w, "error", "", v)
+		if err != nil {
+			return fmt.Errorf("unable to redirect to error page: %w", err)
+		}
+
 		return nil
 	}
-
 }
 
 func CheckJTIFunc() goidc.CheckJTIFunc {
@@ -90,67 +119,6 @@ func CheckJTIFunc() goidc.CheckJTIFunc {
 		}
 
 		jtiStore[jti] = struct{}{}
-		return nil
-	}
-}
-
-type LogoutPage struct {
-	BaseURL     string
-	CallbackID  string
-	IsLoggedOut bool
-	Session     map[string]any
-}
-
-func LogoutPolicy(cfg config.Config) goidc.LogoutPolicy {
-
-	tmpl := template.Must(template.ParseFS(ui.FS, "logout.html"))
-	return goidc.NewLogoutPolicy(
-		"main",
-		func(r *http.Request, ls *goidc.LogoutSession) bool {
-			return true
-		},
-		func(w http.ResponseWriter, r *http.Request, ls *goidc.LogoutSession) (goidc.Status, error) {
-			logout := r.PostFormValue("logout")
-			if logout == "" {
-				logger.TechLog.Debug(context.Background(), "rendering logout page", zap.String("callback_id", ls.CallbackID))
-				sess, err := mapify(ls)
-				if err != nil {
-					logger.TechLog.Error(context.Background(), "unable to mapify logout session for rendering", zap.Error(err))
-					return goidc.StatusFailure, fmt.Errorf("unable to render logout page: %w", err)
-				}
-				if err := tmpl.ExecuteTemplate(w, "logout.html", LogoutPage{
-					BaseURL:    cfg.Services.OpenIDConnectProvider.IssuerURL,
-					CallbackID: ls.CallbackID,
-					Session:    sess,
-				}); err != nil {
-					return goidc.StatusFailure, err
-				}
-				return goidc.StatusInProgress, nil
-			}
-
-			if !isTrue(logout) {
-				logger.TechLog.Debug(context.Background(), "user cancelled logout", zap.String("logout", logout))
-				return goidc.StatusFailure, errLogoutCancelled
-			}
-
-			cookie, err := r.Cookie(cookieUserSessionID)
-			if err != nil {
-				logger.TechLog.Debug(context.Background(), "the session cookie was not found", zap.Error(err))
-				return goidc.StatusSuccess, nil
-			}
-
-			delete(userSessionStore, cookie.Value)
-			return goidc.StatusSuccess, nil
-		},
-	)
-}
-
-func HandleLogout() goidc.HandleDefaultPostLogoutFunc {
-	tmpl := template.Must(template.ParseFS(ui.FS, "logout.html"))
-	return func(w http.ResponseWriter, r *http.Request, ls *goidc.LogoutSession) error {
-		if err := tmpl.ExecuteTemplate(w, "logout.html", LogoutPage{IsLoggedOut: true}); err != nil {
-			return fmt.Errorf("could not execute logout template: %w", err)
-		}
 		return nil
 	}
 }

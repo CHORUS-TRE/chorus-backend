@@ -46,7 +46,7 @@ services:
     key: value
   authentication_service:
     enabled: true
-    dev_auth_enabled: true
+    auth_ui_enabled: true
     modes:
       internal:
         type: internal
@@ -107,8 +107,7 @@ services:
   openid_connect_provider:
     enabled: true
     # issuer_url: "http://localhost:5000/openid-connect"
-    # frontend_login_url: "http://localhost:3000/login"
-    frontend_login_url: "http://localhost:5000/dev-auth"
+    frontend_interactions_url: "http://localhost:5000/auth-ui"
     issuer_url: "http://localhost:5000/openid-connect"
     scopes: 
       - openid

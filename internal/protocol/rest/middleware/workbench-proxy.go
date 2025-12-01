@@ -68,9 +68,9 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Conf
 	})
 }
 
-func AddDevAuth(h http.Handler) http.Handler {
-	devAuthFS, _ := fs.Sub(embed.DevAuthEmbed, "dev-auth")
-	fs := http.FS(devAuthFS)
+func AddAuthUI(h http.Handler) http.Handler {
+	authUIFS, _ := fs.Sub(embed.AuthUIEmbed, "auth-ui")
+	fs := http.FS(authUIFS)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -81,15 +81,15 @@ func AddDevAuth(h http.Handler) http.Handler {
 			return
 		}
 
-		if u.Path == "/dev-auth" {
-			u.Path = "/dev-auth/"
+		if u.Path == "/auth-ui" {
+			u.Path = "/auth-ui/"
 			handler := http.RedirectHandler(u.String(), http.StatusFound)
 			handler.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 
-		if strings.HasPrefix(r.RequestURI, "/dev-auth") {
-			handler := http.StripPrefix("/dev-auth", http.FileServer(fs))
+		if strings.HasPrefix(r.RequestURI, "/auth-ui") {
+			handler := http.StripPrefix("/auth-ui", http.FileServer(fs))
 			handler.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}

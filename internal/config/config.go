@@ -248,18 +248,18 @@ type (
 		} `yaml:"mailer_service"`
 
 		AuthenticationService struct {
-			Enabled        bool            `yaml:"enabled"`
-			DevAuthEnabled bool            `yaml:"dev_auth_enabled"`
-			Modes          map[string]Mode `yaml:"modes"`
+			Enabled       bool            `yaml:"enabled"`
+			AuthUIEnabled bool            `yaml:"auth_ui_enabled"`
+			Modes         map[string]Mode `yaml:"modes"`
 		} `yaml:"authentication_service"`
 
 		OpenIDConnectProvider struct {
-			Enabled          bool                          `yaml:"enabled"`
-			FrontendLoginURL string                        `yaml:"frontend_login_url"`
-			JWKS             Sensitive                     `yaml:"jwks"`
-			IssuerURL        string                        `yaml:"issuer_url"`
-			Scopes           []string                      `yaml:"scopes"`
-			Clients          []OpenIDConnectProviderClient `yaml:"clients"`
+			Enabled                 bool                          `yaml:"enabled"`
+			FrontendInteractionsURL string                        `yaml:"frontend_interactions_url"`
+			JWKS                    Sensitive                     `yaml:"jwks"`
+			IssuerURL               string                        `yaml:"issuer_url"`
+			Scopes                  []string                      `yaml:"scopes"`
+			Clients                 []OpenIDConnectProviderClient `yaml:"clients"`
 		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {
@@ -368,7 +368,8 @@ type (
 
 		OnlyPreLoggedForClient bool `yaml:"only_pre_logged_for_client"`
 
-		GrantAutoApproved bool `yaml:"grant_auto_approved"`
+		GrantAutoApproved bool           `yaml:"grant_auto_approved"`
+		GrantDuration     *time.Duration `yaml:"grant_duration"`
 
 		IsFederated                bool     `yaml:"is_federated"`
 		FederationRegistrationType string   `yaml:"federation_registration_type"` // automatic or explicit

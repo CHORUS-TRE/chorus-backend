@@ -8,7 +8,7 @@
     <script src="index.js"></script>
 </head>
 
-<body class="rubik_cd38be04-module__cl9swW__variable antialiased" style="">
+<body class="rubik_cd38be04-module__cl9swW__variable antialiased">
     <header class="fixed left-0 top-0 z-40 h-11 min-w-full">
         <nav class="glass-surface flex h-11 min-w-full flex-nowrap items-center justify-between gap-2 px-2 text-foreground shadow-lg"
             id="header">
@@ -93,82 +93,39 @@
             </div>
         </div>
         <div class="overlay-surface flex w-full flex-col items-center justify-center rounded-r-2xl p-8 md:w-1/2">
-            <div class="grid h-full w-full gap-2 p-8">
-                <div class="grid gap-4 text-center">
-                    <p class="text-muted">Enter your username below to login to your account</p>
-                </div>
-                <form onsubmit="login(event)" id="loginForm" class="w-full">
-                    <div class="grid gap-4 py-8">
-                        <div class="grid gap-2">
-                            <label
-                                class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                for="username">
-                                Username
-                            </label>
-                            <input
-                                class="flex h-10 w-full rounded-md px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm border border-muted/40 bg-background"
-                                id="username" required="" type="text" name="Username">
-                        </div>
-                        <div class="mb-2 grid gap-2">
-                            <div class="flex items-center">
-                                <label
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    for="password">
-                                    Password
-                                </label>
-                            </div>
-                            <input
-                                class="flex h-10 w-full rounded-md px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm border border-muted/40 bg-background text-muted"
-                                id="password" required="" autocomplete="current-password" type="password"
-                                name="password">
-                        </div>
-                        <div class="mb-2 grid gap-2 hidden">
-                            <div class="flex items-center">
-                                <label
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    for="error">
-                                    Error
-                                </label>
-                            </div>
-                            <span id="error" class="text-sm text-red-600"></span>
-                        </div>
-                        <button
-                            class="whitespace-nowrap font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 h-9 px-3 flex items-center justify-center gap-1 rounded-full text-xs transition-[gap] duration-500 ease-in-out hover:gap-2 bg-transparent text-accent ring-1 ring-accent hover:bg-accent/10 w-full"
-                            type="submit">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="lucide lucide-arrow-right mr-2 h-4 w-4">
-                                <path d="M5 12h14"></path>
-                                <path d="m12 5 7 7-7 7"></path>
-                            </svg>
-                            Login
-                        </button>
-                    </div>
-                </form>
-                <!-- <div class="grid gap-4">
-                    <div class="relative my-2">
-                        <div class="absolute inset-0 flex items-center"><span class="w-full border-t"></span></div>
-                        <div class="relative flex justify-center text-xs uppercase"><span
-                                class="bg-background px-2 text-muted">Or choose an account</span></div>
-                    </div><button
-                        class="whitespace-nowrap font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 h-9 px-3 flex items-center justify-center gap-1 rounded-full text-xs transition-[gap] duration-500 ease-in-out hover:gap-2 bg-transparent text-accent ring-1 ring-accent hover:bg-accent/10 w-full"
-                        type="button">keycloak<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-arrow-right ml-2 h-4 w-4">
-                            <path d="M5 12h14"></path>
-                            <path d="m12 5 7 7-7 7"></path>
-                        </svg></button><button
-                        class="whitespace-nowrap font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 h-9 px-3 flex items-center justify-center gap-1 rounded-full text-xs transition-[gap] duration-500 ease-in-out hover:gap-2 bg-transparent text-accent ring-1 ring-accent hover:bg-accent/10 w-full"
-                        type="button">keycloakdev<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round"
-                            class="lucide lucide-arrow-right ml-2 h-4 w-4">
-                            <path d="M5 12h14"></path>
-                            <path d="m12 5 7 7-7 7"></path>
-                        </svg></button>
-                </div> -->
-            </div>
+            <div class="grid h-full w-full gap-2 p-8" id="template-content"></div>
+            <script>
+                const urlParams = new URLSearchParams(window.location.search);
+                let page = urlParams.get('page');
+                if (!page) {
+                    page = 'login';
+                }
+                fetch(page + '-template.html')
+                    .then(response => response.text())
+                    .then(data => {
+                        const template = document.createElement('template');
+                        template.innerHTML = data;
+                        const clone = template.content.cloneNode(true);
+                        
+                        // extract and execute scripts
+                        const scripts = clone.querySelectorAll('script');
+                        const targetElement = document.getElementById('template-content');
+                        
+                        targetElement.appendChild(clone);
+                        
+                        scripts.forEach(oldScript => {
+                            const newScript = document.createElement('script');
+                            
+                            Array.from(oldScript.attributes).forEach(attr => {
+                                newScript.setAttribute(attr.name, attr.value);
+                            });
+                            
+                            newScript.textContent = oldScript.textContent;
+                            
+                            oldScript.parentNode.replaceChild(newScript, oldScript);
+                        });
+                    });
+            </script>
         </div>
     </div>
     <img alt="Background" id="background" loading="lazy" width="4096" height="2733" decoding="async" data-nimg="1"
