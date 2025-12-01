@@ -158,7 +158,7 @@ func (c WorkspaceFileController) UploadWorkspaceFilePart(ctx context.Context, re
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
 
-	uploadedPart, err := c.workspaceFile.UploadWorkspaceFilePart(ctx, req.WorkspaceId, req.UploadId, req.Path, filePart)
+	uploadedPart, err := c.workspaceFile.UploadWorkspaceFilePart(ctx, req.WorkspaceId, req.Path, req.UploadId, filePart)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UploadWorkspaceFilePart': %v", err.Error())
 	}
