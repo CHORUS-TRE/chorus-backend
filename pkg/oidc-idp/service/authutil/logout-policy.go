@@ -69,14 +69,12 @@ func LogoutPolicy(cfg config.Config) goidc.LogoutPolicy {
 
 			delete(userSessionStore, cookie.Value)
 
-			// r.Header.Set("Set-Cookie", "jwttoken=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax")
 			logger.TechLog.Debug(context.Background(), "removing jwt token cookie upon logout")
-			r.AddCookie(&http.Cookie{
-				Name:  "jwttoken",
-				Value: "",
-
+			http.SetCookie(w, &http.Cookie{
+				Name:     "jwttoken",
+				Value:    "",
 				Path:     "/",
-				MaxAge:   0,
+				MaxAge:   -1,
 				HttpOnly: true,
 				SameSite: http.SameSiteLaxMode,
 			})

@@ -65,7 +65,7 @@ const (
 
 	consentFormParam string = "consent"
 
-	cookieUserSessionID string = "goidc_username"
+	cookieUserSessionID string = "oidc_user_session_id"
 )
 
 var userSessionStore = map[string]userSession{}
