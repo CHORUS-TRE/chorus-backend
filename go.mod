@@ -1,8 +1,7 @@
 module github.com/CHORUS-TRE/chorus-backend
 
 // replace github.com/CHORUS-TRE/chorus-gatekeeper => /home/localadmin/chuv/chorus/chorus-gatekeeper
-
-replace github.com/luikyv/go-oidc => /home/localadmin/go-oidc
+// replace github.com/luikyv/go-oidc => /home/localadmin/go-oidc
 
 go 1.24.3
 

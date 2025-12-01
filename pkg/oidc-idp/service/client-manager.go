@@ -41,7 +41,6 @@ func NewClientManager(cfg config.Config) (*clientManager, error) {
 			ID:                         c.ID,
 			Secret:                     c.Secret.PlainText(),
 			HashedSecret:               string(h),
-			RegistrationToken:          c.RegistrationToken,
 			CreatedAtTimestamp:         c.CreatedAtTimestamp,
 			ExpiresAtTimestamp:         c.ExpiresAtTimestamp,
 			IsFederated:                c.IsFederated,
