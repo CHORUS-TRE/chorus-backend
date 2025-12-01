@@ -122,3 +122,15 @@ func (c *Caching) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uin
 func (c *Caching) DeleteTotpRecoveryCode(ctx context.Context, req *service.DeleteTotpRecoveryCodeReq) error {
 	return c.next.DeleteTotpRecoveryCode(ctx, req)
 }
+
+func (c *Caching) UpsertGrants(ctx context.Context, grants []model.UserGrant) error {
+	return c.next.UpsertGrants(ctx, grants)
+}
+
+func (c *Caching) DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error {
+	return c.next.DeleteGrants(ctx, tenantID, userID, clientID)
+}
+
+func (c *Caching) GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error) {
+	return c.next.GetUserGrants(ctx, tenantID, userID, clientID)
+}

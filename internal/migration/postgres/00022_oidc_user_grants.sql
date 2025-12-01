@@ -18,6 +18,9 @@ CREATE TABLE public.user_grants (
     
     CONSTRAINT user_grants_pkey PRIMARY KEY (id),
     CONSTRAINT tenantcon FOREIGN KEY (tenantid) REFERENCES tenants(id),
-    CONSTRAINT usercon FOREIGN KEY (userid) REFERENCES users(id)
+    CONSTRAINT usercon FOREIGN KEY (userid) REFERENCES users(id),
+    CONSTRAINT user_grants_unique UNIQUE (tenantid, userid, clientid, scope)
 );
 -- +migrate StatementEnd
+
+CREATE INDEX idx_user_grants_tenant_user_client ON public.user_grants (tenantid, userid, clientid) WHERE deletedat IS NULL;
