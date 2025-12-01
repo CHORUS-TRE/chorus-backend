@@ -41,7 +41,7 @@ type MinioFileStore interface {
 	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
 
 	// Upload a single part of a multipart upload.
-	UploadPart(ctx context.Context, uploadId string, part *model.FilePart) (*model.FilePart, error)
+	UploadPart(ctx context.Context, filePath string, uploadId string, part *model.FilePart) (*model.FilePart, error)
 
 	// Complete a multipart upload after all parts of a file have been uploaded.
 	CompleteMultipartUpload(ctx context.Context, path string, uploadId string, parts []*model.FilePart) (*model.File, error)
@@ -77,10 +77,7 @@ func (s *MinioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64)
 		return fileSize, 1
 	}
 
-	partSize := fileSize / PreferredParts
-	if partSize < MinPartSize {
-		partSize = MinPartSize
-	}
+	partSize := max(fileSize/PreferredParts, MinPartSize)
 
 	// Ensure we do not exceed MaxTotalParts
 	if (fileSize+partSize-1)/partSize > MaxTotalParts {
@@ -304,8 +301,8 @@ func (s *MinioFileStorage) InitiateMultipartUpload(ctx context.Context, file *mo
 	}, nil
 }
 
-func (s *MinioFileStorage) UploadPart(ctx context.Context, uploadId string, part *model.FilePart) (*model.FilePart, error) {
-	minioPart, err := s.minioClient.PutObjectPart(uploadId, int(part.PartNumber), part.Data)
+func (s *MinioFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *model.FilePart) (*model.FilePart, error) {
+	minioPart, err := s.minioClient.PutObjectPart(filePath, uploadId, int(part.PartNumber), part.Data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to upload part %d for upload ID %s: %w", part.PartNumber, uploadId, err)
 	}

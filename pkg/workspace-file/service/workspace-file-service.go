@@ -32,7 +32,7 @@ type WorkspaceFileStore interface {
 	DeleteFile(ctx context.Context, path string) error
 	DeleteDirectory(ctx context.Context, dirPath string) error
 	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
-	UploadPart(ctx context.Context, uploadID string, part *model.FilePart) (*model.FilePart, error)
+	UploadPart(ctx context.Context, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error)
 	CompleteMultipartUpload(ctx context.Context, path string, uploadID string, parts []*model.FilePart) (*model.File, error)
 	AbortMultipartUpload(ctx context.Context, uploadID string) error
 }
@@ -317,8 +317,9 @@ func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, work
 	}
 
 	store := s.fileStores[storeName]
+	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
-	uploadedPart, err := store.UploadPart(ctx, uploadID, part)
+	uploadedPart, err := store.UploadPart(ctx, storePath, uploadID, part)
 	if err != nil {
 		return nil, fmt.Errorf("unable to upload part number %d for upload ID %s at path %s: %w", part.PartNumber, uploadID, filePath, err)
 	}

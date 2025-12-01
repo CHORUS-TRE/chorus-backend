@@ -391,7 +391,7 @@ func TestFileUpload(t *testing.T) {
 			lastPartSize := int(fileSize - (partNumber-1)*partSize)
 			partData = make([]byte, lastPartSize)
 		}
-		part, err := storage.UploadPart(context.Background(), uploadInfo.UploadID, &model.FilePart{
+		part, err := storage.UploadPart(context.Background(), storePath, uploadInfo.UploadID, &model.FilePart{
 			PartNumber: partNumber,
 			Data:       partData,
 		})

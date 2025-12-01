@@ -122,7 +122,7 @@ func (c *testClient) NewMultipartUpload(objectKey string, objectSize uint64) (st
 	return uploadID, nil
 }
 
-func (c *testClient) PutObjectPart(uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error) {
+func (c *testClient) PutObjectPart(objectKey string, uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	parts, ok := c.uploads[uploadId]

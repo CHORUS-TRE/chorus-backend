@@ -21,7 +21,7 @@ type MinioClienter interface {
 	MoveObject(oldObjectKey string, newObjectKey string) error
 	DeleteObject(objectKey string) error
 	NewMultipartUpload(objectKey string, objectSize uint64) (string, error)
-	PutObjectPart(uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error)
+	PutObjectPart(objectKey string, uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error)
 	CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error)
 	AbortMultipartUpload(uploadId string) error
 }
@@ -190,8 +190,8 @@ func (c *client) NewMultipartUpload(objectKey string, objectSize uint64) (string
 	return uploadId, nil
 }
 
-func (c *client) PutObjectPart(uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error) {
-	objectPart, err := c.minioCore.PutObjectPart(context.Background(), c.minioClientCfg.BucketName, "", uploadId, partNumber, bytes.NewReader(data), int64(len(data)), minio.PutObjectPartOptions{})
+func (c *client) PutObjectPart(objectKey string, uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error) {
+	objectPart, err := c.minioCore.PutObjectPart(context.Background(), c.minioClientCfg.BucketName, objectKey, uploadId, partNumber, bytes.NewReader(data), int64(len(data)), minio.PutObjectPartOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to upload part %d for upload %s: %w", partNumber, uploadId, err)
 	}
