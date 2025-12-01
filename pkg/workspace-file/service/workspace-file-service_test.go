@@ -430,6 +430,6 @@ func TestAbortFileUpload(t *testing.T) {
 	assert.NotEmpty(t, uploadInfo.UploadID, "upload ID should not be empty")
 
 	// Abort multipart upload
-	err = storage.AbortMultipartUpload(context.Background(), uploadInfo.UploadID)
+	err = storage.AbortMultipartUpload(context.Background(), storePath, uploadInfo.UploadID)
 	assert.NoError(t, err, "aborting multipart upload should not error: %v", err)
 }

@@ -41,13 +41,13 @@ type MinioFileStore interface {
 	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
 
 	// Upload a single part of a multipart upload.
-	UploadPart(ctx context.Context, filePath string, uploadId string, part *model.FilePart) (*model.FilePart, error)
+	UploadPart(ctx context.Context, path string, uploadId string, part *model.FilePart) (*model.FilePart, error)
 
 	// Complete a multipart upload after all parts of a file have been uploaded.
 	CompleteMultipartUpload(ctx context.Context, path string, uploadId string, parts []*model.FilePart) (*model.File, error)
 
 	// Abort a multipart upload, discarding all uploaded parts.
-	AbortMultipartUpload(ctx context.Context, uploadId string) error
+	AbortMultipartUpload(ctx context.Context, path string, uploadId string) error
 }
 
 var _ MinioFileStore = &MinioFileStorage{}
@@ -62,31 +62,43 @@ func NewMinioFileStorage(client miniorawclient.MinioClienter) (*MinioFileStorage
 	}, nil
 }
 
-func (s *MinioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64) {
+func (s *MinioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, error) {
 	const (
-		MinPartSize    = 5 * 1024 * 1024 // 5 MB
-		MaxTotalParts  = 10000           // Max parts allowed by MinIO/S3
-		PreferredParts = 1000            // Preferred number of parts
+		MinPartSize   = uint64(5 * 1024 * 1024)        // Minimum part size allowed by MinIO/S3 (5 MB)
+		MaxPartSize   = uint64(5 * 1024 * 1024 * 1024) // Maximum part size allowed by MinIO/S3 (5 GB)
+		MaxTotalParts = uint64(10000)                  // Max parts allowed by MinIO/S3
 	)
 
 	if fileSize == 0 {
-		return MinPartSize, 1
+		return 0, 0, fmt.Errorf("unable to compute part size for empty files")
 	}
 
+	if fileSize > MaxPartSize*MaxTotalParts {
+		return 0, 0, fmt.Errorf("file size %d exceeds maximum allowed size of %d bytes", fileSize, MaxPartSize*MaxTotalParts)
+	}
+
+	// Single part upload for small files
 	if fileSize <= MinPartSize {
-		return fileSize, 1
+		return fileSize, 1, nil
 	}
 
-	partSize := max(fileSize/PreferredParts, MinPartSize)
-
-	// Ensure we do not exceed MaxTotalParts
+	partSize := MinPartSize
+	// Ensure we do not exceed MaxTotalParts (use ceiling division)
 	if (fileSize+partSize-1)/partSize > MaxTotalParts {
 		partSize = (fileSize + MaxTotalParts - 1) / MaxTotalParts
+
+		// Ensure partSize respects bounds
+		if partSize < MinPartSize {
+			partSize = MinPartSize
+		}
+		if partSize > MaxPartSize {
+			return 0, 0, fmt.Errorf("file size %d exceeds maximum uploadable size", fileSize)
+		}
 	}
 
 	totalParts := (fileSize + partSize - 1) / partSize
 
-	return partSize, totalParts
+	return partSize, totalParts, nil
 }
 
 func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*model.File, error) {
@@ -291,7 +303,10 @@ func (s *MinioFileStorage) InitiateMultipartUpload(ctx context.Context, file *mo
 		return nil, fmt.Errorf("unable to initiate multipart upload for file at %s: %w", path, err)
 	}
 
-	partSize, totalParts := s.computeFilePartSize(file.Size)
+	partSize, totalParts, err := s.computeFilePartSize(file.Size)
+	if err != nil {
+		return nil, fmt.Errorf("unable to compute part size for file at %s: %w", path, err)
+	}
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Initiated multipart upload for %s with upload ID %s (%d parts of size %d)", path, uploadID, totalParts, partSize))
 	return &model.FileUploadInfo{
@@ -332,8 +347,8 @@ func (s *MinioFileStorage) CompleteMultipartUpload(ctx context.Context, filePath
 	return createdFile, nil
 }
 
-func (s *MinioFileStorage) AbortMultipartUpload(ctx context.Context, uploadId string) error {
-	err := s.minioClient.AbortMultipartUpload(uploadId)
+func (s *MinioFileStorage) AbortMultipartUpload(ctx context.Context, filePath string, uploadId string) error {
+	err := s.minioClient.AbortMultipartUpload(filePath, uploadId)
 	if err != nil {
 		return fmt.Errorf("unable to abort multipart upload %s: %w", uploadId, err)
 	}

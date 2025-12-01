@@ -32,9 +32,9 @@ type WorkspaceFileStore interface {
 	DeleteFile(ctx context.Context, path string) error
 	DeleteDirectory(ctx context.Context, dirPath string) error
 	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
-	UploadPart(ctx context.Context, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error)
+	UploadPart(ctx context.Context, path string, uploadID string, part *model.FilePart) (*model.FilePart, error)
 	CompleteMultipartUpload(ctx context.Context, path string, uploadID string, parts []*model.FilePart) (*model.File, error)
-	AbortMultipartUpload(ctx context.Context, uploadID string) error
+	AbortMultipartUpload(ctx context.Context, path string, uploadID string) error
 }
 
 type WorkspaceFileService struct {
@@ -302,6 +302,7 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 		Name:        file.Name,
 		IsDirectory: file.IsDirectory,
 		MimeType:    file.MimeType,
+		Size:        file.Size,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to initiate multipart upload for file at path %s: %w", file.Path, err)
@@ -351,7 +352,7 @@ func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, wor
 
 	store := s.fileStores[storeName]
 
-	err = store.AbortMultipartUpload(ctx, uploadID)
+	err = store.AbortMultipartUpload(ctx, filePath, uploadID)
 	if err != nil {
 		return fmt.Errorf("unable to abort multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
 	}

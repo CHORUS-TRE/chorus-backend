@@ -167,7 +167,7 @@ func (c *testClient) CompleteMultipartUpload(objectKey string, uploadId string, 
 	return object, nil
 }
 
-func (c *testClient) AbortMultipartUpload(uploadId string) error {
+func (c *testClient) AbortMultipartUpload(objectKey string, uploadId string) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	_, ok := c.uploads[uploadId]

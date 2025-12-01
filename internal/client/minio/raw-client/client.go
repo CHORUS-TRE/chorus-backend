@@ -23,7 +23,7 @@ type MinioClienter interface {
 	NewMultipartUpload(objectKey string, objectSize uint64) (string, error)
 	PutObjectPart(objectKey string, uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error)
 	CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error)
-	AbortMultipartUpload(uploadId string) error
+	AbortMultipartUpload(objectKey string, uploadId string) error
 }
 
 type client struct {
@@ -225,8 +225,8 @@ func (c *client) CompleteMultipartUpload(objectKey string, uploadId string, part
 	}, nil
 }
 
-func (c *client) AbortMultipartUpload(uploadId string) error {
-	err := c.minioCore.AbortMultipartUpload(context.Background(), c.minioClientCfg.BucketName, "", uploadId)
+func (c *client) AbortMultipartUpload(objectKey string, uploadId string) error {
+	err := c.minioCore.AbortMultipartUpload(context.Background(), c.minioClientCfg.BucketName, objectKey, uploadId)
 	if err != nil {
 		return fmt.Errorf("unable to abort multipart upload %s: %w", uploadId, err)
 	}
