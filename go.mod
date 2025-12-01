@@ -17,7 +17,7 @@ require (
 	github.com/go-openapi/validate v0.24.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/go-redis/redis v6.15.9+incompatible
-	github.com/go-viper/mapstructure/v2 v2.2.1
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
