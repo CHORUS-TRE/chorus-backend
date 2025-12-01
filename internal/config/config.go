@@ -355,16 +355,15 @@ type (
 		ID string `yaml:"client_id"`
 		// Secret is used when the client authenticates with client_secret_jwt,
 		// since the key used to sign the assertion is the same used to verify it.
-		Secret string `yaml:"client_secret"`
+		Secret Sensitive `yaml:"client_secret"`
 		// HashedSecret is the hash of the client secret for the client_secret_basic
 		// and client_secret_post authentication methods.
-		HashedSecret string `yaml:"hashed_secret"`
+		HashedSecret Sensitive `yaml:"hashed_secret"`
 		// RegistrationToken is the plain text registration access token generated during
 		// dynamic client registration.
-		// Note: For security reasons, it is strongly recommended to hash or encrypt this value before storing it in a database.
-		RegistrationToken  string `yaml:"registration_token"`
-		CreatedAtTimestamp int    `yaml:"created_at"`
-		ExpiresAtTimestamp int    `yaml:"expires_at"`
+		// RegistrationToken  string `yaml:"registration_token"`
+		CreatedAtTimestamp int `yaml:"created_at"`
+		ExpiresAtTimestamp int `yaml:"expires_at"`
 
 		OnlyPreLoggedForClient bool `yaml:"only_pre_logged_for_client"`
 
@@ -394,72 +393,6 @@ type (
 		//...
 
 		TokenAuthnMethod string `yaml:"token_endpoint_auth_method"` // none, client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth, dpop
-	}
-
-	OpenIDConnectProviderClientMeta struct {
-		Name              string   `yaml:"client_name"`
-		SecretExpiresAt   *int     `yaml:"client_secret_expires_at"`
-		ApplicationType   string   `yaml:"application_type"` // web, native
-		LogoURI           string   `yaml:"logo_uri"`
-		Contacts          []string `yaml:"contacts"`
-		PolicyURI         string   `yaml:"policy_uri"`
-		TermsOfServiceURI string   `yaml:"tos_uri"`
-		RedirectURIs      []string `yaml:"redirect_uris"`
-		RequestURIs       []string `yaml:"request_uris"`
-		GrantTypes        []string `yaml:"grant_types"`    // client_credentials, authorization_code, refresh_token, implicit
-		ResponseTypes     []string `yaml:"response_types"` // code, id_token, token, code id_token, code token, id_token token, code id_token token
-		PublicJWKSURI     string   `yaml:"jwks_uri"`
-		// PublicJWKS        *JSONWebKeySet `yaml:"jwks"`
-		// ScopeIDs contains the scopes available to the client separeted by spaces.
-		ScopeIDs string `yaml:"scope"`
-		// SubIdentifierType     SubIdentifierType          `yaml:"subject_type"`
-		// SectorIdentifierURI   string                     `yaml:"sector_identifier_uri"`
-		// IDTokenSigAlg         SignatureAlgorithm         `yaml:"id_token_signed_response_alg"`
-		// IDTokenKeyEncAlg      KeyEncryptionAlgorithm     `yaml:"id_token_encrypted_response_alg"`
-		// IDTokenContentEncAlg  ContentEncryptionAlgorithm `yaml:"id_token_encrypted_response_enc"`
-		// UserInfoSigAlg        SignatureAlgorithm         `yaml:"userinfo_signed_response_alg"`
-		// UserInfoKeyEncAlg     KeyEncryptionAlgorithm     `yaml:"userinfo_encrypted_response_alg"`
-		// UserInfoContentEncAlg ContentEncryptionAlgorithm `yaml:"userinfo_encrypted_response_enc"`
-		// JARIsRequired         bool                       `yaml:"require_signed_request_object"`
-		// // TODO: Is JAR required if this is informed?
-		// JARSigAlg                     SignatureAlgorithm         `yaml:"request_object_signing_alg"`
-		// JARKeyEncAlg                  KeyEncryptionAlgorithm     `yaml:"request_object_encryption_alg"`
-		// JARContentEncAlg              ContentEncryptionAlgorithm `yaml:"request_object_encryption_enc"`
-		// JARMSigAlg                    SignatureAlgorithm         `yaml:"authorization_signed_response_alg"`
-		// JARMKeyEncAlg                 KeyEncryptionAlgorithm     `yaml:"authorization_encrypted_response_alg"`
-		// JARMContentEncAlg             ContentEncryptionAlgorithm `yaml:"authorization_encrypted_response_enc"`
-		// TokenAuthnMethod              ClientAuthnType            `yaml:"token_endpoint_auth_method"`
-		// TokenAuthnSigAlg              SignatureAlgorithm         `yaml:"token_endpoint_auth_signing_alg"`
-		// TokenIntrospectionAuthnMethod ClientAuthnType            `yaml:"introspection_endpoint_auth_method"`
-		// TokenIntrospectionAuthnSigAlg SignatureAlgorithm         `yaml:"introspection_endpoint_auth_signing_alg"`
-		// TokenRevocationAuthnMethod    ClientAuthnType            `yaml:"revocation_endpoint_auth_method"`
-		// TokenRevocationAuthnSigAlg    SignatureAlgorithm         `yaml:"revocation_endpoint_auth_signing_alg"`
-		// DPoPTokenBindingIsRequired    bool                       `yaml:"dpop_bound_access_tokens"`
-		// TLSSubDistinguishedName       string                     `yaml:"tls_client_auth_subject_dn"`
-		// // TLSSubAlternativeName represents a DNS name.
-		// TLSSubAlternativeName     string                `yaml:"tls_client_auth_san_dns"`
-		// TLSSubAlternativeNameIp   string                `yaml:"tls_client_auth_san_ip"`
-		// TLSTokenBindingIsRequired bool                  `yaml:"tls_client_certificate_bound_access_tokens"`
-		// AuthDetailTypes           []string              `yaml:"authorization_data_types"`
-		// DefaultMaxAgeSecs         *int                  `yaml:"default_max_age"`
-		// DefaultACRValues          string                `yaml:"default_acr_values"`
-		// PARIsRequired             bool                  `yaml:"require_pushed_authorization_requests"`
-		// CIBATokenDeliveryMode     CIBATokenDeliveryMode `yaml:"backchannel_token_delivery_mode"`
-		// CIBANotificationEndpoint  string                `yaml:"backchannel_client_notification_endpoint"`
-		// CIBAJARSigAlg             SignatureAlgorithm    `yaml:"backchannel_authentication_request_signing_alg"`
-		// CIBAUserCodeIsEnabled     bool                  `yaml:"backchannel_user_code_parameter"`
-		// PublicSignedJWKSURI       string                `yaml:"signed_jwks_uri"`
-		// OrganizationName          string                `yaml:"organization_name"`
-		// PostLogoutRedirectURIs    []string              `yaml:"post_logout_redirect_uris"`
-		// // CustomAttributes holds any additional dynamic attributes a client may
-		// // provide during registration.
-		// // These attributes allow clients to extend their metadata beyond the
-		// // predefined fields (e.g., client_name, logo_uri).
-		// // During DCR, any attributes that are not explicitly defined in the struct
-		// // will be captured here.
-		// // These additional fields are flattened in the DCR response, meaning
-		// // they are merged directly into the JSON response alongside standard fields.
-		// CustomAttributes map[string]any `yaml:"custom_attributes"`
 	}
 
 	Job struct {

@@ -15,7 +15,7 @@ daemon:
       access_control_max_age: "600"
       cookie_domain: "localhost"
   jwt:
-    secret: eREH6oV#&6bX&zadL%eREH6oV#&6bX&zadL%
+    secret: eREH6oV#&6bX&zadL%
     expiration_time: 72h
     max_refresh_time: 4320h #180d
   jobs:
@@ -106,9 +106,8 @@ services:
             - roles
   openid_connect_provider:
     enabled: true
-    # issuer_url: "http://localhost:5000/openid-connect"
-    frontend_interactions_url: "http://localhost:5000/auth-ui"
     issuer_url: "http://localhost:5000/openid-connect"
+    frontend_interactions_url: "http://localhost:5000/auth-ui"
     scopes: 
       - openid
       - profile

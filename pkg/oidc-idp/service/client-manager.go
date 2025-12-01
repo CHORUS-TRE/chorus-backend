@@ -32,14 +32,14 @@ func NewClientManager(cfg config.Config) (*clientManager, error) {
 			rt[i] = goidc.ResponseType(responseType)
 		}
 
-		h, err := bcrypt.GenerateFromPassword([]byte(c.Secret), bcrypt.DefaultCost)
+		h, err := bcrypt.GenerateFromPassword([]byte(c.Secret.PlainText()), bcrypt.DefaultCost)
 		if err != nil {
 			return nil, fmt.Errorf("unable to byrcpt secret: %w", err)
 		}
 
 		client := &goidc.Client{
 			ID:                         c.ID,
-			Secret:                     c.Secret,
+			Secret:                     c.Secret.PlainText(),
 			HashedSecret:               string(h),
 			RegistrationToken:          c.RegistrationToken,
 			CreatedAtTimestamp:         c.CreatedAtTimestamp,

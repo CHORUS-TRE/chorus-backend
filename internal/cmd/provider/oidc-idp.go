@@ -23,8 +23,6 @@ func ProvideOIDCIDPService() service.OIDCProviderService {
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "unable to instantiate OIDC IDP service", zap.Error(err))
 		}
-		// oidcidpService = service.Logging(logger.BizLog)(oidcidpService)
-		// oidcidpService = service.Validation(ProvideValidator())(oidcidpService)
 	})
 	return oidcidpService
 }
