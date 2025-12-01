@@ -433,3 +433,81 @@ func TestAbortFileUpload(t *testing.T) {
 	err = storage.AbortMultipartUpload(context.Background(), storePath, uploadInfo.UploadID)
 	assert.NoError(t, err, "aborting multipart upload should not error: %v", err)
 }
+
+func TestFileUploadPartSizeCalculation(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+	storage := s.fileStores[testStoreName]
+
+	tests := []struct {
+		name               string
+		fileSize           uint64
+		expectedPartSize   uint64
+		expectedTotalParts uint64
+		expectError        bool
+	}{
+		{
+			name:        "zero file",
+			fileSize:    0, // 0 bytes
+			expectError: true,
+		},
+		{
+			name:               "tiny file",
+			fileSize:           1, // 1 byte
+			expectedPartSize:   1,
+			expectedTotalParts: 1,
+		},
+		{
+			name:               "single part file",
+			fileSize:           5 * 1024 * 1024, // 5 MB
+			expectedPartSize:   5 * 1024 * 1024,
+			expectedTotalParts: 1,
+		},
+		{
+			name:               "slightly over single part file",
+			fileSize:           5*1024*1024 + 1, // > 5 MB
+			expectedPartSize:   5 * 1024 * 1024, // single part
+			expectedTotalParts: 2,
+		},
+		{
+			name:               "medium file",
+			fileSize:           500 * 1024 * 1024, // 500 MB
+			expectedPartSize:   5 * 1024 * 1024,
+			expectedTotalParts: 100,
+		},
+		{
+			name:               "large file (10GB)",
+			fileSize:           10 * 1024 * 1024 * 1024, // 10 GB
+			expectedPartSize:   5 * 1024 * 1024,
+			expectedTotalParts: 2048,
+		},
+		{
+			name:               "huge file (100GB)",
+			fileSize:           100 * 1024 * 1024 * 1024, // 100 GB
+			expectedPartSize:   10737419,                 // ~10.24 MB (100GB/10000)
+			expectedTotalParts: 10000,
+		},
+		{
+			name:        "exceeds max parts",
+			fileSize:    60000 * 1024 * 1024 * 1024, // 60 TB
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &model.File{
+				Path:        "/test-client/testfile.txt",
+				IsDirectory: false,
+				Size:        tt.fileSize,
+			})
+			if tt.expectError {
+				assert.Error(t, err, "expected error but got none")
+				return
+			} else {
+				assert.Equal(t, tt.expectedPartSize, uploadInfo.PartSize, "calculated part size should match expected")
+			}
+		})
+	}
+}
