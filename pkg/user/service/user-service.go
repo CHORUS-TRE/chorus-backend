@@ -35,21 +35,31 @@ type Userer interface {
 
 	GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error)
 	DeleteTotpRecoveryCode(ctx context.Context, req *DeleteTotpRecoveryCodeReq) error
+
+	UpsertGrants(ctx context.Context, grants []model.UserGrant) error
+	DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error
+	GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error)
 }
 
 type UserStore interface {
 	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *UserFilter) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
+	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
+	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
+
 	CreateRole(ctx context.Context, role string) error
 	CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error
 	RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
-	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
-	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
+
 	GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error)
 	UpdateUserWithRecoveryCodes(ctx context.Context, tenantID uint64, user *model.User, totpRecoveryCodes []string) (*model.User, error)
 	DeleteTotpRecoveryCode(ctx context.Context, tenantID, codeID uint64) error
+
+	UpsertGrants(ctx context.Context, grants []model.UserGrant) error
+	DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error
+	GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error)
 }
 
 type ErrUnauthorized struct{}
@@ -401,6 +411,30 @@ func (u *UserService) CreateRole(ctx context.Context, role string) error {
 
 func (u *UserService) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return u.store.GetRoles(ctx)
+}
+
+func (u *UserService) UpsertGrants(ctx context.Context, grants []model.UserGrant) error {
+	err := u.store.UpsertGrants(ctx, grants)
+	if err != nil {
+		return fmt.Errorf("unable to upsert user grants: %w", err)
+	}
+	return nil
+}
+
+func (u *UserService) DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error {
+	err := u.store.DeleteGrants(ctx, tenantID, userID, clientID)
+	if err != nil {
+		return fmt.Errorf("unable to delete user grants: %w", err)
+	}
+	return nil
+}
+
+func (u *UserService) GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error) {
+	grants, err := u.store.GetUserGrants(ctx, tenantID, userID, clientID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get user grants: %w", err)
+	}
+	return grants, nil
 }
 
 // func (u *UserService) GetRolesWithContext(ctx context.Context, roleContext map[string]string) ([]*model.Role, error) {

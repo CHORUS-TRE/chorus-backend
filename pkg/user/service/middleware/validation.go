@@ -121,6 +121,21 @@ func (v validation) DeleteTotpRecoveryCode(ctx context.Context, req *service.Del
 	return v.next.DeleteTotpRecoveryCode(ctx, req)
 }
 
+func (v validation) UpsertGrants(ctx context.Context, grants []model.UserGrant) error {
+	if err := v.validate.Var(grants, "dive"); err != nil {
+		return err
+	}
+	return v.next.UpsertGrants(ctx, grants)
+}
+
+func (v validation) DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error {
+	return v.next.DeleteGrants(ctx, tenantID, userID, clientID)
+}
+
+func (v validation) GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error) {
+	return v.next.GetUserGrants(ctx, tenantID, userID, clientID)
+}
+
 func contains(list []string, str string) bool {
 	for _, v := range list {
 		if v == str {

@@ -111,6 +111,8 @@ type AppInstance struct {
 
 	ShmSize             string
 	KioskConfigURL      string
+	KioskConfigJWTURL   string
+	KioskConfigJWTToken string
 	MaxCPU              string
 	MinCPU              string
 	MaxMemory           string
@@ -175,6 +177,18 @@ func (c *client) appInstanceToWorkbenchApp(app AppInstance) WorkbenchApp {
 		w.KioskConfig = &KioskConfig{
 			URL: app.KioskConfigURL,
 		}
+	}
+	if app.KioskConfigJWTURL != "" {
+		if w.KioskConfig == nil {
+			w.KioskConfig = &KioskConfig{}
+		}
+		w.KioskConfig.JWTURL = app.KioskConfigJWTURL
+	}
+	if app.KioskConfigJWTToken != "" {
+		if w.KioskConfig == nil {
+			w.KioskConfig = &KioskConfig{}
+		}
+		w.KioskConfig.JWTToken = app.KioskConfigJWTToken
 	}
 
 	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" || app.MaxEphemeralStorage != "" || app.MinEphemeralStorage != "" {
@@ -298,7 +312,9 @@ type Image struct {
 	Tag        string `json:"tag,omitempty"`
 }
 type KioskConfig struct {
-	URL string `json:"url"`
+	URL      string `json:"url"`
+	JWTURL   string `json:"jwtUrl,omitempty"`
+	JWTToken string `json:"jwtToken,omitempty"`
 }
 type WorkbenchApp struct {
 	Name        string                       `json:"name"`

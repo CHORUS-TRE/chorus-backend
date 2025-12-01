@@ -248,10 +248,19 @@ type (
 		} `yaml:"mailer_service"`
 
 		AuthenticationService struct {
-			Enabled        bool            `yaml:"enabled"`
-			DevAuthEnabled bool            `yaml:"dev_auth_enabled"`
-			Modes          map[string]Mode `yaml:"modes"`
+			Enabled       bool            `yaml:"enabled"`
+			AuthUIEnabled bool            `yaml:"auth_ui_enabled"`
+			Modes         map[string]Mode `yaml:"modes"`
 		} `yaml:"authentication_service"`
+
+		OpenIDConnectProvider struct {
+			Enabled                 bool                          `yaml:"enabled"`
+			FrontendInteractionsURL string                        `yaml:"frontend_interactions_url"`
+			JWKS                    Sensitive                     `yaml:"jwks"`
+			IssuerURL               string                        `yaml:"issuer_url"`
+			Scopes                  []string                      `yaml:"scopes"`
+			Clients                 []OpenIDConnectProviderClient `yaml:"clients"`
+		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {
 			StreamProxyEnabled         bool           `yaml:"stream_proxy_enabled"`
@@ -272,8 +281,8 @@ type (
 				MaxTransientRetry     int           `yaml:"max_transient_retry"`
 			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
-    
-    WorkspaceService struct {
+
+		WorkspaceService struct {
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
 			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
@@ -282,7 +291,7 @@ type (
 		WorkspaceFileService struct {
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
-		
+
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`
@@ -340,6 +349,50 @@ type (
 		ClientID                  string   `yaml:"client_id"`
 		ClientSecret              string   `yaml:"client_secret"`
 		Scopes                    []string `yaml:"scopes"`
+	}
+
+	OpenIDConnectProviderClient struct {
+		ID string `yaml:"client_id"`
+		// Secret is used when the client authenticates with client_secret_jwt,
+		// since the key used to sign the assertion is the same used to verify it.
+		Secret Sensitive `yaml:"client_secret"`
+		// HashedSecret is the hash of the client secret for the client_secret_basic
+		// and client_secret_post authentication methods.
+		HashedSecret Sensitive `yaml:"hashed_secret"`
+		// RegistrationToken is the plain text registration access token generated during
+		// dynamic client registration.
+		// RegistrationToken  string `yaml:"registration_token"`
+		CreatedAtTimestamp int `yaml:"created_at"`
+		ExpiresAtTimestamp int `yaml:"expires_at"`
+
+		OnlyPreLoggedForClient bool `yaml:"only_pre_logged_for_client"`
+
+		GrantAutoApproved bool           `yaml:"grant_auto_approved"`
+		GrantDuration     *time.Duration `yaml:"grant_duration"`
+
+		IsFederated                bool     `yaml:"is_federated"`
+		FederationRegistrationType string   `yaml:"federation_registration_type"` // automatic or explicit
+		FederationTrustMarkIDs     []string `yaml:"federation_trust_mark_ids"`
+		// OpenIDConnectProviderClientMeta `yaml:",inline"`
+
+		Name              string   `yaml:"client_name"`
+		SecretExpiresAt   *int     `yaml:"client_secret_expires_at"`
+		ApplicationType   string   `yaml:"application_type"` // web, native
+		LogoURI           string   `yaml:"logo_uri"`
+		Contacts          []string `yaml:"contacts"`
+		PolicyURI         string   `yaml:"policy_uri"`
+		TermsOfServiceURI string   `yaml:"tos_uri"`
+		RedirectURIs      []string `yaml:"redirect_uris"`
+		RequestURIs       []string `yaml:"request_uris"`
+		GrantTypes        []string `yaml:"grant_types"`    // client_credentials, authorization_code, refresh_token, implicit
+		ResponseTypes     []string `yaml:"response_types"` // code, id_token, token, code id_token, code token, id_token token, code id_token token
+		PublicJWKSURI     string   `yaml:"jwks_uri"`
+		// PublicJWKS        *JSONWebKeySet `yaml:"jwks"`
+		// ScopeIDs contains the scopes available to the client separeted by spaces.
+		ScopeIDs string `yaml:"scope"`
+		//...
+
+		TokenAuthnMethod string `yaml:"token_endpoint_auth_method"` // none, client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth, dpop
 	}
 
 	Job struct {

@@ -49,7 +49,7 @@ services:
     key: value
   authentication_service:
     enabled: true
-    dev_auth_enabled: true
+    auth_ui_enabled: true
     modes:
       internal:
         type: internal

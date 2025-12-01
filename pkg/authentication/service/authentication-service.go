@@ -41,6 +41,7 @@ type Authenticator interface {
 	AuthenticateOAuth(ctx context.Context, providerID string) (string, error)
 	OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error)
 	Logout(ctx context.Context) (string, error)
+	GetShortLivedTokenForClient(ctx context.Context, oidcClientID string, workspaceID uint64) (string, time.Duration, error)
 }
 
 type Userer interface {
@@ -77,6 +78,7 @@ type CustomClaims struct {
 	Roles     []authorization_model.Role `json:"roles"`
 	R         string                     `json:"r"` // Roles gz compressed and base64-encoded
 	Username  string                     `json:"username"`
+	ForClient string                     `json:"forClient"`
 	Source    string                     `json:"source"`
 
 	jwt.StandardClaims
@@ -245,7 +247,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 		}
 	}
 
-	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now())
+	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now(), "")
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
 		return "", 0, &ErrUnauthorized{}
@@ -368,7 +370,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		}
 	}
 
-	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now())
+	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now(), "")
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
 		return "", 0, "", &ErrUnauthorized{}
@@ -412,7 +414,54 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.
 		return "", 0, status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
 	}
 
-	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0))
+	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0), "")
+	if err != nil {
+		return "", 0, status.Error(codes.Internal, "could not create jwt-token")
+	}
+
+	return token, a.jwtExpirationTime, nil
+}
+
+func (a *AuthenticationService) GetShortLivedTokenForClient(ctx context.Context, oidcClientID string, workspaceID uint64) (string, time.Duration, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return "", 0, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return "", 0, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
+
+	user, err := a.userer.GetUser(ctx, service.GetUserReq{
+		TenantID: tenantID,
+		ID:       userID,
+	})
+	if err != nil {
+		return "", 0, status.Error(codes.InvalidArgument, "could not get user")
+	}
+
+	if workspaceID != 0 {
+		userRolesInWorkspace := []userModel.UserRole{}
+		for _, r := range user.Roles {
+			if _, ok := r.Context["workspace"]; ok {
+				userRolesInWorkspace = append(userRolesInWorkspace, r)
+			}
+		}
+		user.Roles = userRolesInWorkspace
+	}
+
+	issuedAt, err := jwt_model.ExtractIssuedAt(ctx)
+	if err != nil {
+		return "", 0, status.Error(codes.InvalidArgument, "could not extract issued at from jwt-token")
+	}
+
+	elapsed := time.Since(time.Unix(issuedAt, 0))
+	if elapsed > a.maxRefreshTime {
+		return "", 0, status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
+	}
+
+	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0), "")
 	if err != nil {
 		return "", 0, status.Error(codes.Internal, "could not create jwt-token")
 	}
@@ -442,7 +491,7 @@ func verifyPassword(hash, password string) bool {
 }
 
 // createJWTToken generates a fresh JWT token for a given user.
-func createJWTToken(signingKey string, user *userModel.User, expirationTime time.Duration, issuedAt time.Time) (string, error) {
+func createJWTToken(signingKey string, user *userModel.User, expirationTime time.Duration, issuedAt time.Time, clientID string) (string, error) {
 
 	if issuedAt.IsZero() {
 		issuedAt = time.Now()
@@ -468,14 +517,16 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		// Roles:     user.Roles,
-		R:        r,
-		Username: user.Username,
-		Source:   user.Source,
+		R:         r,
+		Username:  user.Username,
+		ForClient: clientID,
+		Source:    user.Source,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(expirationTime).Unix(),
 			IssuedAt:  issuedAt.Unix(),
 		},
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(signingKey))
 }
