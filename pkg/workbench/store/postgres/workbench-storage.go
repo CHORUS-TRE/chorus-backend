@@ -93,14 +93,14 @@ func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout
 		UPDATE workbenchs
 		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
 		WHERE accessedat IS NOT NULL
-		  AND accessedat < NOW() - INTERVAL $3 * INTERVAL '1 second'
+		  AND accessedat < NOW() - $3::INTERVAL
 		  AND status != 'deleted'
 		  AND deletedat IS NULL
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	var deletedWorkbenchs []*model.Workbench
-	err := s.db.SelectContext(ctx, &deletedWorkbenchs, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), int64(idleTimeout.Seconds()))
+	err := s.db.SelectContext(ctx, &deletedWorkbenchs, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(idleTimeout.Seconds())))
 	if err != nil {
 		return nil, fmt.Errorf("unable to exec: %w", err)
 	}
