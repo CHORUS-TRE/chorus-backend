@@ -63,35 +63,34 @@ func NewMinioFileStorage(client miniorawclient.MinioClienter) (*MinioFileStorage
 }
 
 func (s *MinioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, error) {
-	const (
-		MinPartSize   = uint64(5 * 1024 * 1024)        // Minimum part size allowed by MinIO/S3 (5 MB)
-		MaxPartSize   = uint64(5 * 1024 * 1024 * 1024) // Maximum part size allowed by MinIO/S3 (5 GB)
-		MaxTotalParts = uint64(10000)                  // Max parts allowed by MinIO/S3
-	)
+	cfg := s.minioClient.GetClientConfig()
+	minPartSize := cfg.MultipartMinPartSize
+	maxPartSize := cfg.MultipartMaxPartSize
+	maxTotalParts := cfg.MultipartMaxTotalParts
 
 	if fileSize == 0 {
 		return 0, 0, fmt.Errorf("unable to compute part size for empty files")
 	}
 
-	if fileSize > MaxPartSize*MaxTotalParts {
-		return 0, 0, fmt.Errorf("file size %d exceeds maximum allowed size of %d bytes", fileSize, MaxPartSize*MaxTotalParts)
+	if fileSize > maxPartSize*maxTotalParts {
+		return 0, 0, fmt.Errorf("file size %d exceeds maximum allowed size of %d bytes", fileSize, maxPartSize*maxTotalParts)
 	}
 
 	// Single part upload for small files
-	if fileSize <= MinPartSize {
+	if fileSize <= minPartSize {
 		return fileSize, 1, nil
 	}
 
-	partSize := MinPartSize
+	partSize := minPartSize
 	// Ensure we do not exceed MaxTotalParts (use ceiling division)
-	if (fileSize+partSize-1)/partSize > MaxTotalParts {
-		partSize = (fileSize + MaxTotalParts - 1) / MaxTotalParts
+	if (fileSize+partSize-1)/partSize > maxTotalParts {
+		partSize = (fileSize + maxTotalParts - 1) / maxTotalParts
 
 		// Ensure partSize respects bounds
-		if partSize < MinPartSize {
-			partSize = MinPartSize
+		if partSize < minPartSize {
+			partSize = minPartSize
 		}
-		if partSize > MaxPartSize {
+		if partSize > maxPartSize {
 			return 0, 0, fmt.Errorf("file size %d exceeds maximum uploadable size", fileSize)
 		}
 	}
