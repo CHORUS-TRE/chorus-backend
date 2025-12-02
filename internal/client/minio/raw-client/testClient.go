@@ -23,8 +23,18 @@ func NewTestClient() *testClient {
 	}
 }
 
-func (c *testClient) GetClientName() string {
-	return "test-minio-client"
+func (c *testClient) GetClientConfig() MinioClientConfig {
+	return MinioClientConfig{
+		Name:                   "test-client",
+		Endpoint:               "test-endpoint",
+		AccessKeyID:            "test-access-key",
+		SecretAccessKey:        "test-secret-key",
+		UseSSL:                 false,
+		BucketName:             "test-bucket",
+		MultipartMinPartSize:   5 * 1024 * 1024,        // 5MB
+		MultipartMaxPartSize:   5 * 1024 * 1024 * 1024, // 5GB
+		MultipartMaxTotalParts: 10000,
+	}
 }
 
 func (c *testClient) GetObject(objectKey string) (*MinioObject, error) {

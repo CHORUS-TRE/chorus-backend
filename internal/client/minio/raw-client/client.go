@@ -14,6 +14,7 @@ import (
 var _ MinioClienter = &client{}
 
 type MinioClienter interface {
+	GetClientConfig() MinioClientConfig
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
 	ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error)
@@ -62,6 +63,10 @@ func NewClient(cfg config.Config, clientName string) (*client, error) {
 		minioClient:    minioClient,
 		minioCore:      minioCore,
 	}, nil
+}
+
+func (c *client) GetClientConfig() MinioClientConfig {
+	return c.minioClientCfg
 }
 
 func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
