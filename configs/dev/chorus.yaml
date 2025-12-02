@@ -145,7 +145,7 @@ services:
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
       scratch:
         client_type: minio
-        client_name: scratch
+        client_name: archive
         store_prefix: /scratch
         workspace_prefix: "workspaces/%s"
 
