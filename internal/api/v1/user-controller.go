@@ -270,6 +270,10 @@ func (c UserController) CreateUserRole(ctx context.Context, req *chorus.CreateUs
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if req.Role == nil {
+		return nil, status.Error(codes.InvalidArgument, "role is required")
+	}
+
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
