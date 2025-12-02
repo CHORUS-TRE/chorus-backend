@@ -160,6 +160,10 @@ type (
 
 		BucketName string `yaml:"bucket_name,omitempty"`
 		UseSSL     bool   `yaml:"use_ssl,omitempty"`
+
+		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size"`
+		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size"`
+		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts"`
 	}
 
 	ImagePullSecret struct {
@@ -272,8 +276,8 @@ type (
 				MaxTransientRetry     int           `yaml:"max_transient_retry"`
 			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
-    
-    WorkspaceService struct {
+
+		WorkspaceService struct {
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
 			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
@@ -282,7 +286,7 @@ type (
 		WorkspaceFileService struct {
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
-		
+
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`
