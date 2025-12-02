@@ -48,3 +48,27 @@ func WorkspaceFileFromBusiness(file *model.File) (*chorus.WorkspaceFile, error) 
 		Content: file.Content,
 	}, nil
 }
+
+func WorkspaceFilePartToBusiness(part *chorus.WorkspaceFilePart) (*model.FilePart, error) {
+	if part == nil {
+		return nil, fmt.Errorf("unable to convert nil workspace file part")
+	}
+
+	return &model.FilePart{
+		PartNumber: part.PartNumber,
+		Data:       part.Data,
+		ETag:       part.Etag,
+	}, nil
+}
+
+func WorkspaceFilePartFromBusiness(part *model.FilePart) (*chorus.WorkspaceFilePart, error) {
+	if part == nil {
+		return nil, fmt.Errorf("unable to convert nil workspace file part")
+	}
+
+	return &chorus.WorkspaceFilePart{
+		PartNumber: part.PartNumber,
+		Data:       part.Data,
+		Etag:       part.ETag,
+	}, nil
+}

@@ -6,7 +6,7 @@ import (
 
 type MinioObjectInfo struct {
 	Key          string
-	Size         int64
+	Size         uint64
 	LastModified time.Time
 	MimeType     string
 }
@@ -14,4 +14,14 @@ type MinioObjectInfo struct {
 type MinioObject struct {
 	MinioObjectInfo
 	Content []byte
+}
+
+type MinioObjectPartInfo struct {
+	PartNumber int
+	ETag       string
+}
+
+type MinioObjectPart struct {
+	MinioObjectPartInfo
+	Data []byte
 }

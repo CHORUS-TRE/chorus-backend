@@ -14,12 +14,17 @@ import (
 var _ MinioClienter = &client{}
 
 type MinioClienter interface {
+	GetClientConfig() MinioClientConfig
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
 	ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error)
 	PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error)
 	MoveObject(oldObjectKey string, newObjectKey string) error
 	DeleteObject(objectKey string) error
+	NewMultipartUpload(objectKey string, objectSize uint64) (string, error)
+	PutObjectPart(objectKey string, uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error)
+	CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error)
+	AbortMultipartUpload(objectKey string, uploadId string) error
 }
 
 type client struct {
@@ -27,6 +32,7 @@ type client struct {
 	minioClientCfg MinioClientConfig
 
 	minioClient *minio.Client
+	minioCore   *minio.Core
 }
 
 func NewClient(cfg config.Config, clientName string) (*client, error) {
@@ -43,11 +49,24 @@ func NewClient(cfg config.Config, clientName string) (*client, error) {
 		return nil, fmt.Errorf("error creating minio client: %w", err)
 	}
 
+	minioCore, err := minio.NewCore(clientCfg.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(clientCfg.AccessKeyID, clientCfg.SecretAccessKey, ""),
+		Secure: clientCfg.UseSSL,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating minio core: %w", err)
+	}
+
 	return &client{
 		cfg:            cfg,
 		minioClientCfg: clientCfg,
 		minioClient:    minioClient,
+		minioCore:      minioCore,
 	}, nil
+}
+
+func (c *client) GetClientConfig() MinioClientConfig {
+	return c.minioClientCfg
 }
 
 func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
@@ -58,7 +77,7 @@ func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
 
 	return &MinioObjectInfo{
 		Key:          objectInfo.Key,
-		Size:         objectInfo.Size,
+		Size:         uint64(objectInfo.Size),
 		LastModified: objectInfo.LastModified,
 		MimeType:     objectInfo.ContentType,
 	}, nil
@@ -84,7 +103,7 @@ func (c *client) GetObject(objectKey string) (*MinioObject, error) {
 	return &MinioObject{
 		MinioObjectInfo: MinioObjectInfo{
 			Key:          stat.Key,
-			Size:         stat.Size,
+			Size:         uint64(stat.Size),
 			LastModified: stat.LastModified,
 			MimeType:     stat.ContentType,
 		},
@@ -106,7 +125,7 @@ func (c *client) ListObjects(objectKey string, recursive bool) ([]*MinioObjectIn
 		}
 		objects = append(objects, &MinioObjectInfo{
 			Key:          object.Key,
-			Size:         object.Size,
+			Size:         uint64(object.Size),
 			LastModified: object.LastModified,
 			MimeType:     object.ContentType,
 		})
@@ -128,7 +147,7 @@ func (c *client) PutObject(objectKey string, object *MinioObject) (*MinioObjectI
 
 	return &MinioObjectInfo{
 		Key:          objectInfo.Key,
-		Size:         objectInfo.Size,
+		Size:         uint64(objectInfo.Size),
 		LastModified: objectInfo.LastModified,
 		MimeType:     objectInfo.ContentType,
 	}, nil
@@ -162,6 +181,59 @@ func (c *client) DeleteObject(objectKey string) error {
 	err := c.minioClient.RemoveObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.RemoveObjectOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to delete object at %s: %w", objectKey, err)
+	}
+
+	return nil
+}
+
+func (c *client) NewMultipartUpload(objectKey string, objectSize uint64) (string, error) {
+	uploadId, err := c.minioCore.NewMultipartUpload(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.PutObjectOptions{})
+	if err != nil {
+		return "", fmt.Errorf("unable to initiate multipart upload for object %s: %w", objectKey, err)
+	}
+
+	return uploadId, nil
+}
+
+func (c *client) PutObjectPart(objectKey string, uploadId string, partNumber int, data []byte) (*MinioObjectPartInfo, error) {
+	objectPart, err := c.minioCore.PutObjectPart(context.Background(), c.minioClientCfg.BucketName, objectKey, uploadId, partNumber, bytes.NewReader(data), int64(len(data)), minio.PutObjectPartOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to upload part %d for upload %s: %w", partNumber, uploadId, err)
+	}
+
+	return &MinioObjectPartInfo{
+		PartNumber: objectPart.PartNumber,
+		ETag:       objectPart.ETag,
+	}, nil
+}
+
+func (c *client) CompleteMultipartUpload(objectKey string, uploadId string, parts []*MinioObjectPartInfo) (*MinioObject, error) {
+	var completeParts []minio.CompletePart
+	for _, part := range parts {
+		completeParts = append(completeParts, minio.CompletePart{
+			PartNumber: part.PartNumber,
+			ETag:       part.ETag,
+		})
+	}
+
+	uploadInfo, err := c.minioCore.CompleteMultipartUpload(context.Background(), c.minioClientCfg.BucketName, objectKey, uploadId, completeParts, minio.PutObjectOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to complete multipart upload %s: %w", uploadId, err)
+	}
+
+	return &MinioObject{
+		MinioObjectInfo: MinioObjectInfo{
+			Key:          uploadInfo.Key,
+			Size:         uint64(uploadInfo.Size),
+			LastModified: uploadInfo.LastModified,
+		},
+	}, nil
+}
+
+func (c *client) AbortMultipartUpload(objectKey string, uploadId string) error {
+	err := c.minioCore.AbortMultipartUpload(context.Background(), c.minioClientCfg.BucketName, objectKey, uploadId)
+	if err != nil {
+		return fmt.Errorf("unable to abort multipart upload %s: %w", uploadId, err)
 	}
 
 	return nil

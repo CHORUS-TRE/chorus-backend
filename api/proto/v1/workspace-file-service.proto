@@ -77,6 +77,57 @@ message DeleteWorkspaceFileReply {
 }
 message DeleteWorkspaceFileResult {}
 
+// Multipart upload related messages
+message InitiateWorkspaceFileUploadRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+    WorkspaceFile file = 3;
+}
+message InitiateWorkspaceFileUploadReply {
+    InitiateWorkspaceFileUploadResult result = 1;
+}
+message InitiateWorkspaceFileUploadResult {
+    string uploadId = 1;
+    uint64 partSize = 2;
+    uint64 totalParts = 3;
+}
+
+message UploadWorkspaceFilePartRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+    string uploadId = 3;
+    WorkspaceFilePart part = 4;
+}
+message UploadWorkspaceFilePartReply {
+    UploadWorkspaceFilePartResult result = 1;
+}
+message UploadWorkspaceFilePartResult {
+    WorkspaceFilePart part = 1;
+}
+
+message CompleteWorkspaceFileUploadRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+    string uploadId = 3;
+    repeated WorkspaceFilePart parts = 5;
+}
+message CompleteWorkspaceFileUploadReply {
+    CompleteWorkspaceFileUploadResult result = 1;
+}
+message CompleteWorkspaceFileUploadResult {
+    WorkspaceFile file = 1;
+}
+
+message AbortWorkspaceFileUploadRequest {
+    uint64 workspaceId = 1;
+    string path = 2;
+    string uploadId = 3;
+}
+message AbortWorkspaceFileUploadReply {
+    AbortWorkspaceFileUploadResult result = 1;
+}
+message AbortWorkspaceFileUploadResult {}
+
 service WorkspaceFileService {
     // File management methods
     rpc GetWorkspaceFile(GetWorkspaceFileRequest) returns (GetWorkspaceFileReply) {
@@ -132,6 +183,54 @@ service WorkspaceFileService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a file in a workspace";
             description: "This endpoint deletes a file in a workspace at the specified path";
+            tags: "WorkspaceFileService";
+        };
+    };
+
+    // Multipart upload methods
+    rpc InitiateWorkspaceFileUpload(InitiateWorkspaceFileUploadRequest) returns (InitiateWorkspaceFileUploadReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload"
+            body: "file"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Initiate a multipart upload for a file in a workspace";
+            description: "This endpoint initiates a multipart upload for a file in a workspace";
+            tags: "WorkspaceFileService";
+        };
+    }
+
+    rpc UploadWorkspaceFilePart(UploadWorkspaceFilePartRequest) returns (UploadWorkspaceFilePartReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"
+            body: "part"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Upload a part of a file in a workspace";
+            description: "This endpoint uploads a part of a file in a workspace";
+            tags: "WorkspaceFileService";
+        };
+    };
+
+    rpc CompleteWorkspaceFileUpload(CompleteWorkspaceFileUploadRequest) returns (CompleteWorkspaceFileUploadReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}/complete"
+            body: "parts"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Complete a multipart upload for a file in a workspace";
+            description: "This endpoint completes a multipart upload for a file in a workspace";
+            tags: "WorkspaceFileService";
+        };
+    };
+
+    rpc AbortWorkspaceFileUpload(AbortWorkspaceFileUploadRequest) returns (AbortWorkspaceFileUploadReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workspaces/{workspaceId}/file/{path=**}/upload/{uploadId}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Abort a multipart upload for a file in a workspace";
+            description: "This endpoint aborts a multipart upload for a file in a workspace";
             tags: "WorkspaceFileService";
         };
     };

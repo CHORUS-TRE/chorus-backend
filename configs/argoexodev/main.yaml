@@ -169,6 +169,9 @@ clients:
       access_key_id: "{{ .s3_access_key }}"
       secret_access_key: "{{ .s3_secret_access_key }}"
       use_ssl: false
+      multipart_min_part_size: 5242880 # 5MB
+      multipart_max_part_size: 5368709120 # 5GB
+      multipart_max_total_parts: 10000
     nfs:
       enabled: true
       endpoint: s3.exodev.chorus-tre.ch:443
@@ -176,6 +179,9 @@ clients:
       access_key_id: "{{ .nfs_access_key }}"
       secret_access_key: "{{ .nfs_secret_access_key }}"
       use_ssl: true
+      multipart_min_part_size: 5242880 # 5MB
+      multipart_max_part_size: 5368709120 # 5GB
+      multipart_max_total_parts: 10000
   k8s_client:
     enabled: true
     sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"

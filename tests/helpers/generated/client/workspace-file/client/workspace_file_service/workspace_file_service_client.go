@@ -54,17 +54,103 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	WorkspaceFileServiceAbortWorkspaceFileUpload(params *WorkspaceFileServiceAbortWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceAbortWorkspaceFileUploadOK, error)
+
+	WorkspaceFileServiceCompleteWorkspaceFileUpload(params *WorkspaceFileServiceCompleteWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceCompleteWorkspaceFileUploadOK, error)
+
 	WorkspaceFileServiceCreateWorkspaceFile(params *WorkspaceFileServiceCreateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceFileServiceCreateWorkspaceFileOK, error)
 
 	WorkspaceFileServiceDeleteWorkspaceFile(params *WorkspaceFileServiceDeleteWorkspaceFileParams, opts ...ClientOption) (*WorkspaceFileServiceDeleteWorkspaceFileOK, error)
 
 	WorkspaceFileServiceGetWorkspaceFile(params *WorkspaceFileServiceGetWorkspaceFileParams, opts ...ClientOption) (*WorkspaceFileServiceGetWorkspaceFileOK, error)
 
+	WorkspaceFileServiceInitiateWorkspaceFileUpload(params *WorkspaceFileServiceInitiateWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceInitiateWorkspaceFileUploadOK, error)
+
 	WorkspaceFileServiceListWorkspaceFiles(params *WorkspaceFileServiceListWorkspaceFilesParams, opts ...ClientOption) (*WorkspaceFileServiceListWorkspaceFilesOK, error)
 
 	WorkspaceFileServiceUpdateWorkspaceFile(params *WorkspaceFileServiceUpdateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceFileServiceUpdateWorkspaceFileOK, error)
 
+	WorkspaceFileServiceUploadWorkspaceFilePart(params *WorkspaceFileServiceUploadWorkspaceFilePartParams, opts ...ClientOption) (*WorkspaceFileServiceUploadWorkspaceFilePartOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+WorkspaceFileServiceAbortWorkspaceFileUpload aborts a multipart upload for a file in a workspace
+
+This endpoint aborts a multipart upload for a file in a workspace
+*/
+func (a *Client) WorkspaceFileServiceAbortWorkspaceFileUpload(params *WorkspaceFileServiceAbortWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceAbortWorkspaceFileUploadOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceFileServiceAbortWorkspaceFileUploadParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceFileService_AbortWorkspaceFileUpload",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceFileServiceAbortWorkspaceFileUploadReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceFileServiceAbortWorkspaceFileUploadOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceFileServiceAbortWorkspaceFileUploadDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceFileServiceCompleteWorkspaceFileUpload completes a multipart upload for a file in a workspace
+
+This endpoint completes a multipart upload for a file in a workspace
+*/
+func (a *Client) WorkspaceFileServiceCompleteWorkspaceFileUpload(params *WorkspaceFileServiceCompleteWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceCompleteWorkspaceFileUploadOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceFileServiceCompleteWorkspaceFileUploadParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceFileService_CompleteWorkspaceFileUpload",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceFileServiceCompleteWorkspaceFileUploadReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceFileServiceCompleteWorkspaceFileUploadOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceFileServiceCompleteWorkspaceFileUploadDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -185,6 +271,45 @@ func (a *Client) WorkspaceFileServiceGetWorkspaceFile(params *WorkspaceFileServi
 }
 
 /*
+WorkspaceFileServiceInitiateWorkspaceFileUpload initiates a multipart upload for a file in a workspace
+
+This endpoint initiates a multipart upload for a file in a workspace
+*/
+func (a *Client) WorkspaceFileServiceInitiateWorkspaceFileUpload(params *WorkspaceFileServiceInitiateWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceInitiateWorkspaceFileUploadOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceFileServiceInitiateWorkspaceFileUploadParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceFileService_InitiateWorkspaceFileUpload",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceFileServiceInitiateWorkspaceFileUploadReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceFileServiceInitiateWorkspaceFileUploadOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceFileServiceInitiateWorkspaceFileUploadDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkspaceFileServiceListWorkspaceFiles lists files in a workspace at a specified path
 
 This endpoint lists all files at given path within a workspace
@@ -259,6 +384,45 @@ func (a *Client) WorkspaceFileServiceUpdateWorkspaceFile(params *WorkspaceFileSe
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceFileServiceUpdateWorkspaceFileDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceFileServiceUploadWorkspaceFilePart uploads a part of a file in a workspace
+
+This endpoint uploads a part of a file in a workspace
+*/
+func (a *Client) WorkspaceFileServiceUploadWorkspaceFilePart(params *WorkspaceFileServiceUploadWorkspaceFilePartParams, opts ...ClientOption) (*WorkspaceFileServiceUploadWorkspaceFilePartOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceFileServiceUploadWorkspaceFilePartParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceFileService_UploadWorkspaceFilePart",
+		Method:             "PUT",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceFileServiceUploadWorkspaceFilePartReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceFileServiceUploadWorkspaceFilePartOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceFileServiceUploadWorkspaceFilePartDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

@@ -160,6 +160,10 @@ type (
 
 		BucketName string `yaml:"bucket_name,omitempty"`
 		UseSSL     bool   `yaml:"use_ssl,omitempty"`
+
+		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size"`
+		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size"`
+		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts"`
 	}
 
 	ImagePullSecret struct {
