@@ -196,30 +196,28 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 	return nil
 }
 
-func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (updatedUser *model.User, err error) {
-	tx, txErr := s.db.Beginx()
-	if txErr != nil {
-		return nil, txErr
-	}
+func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
+	const userUpdateQuery = `
+		UPDATE users
+		SET firstname = $3, lastname = $4, username = $5, source = $6, status = $7, password = $8, passwordChanged = $9, totpenabled = $10, totpsecret = $11, updatedat = NOW()
+		WHERE tenantid = $1 AND id = $2
+		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+	`
 
-	defer func() {
-		if err != nil {
-			if txErr = tx.Rollback(); txErr != nil {
-				err = fmt.Errorf("%s: %w", txErr.Error(), err)
-			}
-		}
-	}()
-
-	updatedUser, err = s.updateUserAndRoles(ctx, tx, tenantID, user)
+	var updatedUser model.User
+	err := s.db.GetContext(ctx, &updatedUser, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username, user.Source,
+		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update: %w", err)
+		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
 
-	if err = tx.Commit(); err != nil {
-		return nil, fmt.Errorf("unable to commit: %w", err)
+	roles, err := s.getUserRoles(ctx, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get user roles: %w", err)
 	}
+	updatedUser.Roles = roles
 
-	return updatedUser, err
+	return &updatedUser, nil
 }
 
 func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) (*model.User, error) {
