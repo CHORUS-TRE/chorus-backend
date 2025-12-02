@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -523,4 +524,70 @@ func (s *UserStorage) CreateRole(ctx context.Context, role string) error {
 	}
 
 	return nil
+}
+
+// UpsertGrants creates or updates user grants in the database.
+// If a grant with the same tenantid, userid, clientid, and scope exists, it updates the updatedat and granteduntil fields.
+// Otherwise, it creates a new grant.
+func (s *UserStorage) UpsertGrants(ctx context.Context, grants []model.UserGrant) error {
+	if len(grants) == 0 {
+		return nil
+	}
+
+	numParameters := 5
+
+	valueStrings := make([]string, 0, len(grants))
+	valueArgs := make([]interface{}, 0, len(grants)*numParameters)
+
+	for i, grant := range grants {
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, NOW(), NOW())",
+			i*numParameters+1, i*numParameters+2, i*numParameters+3, i*numParameters+4, i*numParameters+5))
+		valueArgs = append(valueArgs, grant.TenantID, grant.UserID, grant.ClientID, grant.Scope, grant.GrantedUntil)
+	}
+
+	query := fmt.Sprintf(`
+		INSERT INTO user_grants (tenantid, userid, clientid, scope, granteduntil, createdat, updatedat)
+		VALUES %s
+		ON CONFLICT (tenantid, userid, clientid, scope)
+		DO UPDATE SET
+			granteduntil = EXCLUDED.granteduntil,
+			updatedat = NOW(),
+			deletedat = NULL;
+	`, strings.Join(valueStrings, ", "))
+
+	if _, err := s.db.ExecContext(ctx, query, valueArgs...); err != nil {
+		return fmt.Errorf("unable to upsert grants: %w", err)
+	}
+
+	return nil
+}
+
+func (s *UserStorage) DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error {
+	const query = `
+		UPDATE user_grants
+		SET deletedat = NOW()
+		WHERE tenantid = $1 AND userid = $2 AND clientid = $3 AND deletedat IS NULL;
+	`
+
+	_, err := s.db.ExecContext(ctx, query, tenantID, userID, clientID)
+	if err != nil {
+		return fmt.Errorf("unable to delete grants: %w", err)
+	}
+
+	return nil
+}
+
+func (s *UserStorage) GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error) {
+	const query = `
+		SELECT id, tenantid, userid, clientid, scope, granteduntil, createdat, updatedat, deletedat
+		FROM user_grants
+		WHERE tenantid = $1 AND userid = $2 AND clientid = $3 AND deletedat IS NULL;
+	`
+
+	var grants []model.UserGrant
+	if err := s.db.SelectContext(ctx, &grants, query, tenantID, userID, clientID); err != nil {
+		return nil, fmt.Errorf("unable to get user grants: %w", err)
+	}
+
+	return grants, nil
 }

@@ -46,7 +46,7 @@ services:
     key: value
   authentication_service:
     enabled: true
-    dev_auth_enabled: true
+    auth_ui_enabled: true
     modes:
       internal:
         type: internal
@@ -104,6 +104,50 @@ services:
             - profile
             - email
             - roles
+  openid_connect_provider:
+    enabled: true
+    issuer_url: "http://localhost:5000/openid-connect"
+    frontend_interactions_url: "http://localhost:5000/auth-ui"
+    scopes: 
+      - openid
+      - profile
+      - email
+      - roles
+    jwks: |
+      {
+        "keys": [
+          {
+            "use": "sig",
+            "kty": "RSA",
+            "kid": "chorus-backend-jwk-1",
+            "alg": "RS256",
+            "n": "vs3QBylCacEYjRICeQcxIAHR54RGgh-p5ItKNMXwNfvTIAPxPKA4_PDVLSc2EQJlfOIHEQ1Fh1SubV2BxBChzVu_iFM7ORIyaCZRnIB87Wg4IixwZBqrOLII-Qmj2DaYay6yuS9EvdmHT1B2Zu_SvX2tnO-xZ7LOr9OXaVMOeJPDeVy-lQpm-GoUFNnIHlYgX7_EBSafzt8VEANPCJkrsFrjIKGYCG1rTvOOxZL1VlLqoxhnyv8_ampxsnX9o_UblEgcu6Yii9vILmH7VBA2lm8ZkSX1NTVDkdvWzPuPZaz56Vjt6W2-z2csTlU5gY9M_rVIwdS88HUG5sm010K62Q",
+            "e": "AQAB",
+            "d": "IDIVWKf_I14oWOGBlk9-3BJCi4jX5uwV3FEen-IIgutvuBbCNYMpqpCuv_Q-XMdlPZncLGXrZgcFecHN_Dn8O20wV_4HX71w0P8qRTivG9Y6ppWOD24qlyH_fppAUeMAfBGAqdvOgyR5_wmqOPtduYjD61fMvR1AYA3ZnjWcGv809LgCiFBAwA5zSA5_hu1baDNmXN4oKBhecVD4CWEN6Ob-d53HAvxxT6b3ArT0mdZER5puJtcLdlWsJ_yXL1C5x6ZuPg-3h6aWKq0d-en4_e4_G4r7pH-8McYBf_MpWqm3i9SXdIJZH9ViVY1X0C50nx9m72Su40snIs1jOuyoiQ",
+            "p": "9nHkSGl3ZctwS-PIE9fCYEVnx2wlF7d5c9zEr0-bAwcrQgzG42iF3SgtWzDvwDr2dg3em0wf9HmJD-gsseHpRkSUZ5w5MCNaLJdwcLuyYrQpb2CSjCdXx30mM6aEMA3i_qHKP_f00BQAFYVLXwBw35P5_ch6MZeDVxiF6CZfEg0",
+            "q": "xjOnAnj35pTJFy2RLPTTtH32ASbmrW_9brHr3hFsFvPSmAvxbIfXb68zOIfZIJnjcCccGoDnpItX08N8dtR8qYnNebuMKXv1-TlGC6dPjuCKvgugf0c4nsgvD_FhaHHdicOowzE4Kx0VEOgiye2-AJPDhW559qKGMXHQ-gugdP0",
+            "dp": "IulXcXqfU2hSbC3EdismegTbAsErMATpy6QGqN8aEn-9fQnaUvTHoeDDLBvumsi_iVHFqzJJhJSC-iHl0v0x0qZ8b4EOCOe5Kn_5ib7NMnZbOE_x8rDQGo58Du0T5MrS0UeSIyW5JJDwwhuz5a1mUAXicDUqOkRAcuIidhSZezE",
+            "dq": "YhVNoLucck9O9Flobob5_WgYRZmqrkmtcQo7Xznf87vVi8jdQIg45NwezOrtWGTPWMEB91uzRopufC1RerzMtFmthYB6bE0b_KmLMFkr1djo0AOQ-WuVaX5HS-x39-fhajuZWH8S_ML3mdZG4Qb17_Mv3ug9EwB6yB06_YKjdUE",
+            "qi": "2j35JGuECw2aVZIyK903_tsTU6gfzfxMTNF75CcMYMt--UlaIa0lQhQSaTCVWeOYtUYUoV6G-sS7hmxwcSkPnlSRBy2nlB8pkcuZPnjDvatysVNuYjEoIBiisJoRN9PM6Zvn9ICFGTggnTIa-xrYKj-B0CEA8Ij_x53_hYyjEzg"
+          }
+        ]
+      }
+    clients:
+      - client_id: chorus-oidc-test-client
+        client_name: Chorus OIDC Test Client
+        client_secret: chorus-oidc-test-client-secret
+        redirect_uris:
+          - "http://localhost:3000/oauthredirect"
+          - "https://psteniusubi.github.io/oidc-tester/authorization-code-flow.html"
+        grant_types:
+          - authorization_code
+          - refresh_token
+          - client_credentials
+          - implicit
+        response_types:
+          - code
+        scope: "openid profile email roles"
+        token_endpoint_auth_method: "client_secret_post"
   steward:
     init_tenant:
       enabled: true
@@ -133,6 +177,7 @@ services:
     backend_in_k8s: false
     proxy_hit_save_batch_interval: 30s
     workbench_idle_timeout: 24h
+    workbench_idle_check_interval: 10s
   workspace_service:
     enable_kill_fixed_timeout: false
     kill_fixed_timeout: 1h

@@ -278,3 +278,63 @@ func (c userStorageLogging) UpdateUserWithRecoveryCodes(ctx context.Context, ten
 	)
 	return updatedUser, nil
 }
+
+func (c userStorageLogging) UpsertGrants(ctx context.Context, grants []model.UserGrant) error {
+	c.logger.Debug(ctx, "UpsertGrants request started")
+
+	now := time.Now()
+
+	err := c.next.UpsertGrants(ctx, grants)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "UpsertGrants request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c userStorageLogging) DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error {
+	c.logger.Debug(ctx, "DeleteGrants request started")
+
+	now := time.Now()
+
+	err := c.next.DeleteGrants(ctx, tenantID, userID, clientID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "DeleteGrants request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c userStorageLogging) GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error) {
+	c.logger.Debug(ctx, "GetUserGrants request started")
+
+	now := time.Now()
+
+	res, err := c.next.GetUserGrants(ctx, tenantID, userID, clientID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "GetUserGrants request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}

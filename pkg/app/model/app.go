@@ -21,15 +21,17 @@ type App struct {
 	DockerImageName     string
 	DockerImageTag      string
 
-	ShmSize             string
-	MaxCPU              string
-	MinCPU              string
-	MaxMemory           string
-	MinMemory           string
-	MaxEphemeralStorage string
-	MinEphemeralStorage string
-	KioskConfigURL      string
-	IconURL             string
+	ShmSize                    string
+	MaxCPU                     string
+	MinCPU                     string
+	MaxMemory                  string
+	MinMemory                  string
+	MaxEphemeralStorage        string
+	MinEphemeralStorage        string
+	KioskConfigURL             string
+	KioskConfigJWTURL          string
+	KioskConfigJWTOIDCClientID string
+	IconURL                    string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
