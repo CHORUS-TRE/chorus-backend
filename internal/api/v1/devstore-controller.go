@@ -5,6 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/devstore/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/devstore/service"
 	"google.golang.org/grpc/codes"
@@ -31,7 +32,7 @@ func (c DevstoreController) ListGlobalEntries(ctx context.Context, req *chorus.L
 	tenantid := uint64(1)
 	res, err := c.devstore.ListEntries(ctx, tenantid, model.DevStoreScopeGlobal, 0)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'ListGlobalEntries': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListGlobalEntries': %v", err.Error())
 	}
 
 	entries := map[string]string{}
@@ -51,7 +52,7 @@ func (c DevstoreController) GetGlobalEntry(ctx context.Context, req *chorus.GetE
 
 	entry, err := c.devstore.GetEntry(ctx, tenantid, model.DevStoreScopeGlobal, 0, req.Key)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'GetGlobalEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetGlobalEntry': %v", err.Error())
 	}
 
 	return &chorus.GetEntryReply{Result: &chorus.GetEntryResult{Key: entry.Key, Value: entry.Value}}, nil
@@ -66,7 +67,7 @@ func (c DevstoreController) PutGlobalEntry(ctx context.Context, req *chorus.PutE
 
 	entry, err := c.devstore.PutEntry(ctx, tenantid, model.DevStoreScopeGlobal, 0, req.Key, req.Value)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'PutGlobalEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'PutGlobalEntry': %v", err.Error())
 	}
 
 	return &chorus.PutEntryReply{Result: &chorus.PutEntryResult{Key: entry.Key, Value: entry.Value}}, nil
@@ -81,7 +82,7 @@ func (c DevstoreController) DeleteGlobalEntry(ctx context.Context, req *chorus.D
 
 	err := c.devstore.DeleteEntry(ctx, tenantid, model.DevStoreScopeGlobal, 0, req.Key)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'DeleteGlobalEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteGlobalEntry': %v", err.Error())
 	}
 
 	return &chorus.DeleteEntryReply{Result: &chorus.DeleteEntryResult{}}, nil
@@ -94,17 +95,17 @@ func (c DevstoreController) ListUserEntries(ctx context.Context, req *chorus.Lis
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract user ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract user ID from token: %v", err.Error())
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	res, err := c.devstore.ListEntries(ctx, tenantID, model.DevStoreScopeUser, userID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'ListUserEntries': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListUserEntries': %v", err.Error())
 	}
 
 	entries := map[string]string{}
@@ -122,17 +123,17 @@ func (c DevstoreController) GetUserEntry(ctx context.Context, req *chorus.GetEnt
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract user ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract user ID from token: %v", err.Error())
 	}
 
 	entry, err := c.devstore.GetEntry(ctx, tenantID, model.DevStoreScopeUser, userID, req.Key)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'GetUserEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetUserEntry': %v", err.Error())
 	}
 
 	return &chorus.GetEntryReply{Result: &chorus.GetEntryResult{Key: entry.Key, Value: entry.Value}}, nil
@@ -145,17 +146,17 @@ func (c DevstoreController) PutUserEntry(ctx context.Context, req *chorus.PutEnt
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract user ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract user ID from token: %v", err.Error())
 	}
 
 	entry, err := c.devstore.PutEntry(ctx, tenantID, model.DevStoreScopeUser, userID, req.Key, req.Value)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'PutUserEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'PutUserEntry': %v", err.Error())
 	}
 
 	return &chorus.PutEntryReply{Result: &chorus.PutEntryResult{Key: entry.Key, Value: entry.Value}}, nil
@@ -168,17 +169,17 @@ func (c DevstoreController) DeleteUserEntry(ctx context.Context, req *chorus.Del
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract user ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract user ID from token: %v", err.Error())
 	}
 
 	err = c.devstore.DeleteEntry(ctx, tenantID, model.DevStoreScopeUser, userID, req.Key)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'DeleteUserEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteUserEntry': %v", err.Error())
 	}
 
 	return &chorus.DeleteEntryReply{Result: &chorus.DeleteEntryResult{}}, nil
@@ -191,12 +192,12 @@ func (c DevstoreController) ListWorkspaceEntries(ctx context.Context, req *choru
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	res, err := c.devstore.ListEntries(ctx, tenantID, model.DevStoreScopeWorkspace, req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'ListWorkspaceEntries': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaceEntries': %v", err.Error())
 	}
 
 	entries := map[string]string{}
@@ -214,12 +215,12 @@ func (c DevstoreController) GetWorkspaceEntry(ctx context.Context, req *chorus.G
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	entry, err := c.devstore.GetEntry(ctx, tenantID, model.DevStoreScopeWorkspace, req.Id, req.Key)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'GetWorkspaceEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspaceEntry': %v", err.Error())
 	}
 
 	return &chorus.GetEntryReply{Result: &chorus.GetEntryResult{Key: entry.Key, Value: entry.Value}}, nil
@@ -232,12 +233,12 @@ func (c DevstoreController) PutWorkspaceEntry(ctx context.Context, req *chorus.P
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	entry, err := c.devstore.PutEntry(ctx, tenantID, model.DevStoreScopeWorkspace, req.Id, req.Key, req.Value)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'PutWorkspaceEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'PutWorkspaceEntry': %v", err.Error())
 	}
 
 	return &chorus.PutEntryReply{Result: &chorus.PutEntryResult{Key: entry.Key, Value: entry.Value}}, nil
@@ -250,12 +251,12 @@ func (c DevstoreController) DeleteWorkspaceEntry(ctx context.Context, req *choru
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to extract tenant ID from token: %v", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "unable to extract tenant ID from token: %v", err.Error())
 	}
 
 	err = c.devstore.DeleteEntry(ctx, tenantID, model.DevStoreScopeWorkspace, req.Id, req.Key)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "unable to call 'DeleteWorkspaceEntry': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteWorkspaceEntry': %v", err.Error())
 	}
 
 	return &chorus.DeleteEntryReply{Result: &chorus.DeleteEntryResult{}}, nil
