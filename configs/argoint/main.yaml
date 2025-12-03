@@ -151,7 +151,7 @@ services:
         client_type: minio
         client_name: s3
         store_prefix: /workspace-archive
-        workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+        workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
   
 clients:
   docker_client:
