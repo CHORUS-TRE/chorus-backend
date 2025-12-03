@@ -208,12 +208,7 @@ func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *c
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	userID, err := jwt_model.ExtractUserID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
-	}
-
-	err = c.workbench.RemoveUserFromWorkbench(ctx, tenantID, userID, req.Id)
+	err = c.workbench.RemoveUserFromWorkbench(ctx, tenantID, req.UserId, req.Id)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkbench': %v", err.Error())
 	}
