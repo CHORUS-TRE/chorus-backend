@@ -80,7 +80,7 @@ func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination *
 func (s *AppStorage) CreateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	const appQuery = `
 		INSERT INTO apps (tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "kioskconfigjwturl", "kioskconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW(), NOW()) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW()) 
 		RETURNING id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "kioskconfigjwturl", "kioskconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", createdat, updatedat;
 	`
 
