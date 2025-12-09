@@ -59,13 +59,6 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Service account secret name
-*/}}
-{{- define "backend.serviceAccountSecretName" -}}
-{{ include "backend.serviceAccountName" . }}-token
-{{- end }}
-
-{{/*
 Return the proper image name
 */}}
 {{- define "backend.image" -}}
