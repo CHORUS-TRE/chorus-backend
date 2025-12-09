@@ -73,7 +73,7 @@ func runServer() error {
 
 	// 1. Init and serve the HTTP server, but it will return 503 errors until
 	// the gRPC server has started.
-	handler, mux, opts := rest.InitServer(ctx, cfg, getVersion(), started, provider.ProvideWorkbench().ProxyWorkbench, provider.ProvideAuthorizer(), provider.ProvideKeyFunc(cfg.Daemon.JWT.Secret.PlainText()), provider.ProvideClaimsFactory())
+	handler, mux, opts := rest.InitServer(ctx, cfg, getVersion(), started, provider.ProvideWorkbench().ProxyWorkbench, provider.ProvideAuthorizer(), provider.ProvideKeyFunc(cfg.Daemon.JWT.Secret.PlainText()), provider.ProvideClaimsFactory(), provider.ProvideOIDCIDPService())
 
 	httpSrv := &http.Server{
 		Addr:    httpHostPort,
@@ -155,6 +155,7 @@ func registerGRPCServices(server *google_grpc.Server) {
 	chorus.RegisterAppServiceServer(server, provider.ProvideAppController())
 	chorus.RegisterAppInstanceServiceServer(server, provider.ProvideAppInstanceController())
 	chorus.RegisterWorkspaceServiceServer(server, provider.ProvideWorkspaceController())
+	chorus.RegisterWorkspaceFileServiceServer(server, provider.ProvideWorkspaceFileController())
 	chorus.RegisterWorkbenchServiceServer(server, provider.ProvideWorkbenchController())
 	chorus.RegisterDevstoreServiceServer(server, provider.ProvideDevstoreController())
 
@@ -191,8 +192,11 @@ func registerHTTPEndpoints(ctx context.Context, mux *runtime.ServeMux, grpcHostP
 	if err := chorus.RegisterWorkspaceServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 		logger.TechLog.Fatal(ctx, "failed to register http workspace service handler", logger.WithErrorField(err))
 	}
+	if err := chorus.RegisterWorkspaceFileServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
+		logger.TechLog.Fatal(ctx, "failed to register http workspace file service handler", logger.WithErrorField(err))
+	}
 	if err := chorus.RegisterWorkbenchServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
-		logger.TechLog.Fatal(ctx, "failed to register http workspace service handler", logger.WithErrorField(err))
+		logger.TechLog.Fatal(ctx, "failed to register http workbench service handler", logger.WithErrorField(err))
 	}
 	if err := chorus.RegisterDevstoreServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 		logger.TechLog.Fatal(ctx, "failed to register http devstore service handler", logger.WithErrorField(err))

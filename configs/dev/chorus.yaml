@@ -1,8 +1,13 @@
 daemon:
   title: "chorus"
+  grpc:
+    max_recv_msg_size: 1073741824 # 1GB
+    max_send_msg_size: 1073741824 # 1GB
   http:
     host: 0.0.0.0
     port: 5000
+    max_call_recv_msg_size: 1073741824 # 1GB
+    max_call_send_msg_size: 1073741824 # 1GB
     headers:
       access_control_allow_origins: 
         - "http://localhost:3000"
@@ -41,7 +46,7 @@ services:
     key: value
   authentication_service:
     enabled: true
-    dev_auth_enabled: true
+    auth_ui_enabled: true
     modes:
       internal:
         type: internal
@@ -99,6 +104,50 @@ services:
             - profile
             - email
             - roles
+  openid_connect_provider:
+    enabled: true
+    issuer_url: "http://localhost:5000/openid-connect"
+    frontend_interactions_url: "http://localhost:5000/auth-ui"
+    scopes: 
+      - openid
+      - profile
+      - email
+      - roles
+    jwks: |
+      {
+        "keys": [
+          {
+            "use": "sig",
+            "kty": "RSA",
+            "kid": "chorus-backend-jwk-1",
+            "alg": "RS256",
+            "n": "vs3QBylCacEYjRICeQcxIAHR54RGgh-p5ItKNMXwNfvTIAPxPKA4_PDVLSc2EQJlfOIHEQ1Fh1SubV2BxBChzVu_iFM7ORIyaCZRnIB87Wg4IixwZBqrOLII-Qmj2DaYay6yuS9EvdmHT1B2Zu_SvX2tnO-xZ7LOr9OXaVMOeJPDeVy-lQpm-GoUFNnIHlYgX7_EBSafzt8VEANPCJkrsFrjIKGYCG1rTvOOxZL1VlLqoxhnyv8_ampxsnX9o_UblEgcu6Yii9vILmH7VBA2lm8ZkSX1NTVDkdvWzPuPZaz56Vjt6W2-z2csTlU5gY9M_rVIwdS88HUG5sm010K62Q",
+            "e": "AQAB",
+            "d": "IDIVWKf_I14oWOGBlk9-3BJCi4jX5uwV3FEen-IIgutvuBbCNYMpqpCuv_Q-XMdlPZncLGXrZgcFecHN_Dn8O20wV_4HX71w0P8qRTivG9Y6ppWOD24qlyH_fppAUeMAfBGAqdvOgyR5_wmqOPtduYjD61fMvR1AYA3ZnjWcGv809LgCiFBAwA5zSA5_hu1baDNmXN4oKBhecVD4CWEN6Ob-d53HAvxxT6b3ArT0mdZER5puJtcLdlWsJ_yXL1C5x6ZuPg-3h6aWKq0d-en4_e4_G4r7pH-8McYBf_MpWqm3i9SXdIJZH9ViVY1X0C50nx9m72Su40snIs1jOuyoiQ",
+            "p": "9nHkSGl3ZctwS-PIE9fCYEVnx2wlF7d5c9zEr0-bAwcrQgzG42iF3SgtWzDvwDr2dg3em0wf9HmJD-gsseHpRkSUZ5w5MCNaLJdwcLuyYrQpb2CSjCdXx30mM6aEMA3i_qHKP_f00BQAFYVLXwBw35P5_ch6MZeDVxiF6CZfEg0",
+            "q": "xjOnAnj35pTJFy2RLPTTtH32ASbmrW_9brHr3hFsFvPSmAvxbIfXb68zOIfZIJnjcCccGoDnpItX08N8dtR8qYnNebuMKXv1-TlGC6dPjuCKvgugf0c4nsgvD_FhaHHdicOowzE4Kx0VEOgiye2-AJPDhW559qKGMXHQ-gugdP0",
+            "dp": "IulXcXqfU2hSbC3EdismegTbAsErMATpy6QGqN8aEn-9fQnaUvTHoeDDLBvumsi_iVHFqzJJhJSC-iHl0v0x0qZ8b4EOCOe5Kn_5ib7NMnZbOE_x8rDQGo58Du0T5MrS0UeSIyW5JJDwwhuz5a1mUAXicDUqOkRAcuIidhSZezE",
+            "dq": "YhVNoLucck9O9Flobob5_WgYRZmqrkmtcQo7Xznf87vVi8jdQIg45NwezOrtWGTPWMEB91uzRopufC1RerzMtFmthYB6bE0b_KmLMFkr1djo0AOQ-WuVaX5HS-x39-fhajuZWH8S_ML3mdZG4Qb17_Mv3ug9EwB6yB06_YKjdUE",
+            "qi": "2j35JGuECw2aVZIyK903_tsTU6gfzfxMTNF75CcMYMt--UlaIa0lQhQSaTCVWeOYtUYUoV6G-sS7hmxwcSkPnlSRBy2nlB8pkcuZPnjDvatysVNuYjEoIBiisJoRN9PM6Zvn9ICFGTggnTIa-xrYKj-B0CEA8Ij_x53_hYyjEzg"
+          }
+        ]
+      }
+    clients:
+      - client_id: chorus-oidc-test-client
+        client_name: Chorus OIDC Test Client
+        client_secret: chorus-oidc-test-client-secret
+        redirect_uris:
+          - "http://localhost:3000/oauthredirect"
+          - "https://psteniusubi.github.io/oidc-tester/authorization-code-flow.html"
+        grant_types:
+          - authorization_code
+          - refresh_token
+          - client_credentials
+          - implicit
+        response_types:
+          - code
+        scope: "openid profile email roles"
+        token_endpoint_auth_method: "client_secret_post"
   steward:
     init_tenant:
       enabled: true
@@ -128,34 +177,43 @@ services:
     backend_in_k8s: false
     proxy_hit_save_batch_interval: 30s
     workbench_idle_timeout: 24h
+    workbench_idle_check_interval: 10s
   workspace_service:
     enable_kill_fixed_timeout: false
     kill_fixed_timeout: 1h
+  workspace_file_service:
+    stores:
+      archive:
+        client_type: minio
+        client_name: archive
+        store_prefix: /archive
+        workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+      scratch:
+        client_type: minio
+        client_name: scratch
+        store_prefix: /scratch
+        workspace_prefix: "workspaces/%s"
 
+# Client configurations added using the create-local-cluster.sh script
 # clients:
+#   docker_client:
+#     enabled: true
+#   minio_clients:
+#     archive:
+#       enabled: true
+#       endpoint: localhost:9000
+#       bucket_name: chorus-data
+#       access_key_id: minioadmin
+#       secret_access_key: minioadmin
+#       use_ssl: false
+#       multipart_min_part_size: 5242880 # 5MB
+#       multipart_max_part_size: 5368709120 # 5GB
+#       multipart_max_total_parts: 10000
 #   k8s_client:
 #     server_version: "6.2.3-2"
 #     kube_config: |
-#       apiVersion: v1
-#       clusters:
-#       - cluster:
-#           certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCekNDQWUrZ0F3SUJBZ0lVRHVkSVplRksrVC9QRDk2RDRjOEdCNjU1dlM0d0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF3d0hhMmx1WkMxallUQWdGdzB5TkRBNE1UUXdOelF3TkRsYUdBOHlNRFV4TVRJegpNVEEzTkRBME9Wb3dFakVRTUE0R0ExVUVBd3dIYTJsdVpDMWpZVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBSThvSnp4WE5aNEVLdmlIc3lKVEdTN0ZMM3dPWkRzYXZCc09vVS9yZ3k3Q0tiL3YKTXlKRFBXYjIyaW51VzNKV1VoWTFmNmpza0hsMHJKdUUzUEJ4MlBHUXljeDRHdzdzb2tYMFVpMjVxR3UvRngvRApiSUluWHc1WHVzTno5dDBneVowSzk2QnFsclJMWlE2eWk2OVJHOW5UMmVPUFczRFZhUTM3QnFCQzFrZjVTUEM0CjAwUStHeXdvL2dvd3IwMVVpYU91MUI3WUduNzY3THF6K0RVaER0aWhNZlRCbG5JSmg2NzZLNlFoOEdkN1dybEQKQW1RYm9ud3ZwaHJ6Y25MVEF1TExVWmswY2NEVkZpNGVRSkFUbHpMSGVsbzBNbVpSNGdDcm50Zmt0ZGFIQUVwUwpnVHpTdmpsaUt5ZU5FMUhRY1k2R0ZwK29QK3R3Vi9rV1VXb1ZLdmtDQXdFQUFhTlRNRkV3SFFZRFZSME9CQllFCkZHcUlFU1lEdHBsMWgvTzhjdU12Y0p2YmpEclBNQjhHQTFVZEl3UVlNQmFBRkdxSUVTWUR0cGwxaC9POGN1TXYKY0p2YmpEclBNQThHQTFVZEV3RUIvd1FGTUFNQkFmOHdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBSXF2K2k4OQpFQUIzMVpaYzhGQWhGVjNQUnFZNG8wWmxTaWpCTmdNSml1NUt3Nk9zcTN1OFRWQ2tSajZaMkxFK3lsZlh3UzZICkpUWlFoTFhYSC8wQ0NWcUlhUld3TkcxQ3E5RDhYbTBwS0FrMGVtS21iekY2Yk53Y2E3NnR6bVljdko3THp2eUMKRmpWNHFzWXFicnpGeHIwcnpvU0IxOWdBTGprZWovWW1sbHYvelczUjRsNE9QTGdWbFBPd1VpV1lmU01SL0ZaeQpPQmRGaWdHcFFWdGdmQldVcWVVRkFrZlI4d1NkVXE5MTMxNzRSeVRpcmlJaXF4YlhlNEdKZHAwUHh2R2N6K0tOCkowaEhBcHpxdXZqZTI3SHZZNlZPTXBSQm9hQTY0ak1zNGJIR0g5aUJSQzJ4TE9ET0d4S0tNbkJoeU9TNUlzcFIKQ1NGRE93Q1ZHdWVuWWpZPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
-#           server: https://127.0.0.1:41491
-#         name: kind-chorus
-#       contexts:
-#       - context:
-#           cluster: kind-chorus
-#           user: kind-chorus
-#         name: kind-chorus
-#       current-context: kind-chorus
-#       kind: Config
-#       preferences: {}
-#       users:
-#       - name: kind-chorus
-#         user:
-#           client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURKakNDQWc2Z0F3SUJBZ0lJR1dPczhlcG1xLzR3RFFZSktvWklodmNOQVFFTEJRQXdFakVRTUE0R0ExVUUKQXd3SGEybHVaQzFqWVRBZUZ3MHlOREE0TVRRd056UXdORGxhRncweU5UQTRNVFF3T0RJNU1qbGFNRHd4SHpBZApCZ05WQkFvVEZtdDFZbVZoWkcwNlkyeDFjM1JsY2kxaFpHMXBibk14R1RBWEJnTlZCQU1URUd0MVltVnlibVYwClpYTXRZV1J0YVc0d2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUMzdE4rV0RGemUKKytqd0Q5ZGFPVUxkUlhrZ2R6a01tclF3NktuZnBBdmM1STB3R2dyQmkwTjcvTXhpTnc5dU5iSU4vOUVTZldlcQp1VVJBVHRRVGlhbk1LY1ZQaHB0UjJDSUc0eUpldWgzNlo5OVVaRnlsb3h4amFGc2lqUzRiODlxeDJTWkNUUmdPCklIMFo3OG02Z2VDcld0bzhESTZjbEtpdHpINGVuU0tzdklOVlVQU3ovQmhZUlRNUitDVExWZDQxcWU0bmNoQnYKanpPN0hVWUxHNDNOMXlCQ3hBRENWby9obDh0K0cxTy9oSFZaSSsvMXY1T2NHOStXWkVoSVhUZW53V3RGWE1vdQpQdDBjT1dxdHBOdk9HMEVYYlZmVkF1T3YrenFGWjVUWTlhY0NsSGp2Q3Rsa3UwRGVRYzVjYlNoY2lmVTBIM0RlCmt6UWVNM255UDZWN0FnTUJBQUdqVmpCVU1BNEdBMVVkRHdFQi93UUVBd0lGb0RBVEJnTlZIU1VFRERBS0JnZ3IKQmdFRkJRY0RBakFNQmdOVkhSTUJBZjhFQWpBQU1COEdBMVVkSXdRWU1CYUFGR3FJRVNZRHRwbDFoL084Y3VNdgpjSnZiakRyUE1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQUhkQ3Z3WHBrYjE2SFFISTM2R09abXlpY29aQkxCCnpGUFQ3dHR2dmJYa1UxK0cwMTZjVjhDUndjWjFlaDR0VitnRFhGUDFQL0RESnZZZEtpNEJDc042K0t5cE9FV3IKWFVIYVljT0RCYnFWYnhrSEI0dHE1OURESU9aWkxDM0xPZ3lzSE9Ga2s1aDBGZjhFRFZ6OW4xNTJFb3pBc21uOQo2NXNiaW0waVJuVGJOeDF5VHUvTUs1L2dCTG9MN0ZLTTVER2lSc3lYQzVWN2ZUeE9kaFZjU0dZVGsyMTdMbUtZClBaazhEcEVOcU5DYXlMUVo3TGpHQTVYZEdOU0M4elpMU1Q3QVVkRGFIQ3lJdzFCNk9ZWEFPYUpCaUUzazRnQ24KTlc2NWdyUGNXT2J1aGZnSHlXeEhpVTZ0UzRNQ005V2V0OUNwS3VIT3pSbkhnUnpJK2pWaWdmQXEKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-#           client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb2dJQkFBS0NBUUVBdDdUZmxneGMzdnZvOEEvWFdqbEMzVVY1SUhjNURKcTBNT2lwMzZRTDNPU05NQm9LCndZdERlL3pNWWpjUGJqV3lEZi9SRW4xbnFybEVRRTdVRTRtcHpDbkZUNGFiVWRnaUJ1TWlYcm9kK21mZlZHUmMKcGFNY1kyaGJJbzB1Ry9QYXNka21RazBZRGlCOUdlL0p1b0hncTFyYVBBeU9uSlNvcmN4K0hwMGlyTHlEVlZEMApzL3dZV0VVekVmZ2t5MVhlTmFudUozSVFiNDh6dXgxR0N4dU56ZGNnUXNRQXdsYVA0WmZMZmh0VHY0UjFXU1B2CjliK1RuQnZmbG1SSVNGMDNwOEZyUlZ6S0xqN2RIRGxxcmFUYnpodEJGMjFYMVFManIvczZoV2VVMlBXbkFwUjQKN3dyWlpMdEEza0hPWEcwb1hJbjFOQjl3M3BNMEhqTjU4aitsZXdJREFRQUJBb0lCQURtN2loaXB3ZllCek83RQp5N1Q3RWR4Z0hQVHJBdTdISDZIUFBMT2Y1bXFCR1Mzb3dVQ1o5NWRibHcrMnBnN0lxVEJsR050cXRjMmRjNm1TCkhHd1hjMWxLTjB3S3pYMG5JMnB1cnpwOTJ6WDZ0dURhdVpNRWM4TjU1RW96ZkM0a3NMSDd3RjVOeENXTWFFUmkKYTA5RnljbVFQODFuVk5vNGpkb3d6ZUhwR0NDWWhTTFRiNVhCK1JZdG5zSmlpdm1xL3ZrcEpnRDF1VFU4aUZacgp3dEJsSVE3cHhvSGFBaXBCSXlTSnYxOWJoZXowTFNDNHdvOWhTSFpKbm42ZXV5SlpoT3NINnM5WHl4L2VOOTB1CnRDRGQ2UkNxZDM5TndyZGpVY29hc1BQb0ZqcGpLb1NUdUlZeUJLdVBkUHRuditRdko5RE1hQkx5Wm1GUTh5T0kKNU5oVW9XRUNnWUVBeUd4VzRmam1QNHJBZmRZQ1ArcmhqbS9rb0k3dGo4UkhTRGZ4Lzh4Q1QrdXlxcGxxSUtEQgpCRExLMVhQazQrS0NoWWozME0zRm5FaHJETTB3a2N6R3FjVkJGendEKzgwSXVVeVhRSkVpNk1vcTJWeUNBcGg0CkpPTkNqR3F2V1ZOVWNqQzVLVHZWckE5QVRuOW9NdFBnV0htcTI4MFVPai9JbkxEWmdCeEMwU1VDZ1lFQTZxWFoKazd3MW9aMFBITDl6RVd2OVJ4NmRzQnlGOTV1L1JqWTBLSnlFelVWTG5ydktTZUVDTm5IVnRtK3puS2RWMWVZVApIMDIyOHB2bjJoZHhpbXM0L2txTkxyVUt0N1pjeGorZCtNdktFUkFnTzNWeWNVTnRjbENyQk80Yi9hUTlLV05CClVkMGpjUlNZbnpTdUEyVmNmRndod3NCYlpJT04xSG11WkoyamFoOENnWUFWMGUyM2xtQ0M1SGxHZWVrdXlrU2EKUEVaWTBKYStnekQ3aE5PODlLRDNrSUtZSGpHMnNhbXg2bEc0NFhBMit5OFltS3ZhT0x6ZDRlaDlzVTByWW03eQpocjRxYUdkS242em1kNWN6K1ZraW5QZ0RTQllEY0ZRTU9BM0R1YzJ6WE9ZaHRIcEVLZlorVC83QlRRK3NFUE1vCnpyNHlSZWFBM1BiYlVFbXRyK1g2WFFLQmdCZnVhazVpOTZWUCsyYVhNQWtxMWw0V2hVYWM0aHpxeVl0RG8vWXcKWUdyL0VrTlNLOE4xSzJDYUk0M0R2ckhQYnpXdGpXMjM0MXpEQWRhQVpaZ1ViMitmOHQ0OG9LY3o5aXBSK3E2UgpPajZiUW01T0FDb0ZFbmlDT2E3N0NlZkloR1JnTngwK1RJc1A2ckR5RW4xT0xTeVJ5Tyt2NXFKTnVIMWZHNll2ClhhZEpBb0dBVXl2ZHgvRUdmcXlnQjJqb0V3UHQ5VVlCTHpCTWtlWk5SS0pYRnNTbFV4VWh1NUZ1NFh5RWZwMEoKdTJaZnlhYmZzQUFKdXpSU3RTK25DekFVbXJUN2NqaFJHaXhaWXJLcEJoaHhZdEF2aEZGdlRYNzloZXNlbVNWdQpjMkJsekRvMjFnbHhxSmFFcmV2TVV3dHlnd2ovNlAyL0tPbEFaUFRaK0lUdGNMM2hpMEE9Ci0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
-  
+#       ...  
+
 log:
   loggers:
     stdout_technical:

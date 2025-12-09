@@ -93,14 +93,14 @@ func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout
 		UPDATE workbenchs
 		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
 		WHERE accessedat IS NOT NULL
-		  AND accessedat < NOW() - INTERVAL $3 * INTERVAL '1 second'
+		  AND accessedat < NOW() - $3::INTERVAL
 		  AND status != 'deleted'
 		  AND deletedat IS NULL
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	var deletedWorkbenchs []*model.Workbench
-	err := s.db.SelectContext(ctx, &deletedWorkbenchs, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), int64(idleTimeout.Seconds()))
+	err := s.db.SelectContext(ctx, &deletedWorkbenchs, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(idleTimeout.Seconds())))
 	if err != nil {
 		return nil, fmt.Errorf("unable to exec: %w", err)
 	}
@@ -122,6 +122,7 @@ SELECT
 	ai.initialresolutionheight,
     ai.createdat,
     ai.updatedat,
+	ai.kioskconfigjwttoken,
 
 	a.name as AppName,
     a.dockerimageregistry as AppDockerImageRegistry,
@@ -129,6 +130,7 @@ SELECT
     a.dockerimagetag as AppDockerImageTag,
 	a.shmsize as AppShmSize,
 	a.kioskconfigurl as AppKioskConfigURL,
+	a.kioskconfigjwturl as AppKioskConfigJWTUrl,
 	a.maxcpu as AppMaxCPU,
 	a.mincpu as AppMinCPU,
 	a.maxmemory as AppMaxMemory,
@@ -287,7 +289,7 @@ func (s *WorkbenchStorage) DeleteWorkbenchsInWorkspace(ctx context.Context, tena
 
 func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 			FROM app_instances
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -309,7 +311,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 
 	// Get app instances query
 	query := `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
 		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
 	`
@@ -340,14 +342,14 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.
 func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceQuery = `
-		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
 	`
 
 	var newAppInstance model.AppInstance
 	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, appInstance.Status, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, appInstance.Status, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
 	)
 	if err != nil {
 		return nil, err
@@ -361,7 +363,7 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 		UPDATE app_instances
 		SET status = $3, k8sstate = $4, k8sstatus = $5, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
 	`
 
 	var updatedAppInstance model.AppInstance

@@ -85,7 +85,7 @@ function generate_client() {
 
     for folder in api/openapiv2/v1-tags/*-service; do
         if [[ -d $folder && $folder/apis.swagger.yaml ]]; then
-            service=$(echo ${folder##*/} | cut -d- -f1)
+            service=$(echo ${folder##*/} | sed 's/-service$//')
             echo "generating openapi client for $service" 
 
             mkdir -p tests/helpers/generated/client/$service

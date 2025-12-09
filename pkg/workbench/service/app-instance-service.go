@@ -42,7 +42,7 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
-	clientApp, err := s.getK8sAppInstance(appInstance.TenantID, appInstance.AppID, appInstance.ID)
+	clientApp, err := s.getK8sAppInstance(ctx, appInstance)
 	if err != nil {
 		return fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
 	}
@@ -65,6 +65,19 @@ func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *m
 }
 
 func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
+	app, err := s.apper.GetApp(ctx, appInstance.TenantID, appInstance.AppID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
+	}
+
+	if app.KioskConfigJWTOIDCClientID != "" {
+		token, _, err := s.authenticator.GetShortLivedTokenForClient(ctx, app.KioskConfigJWTOIDCClientID, appInstance.WorkspaceID)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get short lived token for app %v: %w", appInstance.AppID, err)
+		}
+		appInstance.KioskConfigJWTToken = token
+	}
+
 	newAppInstance, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
@@ -73,7 +86,7 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 	wsName := s.getWorkspaceName(newAppInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(newAppInstance.WorkbenchID)
 
-	clientApp, err := s.getK8sAppInstance(newAppInstance.TenantID, newAppInstance.AppID, newAppInstance.ID)
+	clientApp, err := s.getK8sAppInstance(ctx, newAppInstance)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get app %v: %w", newAppInstance.ID, err)
 	}
@@ -86,22 +99,25 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 	return newAppInstance, nil
 }
 
-func (s *WorkbenchService) getK8sAppInstance(tenantID, appID, appInstanceID uint64) (k8s.AppInstance, error) {
-	app, err := s.apper.GetApp(context.Background(), tenantID, appID)
+func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *model.AppInstance) (k8s.AppInstance, error) {
+	app, err := s.apper.GetApp(ctx, appInstance.TenantID, appInstance.AppID)
 	if err != nil {
-		return k8s.AppInstance{}, fmt.Errorf("unable to get app %v: %w", appID, err)
+		return k8s.AppInstance{}, fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
 	}
 
 	clientApp := k8s.AppInstance{
-		ID:      appInstanceID,
+		ID:      appInstance.ID,
 		AppName: app.Name,
 
 		AppRegistry: app.DockerImageRegistry,
 		AppImage:    app.DockerImageName,
 		AppTag:      app.DockerImageTag,
 
-		ShmSize:             app.ShmSize,
 		KioskConfigURL:      app.KioskConfigURL,
+		KioskConfigJWTURL:   app.KioskConfigJWTURL,
+		KioskConfigJWTToken: appInstance.KioskConfigJWTToken,
+
+		ShmSize:             app.ShmSize,
 		MaxCPU:              app.MaxCPU,
 		MinCPU:              app.MinCPU,
 		MaxMemory:           app.MaxMemory,

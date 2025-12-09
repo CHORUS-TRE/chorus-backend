@@ -1,0 +1,98 @@
+<div class="grid gap-4 text-center">
+    <p class="text-muted">Do you want to grant the following permission to <br>
+        <span id="client_name" class="text-accent"></span> ?
+    </p>
+</div>
+<div class="grid gap-4">
+    <span id="permission_list"></span>
+</div>
+<form onsubmit="reply(event, true)" id="loginForm" class="w-full">
+    <div class="grid gap-4 py-8">
+        <button
+            class="whitespace-nowrap font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 h-9 px-3 flex items-center justify-center gap-1 rounded-full text-xs transition-[gap] duration-500 ease-in-out hover:gap-2 bg-transparent text-accent ring-1 ring-accent hover:bg-accent/10 w-full"
+            type="submit">
+
+            Approve
+        </button>
+        <button type="button" onclick="reply(event, false)"
+            class="whitespace-nowrap font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 h-9 px-3 flex items-center justify-center gap-1 rounded-full text-xs transition-[gap] duration-500 ease-in-out hover:gap-2 bg-transparent text-accent ring-1 ring-red-400 hover:bg-accent/10 w-full ">
+            Deny
+        </button>
+        <span id="error" class="text-sm text-red-600"></span>
+    </div>
+</form>
+
+<script>
+    function initGrant() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientName = urlParams.get('client_name');
+        const scopes = urlParams.get('scopes');
+
+        console.log("urlParams:", urlParams);
+        console.log("clientName:", clientName);
+        console.log("scopes:", scopes);
+
+        if (clientName) {
+            document.getElementById('client_name').textContent = clientName;
+        }
+
+        if (scopes) {
+            try {
+                const scopesList = JSON.parse(scopes);
+                const permissionListElement = document.getElementById('permission_list');
+                scopesList.forEach(scope => {
+                    const li = document.createElement('li');
+                    li.textContent = scope;
+                    const small = document.createElement('small');
+                    small.className = "text-muted";
+                    if (scope === 'openid') {
+                        small.textContent = " (Authenticate your identity)";
+                    } else if (scope === 'profile') {
+                        small.textContent = " (Access your basic profile information)";
+                    } else if (scope === 'email') {
+                        small.textContent = " (Access your email address)";
+                    } else if (scope === 'roles') {
+                        small.textContent = " (List your roles and permissions)";
+                    } else {
+                        small.textContent = " (Access to " + scope + ")";
+                    }
+                    li.appendChild(small);
+                    permissionListElement.appendChild(li);
+                });
+            } catch (e) {
+                console.error('Error parsing scopes:', e);
+            }
+        }
+    }
+
+    function reply(event, consent) {
+        if (event?.preventDefault) {
+            event.preventDefault();
+        }
+
+        hideError();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let callbackUrl = urlParams.get('callback_url');
+
+        if (!callbackUrl) {
+            displayError('Callback URL is missing.');
+            return;
+        }
+
+        if (consent) {
+            callbackUrl += (callbackUrl.includes('?') ? '&' : '?') + 'consent=true';
+        } else {
+            callbackUrl += (callbackUrl.includes('?') ? '&' : '?') + 'consent=false';
+        }
+
+        console.log("Redirecting to callback URL:", callbackUrl);
+
+        window.location.href = callbackUrl;
+    }
+
+    initGrant();
+
+
+    console.log("Grant template initialized.");
+</script>

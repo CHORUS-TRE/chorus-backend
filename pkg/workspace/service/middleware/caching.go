@@ -74,26 +74,6 @@ func (c *Caching) CreateWorkspace(ctx context.Context, workspace *model.Workspac
 	return c.next.CreateWorkspace(ctx, workspace)
 }
 
-func (c *Caching) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.WorkspaceFile, error) {
-	return c.next.GetWorkspaceFile(ctx, workspaceID, filePath)
-}
-
-func (c *Caching) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.WorkspaceFile, error) {
-	return c.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
-}
-
-func (c *Caching) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	return c.next.CreateWorkspaceFile(ctx, workspaceID, file)
-}
-
-func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.WorkspaceFile) (*model.WorkspaceFile, error) {
-	return c.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)
-}
-
-func (c *Caching) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
-	return c.next.DeleteWorkspaceFile(ctx, workspaceID, filePath)
-}
-
 func (c *Caching) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	return c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
 }

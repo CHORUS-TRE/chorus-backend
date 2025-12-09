@@ -1,0 +1,24 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message WorkspaceFile {
+    string path = 1; // Unique identifier for the file within the workspace
+
+    string name = 2;
+    bool isDirectory = 3;
+    uint64 size = 4;
+    string mimeType = 5;
+
+    google.protobuf.Timestamp updatedAt = 6;
+
+    optional bytes content = 7; // File content will be empty when listing files
+}
+
+message WorkspaceFilePart {
+    uint64 partNumber = 1;
+    bytes data = 2;
+    string etag = 3; // ETag returned by MinIO
+}
