@@ -147,9 +147,14 @@ disableMountSecrets: true
 config:
   daemon:
     title: "template backend"
+    grpc:
+      max_recv_msg_size: 1073741824 # 1GB
+      max_send_msg_size: 1073741824 # 1GB
     http:
       host: 0.0.0.0
       port: 5000
+      max_call_recv_msg_size: 1073741824 # 1GB
+      max_call_send_msg_size: 1073741824 # 1GB
       headers:
         access_control_allow_origins: []
         access_control_allow_origin_wildcard: true
@@ -264,22 +269,33 @@ config:
       backend_in_k8s: true
       proxy_hit_save_batch_interval: 30s
       workbench_idle_timeout: 504h #21d
+    workspace_service:
+      enable_kill_fixed_timeout: false
+      kill_fixed_timeout: 1h
+    # workspace_file_service:
+    #   stores:
+    #     archive:
+    #       client_type: minio
+    #       client_name: s3
+    #       store_prefix: /workspace-archive
+    #       workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
 
   clients:
     docker_client:
-      enabled: true
-    minio_client:
       enabled: false
-      endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-      access_key_id: ""
-      secret_access_key: "" # set in secret
-      bucket_name: chorus-data
-      use_ssl: false
+    minio_clients:
+      s3:
+        enabled: false
+        endpoint: ""
+        access_key_id: ""
+        secret_access_key: "" # set in secret
+        bucket_name: ""
+        use_ssl: false
     k8s_client:
-      enabled: true
-      sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
-      api_server: "https://kubernetes.default.svc.cluster.local"
-      add_user_details: true
+      enabled: false
+      sa_secret_path: ""
+      api_server: ""
+      add_user_details: false
 
   log:
     loggers:

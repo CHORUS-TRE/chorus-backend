@@ -20,9 +20,14 @@ disableMountSecrets: false
 config:
   daemon:
     title: "template backend"
+    grpc:
+      max_recv_msg_size: 1073741824 # 1GB
+      max_send_msg_size: 1073741824 # 1GB
     http:
       host: 0.0.0.0
       port: 5000
+      max_call_recv_msg_size: 1073741824 # 1GB
+      max_call_send_msg_size: 1073741824 # 1GB
       headers:
         access_control_allow_origins:
           - "https://exodev.chorus-tre.ch"
@@ -70,7 +75,7 @@ config:
       key: value
     authentication_service:
       enabled: true
-      dev_auth_enabled: true
+      auth_ui_enabled: true
       modes:
         internal:
           type: internal
@@ -160,17 +165,43 @@ config:
     workspace_service:
       enable_kill_fixed_timeout: false
       kill_fixed_timeout: 1h
+    workspace_file_service:
+      stores:
+        archive:
+          client_type: minio
+          client_name: s3
+          store_prefix: /workspace-archive
+          workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+        scratch:
+          client_type: minio
+          client_name: nfs
+          store_prefix: /workspace-scratch
+          workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
 
   clients:
     docker_client:
       enabled: true
-    minio_client:
-      enabled: true
-      endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-      access_key_id: ""
-      secret_access_key: "" # set in secret
-      bucket_name: chorus-data
-      use_ssl: false
+    minio_clients:
+      s3:
+        enabled: true
+        endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+        access_key_id: ""
+        secret_access_key: "" # set in secret
+        bucket_name: chorus-data
+        use_ssl: false
+        multipart_min_part_size: 5242880 # 5MB
+        multipart_max_part_size: 5368709120 # 5GB
+        multipart_max_total_parts: 10000
+      nfs:
+        enabled: true
+        endpoint: s3.exodev.chorus-tre.ch:443
+        bucket_name: nfs
+        access_key_id: ""  # set in secret
+        secret_access_key: "" # set in secret
+        use_ssl: true
+        multipart_min_part_size: 5242880 # 5MB
+        multipart_max_part_size: 5368709120 # 5GB
+        multipart_max_total_parts: 10000
     k8s_client:
       enabled: true
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
