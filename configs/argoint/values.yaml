@@ -12,6 +12,10 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+  tls:
+    - secretName: backend-tls
+      hosts:
+        - backend.int.chorus-tre.ch
 
 # Disable mounting of secrets volume and config override
 # all password will need to be set via the config below
