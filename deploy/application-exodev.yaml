@@ -15,9 +15,6 @@ spec:
       helm:
         valueFiles:
           - ../../configs/argoexodev/values.yaml
-        fileParameters:
-          - name: main.yaml
-            path: ../../configs/argoexodev/main.yaml
         parameters:
           - name: podLabels.commit-sha
             value: $ARGOCD_APP_REVISION_SHORT

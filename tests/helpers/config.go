@@ -37,7 +37,7 @@ func Setup() {
 		fmt.Println("config file not found:", viper.GetString("config"))
 		os.Exit(1)
 	} else {
-		fmt.Println("using config file:", viper.ConfigFileUsed())
+		fmt.Println("Viper: using config file:", viper.ConfigFileUsed())
 	}
 
 	cfg = provider.ProvideConfig()

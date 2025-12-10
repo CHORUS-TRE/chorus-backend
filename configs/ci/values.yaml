@@ -1,3 +1,363 @@
-deployment:
-  disableMountSecrets: true
-  postgresDBName: "chorus_ci"
+# Default values for chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+fullnameOverride: ""
+nameOverride: ""
+
+image:
+  repository: harbor.build.chorus-tre.ch/chorus/backend
+  tag: ""
+  imagePullPolicy: IfNotPresent
+
+replicaCount: 1
+
+imagePullSecrets:
+- name: regcred
+
+# Custom environment variables to be set in the backend container
+# env:
+#   - name: ENV_VAR_NAME
+#     value: "value"
+# envFrom:
+#   - secretRef:
+#       name: my-secret
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  createSecret: false
+
+priorityClassName: ""
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 20g
+  hosts:
+    - host: backend.chorus-tre.ch
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: backend-tls
+      hosts:
+        - backend.chorus-tre.ch
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /api/rest/v1/health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/rest/v1/health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+serviceMonitor:
+  enabled: false
+  basicAuth:
+    enabled: false
+    secretName: ""
+    usernameKey: "username"
+    passwordKey: "password"
+  labels:
+    app.kubernetes.io/component: metrics
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+clusterRole:
+  create: false
+
+# Disable mounting of secrets volume and config override
+# all password will need to be set via the config below
+# which is not recommended for production use cases
+disableMountSecrets: true
+config:
+  daemon:
+    title: "template backend"
+    grpc:
+      max_recv_msg_size: 1073741824 # 1GB
+      max_send_msg_size: 1073741824 # 1GB
+    http:
+      host: 0.0.0.0
+      port: 5000
+      max_call_recv_msg_size: 1073741824 # 1GB
+      max_call_send_msg_size: 1073741824 # 1GB
+      headers:
+        access_control_allow_origins: []
+        access_control_allow_origin_wildcard: true
+        access_control_max_age: "600"
+        cookie_domain: ""
+    jwt:
+      secret: "NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO" # set in secret
+      expiration_time: 72h
+      max_refresh_time: 4320h #180d
+    jobs:
+      job_status_gc:
+        enabled: true
+    private_key: |
+      -----BEGIN EC PRIVATE KEY-----
+      MHcCAQEEII8kGzWHAJfOs9i/4Itm6XmR/CIb6ePuqx+2waa/U0EuoAoGCCqGSM49
+      AwEHoUQDQgAEg3/teKmW70zuiWjYTOynPqPHLOM7XExQUeOD6WSGdlJph3jZzuXh
+      f3hlc8rjTTQFa/xIsE+FYdpzVv5TB5qJVw==
+      -----END EC PRIVATE KEY-----
+    salt: "SNN6lK7wfEHVvN7mAaTI4nH375yQZzV8"
+    metrics:
+      enabled: false
+      authentication:
+        enabled: true
+        username: prometheus
+        password: "" # set in secret
+
+  # TODO: refactor storage with the postgresql chart values below
+  #       to avoid duplication
+  storage:
+    datastores:
+      chorus:
+        type: postgres
+        migration_table_name: tt_migrations
+        host: "" # set dynamically in argo-workflows
+        port: 5432
+        username: backend
+        password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
+        database: backend
+        max_connections: 10
+        max_lifetime: 10s
+        debug_mode: true
+        ssl:
+          enabled: false
+          certificate_file: ""
+          key_file: ""
+
+  services:
+    index_service:
+      key: value
+    authentication_service:
+      enabled: true
+      dev_auth_enabled: true
+      modes:
+        internal:
+          type: internal
+          enabled: true
+          public_registration_enabled: false
+          button_text: "Login with Chorus"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 1
+        keycloak:
+          type: openid
+          enabled: false
+          main_source: false
+          button_text: "Login with CHUV"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 2
+          openid:
+            id: keycloak
+            chorus_backend_host: ""
+            enable_frontend_redirect: true
+            chorus_frontend_redirect_url: ""
+            authorize_url: ""
+            token_url: ""
+            user_info_url: ""
+            logout_url: ""
+            user_name_claim: "preferred_username"
+            client_id: chorus
+            client_secret: ""  # set in secret
+            scopes:
+              - openid
+              - profile
+              - email
+              - roles
+        keycloakdev: {}
+    steward:
+      init_tenant:
+        enabled: false
+        tenant_id: 1
+      init_user:
+        enabled: false
+        user_id: 1
+        username: chorus
+        password: ""  # set in secret
+        roles:
+          - name: Authenticated
+            context:
+              user: 1
+      init_workspace:
+        enabled: false
+        workspace_id: 1
+        name: "Home workspace"
+    mailer_service:
+      smtp:
+        user: smtpUser
+        password: ""  # set in secret
+        host: smtp-relay.sendinblue.com
+        port: 587
+        authentication: "none"
+    workbench_service:
+      stream_proxy_enabled: true
+      backend_in_k8s: true
+      proxy_hit_save_batch_interval: 30s
+      workbench_idle_timeout: 504h #21d
+    workspace_service:
+      enable_kill_fixed_timeout: false
+      kill_fixed_timeout: 1h
+    # workspace_file_service:
+    #   stores:
+    #     archive:
+    #       client_type: minio
+    #       client_name: s3
+    #       store_prefix: /workspace-archive
+    #       workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+
+  clients:
+    docker_client:
+      enabled: false
+    minio_clients:
+      s3:
+        enabled: false
+        endpoint: ""
+        access_key_id: ""
+        secret_access_key: "" # set in secret
+        bucket_name: ""
+        use_ssl: false
+    k8s_client:
+      enabled: false
+      sa_secret_path: ""
+      api_server: ""
+      add_user_details: false
+
+  log:
+    loggers:
+      stdout_technical:
+        level: debug
+      stdout_security:
+        level: debug
+      stdout_business:
+        level: debug
+
+
+postgresql:
+  enabled: true
+  chorusNetworkPolicy:
+    enabled: false
+  postgresql:
+    global:
+      # Using a storage class
+      # with reclaim policy 'Delete'
+      # for CI
+      defaultStorageClass: "ceph-corbo-rbd-hdd"
+      postgresql:
+        auth:
+          postgresPassword: "FQAVJwPBCAbDRSkEXuIHAUSWjPViKyfF"
+          username: backend
+          password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"
+          database: backend
+          existingSecret: ""
+          secretKeys:
+            adminPasswordKey: "postgres-password"
+            userPasswordKey: "password"
+            replicationPasswordKey: ""
+        service:
+          port: 5432
+
+    tls:
+      enabled: true
+      certificatesSecret: backend-db-tls-secret
+
+    metrics:
+      enabled: false
+      serviceMonitor:
+        enabled: false
+
+    primary:
+      persistence:
+        size: 8Gi
+      resourcesPreset: small
+      pdb:
+        create: false
+      networkPolicy:
+        enabled: false
+
+    image:
+      # https://hub.docker.com/r/bitnamilegacy/postgresql
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
+      tag: 16.4.0
+
+  certificate:
+    enabled: true
+    secretName: backend-db-tls-secret
+    issuerRef:
+      name: private-ca-cluster-issuer
+      kind: ClusterIssuer

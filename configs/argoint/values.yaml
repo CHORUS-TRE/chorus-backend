@@ -1,12 +1,203 @@
-ingress:
-  enabled: true
-  host: "backend.int.chorus-tre.ch"
+image:
+  repository: harbor.int.chorus-tre.ch/chorus/backend
+  tag: latest
+  imagePullPolicy: Always
 
 service:
   port: 5000
 
-deployment:
-  postgresEnabled: false
-  serviceAccountName: "backend-service-account-chorus-master"
+ingress:
+  hosts:
+    - host: backend.int.chorus-tre.ch
+      paths:
+        - path: /
+          pathType: Prefix
 
-image: harbor.int.chorus-tre.ch/chorus/backend:master
+# Disable mounting of secrets volume and config override
+# all password will need to be set via the config below
+# which is not recommended for production use cases
+disableMountSecrets: false
+config:
+  daemon:
+    title: "template backend"
+    grpc:
+      max_recv_msg_size: 1073741824 # 1GB
+      max_send_msg_size: 1073741824 # 1GB
+    http:
+      host: 0.0.0.0
+      port: 5000
+      max_call_recv_msg_size: 1073741824 # 1GB
+      max_call_send_msg_size: 1073741824 # 1GB
+      headers:
+        access_control_allow_origins:
+          - "https://int.chorus-tre.ch"
+          - "https://backend.int.chorus-tre.ch"
+          - "http://localhost:3000"
+        access_control_allow_origin_wildcard: true
+        access_control_max_age: "600"
+        cookie_domain: ".int.chorus-tre.ch"
+    jwt:
+      secret: "" # set in secret
+      expiration_time: 72h
+      max_refresh_time: 4320h #180d
+    jobs:
+      job_status_gc:
+        enabled: true
+    private_key: "" # set in secret
+    salt: feast-salutary3-online-slogan-chafe-july-rickety-desktop-from
+    metrics:
+      enabled: true
+      authentication:
+        enabled: true
+        username: prometheus
+        password: "" # set in secret
+
+  storage:
+    datastores:
+      chorus:
+        type: postgres
+        migration_table_name: tt_migrations
+        host: chorus-int-backend-db-postgresql
+        port: 5432
+        username: backend
+        password: ""  # set in secret
+        database: chorus
+        max_connections: 10
+        max_lifetime: 10s
+        debug_mode: true
+        ssl:
+          enabled: false
+          certificate_file: ""
+          key_file: ""
+
+  services:
+    index_service:
+      key: value
+    authentication_service:
+      enabled: true
+      auth_ui_enabled: true
+      modes:
+        internal:
+          type: internal
+          enabled: true
+          public_registration_enabled: false
+          button_text: "Login with Chorus"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 1
+        keycloak:
+          type: openid
+          enabled: true
+          main_source: true
+          button_text: "Login with CHUV"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 2
+          openid:
+            id: keycloak
+            chorus_backend_host: "https://backend.int.chorus-tre.ch"
+            enable_frontend_redirect: true
+            chorus_frontend_redirect_url: "https://int.chorus-tre.ch/oauthredirect"
+            authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
+            user_name_claim: "preferred_username"
+            # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+            client_id: chorus
+            client_secret: ""  # set in secret
+            scopes:
+              - openid
+              - profile
+              - email
+              - roles
+        keycloakdev:
+          type: openid
+          enabled: true
+          button_text: "Login with CHUV"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 3
+          openid:
+            id: keycloakdev
+          chorus_backend_host: "https://backend.int.chorus-tre.ch"
+          enable_frontend_redirect: true
+          chorus_frontend_redirect_url: "http://localhost:3000/oauthredirect"
+          authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+          token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+          user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+          logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
+          user_name_claim: "preferred_username"
+          # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+          client_id: chorus
+          client_secret: ""  # set in secret
+          scopes:
+            - openid
+            - profile
+            - email
+            - roles
+    steward:
+      init_tenant:
+        enabled: true
+        tenant_id: 1
+      init_user:
+        enabled: true
+        user_id: 1
+        username: chorus
+        password: ""  # set in secret
+        roles:
+          - name: Authenticated
+            context:
+              user: 1
+      init_workspace:
+        enabled: true
+        workspace_id: 1
+        name: "Home workspace"
+    mailer_service:
+      smtp:
+        user: smtpUser
+        password: ""  # set in secret
+        host: smtp-relay.sendinblue.com
+        port: 587
+        authentication: "none"
+    workbench_service:
+      stream_proxy_enabled: true
+      backend_in_k8s: true
+      proxy_hit_save_batch_interval: 30s
+      workbench_idle_timeout: 504h #21d
+    workspace_service:
+      enable_kill_fixed_timeout: false
+      kill_fixed_timeout: 1h
+    workspace_file_service:
+      stores:
+        archive:
+          client_type: minio
+          client_name: s3
+          store_prefix: /workspace-archive
+          workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+
+  clients:
+    docker_client:
+      enabled: true
+    minio_clients:
+      s3:
+        enabled: true
+        endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+        access_key_id: ""
+        secret_access_key: "" # set in secret
+        bucket_name: chorus-data
+        use_ssl: false
+        multipart_min_part_size: 5242880 # 5MB
+        multipart_max_part_size: 5368709120 # 5GB
+        multipart_max_total_parts: 10000
+    k8s_client:
+      enabled: true
+      sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
+      api_server: ""
+      add_user_details: true
+
+  log:
+    loggers:
+      stdout_technical:
+        level: debug
+      stdout_security:
+        level: debug
+      stdout_business:
+        level: debug

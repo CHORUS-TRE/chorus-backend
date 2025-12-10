@@ -1,0 +1,33 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "backend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  endpoints:
+  # TODO: discuss exposing metrics on a different port
+  # than the one used for main service traffic
+  - port: {{ .Values.serviceMonitor.portName | default "http" }}
+    path: {{ .Values.serviceMonitor.path | default "/metrics" }}
+    {{- if .Values.serviceMonitor.basicAuth.enabled }}
+    basicAuth:
+      password:
+        name: {{ .Values.serviceMonitor.basicAuth.secretName | default (printf "%s-monitor-auth" (include "backend.fullname" .)) }}
+        key: {{ .Values.serviceMonitor.basicAuth.passwordKey | default "password" }}
+      username:
+        name: {{ .Values.serviceMonitor.basicAuth.secretName | default (printf "%s-monitor-auth" (include "backend.fullname" .)) }}
+        key: {{ .Values.serviceMonitor.basicAuth.usernameKey | default "username" }}
+      {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "backend.selectorLabels" . | nindent 6 }}
+{{- end }}

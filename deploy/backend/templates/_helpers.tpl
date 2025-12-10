@@ -2,48 +2,6 @@
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "backend.nameid" -}}
-{{- printf "%s-%s" (include "backend.name" .) .Values.version }}
-{{- end }}
-
-{{- define "backend.main" -}}
-    {{- $passphrase := "" }}
-    {{- if and (.Values.aesPassphrase) (ne .Values.aesPassphrase "") }}
-        {{- $passphrase = .Values.aesPassphrase }}
-    {{- else }}
-        {{- $namespace := "backend" }}
-        {{- $secretName := "configaespassphrase-argodev" }}
-        {{- $secretKey := "passphrase" }}
-        {{- $secret := lookup "v1" "Secret" $namespace $secretName }}
-        {{- if $secret }}
-            {{- $passphrase = $secret.data.passphrase | b64dec }}
-        {{- end }}
-    {{- end }}
-
-    {{- if (ne $passphrase "") }}
-        {{- $encryptedFile := .Files.Get "files/secrets.yaml.enc" }}
-        {{- $salt := $encryptedFile | substr 0 64 }}
-        {{- $remainingFile := $encryptedFile | substr 64 -1 }}
-        {{- $ivAndEncryptedData := $remainingFile | b64enc }}
-        {{- $passphraseWithSalt :=  (printf "%s%s" $passphrase $salt) | sha256sum | substr 0 32 }}
-        {{- $secrets := $ivAndEncryptedData | decryptAES $passphraseWithSalt | fromYaml -}}
-
-        {{- $_ := set $secrets "Template" $.Template }}
-        {{- tpl (.Files.Get "files/main.yaml") $secrets -}}
-    {{- else }}
-        {{- $file := .Files.Get "files/main.yaml" }}
-        {{- if $file }}
-            {{- printf "%s" (.Files.Get "files/main.yaml") }}
-        {{- else }}
-            {{- if kindIs "map" .Values.main }}
-                {{- printf "%s" (((.Values.main).yaml) | default .Values.main) }}
-            {{- else }}
-                {{- printf "%s" (.Values.main | default "") }}
-            {{- end }}
-        {{- end }}
-    {{- end }}
-{{- end -}}
-
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
@@ -98,4 +56,11 @@ Create the name of the service account to use
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
+{{- end }}
+
+{{/*
+Return the proper image name
+*/}}
+{{- define "backend.image" -}}
+{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}

@@ -2,18 +2,26 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-nameOverride: "chorus"
+fullnameOverride: ""
+nameOverride: ""
 
-aesPassphrase: ""
-
-image: harbor.build.chorus-tre.ch/chorus/backend:latest
-
-version: master
+image:
+  repository: harbor.build.chorus-tre.ch/chorus/backend
+  tag: ""
+  imagePullPolicy: IfNotPresent
 
 replicaCount: 1
 
-imagePullSecrets: []
-fullnameOverride: ""
+imagePullSecrets:
+- name: regcred
+
+# Custom environment variables to be set in the backend container
+# env:
+#   - name: ENV_VAR_NAME
+#     value: "value"
+# envFrom:
+#   - secretRef:
+#       name: my-secret
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -26,6 +34,7 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+priorityClassName: medium-priority
 podAnnotations: {}
 podLabels: {}
 
@@ -40,28 +49,26 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-deployment:
-  postgresEnabled: true
-
 service:
   type: ClusterIP
   port: 5000
 
 ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 20g
   hosts:
-    - host: chart-example.local
+    - host: backend.chorus-tre.ch
       paths:
         - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+          pathType: Prefix
+  tls:
+    - secretName: backend-tls
+      hosts:
+        - backend.chorus-tre.ch
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -75,8 +82,33 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
+livenessProbe:
+  httpGet:
+    path: /api/rest/v1/health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/rest/v1/health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
 serviceMonitor:
   enabled: false
+  basicAuth:
+    enabled: false
+    secretName: ""
+    usernameKey: "username"
+    passwordKey: "password"
+  labels:
+    app.kubernetes.io/component: metrics
 
 autoscaling:
   enabled: false
@@ -103,3 +135,232 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+clusterRole:
+  create: true
+
+# Disable mounting of secrets volume and config override
+# all password will need to be set via the config below
+# which is not recommended for production use cases
+disableMountSecrets: false
+config:
+  daemon:
+    title: "template backend"
+    grpc:
+      max_recv_msg_size: 1073741824 # 1GB
+      max_send_msg_size: 1073741824 # 1GB
+    http:
+      host: 0.0.0.0
+      port: 5000
+      max_call_recv_msg_size: 1073741824 # 1GB
+      max_call_send_msg_size: 1073741824 # 1GB
+      headers:
+        access_control_allow_origins: []
+        access_control_allow_origin_wildcard: true
+        access_control_max_age: "600"
+        cookie_domain: ""
+    jwt:
+      secret: "" # set in secret
+      expiration_time: 72h
+      max_refresh_time: 4320h #180d
+    jobs:
+      job_status_gc:
+        enabled: true
+    private_key: "" # set in secret
+    salt: ""
+    metrics:
+      enabled: true
+      authentication:
+        enabled: true
+        username: prometheus
+        password: "" # set in secret
+
+  # TODO: refactor storage with the postgresql chart values below
+  #       to avoid duplication
+  storage:
+    datastores:
+      chorus:
+        type: postgres
+        migration_table_name: tt_migrations
+        host: ""
+        port: 5432
+        username: backend
+        password: ""  # set in secret
+        database: backend
+        max_connections: 10
+        max_lifetime: 10s
+        debug_mode: true
+        ssl:
+          enabled: false
+          certificate_file: ""
+          key_file: ""
+
+  services:
+    index_service:
+      key: value
+    authentication_service:
+      enabled: true
+      auth_ui_enabled: true
+      modes:
+        internal:
+          type: internal
+          enabled: true
+          public_registration_enabled: false
+          button_text: "Login with Chorus"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 1
+        keycloak:
+          type: openid
+          enabled: true
+          main_source: true
+          button_text: "Login with CHUV"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 2
+          openid:
+            id: keycloak
+            chorus_backend_host: "https://backend.chorus-tre.ch"
+            enable_frontend_redirect: true
+            chorus_frontend_redirect_url: "https://chorus-tre.ch/oauthredirect"
+            authorize_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            token_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logout_url: "https://auth.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://chorus-tre.ch"
+            user_name_claim: "preferred_username"
+            # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+            client_id: chorus
+            client_secret: ""  # set in secret
+            scopes:
+              - openid
+              - profile
+              - email
+              - roles
+        # TODO: check how to handle keycloakdev properly in helm charts
+        keycloakdev: {}
+    steward:
+      init_tenant:
+        enabled: true
+        tenant_id: 1
+      init_user:
+        enabled: false
+        user_id: 1
+        username: chorus
+        password: ""  # set in secret
+        roles:
+          - name: Authenticated
+            context:
+              user: 1
+      init_workspace:
+        enabled: false
+        workspace_id: 1
+        name: "Home workspace"
+    mailer_service:
+      smtp:
+        user: smtpUser
+        password: ""  # set in secret
+        host: smtp-relay.sendinblue.com
+        port: 587
+        authentication: "none"
+    workbench_service:
+      stream_proxy_enabled: true
+      backend_in_k8s: true
+      proxy_hit_save_batch_interval: 30s
+      workbench_idle_timeout: 504h #21d
+    workspace_service:
+      enable_kill_fixed_timeout: false
+      kill_fixed_timeout: 1h
+    workspace_file_service:
+      stores: {}
+      #  archive:
+      #    client_type: minio
+      #    client_name: s3
+      #    store_prefix: /workspace-archive
+      #    workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+      #  scratch:
+      #    client_type: minio
+      #    client_name: nfs
+      #    store_prefix: /workspace-scratch
+      #    workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+
+  clients:
+    docker_client:
+      enabled: true
+    minio_clients: {}
+    #  s3:
+    #    enabled: true
+    #    endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+    #    access_key_id: ""
+    #    secret_access_key: "" # set in secret
+    #    bucket_name: chorus-data
+    #    use_ssl: false
+    #    multipart_min_part_size: 5242880 # 5MB
+    #    multipart_max_part_size: 5368709120 # 5GB
+    #    multipart_max_total_parts: 10000
+    #  nfs:
+    #    enabled: true
+    #    endpoint: s3.chorus-tre.ch:443
+    #    bucket_name: nfs
+    #    access_key_id: ""  # set in secret
+    #    secret_access_key: "" # set in secret
+    #    use_ssl: true
+    #    multipart_min_part_size: 5242880 # 5MB
+    #    multipart_max_part_size: 5368709120 # 5GB
+    #    multipart_max_total_parts: 10000
+    k8s_client:
+      enabled: true
+      sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
+      api_server: ""
+      add_user_details: true
+
+  log:
+    loggers:
+      stdout_technical:
+        level: debug
+      stdout_security:
+        level: debug
+      stdout_business:
+        level: debug
+
+postgresql:
+  enabled: false
+  postgresql:
+    global:
+      postgresql:
+        auth:
+          postgresPassword: ""
+          username: backend
+          password: ""
+          database: backend
+          existingSecret: ""
+          secretKeys:
+            adminPasswordKey: "postgres-password"
+            userPasswordKey: "password"
+            replicationPasswordKey: ""
+        service:
+          port: 5432
+
+    tls:
+      enabled: true
+      certificatesSecret: backend-db-tls-secret
+
+    metrics:
+      enabled: false
+      serviceMonitor:
+        enabled: false
+
+    primary:
+      persistence:
+        size: 8Gi
+      resourcesPreset: small
+
+    image:
+      # https://hub.docker.com/r/bitnamilegacy/postgresql
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
+      tag: 16.4.0
+
+  certificate:
+    enabled: true
+    secretName: backend-db-tls-secret
+    issuerRef:
+      name: private-ca-cluster-issuer
+      kind: ClusterIssuer

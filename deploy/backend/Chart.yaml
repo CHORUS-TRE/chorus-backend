@@ -2,5 +2,11 @@ apiVersion: v2
 name: backend
 description: Chorus Backend
 type: application
-version: 0.3.1
-appVersion: "1.16.0"
+version: 0.4.0
+appVersion: 0.4.0
+
+dependencies:
+  - name: postgresql
+    version: 0.0.19
+    repository: oci://harbor.build.chorus-tre.ch/charts
+    condition: postgresql.enabled
