@@ -247,7 +247,7 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateUser': %v", err.Error())
 	}
 
-	err = c.user.CreateUserRoles(ctx, res.ID, []model.UserRole{{
+	err = c.user.CreateUserRoles(ctx, tenantID, res.ID, []model.UserRole{{
 		Role: authorization_model.NewRole(
 			authorization_model.RoleAuthenticated,
 			authorization_model.WithUser(res.ID),
@@ -284,7 +284,7 @@ func (c UserController) CreateUserRole(ctx context.Context, req *chorus.CreateUs
 		return nil, status.Errorf(codes.InvalidArgument, "invalid role: %v", err.Error())
 	}
 
-	err = c.user.CreateUserRoles(ctx, req.UserId, []model.UserRole{{
+	err = c.user.CreateUserRoles(ctx, tenantID, req.UserId, []model.UserRole{{
 		Role: role,
 	}})
 	if err != nil {
@@ -317,7 +317,7 @@ func (c UserController) DeleteUserRole(ctx context.Context, req *chorus.DeleteUs
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	err = c.user.RemoveUserRoles(ctx, req.UserId, []uint64{req.RoleId})
+	err = c.user.RemoveUserRoles(ctx, tenantID, req.UserId, []uint64{req.RoleId})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteUserRole': %v", err.Error())
 	}

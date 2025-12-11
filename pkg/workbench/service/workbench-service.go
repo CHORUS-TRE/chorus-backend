@@ -24,6 +24,7 @@ import (
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
@@ -42,6 +43,10 @@ var (
 
 	_ = prometheus.DefaultRegisterer.Register(workbenchProxyRequest)
 )
+
+type NotificationStore interface {
+	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
+}
 
 type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
@@ -103,9 +108,10 @@ type WorkbenchService struct {
 	store  WorkbenchStore
 	client k8s.K8sClienter
 
-	apper         app_service.Apper
-	userer        user_service.Userer
-	authenticator authentication_service.Authenticator
+	apper             app_service.Apper
+	userer            user_service.Userer
+	authenticator     authentication_service.Authenticator
+	notificationStore NotificationStore
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
@@ -114,15 +120,16 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
 		client: client,
 
-		apper:         apper,
-		userer:        userer,
-		authenticator: authenticator,
+		apper:             apper,
+		userer:            userer,
+		authenticator:     authenticator,
+		notificationStore: notificationStore,
 
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),
@@ -434,7 +441,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	r := authorization_model.NewRole(authorization_model.RoleWorkbenchAdmin,
 		authorization_model.WithWorkbench(newWorkbench.ID),
 		authorization_model.WithWorkspace(newWorkbench.WorkspaceID))
-	err = s.userer.CreateUserRoles(ctx, workbench.UserID, []user_model.UserRole{{Role: r}})
+	err = s.userer.CreateUserRoles(ctx, workbench.TenantID, workbench.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", workbench.UserID, newWorkbench.ID, err)
 	}
@@ -491,7 +498,7 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 	}
 
 	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
 			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, tenantID, err)
 		}
@@ -501,9 +508,23 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 
 	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
 
-	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
+	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
 	if err != nil {
 		return fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", userID, tenantID, err)
+	}
+
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		Message:  fmt.Sprintf("You have been assigned the role %v in workbench %v", role.Role, workbench.Name),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return fmt.Errorf("unable to create notification for user %v about new role %v in workspace %v: %w", userID, role.Role, role.Context["workspace"], err)
 	}
 
 	return nil
@@ -523,7 +544,7 @@ func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID
 	}
 
 	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
 			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, workbenchID, err)
 		}

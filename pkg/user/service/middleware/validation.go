@@ -38,12 +38,12 @@ func (v validation) CreateRole(ctx context.Context, role string) error {
 	return v.next.CreateRole(ctx, role)
 }
 
-func (v validation) CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error {
-	return v.next.CreateUserRoles(ctx, userID, roles)
+func (v validation) CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error {
+	return v.next.CreateUserRoles(ctx, tenantID, userID, roles)
 }
 
-func (v validation) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
-	return v.next.RemoveUserRoles(ctx, userID, userRoleIDs)
+func (v validation) RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error {
+	return v.next.RemoveUserRoles(ctx, tenantID, userID, userRoleIDs)
 }
 
 func (v validation) GetRoles(ctx context.Context) ([]*model.Role, error) {
