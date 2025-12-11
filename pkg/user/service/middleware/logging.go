@@ -145,12 +145,12 @@ func (c userServiceLogging) CreateRole(ctx context.Context, role string) error {
 	return nil
 }
 
-func (c userServiceLogging) CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error {
+func (c userServiceLogging) CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.CreateUserRoles(ctx, userID, roles)
+	err := c.next.CreateUserRoles(ctx, tenantID, userID, roles)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -165,12 +165,12 @@ func (c userServiceLogging) CreateUserRoles(ctx context.Context, userID uint64, 
 	return nil
 }
 
-func (c userServiceLogging) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
+func (c userServiceLogging) RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.RemoveUserRoles(ctx, userID, userRoleIDs)
+	err := c.next.RemoveUserRoles(ctx, tenantID, userID, userRoleIDs)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

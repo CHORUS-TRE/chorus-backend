@@ -14,16 +14,21 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 )
+
+type NotificationStore interface {
+	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
+}
 
 type Userer interface {
 	ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
 	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
-	CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error
-	RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error
+	CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error
+	RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	// GetRolesWithContext(ctx context.Context, roleContext map[string]string) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
@@ -85,14 +90,16 @@ type UserService struct {
 	daemonEncryptionKey  *crypto.Secret
 	store                UserStore
 	mailer               mailer.Mailer
+	notificationStore    NotificationStore
 }
 
-func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret, store UserStore, mailer mailer.Mailer) *UserService {
+func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret, store UserStore, mailer mailer.Mailer, notificationStore NotificationStore) *UserService {
 	return &UserService{
 		totpNumRecoveryCodes: totpNumRecoveryCodes,
 		daemonEncryptionKey:  daemonEncryptionKey,
 		store:                store,
 		mailer:               mailer,
+		notificationStore:    notificationStore,
 	}
 }
 
@@ -384,7 +391,7 @@ func (u *UserService) sendMailWithTempPassword(subjectMessage string, tenantID u
 	}
 }
 
-func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error {
+func (u *UserService) CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error {
 	err := verifyRoles(roles)
 	if err != nil {
 		return fmt.Errorf("role verification failed: %w", err)
@@ -394,14 +401,44 @@ func (u *UserService) CreateUserRoles(ctx context.Context, userID uint64, roles 
 	if err != nil {
 		return fmt.Errorf("unable to create user roles for user %v: %w", userID, err)
 	}
+
+	err = u.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		Message:  "You have been assigned new roles",
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return fmt.Errorf("unable to create notification for user %v: %w", userID, err)
+	}
+
 	return nil
 }
 
-func (u *UserService) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
+func (u *UserService) RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error {
 	err := u.store.RemoveUserRoles(ctx, userID, userRoleIDs)
 	if err != nil {
 		return fmt.Errorf("unable to remove user roles for user %v: %w", userID, err)
 	}
+
+	err = u.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		Message:  "You have been assigned new roles",
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return fmt.Errorf("unable to create notification for user %v: %w", userID, err)
+	}
+
 	return nil
 }
 

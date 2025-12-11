@@ -36,12 +36,12 @@ func (c *Caching) CreateRole(ctx context.Context, role string) error {
 	return c.next.CreateRole(ctx, role)
 }
 
-func (c *Caching) CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error {
-	return c.next.CreateUserRoles(ctx, userID, roles)
+func (c *Caching) CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error {
+	return c.next.CreateUserRoles(ctx, tenantID, userID, roles)
 }
 
-func (c *Caching) RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error {
-	return c.next.RemoveUserRoles(ctx, userID, userRoleIDs)
+func (c *Caching) RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error {
+	return c.next.RemoveUserRoles(ctx, tenantID, userID, userRoleIDs)
 }
 
 func (c *Caching) GetRoles(ctx context.Context) (reply []*model.Role, err error) {

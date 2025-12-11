@@ -19,6 +19,9 @@ import (
 // swagger:model chorusNotification
 type ChorusNotification struct {
 
+	// content
+	Content *ChorusNotificationContent `json:"content,omitempty"`
+
 	// created at
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
@@ -41,6 +44,10 @@ type ChorusNotification struct {
 func (m *ChorusNotification) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateContent(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateCreatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -52,6 +59,25 @@ func (m *ChorusNotification) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusNotification) validateContent(formats strfmt.Registry) error {
+	if swag.IsZero(m.Content) { // not required
+		return nil
+	}
+
+	if m.Content != nil {
+		if err := m.Content.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("content")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("content")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -79,8 +105,38 @@ func (m *ChorusNotification) validateReadAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus notification based on context it is used
+// ContextValidate validate this chorus notification based on the context it is used
 func (m *ChorusNotification) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateContent(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusNotification) contextValidateContent(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Content != nil {
+
+		if swag.IsZero(m.Content) { // not required
+			return nil
+		}
+
+		if err := m.Content.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("content")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("content")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

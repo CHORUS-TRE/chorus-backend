@@ -143,12 +143,19 @@ definitions:
         format: uint64
       message:
         type: string
+      content:
+        $ref: '#/definitions/chorusNotificationContent'
       createdAt:
         type: string
         format: date-time
       readAt:
         type: string
         format: date-time
+  chorusNotificationContent:
+    type: object
+    properties:
+      systemNotification:
+        $ref: '#/definitions/chorusSystemNotification'
   chorusPaginationQuery:
     type: object
     properties:
@@ -178,6 +185,11 @@ definitions:
         type: string
       type:
         type: string
+  chorusSystemNotification:
+    type: object
+    properties:
+      refreshJWTRequired:
+        type: boolean
   protobufAny:
     type: object
     properties:

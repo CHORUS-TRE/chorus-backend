@@ -11,11 +11,16 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"go.uber.org/zap"
 )
+
+type NotificationStore interface {
+	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
+}
 
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
@@ -42,26 +47,28 @@ type WorkspaceStore interface {
 }
 
 type Userer interface {
-	CreateUserRoles(ctx context.Context, userID uint64, roles []user_model.UserRole) error
-	RemoveUserRoles(ctx context.Context, userID uint64, roleIDs []uint64) error
+	CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []user_model.UserRole) error
+	RemoveUserRoles(ctx context.Context, tenantID, userID uint64, roleIDs []uint64) error
 	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
 }
 
 type WorkspaceService struct {
-	cfg         config.Config
-	store       WorkspaceStore
-	k8sClient   k8s.K8sClienter
-	workbencher Workbencher
-	userer      Userer
+	cfg               config.Config
+	store             WorkspaceStore
+	k8sClient         k8s.K8sClienter
+	workbencher       Workbencher
+	userer            Userer
+	notificationStore NotificationStore
 }
 
-func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer) *WorkspaceService {
+func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, notificationStore NotificationStore) *WorkspaceService {
 	ws := &WorkspaceService{
-		cfg:         cfg,
-		store:       store,
-		k8sClient:   client,
-		workbencher: workbencher,
-		userer:      userer,
+		cfg:               cfg,
+		store:             store,
+		k8sClient:         client,
+		workbencher:       workbencher,
+		userer:            userer,
+		notificationStore: notificationStore,
 	}
 
 	go func() {
@@ -182,7 +189,7 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 	}
 
 	r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
-	err = s.userer.CreateUserRoles(ctx, workspace.UserID, []user_model.UserRole{{Role: r}})
+	err = s.userer.CreateUserRoles(ctx, workspace.TenantID, workspace.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
 	}
@@ -209,15 +216,29 @@ func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenant
 	}
 
 	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
 			return fmt.Errorf("unable to remove existing workspace roles for user %v for workspace %v: %w", userID, tenantID, err)
 		}
 	}
 
-	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
+	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
 	if err != nil {
 		return fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", userID, tenantID, err)
+	}
+
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		Message:  fmt.Sprintf("You have been assigned the role %v in workspace %v", role.Role, role.Context["workspace"]),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return fmt.Errorf("unable to create notification for user %v about new role %v in workspace %v: %w", userID, role.Role, role.Context["workspace"], err)
 	}
 
 	return nil
@@ -237,7 +258,7 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	}
 
 	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
 			return fmt.Errorf("unable to remove existing workspace roles for user %v for workspace %v: %w", userID, workspaceID, err)
 		}
