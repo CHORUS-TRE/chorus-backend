@@ -27,7 +27,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/luikyv/go-oidc v0.13.1-0.20251117180134-6509e29e2df7
 	github.com/minio/minio-go/v7 v7.0.95
-	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.0
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/pquerna/otp v1.4.0
