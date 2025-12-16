@@ -31,7 +31,7 @@ func createTestService() *WorkspaceFileService {
 		},
 	}
 
-	fileStores := map[string]WorkspaceFileStore{
+	fileStores := map[string]blockstore.BlockStore{
 		"test": fileStore,
 	}
 

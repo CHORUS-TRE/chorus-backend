@@ -22,27 +22,12 @@ type WorkspaceFiler interface {
 	AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error
 }
 
-type WorkspaceFileStore interface {
-	StatFile(ctx context.Context, path string) (*blockstore.File, error)
-	GetFile(ctx context.Context, path string) (*blockstore.File, error)
-	ListFiles(ctx context.Context, path string) ([]*blockstore.File, error)
-	CreateFile(ctx context.Context, file *blockstore.File) (*blockstore.File, error)
-	CreateDirectory(ctx context.Context, file *blockstore.File) (*blockstore.File, error)
-	MoveFile(ctx context.Context, oldPath string, newPath string) (*blockstore.File, error)
-	DeleteFile(ctx context.Context, path string) error
-	DeleteDirectory(ctx context.Context, dirPath string) error
-	InitiateMultipartUpload(ctx context.Context, file *blockstore.File) (*blockstore.FileUploadInfo, error)
-	UploadPart(ctx context.Context, path string, uploadID string, part *blockstore.FilePart) (*blockstore.FilePart, error)
-	CompleteMultipartUpload(ctx context.Context, path string, uploadID string, parts []*blockstore.FilePart) (*blockstore.File, error)
-	AbortMultipartUpload(ctx context.Context, path string, uploadID string) error
-}
-
 type WorkspaceFileService struct {
-	fileStores   map[string]WorkspaceFileStore
+	fileStores   map[string]blockstore.BlockStore
 	storeConfigs map[string]config.WorkspaceFileStore
 }
 
-func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStoreConfigs map[string]config.WorkspaceFileStore) (*WorkspaceFileService, error) {
+func NewWorkspaceFileService(fileStores map[string]blockstore.BlockStore, fileStoreConfigs map[string]config.WorkspaceFileStore) (*WorkspaceFileService, error) {
 	// Validate store prefixes uniqueness
 	for storeName, storeCfg := range fileStoreConfigs {
 		for otherStoreName, otherStoreCfg := range fileStoreConfigs {

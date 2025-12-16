@@ -11,19 +11,19 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
-var _ blockstore.BlockStore = &MinioFileStorage{}
+var _ blockstore.BlockStore = &minioFileStorage{}
 
-type MinioFileStorage struct {
+type minioFileStorage struct {
 	minioClient miniorawclient.MinioClienter
 }
 
-func NewMinioFileStorage(client miniorawclient.MinioClienter) (*MinioFileStorage, error) {
-	return &MinioFileStorage{
+func NewMinioFileStorage(client miniorawclient.MinioClienter) (blockstore.BlockStore, error) {
+	return &minioFileStorage{
 		minioClient: client,
 	}, nil
 }
 
-func (s *MinioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, error) {
+func (s *minioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, error) {
 	cfg := s.minioClient.GetClientConfig()
 	minPartSize := cfg.MultipartMinPartSize
 	maxPartSize := cfg.MultipartMaxPartSize
@@ -61,7 +61,7 @@ func (s *MinioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64,
 	return partSize, totalParts, nil
 }
 
-func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*blockstore.File, error) {
+func (s *minioFileStorage) StatFile(ctx context.Context, path string) (*blockstore.File, error) {
 	objectInfo, err := s.minioClient.StatObject(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to stat file at %s: %w", path, err)
@@ -73,7 +73,7 @@ func (s *MinioFileStorage) StatFile(ctx context.Context, path string) (*blocksto
 	return file, nil
 }
 
-func (s *MinioFileStorage) GetFile(ctx context.Context, path string) (*blockstore.File, error) {
+func (s *minioFileStorage) GetFile(ctx context.Context, path string) (*blockstore.File, error) {
 	object, err := s.minioClient.GetObject(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get file at %s: %w", path, err)
@@ -85,7 +85,7 @@ func (s *MinioFileStorage) GetFile(ctx context.Context, path string) (*blockstor
 	return file, nil
 }
 
-func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*blockstore.File, error) {
+func (s *minioFileStorage) ListFiles(ctx context.Context, path string) ([]*blockstore.File, error) {
 	objects, err := s.minioClient.ListObjects(path, false)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list files at path %s: %w", path, err)
@@ -101,7 +101,7 @@ func (s *MinioFileStorage) ListFiles(ctx context.Context, path string) ([]*block
 	return files, nil
 }
 
-func (s *MinioFileStorage) CreateFile(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
+func (s *minioFileStorage) CreateFile(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
 	if file.IsDirectory {
 		return nil, fmt.Errorf("use CreateDirectory to create directories")
 	}
@@ -140,7 +140,7 @@ func (s *MinioFileStorage) CreateFile(ctx context.Context, file *blockstore.File
 	return createdFile, nil
 }
 
-func (s *MinioFileStorage) CreateDirectory(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
+func (s *minioFileStorage) CreateDirectory(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
 	if file.IsDirectory == false {
 		return nil, fmt.Errorf("use CreateFile to create files")
 	}
@@ -183,7 +183,7 @@ func (s *MinioFileStorage) CreateDirectory(ctx context.Context, file *blockstore
 	return createdDir, nil
 }
 
-func (s *MinioFileStorage) MoveFile(ctx context.Context, oldPath string, newPath string) (*blockstore.File, error) {
+func (s *minioFileStorage) MoveFile(ctx context.Context, oldPath string, newPath string) (*blockstore.File, error) {
 	err := s.minioClient.MoveObject(oldPath, newPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to move file from %s to %s: %w", oldPath, newPath, err)
@@ -202,7 +202,7 @@ func (s *MinioFileStorage) MoveFile(ctx context.Context, oldPath string, newPath
 	return movedFile, nil
 }
 
-func (s *MinioFileStorage) DeleteFile(ctx context.Context, path string) error {
+func (s *minioFileStorage) DeleteFile(ctx context.Context, path string) error {
 	if strings.HasSuffix(path, "/") {
 		return fmt.Errorf("use DeleteDirectory to delete directories")
 	}
@@ -216,7 +216,7 @@ func (s *MinioFileStorage) DeleteFile(ctx context.Context, path string) error {
 	return nil
 }
 
-func (s *MinioFileStorage) DeleteDirectory(ctx context.Context, path string) error {
+func (s *minioFileStorage) DeleteDirectory(ctx context.Context, path string) error {
 	if !strings.HasSuffix(path, "/") {
 		return fmt.Errorf("use DeleteFile to delete files")
 	}
@@ -238,7 +238,7 @@ func (s *MinioFileStorage) DeleteDirectory(ctx context.Context, path string) err
 	return nil
 }
 
-func (s *MinioFileStorage) InitiateMultipartUpload(ctx context.Context, file *blockstore.File) (*blockstore.FileUploadInfo, error) {
+func (s *minioFileStorage) InitiateMultipartUpload(ctx context.Context, file *blockstore.File) (*blockstore.FileUploadInfo, error) {
 	if file.IsDirectory {
 		return nil, fmt.Errorf("use CreateDirectory to create directories")
 	}
@@ -276,7 +276,7 @@ func (s *MinioFileStorage) InitiateMultipartUpload(ctx context.Context, file *bl
 	}, nil
 }
 
-func (s *MinioFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *blockstore.FilePart) (*blockstore.FilePart, error) {
+func (s *minioFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *blockstore.FilePart) (*blockstore.FilePart, error) {
 	minioPart, err := s.minioClient.PutObjectPart(filePath, uploadId, int(part.PartNumber), part.Data)
 	if err != nil {
 		return nil, fmt.Errorf("unable to upload part %d for upload ID %s: %w", part.PartNumber, uploadId, err)
@@ -289,7 +289,7 @@ func (s *MinioFileStorage) UploadPart(ctx context.Context, filePath string, uplo
 	}, nil
 }
 
-func (s *MinioFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*blockstore.FilePart) (*blockstore.File, error) {
+func (s *minioFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*blockstore.FilePart) (*blockstore.File, error) {
 	var completeParts []*miniorawclient.MinioObjectPartInfo
 	for _, part := range parts {
 		completeParts = append(completeParts, model.FilePartToMinioObjectPartInfo(part))
@@ -307,7 +307,7 @@ func (s *MinioFileStorage) CompleteMultipartUpload(ctx context.Context, filePath
 	return createdFile, nil
 }
 
-func (s *MinioFileStorage) AbortMultipartUpload(ctx context.Context, filePath string, uploadId string) error {
+func (s *minioFileStorage) AbortMultipartUpload(ctx context.Context, filePath string, uploadId string) error {
 	err := s.minioClient.AbortMultipartUpload(filePath, uploadId)
 	if err != nil {
 		return fmt.Errorf("unable to abort multipart upload %s: %w", uploadId, err)

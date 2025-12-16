@@ -15,7 +15,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
-var _ blockstore.BlockStore = &DiskFileStorage{}
+var _ blockstore.BlockStore = &diskFileStorage{}
 
 const (
 	multipartDir  = ".multipart"
@@ -34,7 +34,7 @@ type multipartUpload struct {
 	CreatedAt  time.Time
 }
 
-type DiskFileStorage struct {
+type diskFileStorage struct {
 	basePath         string
 	multipartUploads map[string]*multipartUpload
 	mu               sync.RWMutex
@@ -42,7 +42,7 @@ type DiskFileStorage struct {
 
 // NewDiskFileStorage creates a new disk-based file storage at the given path.
 // It recursively creates all needed folders if they don't exist.
-func NewDiskFileStorage(basePath string) (*DiskFileStorage, error) {
+func NewDiskFileStorage(basePath string) (blockstore.BlockStore, error) {
 	// Create base directory if it doesn't exist
 	if err := os.MkdirAll(basePath, 0755); err != nil {
 		return nil, fmt.Errorf("unable to create base directory %s: %w", basePath, err)
@@ -54,18 +54,18 @@ func NewDiskFileStorage(basePath string) (*DiskFileStorage, error) {
 		return nil, fmt.Errorf("unable to create multipart directory %s: %w", multipartPath, err)
 	}
 
-	return &DiskFileStorage{
+	return &diskFileStorage{
 		basePath:         basePath,
 		multipartUploads: make(map[string]*multipartUpload),
 	}, nil
 }
 
-func (s *DiskFileStorage) resolvePath(path string) string {
+func (s *diskFileStorage) resolvePath(path string) string {
 	cleanPath := filepath.Clean(strings.TrimPrefix(path, "/"))
 	return filepath.Join(s.basePath, cleanPath)
 }
 
-func (s *DiskFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, error) {
+func (s *diskFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, error) {
 	if fileSize == 0 {
 		return 0, 0, fmt.Errorf("unable to compute part size for empty files")
 	}
@@ -98,7 +98,7 @@ func (s *DiskFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64, 
 	return partSize, totalParts, nil
 }
 
-func (s *DiskFileStorage) getMimeType(path string) string {
+func (s *diskFileStorage) getMimeType(path string) string {
 	ext := strings.ToLower(filepath.Ext(path))
 	mimeTypes := map[string]string{
 		".txt":  "text/plain",
@@ -127,7 +127,7 @@ func (s *DiskFileStorage) getMimeType(path string) string {
 	return "application/octet-stream"
 }
 
-func (s *DiskFileStorage) fileInfoToFile(path string, info os.FileInfo) *blockstore.File {
+func (s *diskFileStorage) fileInfoToFile(path string, info os.FileInfo) *blockstore.File {
 	isDir := info.IsDir()
 	var size uint64
 	if !isDir {
@@ -152,7 +152,7 @@ func (s *DiskFileStorage) fileInfoToFile(path string, info os.FileInfo) *blockst
 	}
 }
 
-func (s *DiskFileStorage) StatFile(ctx context.Context, path string) (*blockstore.File, error) {
+func (s *diskFileStorage) StatFile(ctx context.Context, path string) (*blockstore.File, error) {
 	fullPath := s.resolvePath(path)
 
 	info, err := os.Stat(fullPath)
@@ -169,7 +169,7 @@ func (s *DiskFileStorage) StatFile(ctx context.Context, path string) (*blockstor
 	return file, nil
 }
 
-func (s *DiskFileStorage) GetFile(ctx context.Context, path string) (*blockstore.File, error) {
+func (s *diskFileStorage) GetFile(ctx context.Context, path string) (*blockstore.File, error) {
 	fullPath := s.resolvePath(path)
 
 	info, err := os.Stat(fullPath)
@@ -196,7 +196,7 @@ func (s *DiskFileStorage) GetFile(ctx context.Context, path string) (*blockstore
 	return file, nil
 }
 
-func (s *DiskFileStorage) ListFiles(ctx context.Context, path string) ([]*blockstore.File, error) {
+func (s *diskFileStorage) ListFiles(ctx context.Context, path string) ([]*blockstore.File, error) {
 	fullPath := s.resolvePath(path)
 
 	entries, err := os.ReadDir(fullPath)
@@ -228,7 +228,7 @@ func (s *DiskFileStorage) ListFiles(ctx context.Context, path string) ([]*blocks
 	return files, nil
 }
 
-func (s *DiskFileStorage) CreateFile(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
+func (s *diskFileStorage) CreateFile(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
 	if file.IsDirectory {
 		return nil, fmt.Errorf("use CreateDirectory to create directories")
 	}
@@ -269,7 +269,7 @@ func (s *DiskFileStorage) CreateFile(ctx context.Context, file *blockstore.File)
 	return createdFile, nil
 }
 
-func (s *DiskFileStorage) CreateDirectory(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
+func (s *diskFileStorage) CreateDirectory(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
 	if !file.IsDirectory {
 		return nil, fmt.Errorf("use CreateFile to create files")
 	}
@@ -311,7 +311,7 @@ func (s *DiskFileStorage) CreateDirectory(ctx context.Context, file *blockstore.
 	return createdDir, nil
 }
 
-func (s *DiskFileStorage) MoveFile(ctx context.Context, oldPath string, newPath string) (*blockstore.File, error) {
+func (s *diskFileStorage) MoveFile(ctx context.Context, oldPath string, newPath string) (*blockstore.File, error) {
 	fullOldPath := s.resolvePath(oldPath)
 	fullNewPath := s.resolvePath(newPath)
 
@@ -343,7 +343,7 @@ func (s *DiskFileStorage) MoveFile(ctx context.Context, oldPath string, newPath 
 	return movedFile, nil
 }
 
-func (s *DiskFileStorage) DeleteFile(ctx context.Context, path string) error {
+func (s *diskFileStorage) DeleteFile(ctx context.Context, path string) error {
 	if strings.HasSuffix(path, "/") {
 		return fmt.Errorf("use DeleteDirectory to delete directories")
 	}
@@ -371,7 +371,7 @@ func (s *DiskFileStorage) DeleteFile(ctx context.Context, path string) error {
 	return nil
 }
 
-func (s *DiskFileStorage) DeleteDirectory(ctx context.Context, path string) error {
+func (s *diskFileStorage) DeleteDirectory(ctx context.Context, path string) error {
 	if !strings.HasSuffix(path, "/") {
 		return fmt.Errorf("use DeleteFile to delete files")
 	}
@@ -400,7 +400,7 @@ func (s *DiskFileStorage) DeleteDirectory(ctx context.Context, path string) erro
 	return nil
 }
 
-func (s *DiskFileStorage) InitiateMultipartUpload(ctx context.Context, file *blockstore.File) (*blockstore.FileUploadInfo, error) {
+func (s *diskFileStorage) InitiateMultipartUpload(ctx context.Context, file *blockstore.File) (*blockstore.FileUploadInfo, error) {
 	if file.IsDirectory {
 		return nil, fmt.Errorf("use CreateDirectory to create directories")
 	}
@@ -453,14 +453,14 @@ func (s *DiskFileStorage) InitiateMultipartUpload(ctx context.Context, file *blo
 	}, nil
 }
 
-func (s *DiskFileStorage) generateUploadID(path string) string {
+func (s *diskFileStorage) generateUploadID(path string) string {
 	timestamp := time.Now().UnixNano()
 	data := fmt.Sprintf("%s-%d", path, timestamp)
 	hash := md5.Sum([]byte(data))
 	return hex.EncodeToString(hash[:])
 }
 
-func (s *DiskFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *blockstore.FilePart) (*blockstore.FilePart, error) {
+func (s *diskFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *blockstore.FilePart) (*blockstore.FilePart, error) {
 	s.mu.RLock()
 	upload, exists := s.multipartUploads[uploadId]
 	s.mu.RUnlock()
@@ -494,7 +494,7 @@ func (s *DiskFileStorage) UploadPart(ctx context.Context, filePath string, uploa
 	}, nil
 }
 
-func (s *DiskFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*blockstore.FilePart) (*blockstore.File, error) {
+func (s *diskFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*blockstore.FilePart) (*blockstore.File, error) {
 	s.mu.RLock()
 	upload, exists := s.multipartUploads[uploadId]
 	s.mu.RUnlock()
@@ -559,7 +559,7 @@ func (s *DiskFileStorage) CompleteMultipartUpload(ctx context.Context, filePath 
 	return createdFile, nil
 }
 
-func (s *DiskFileStorage) AbortMultipartUpload(ctx context.Context, filePath string, uploadId string) error {
+func (s *diskFileStorage) AbortMultipartUpload(ctx context.Context, filePath string, uploadId string) error {
 	s.mu.RLock()
 	_, exists := s.multipartUploads[uploadId]
 	s.mu.RUnlock()
