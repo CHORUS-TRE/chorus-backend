@@ -64,10 +64,6 @@ func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 
 			switch blockStore.Type {
 			case "minio":
-				if blockStore.MinioConfig == nil {
-					logger.TechLog.Fatal(context.Background(), "minio_config is required for minio block store type: "+blockStoreName)
-				}
-
 				var minioClient miniorawclient.MinioClienter
 				if !blockStore.MinioConfig.Enabled {
 					logger.TechLog.Info(context.Background(), fmt.Sprintf("Minio block store '%s' is disabled, using test client", blockStoreName))
@@ -88,9 +84,6 @@ func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 				workspaceFileStores[storeName] = fileStore
 
 			case "disk":
-				if blockStore.DiskConfig == nil {
-					logger.TechLog.Fatal(context.Background(), "disk_config is required for disk block store type: "+blockStoreName)
-				}
 				if blockStore.DiskConfig.BasePath == "" {
 					logger.TechLog.Fatal(context.Background(), "disk_config.base_path is required for disk block store: "+blockStoreName)
 				}

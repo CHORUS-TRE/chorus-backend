@@ -152,9 +152,9 @@ type (
 	}
 
 	BlockStore struct {
-		Type        string                 `yaml:"type"` // "minio" or "disk"
-		MinioConfig *BlockStoreMinioConfig `yaml:"minio_config,omitempty"`
-		DiskConfig  *BlockStoreDiskConfig  `yaml:"disk_config,omitempty"`
+		Type        string                `yaml:"type"` // "minio" or "disk"
+		MinioConfig BlockStoreMinioConfig `yaml:"minio_config,omitempty"`
+		DiskConfig  BlockStoreDiskConfig  `yaml:"disk_config,omitempty"`
 	}
 
 	BlockStoreMinioConfig struct {

@@ -16,7 +16,7 @@ type MinioClientConfig struct {
 	MultipartMaxTotalParts uint64
 }
 
-func GetMinioClientConfigFromBlockStore(blockStoreName string, minioConfig *config.BlockStoreMinioConfig) MinioClientConfig {
+func GetMinioClientConfigFromBlockStore(blockStoreName string, minioConfig config.BlockStoreMinioConfig) MinioClientConfig {
 	return MinioClientConfig{
 		Name:                   blockStoreName,
 		Endpoint:               minioConfig.Endpoint,
