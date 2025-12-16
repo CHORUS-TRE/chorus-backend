@@ -190,9 +190,9 @@ config:
         migration_table_name: tt_migrations
         host: "" # set dynamically in argo-workflows
         port: 5432
-        username: admin
-        password: password  # set in secret
-        database: chorus_ci
+        username: backend
+        password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
+        database: backend
         max_connections: 10
         max_lifetime: 10s
         debug_mode: true
