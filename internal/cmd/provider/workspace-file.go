@@ -2,12 +2,15 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/diskblockstore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service/middleware"
@@ -50,24 +53,55 @@ var workspaceFileStores map[string]service.WorkspaceFileStore
 func ProvideWorkspaceFileStores() map[string]service.WorkspaceFileStore {
 	workspaceFileStoresOnce.Do(func() {
 		config := ProvideConfig()
-		minioClients := ProvideMinioClients()
 		workspaceFileStores = make(map[string]service.WorkspaceFileStore)
+
 		for storeName, storeCfg := range config.Services.WorkspaceFileService.Stores {
-			switch storeCfg.ClientType {
+			blockStoreName := storeCfg.BlockStoreName
+			blockStore, ok := config.Clients.BlockStores[blockStoreName]
+			if !ok {
+				logger.TechLog.Fatal(context.Background(), "block store not found: "+blockStoreName+" for workspace file store: "+storeName)
+			}
+
+			switch blockStore.Type {
 			case "minio":
-				minioClient, ok := minioClients[storeCfg.ClientName]
-				if !ok {
-					logger.TechLog.Fatal(context.Background(), "minio client not found: "+storeCfg.ClientName)
+				if blockStore.MinioConfig == nil {
+					logger.TechLog.Fatal(context.Background(), "minio_config is required for minio block store type: "+blockStoreName)
 				}
-				fileStore, err := minio.NewMinioFileStorage(
-					minioClient,
-				)
+
+				var minioClient miniorawclient.MinioClienter
+				if !blockStore.MinioConfig.Enabled {
+					logger.TechLog.Info(context.Background(), fmt.Sprintf("Minio block store '%s' is disabled, using test client", blockStoreName))
+					minioClient = miniorawclient.NewTestClient()
+				} else {
+					clientCfg := miniorawclient.GetMinioClientConfigFromBlockStore(blockStoreName, blockStore.MinioConfig)
+					var err error
+					minioClient, err = miniorawclient.NewClient(clientCfg)
+					if err != nil {
+						logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unable to create minio client for block store '%s': '%v'", blockStoreName, err))
+					}
+				}
+
+				fileStore, err := minio.NewMinioFileStorage(minioClient)
 				if err != nil {
 					logger.TechLog.Fatal(context.Background(), "failed to create minio workspace file store: "+err.Error())
 				}
 				workspaceFileStores[storeName] = fileStore
+
+			case "disk":
+				if blockStore.DiskConfig == nil {
+					logger.TechLog.Fatal(context.Background(), "disk_config is required for disk block store type: "+blockStoreName)
+				}
+				if blockStore.DiskConfig.BasePath == "" {
+					logger.TechLog.Fatal(context.Background(), "disk_config.base_path is required for disk block store: "+blockStoreName)
+				}
+				fileStore, err := diskblockstore.NewDiskFileStorage(blockStore.DiskConfig.BasePath)
+				if err != nil {
+					logger.TechLog.Fatal(context.Background(), "failed to create disk workspace file store: "+err.Error())
+				}
+				workspaceFileStores[storeName] = fileStore
+
 			default:
-				logger.TechLog.Fatal(context.Background(), "unsupported workspace file store type: "+storeCfg.ClientType)
+				logger.TechLog.Fatal(context.Background(), "unsupported block store type: "+blockStore.Type+" for block store: "+blockStoreName)
 			}
 		}
 	})

@@ -184,35 +184,15 @@ services:
   workspace_file_service:
     stores:
       archive:
-        client_type: minio
-        client_name: archive
+        block_store_name: archive
         store_prefix: /archive
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
       scratch:
-        client_type: minio
-        client_name: scratch
+        block_store_name: scratch
         store_prefix: /scratch
         workspace_prefix: "workspaces/%s"
 
 # Client configurations added using the create-local-cluster.sh script
-# clients:
-#   docker_client:
-#     enabled: true
-#   minio_clients:
-#     archive:
-#       enabled: true
-#       endpoint: localhost:9000
-#       bucket_name: chorus-data
-#       access_key_id: minioadmin
-#       secret_access_key: minioadmin
-#       use_ssl: false
-#       multipart_min_part_size: 5242880 # 5MB
-#       multipart_max_part_size: 5368709120 # 5GB
-#       multipart_max_total_parts: 10000
-#   k8s_client:
-#     server_version: "6.2.3-2"
-#     kube_config: |
-#       ...  
 
 log:
   loggers:

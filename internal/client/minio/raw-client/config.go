@@ -16,16 +16,16 @@ type MinioClientConfig struct {
 	MultipartMaxTotalParts uint64
 }
 
-func getMinioClientConfig(cfg config.Config, clientName string) (MinioClientConfig, error) {
+func GetMinioClientConfigFromBlockStore(blockStoreName string, minioConfig *config.BlockStoreMinioConfig) MinioClientConfig {
 	return MinioClientConfig{
-		Name:                   clientName,
-		Endpoint:               cfg.Clients.MinioClients[clientName].Endpoint,
-		AccessKeyID:            cfg.Clients.MinioClients[clientName].AccessKeyID,
-		SecretAccessKey:        cfg.Clients.MinioClients[clientName].SecretAccessKey.PlainText(),
-		UseSSL:                 cfg.Clients.MinioClients[clientName].UseSSL,
-		BucketName:             cfg.Clients.MinioClients[clientName].BucketName,
-		MultipartMinPartSize:   cfg.Clients.MinioClients[clientName].MultipartMinPartSize,
-		MultipartMaxPartSize:   cfg.Clients.MinioClients[clientName].MultipartMaxPartSize,
-		MultipartMaxTotalParts: cfg.Clients.MinioClients[clientName].MultipartMaxTotalParts,
-	}, nil
+		Name:                   blockStoreName,
+		Endpoint:               minioConfig.Endpoint,
+		AccessKeyID:            minioConfig.AccessKeyID,
+		SecretAccessKey:        minioConfig.SecretAccessKey.PlainText(),
+		UseSSL:                 minioConfig.UseSSL,
+		BucketName:             minioConfig.BucketName,
+		MultipartMinPartSize:   minioConfig.MultipartMinPartSize,
+		MultipartMaxPartSize:   minioConfig.MultipartMaxPartSize,
+		MultipartMaxTotalParts: minioConfig.MultipartMaxTotalParts,
+	}
 }
