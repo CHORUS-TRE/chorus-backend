@@ -11,7 +11,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
-var _ blockstore.MinioFileStore = &MinioFileStorage{}
+var _ blockstore.BlockStore = &MinioFileStorage{}
 
 type MinioFileStorage struct {
 	minioClient miniorawclient.MinioClienter

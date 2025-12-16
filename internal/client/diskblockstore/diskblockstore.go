@@ -15,7 +15,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
-var _ blockstore.MinioFileStore = &DiskFileStorage{}
+var _ blockstore.BlockStore = &DiskFileStorage{}
 
 const (
 	multipartDir  = ".multipart"
