@@ -316,6 +316,9 @@ type KioskConfig struct {
 	JWTURL   string `json:"jwtUrl,omitempty"`
 	JWTToken string `json:"jwtToken,omitempty"`
 }
+type InitContainerConfig struct {
+	Version string `json:"version,omitempty"`
+}
 type WorkbenchApp struct {
 	Name        string                       `json:"name"`
 	Version     string                       `json:"version,omitempty"`
@@ -327,6 +330,7 @@ type WorkbenchApp struct {
 }
 type WorkbenchSpec struct {
 	Server           WorkbenchServer         `json:"server,omitempty"`
+	InitContainer    *InitContainerConfig    `json:"initContainer,omitempty"`
 	Apps             map[string]WorkbenchApp `json:"apps,omitempty"`
 	ServiceAccount   string                  `json:"serviceAccountName,omitempty"`
 	ImagePullSecrets []string                `json:"imagePullSecrets,omitempty"`
