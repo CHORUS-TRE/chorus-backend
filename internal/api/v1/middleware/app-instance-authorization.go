@@ -56,7 +56,7 @@ func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateAppInstance)
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdateAppInstance, authorization.WithWorkbench(req.WorkbenchId), authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance)
+	err := c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance) // TODO: add workbench/workspace authorization context
 	if err != nil {
 		return nil, err
 	}
