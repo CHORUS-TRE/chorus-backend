@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -28,19 +27,13 @@ type MinioClienter interface {
 }
 
 type client struct {
-	cfg            config.Config
 	minioClientCfg MinioClientConfig
 
 	minioClient *minio.Client
 	minioCore   *minio.Core
 }
 
-func NewClient(cfg config.Config, clientName string) (*client, error) {
-	clientCfg, err := getMinioClientConfig(cfg, clientName)
-	if err != nil {
-		return nil, fmt.Errorf("error getting minio config: %w", err)
-	}
-
+func NewClient(clientCfg MinioClientConfig) (*client, error) {
 	minioClient, err := minio.New(clientCfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(clientCfg.AccessKeyID, clientCfg.SecretAccessKey, ""),
 		Secure: clientCfg.UseSSL,
@@ -58,7 +51,6 @@ func NewClient(cfg config.Config, clientName string) (*client, error) {
 	}
 
 	return &client{
-		cfg:            cfg,
 		minioClientCfg: clientCfg,
 		minioClient:    minioClient,
 		minioCore:      minioCore,
