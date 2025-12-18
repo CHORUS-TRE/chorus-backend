@@ -89,104 +89,33 @@ func NewClient(cfg config.Config) (*client, error) {
 	}
 
 	if cfg.Clients.K8sClient.IsWatcher {
-		go c.watch()
+		go c.watchWorkbenchEvents()
 	}
 
 	return c, nil
 }
 
-func (c *client) watch() {
+// Sets up watchers for Workbench resources
+func (c *client) watchWorkbenchEvents() {
 	factory := dynamicinformer.NewDynamicSharedInformerFactory(c.dynamicClient, 0)
 
-	// namespaceGvr, err := c.getGroupVersionFromKind("Namespace")
-	// if err != nil {
-	// 	logger.TechLog.Error(context.Background(), "Error getting GVR for namespace:", zap.Error(err))
-	// 	return
-	// }
-	// namespaceInformer := factory.ForResource(namespaceGvr).Informer()
-	// namespaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-	// 	AddFunc: func(obj interface{}) {
-	// 		logger.TechLog.Info(context.Background(), "Watcher event: added namespace:")
-	// 		namespace, err := EventInterfaceToNamespace(obj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 	},
-	// 	UpdateFunc: func(oldObj, newObj interface{}) {
-	// 		logger.TechLog.Info(context.Background(), "Watcher event: updated namespace:")
-	// 		newNamespace, err := EventInterfaceToNamespace(newObj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 		oldNamespace, err := EventInterfaceToNamespace(oldObj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 	},
-	// 	DeleteFunc: func(obj interface{}) {
-	// 		logger.TechLog.Info(context.Background(), "Watcher event: deleted namespace:")
-	// 		namespace, err := EventInterfaceToNamespace(obj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 	},
-	// })
-
+	// Get GVR for Workbench
 	workbenchGvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
 		logger.TechLog.Error(context.Background(), "Error getting GVR for Workbench", zap.Error(err))
 		return
 	}
+
 	workbenchInformer := factory.ForResource(workbenchGvr).Informer()
 	workbenchInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			logger.TechLog.Debug(context.Background(), "added workbench", zap.Any("workbench", obj))
-
-			workbench, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(obj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
-				return
-			}
-
-			if c.onNewWorkbench != nil {
-				if err := c.onNewWorkbench(workbench); err != nil {
-					logger.TechLog.Error(context.Background(), "Error handling new workbench:", zap.Error(err))
-				}
-			}
+			c.handleWorkbenchEvent(obj, "added", c.onNewWorkbench)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			logger.TechLog.Debug(context.Background(), "updated workbench", zap.Any("newWorkbench", newObj), zap.Any("oldWorkbench", oldObj))
-
-			workbench, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(newObj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
-				return
-			}
-
-			if c.onUpdateWorkbench != nil {
-				if err := c.onUpdateWorkbench(workbench); err != nil {
-					logger.TechLog.Error(context.Background(), "Error handling updated workbench:", zap.Error(err))
-				}
-			}
+			c.handleWorkbenchEvent(newObj, "updated", c.onUpdateWorkbench)
 		},
 		DeleteFunc: func(obj interface{}) {
-			logger.TechLog.Debug(context.Background(), "deleted workbench", zap.Any("workbench", obj))
-
-			workbench, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(obj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
-				return
-			}
-
-			if c.onDeleteWorkbench != nil {
-				if err := c.onDeleteWorkbench(workbench); err != nil {
-					logger.TechLog.Error(context.Background(), "Error handling deleted workbench:", zap.Error(err))
-				}
-			}
+			c.handleWorkbenchEvent(obj, "deleted", c.onDeleteWorkbench)
 		},
 	})
 
@@ -436,4 +365,26 @@ func (c *client) RegisterOnUpdateWorkbenchHandler(handler func(workbench Workben
 func (c *client) RegisterOnDeleteWorkbenchHandler(handler func(workbench Workbench) error) error {
 	c.onDeleteWorkbench = handler
 	return nil
+}
+
+// Generic handler for workbench events
+func (c *client) handleWorkbenchEvent(obj any, eventType string, handler func(workbench Workbench) error) {
+	logger.TechLog.Debug(context.Background(), fmt.Sprintf("%s workbench", eventType), zap.Any("workbench", obj))
+
+	if obj == nil {
+		logger.TechLog.Error(context.Background(), fmt.Sprintf("nil object received during %s workbench event", eventType))
+		return
+	}
+
+	workbench, err := c.eventInterfaceToWorkbench(obj)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "Error converting event interface to Workbench", zap.Error(err))
+		return
+	}
+
+	if handler != nil {
+		if err := handler(workbench); err != nil {
+			logger.TechLog.Error(context.Background(), fmt.Sprintf("Error handling %s workbench event", eventType), zap.Error(err))
+		}
+	}
 }
