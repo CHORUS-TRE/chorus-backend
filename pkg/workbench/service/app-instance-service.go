@@ -36,7 +36,7 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 
 	err = s.store.DeleteAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
-		return fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+		return fmt.Errorf("unable to delete appInstance %v: %w", appInstanceID, err)
 	}
 
 	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
