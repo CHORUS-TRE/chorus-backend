@@ -26,20 +26,27 @@ import (
 var _ = K8sClienter(&client{})
 
 type K8sClienter interface {
+	// Workspace (Namespace) operations
 	CreateWorkspace(tenantID uint64, namespace string) error
 	DeleteWorkspace(namespace string) error
-	CreateWorkbench(req MakeWorkbenchRequest) error
-	UpdateWorkbench(req MakeWorkbenchRequest) error
-	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
-	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
-	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
+
+	// Workbench operations
+	CreateWorkbench(workbench *Workbench) error
+	UpdateWorkbench(workbench *Workbench) error
 	DeleteWorkbench(namespace, workbenchName string) error
 
+	// AppInstance operations
+	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
+	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
+
+	// Utility operations
+	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	PrePullImageOnAllNodes(image string)
 
-	WatchOnNewWorkbench(func(workbench Workbench) error) error
-	WatchOnUpdateWorkbench(func(workbench Workbench) error) error
-	WatchOnDeleteWorkbench(func(workbench Workbench) error) error
+	// Watcher operations
+	RegisterOnNewWorkbenchHandler(func(workbench Workbench) error) error
+	RegisterOnUpdateWorkbenchHandler(func(workbench Workbench) error) error
+	RegisterOnDeleteWorkbenchHandler(func(workbench Workbench) error) error
 }
 
 type client struct {
@@ -309,28 +316,26 @@ func (c *client) DeleteWorkspace(namespace string) error {
 	return c.deleteNamespace(namespace)
 }
 
-type MakeWorkbenchRequest Workbench
-
-func (c *client) CreateWorkbench(req MakeWorkbenchRequest) error {
-	workbench, err := c.makeWorkbench(req)
+func (c *client) CreateWorkbench(workbench *Workbench) error {
+	k8sWorkbench, err := c.workbenchToK8sWorkbench(workbench)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(req.TenantID, workbench, req.Namespace)
+	return c.syncWorkbench(workbench.TenantID, k8sWorkbench, workbench.Namespace)
 }
 
-func (c *client) UpdateWorkbench(req MakeWorkbenchRequest) error {
-	workbench, err := c.makeWorkbench(req)
+func (c *client) UpdateWorkbench(workbench *Workbench) error {
+	k8sWorkbench, err := c.workbenchToK8sWorkbench(workbench)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(req.TenantID, workbench, req.Namespace)
+	return c.syncWorkbench(workbench.TenantID, k8sWorkbench, workbench.Namespace)
 }
 
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := c.appInstanceToWorkbenchApp(appInstance)
+	app := c.appInstanceToK8sWorkbenchApp(appInstance)
 
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
@@ -417,4 +422,18 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 
 func (c *client) DeleteWorkbench(namespace, workbenchName string) error {
 	return c.deleteResource(namespace, "Workbench", workbenchName)
+}
+
+// Watcher registration methods
+func (c *client) RegisterOnNewWorkbenchHandler(handler func(workbench Workbench) error) error {
+	c.onNewWorkbench = handler
+	return nil
+}
+func (c *client) RegisterOnUpdateWorkbenchHandler(handler func(workbench Workbench) error) error {
+	c.onUpdateWorkbench = handler
+	return nil
+}
+func (c *client) RegisterOnDeleteWorkbenchHandler(handler func(workbench Workbench) error) error {
+	c.onDeleteWorkbench = handler
+	return nil
 }
