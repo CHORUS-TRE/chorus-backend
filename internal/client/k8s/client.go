@@ -150,19 +150,6 @@ func (c *client) eventInterfaceToNamespaceWorkbenchTenantApps(obj interface{}) (
 	return workbench, nil
 }
 
-func (c *client) WatchOnNewWorkbench(handler func(workbench Workbench) error) error {
-	c.onNewWorkbench = handler
-	return nil
-}
-func (c *client) WatchOnUpdateWorkbench(handler func(workbench Workbench) error) error {
-	c.onUpdateWorkbench = handler
-	return nil
-}
-func (c *client) WatchOnDeleteWorkbench(handler func(workbench Workbench) error) error {
-	c.onDeleteWorkbench = handler
-	return nil
-}
-
 func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 	workbench := K8sWorkbench{
 		TypeMeta: v1.TypeMeta{
