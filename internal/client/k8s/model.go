@@ -41,7 +41,9 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	}
 
 	for k, app := range wb.Status.Apps {
-		appsMap[k].K8sStatus = string(app.Status)
+		if appInstance, ok := appsMap[k]; ok {
+			appInstance.K8sStatus = string(app.Status)
+		}
 	}
 
 	for _, app := range appsMap {
