@@ -12,7 +12,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	common_storage "github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
@@ -48,7 +47,7 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 	countQuery := `SELECT COUNT(*) FROM workbenchs WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL`
 	if workspaceIDsIn != nil {
 		countQuery += " AND workspaceid = ANY($2)"
-		args = append(args, storage.Uint64ToPqInt64(*workspaceIDsIn))
+		args = append(args, common_storage.Uint64ToPqInt64(*workspaceIDsIn))
 	}
 	var totalCount int64
 	if err := s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {

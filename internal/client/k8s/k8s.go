@@ -4,28 +4,20 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 	"time"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	jsonpatch "github.com/evanphx/json-patch"
 	"go.uber.org/zap"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/transport/spdy"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -268,7 +260,7 @@ func (c *client) syncImagePullSecret(namespace string) error {
 
 	secretName := c.cfg.Clients.K8sClient.ImagePullSecretName
 
-	dockerConfig, err := EncodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
+	dockerConfig, err := encodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
 	if err != nil {
 		return fmt.Errorf("unable to encode registries: %w", err)
 	}
@@ -288,6 +280,29 @@ func (c *client) syncImagePullSecret(namespace string) error {
 	}
 
 	return c.syncResource(spec, "Secret", secretName, namespace, "data")
+}
+
+func encodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, error) {
+	auths := make(map[string]map[string]string)
+
+	for _, entry := range entries {
+		auth := base64.StdEncoding.EncodeToString([]byte(entry.Username + ":" + entry.Password))
+
+		auths[entry.Registry] = map[string]string{
+			"auth": auth,
+		}
+	}
+
+	result := map[string]map[string]map[string]string{
+		"auths": auths,
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonData), nil
 }
 
 func (c *client) interfaceToMapInterface(i interface{}) (map[string]interface{}, error) {
@@ -337,130 +352,4 @@ func getGroupVersion(groupVersion string) (string, string) {
 		return arr[0], arr[1]
 	}
 	return "", groupVersion
-}
-
-func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error) {
-	pods, err := c.k8sClient.CoreV1().Pods(namespace).List(context.Background(), v1.ListOptions{
-		LabelSelector: fmt.Sprintf("workbench=%s", serviceName),
-	})
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to get pods: %w", err)
-	}
-
-	if len(pods.Items) == 0 {
-		return 0, nil, errors.New("no pods found for the service")
-	}
-
-	podName := pods.Items[0].Name
-	ports := []string{"0:8080"}
-
-	req := c.k8sClient.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Namespace(namespace).
-		Name(podName).
-		SubResource("portforward")
-
-	transport, upgrader, err := spdy.RoundTripperFor(c.restConfig)
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to get spdy round tripper: %w", err)
-	}
-
-	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
-
-	stopChan := make(chan struct{}, 1)
-	readyChan := make(chan struct{})
-	out, errOut := io.Discard, io.Discard
-
-	pf, err := portforward.New(dialer, ports, stopChan, readyChan, out, errOut)
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to create the port forwarder: %w", err)
-	}
-
-	go func() {
-		if err := pf.ForwardPorts(); err != nil {
-			// todo check if err is ErrLostConnectionToPod
-			// if so recreacte portforward
-			logger.TechLog.Error(context.Background(), "portforwarding error", zap.Error(err))
-		}
-	}()
-
-	<-readyChan
-
-	forwardedPorts, err := pf.GetPorts()
-	if err != nil {
-		return 0, nil, fmt.Errorf("unable to get ports: %w", err)
-	}
-	if len(forwardedPorts) != 1 {
-		return 0, nil, errors.New("not right number of forwarded ports")
-	}
-	port := forwardedPorts[0]
-
-	return port.Local, stopChan, nil
-}
-
-func (c *client) PrePullImageOnAllNodes(image string) {
-	err := c.syncImagePullSecret("default")
-	if err != nil {
-		logger.TechLog.Error(context.Background(), "failed to sync image pull secret",
-			zap.String("image", image),
-			zap.Error(err),
-		)
-		return
-	}
-
-	nodeList, err := c.k8sClient.CoreV1().Nodes().List(context.Background(), v1.ListOptions{})
-	if err != nil {
-		logger.TechLog.Error(context.Background(), "failed to list nodes while pre-pulling image",
-			zap.String("image", image),
-			zap.Error(err),
-		)
-
-		return
-	}
-
-	for _, node := range nodeList.Items {
-		job := &batchv1.Job{
-			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: "prepull-",
-				Namespace:    "default",
-			},
-			Spec: batchv1.JobSpec{
-				TTLSecondsAfterFinished: ptr.To(int32(60)),
-				Template: corev1.PodTemplateSpec{
-					Spec: corev1.PodSpec{
-						NodeName:      node.Name,
-						RestartPolicy: corev1.RestartPolicyNever,
-						Containers: []corev1.Container{
-							{
-								Name:    "puller",
-								Image:   image,
-								Command: []string{"bash", "-c", "exit"},
-							},
-						},
-						ImagePullSecrets: []corev1.LocalObjectReference{
-							{
-								Name: c.cfg.Clients.K8sClient.ImagePullSecretName,
-							},
-						},
-					},
-				},
-			},
-			TypeMeta: v1.TypeMeta{},
-			Status:   batchv1.JobStatus{},
-		}
-
-		_, err := c.k8sClient.BatchV1().Jobs("default").Create(context.Background(), job, v1.CreateOptions{})
-		if err != nil {
-			logger.TechLog.Error(context.Background(), "failed to create job for pre-pulling image",
-				zap.String("image", image),
-				zap.String("node", node.Name),
-				zap.Error(err),
-			)
-		} else {
-			logger.TechLog.Info(context.Background(), "successfully created job for pre-pulling image",
-				zap.String("image", image),
-				zap.String("node", node.Name),
-			)
-		}
-	}
 }
