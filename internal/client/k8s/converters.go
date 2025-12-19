@@ -83,9 +83,7 @@ func (c *client) appInstanceToK8sWorkbenchApp(app AppInstance) WorkbenchApp {
 		w.Version = app.AppTag
 	}
 
-	if app.K8sState != "" {
-		w.State = WorkbenchAppState(app.K8sState)
-	}
+	// TODO: ADD STATE FIELD IN APP
 
 	if app.AppRegistry == "" {
 		w.Image = &Image{
