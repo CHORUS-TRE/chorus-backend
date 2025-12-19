@@ -324,6 +324,8 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 				AppImage:    utils.ToString(app.AppDockerImageName),
 				AppTag:      utils.ToString(app.AppDockerImageTag),
 
+				// K8sState: string(app.K8sState), // TODO: ADD THIS FIELD AND USE IT IN K8S CLIENT
+
 				ShmSize:             utils.ToString(app.AppShmSize),
 				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
 				MaxCPU:              utils.ToString(app.AppMaxCPU),
