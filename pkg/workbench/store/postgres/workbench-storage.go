@@ -111,24 +111,23 @@ func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout
 func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {
 	const query = `
 SELECT 
-	ai.id,
-	ai.tenantid,
-	ai.userid,
-	ai.appid,
-	ai.workspaceid,
-	ai.workbenchid,
-	ai.status,
-	ai.k8sstate,
-	ai.k8sstatus,
+    ai.id,
+    ai.tenantid,
+    ai.userid,
+    ai.appid,
+    ai.workspaceid,
+    ai.workbenchid,
+    ai.status,
 	ai.initialresolutionwidth,
 	ai.initialresolutionheight,
-	ai.createdat,
-	ai.updatedat,
+    ai.createdat,
+    ai.updatedat,
 	ai.kioskconfigjwttoken,
+
 	a.name as AppName,
-	a.dockerimageregistry as AppDockerImageRegistry,
-	a.dockerimagename as AppDockerImageName,
-	a.dockerimagetag as AppDockerImageTag,
+    a.dockerimageregistry as AppDockerImageRegistry,
+    a.dockerimagename as AppDockerImageName,
+    a.dockerimagetag as AppDockerImageTag,
 	a.shmsize as AppShmSize,
 	a.kioskconfigurl as AppKioskConfigURL,
 	a.kioskconfigjwturl as AppKioskConfigJWTUrl,
@@ -139,6 +138,7 @@ SELECT
 	a.maxephemeralstorage as AppMaxEphemeralStorage,
 	a.minephemeralstorage as AppMinEphemeralStorage,
 	a.iconurl as AppIconURL
+
 FROM 
     app_instances ai
 JOIN 
@@ -311,7 +311,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 
 	// Get app instances query
 	query := `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
 		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
 	`
@@ -388,12 +388,12 @@ func (s *WorkbenchStorage) UpdateAppInstances(ctx context.Context, tenantID uint
 func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) error {
 	const query = `
 		UPDATE app_instances SET 
-			(status, k8sState, updatedat, deletedat) = 
-			($3, $4, NOW(), NOW())
+			(status, updatedat, deletedat) = 
+			($3, NOW(), NOW())
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
-	rows, err := s.db.ExecContext(ctx, query, tenantID, appInstanceID, model.AppInstanceDeleted.String(), model.K8sAppInstanceStateStopped.String())
+	rows, err := s.db.ExecContext(ctx, query, tenantID, appInstanceID, model.AppInstanceDeleted.String())
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
 	}
