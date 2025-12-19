@@ -41,9 +41,13 @@ func (c *client) K8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	}
 
 	for k, app := range wb.Status.Apps {
-		if appInstance, ok := appsMap[k]; ok {
-			appInstance.K8sStatus = string(app.Status)
+		appInstance, exists := appsMap[k]
+		if !exists {
+			logger.TechLog.Warn(context.Background(), "workbench app in status not found in spec apps", zap.String("appUid", k), zap.String("workbenchName", wb.Name))
+			continue
 		}
+
+		appInstance.K8sStatus = string(app.Status)
 	}
 
 	for _, app := range appsMap {
