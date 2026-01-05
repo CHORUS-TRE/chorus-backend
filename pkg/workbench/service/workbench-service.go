@@ -211,8 +211,8 @@ func (s *WorkbenchService) SetClientWatchers() {
 			appInstance := &model.AppInstance{
 				ID: app.ID,
 
-				Status:    k8sState.ToStatus(),
-				K8sState:  k8sState,
+				Status:    k8sState.ToAppInstanceStatus(),
+				K8sState:  k8sState, // TODO: THE STATE SHOULD COME FROM DATABASE
 				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
 			}
 
@@ -248,8 +248,8 @@ func (s *WorkbenchService) SetClientWatchers() {
 		return nil
 	}
 
-	s.client.WatchOnNewWorkbench(watcher)
-	s.client.WatchOnUpdateWorkbench(watcher)
+	s.client.RegisterOnNewWorkbenchHandler(watcher)
+	s.client.RegisterOnUpdateWorkbenchHandler(watcher)
 }
 
 func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
@@ -306,7 +306,8 @@ func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, wo
 }
 
 func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.Workbench) error {
-	if workbench.Status == model.WorkbenchActive {
+	switch workbench.Status {
+	case model.WorkbenchActive:
 
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
 		if err != nil {
@@ -322,6 +323,8 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
 				AppImage:    utils.ToString(app.AppDockerImageName),
 				AppTag:      utils.ToString(app.AppDockerImageTag),
+
+				// K8sState: string(app.K8sState), // TODO: ADD THIS FIELD AND USE IT IN K8S CLIENT
 
 				ShmSize:             utils.ToString(app.AppShmSize),
 				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
@@ -347,7 +350,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(k8s.MakeWorkbenchRequest{
+		err = s.client.UpdateWorkbench(k8s.Workbench{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
 			Username:                username,
@@ -363,7 +366,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 		}
 
 		return nil
-	} else if workbench.Status == model.WorkbenchDeleted {
+	case model.WorkbenchDeleted:
 		err := s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to delete workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
@@ -458,7 +461,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
-	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
+	err = s.client.CreateWorkbench(k8s.Workbench{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
 		Username:                username,
@@ -617,7 +620,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	if !s.cfg.Services.WorkbenchService.BackendInK8S {
 		port, stopChan, err = s.client.CreatePortForward(proxyID.namespace, proxyID.workbench)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to create port forward: %w", err)
+			return nil, fmt.Errorf("failed to create port forward: %w", err)
 		}
 
 		xpraUrl = fmt.Sprintf("http://localhost:%v", port)
@@ -628,7 +631,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 
 	targetURL, err := url.Parse(xpraUrl)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse url: %w", err)
+		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)

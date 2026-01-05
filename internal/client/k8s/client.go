@@ -2,9 +2,11 @@ package k8s
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -12,6 +14,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -21,25 +25,35 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
+	"k8s.io/utils/ptr"
 )
 
 var _ = K8sClienter(&client{})
 
 type K8sClienter interface {
+	// Workspace (Namespace) operations
 	CreateWorkspace(tenantID uint64, namespace string) error
 	DeleteWorkspace(namespace string) error
-	CreateWorkbench(req MakeWorkbenchRequest) error
-	UpdateWorkbench(req MakeWorkbenchRequest) error
-	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
-	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
-	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
+
+	// Workbench operations
+	CreateWorkbench(workbench Workbench) error
+	UpdateWorkbench(workbench Workbench) error
 	DeleteWorkbench(namespace, workbenchName string) error
 
+	// AppInstance operations
+	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
+	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
+
+	// Utility operations
+	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	PrePullImageOnAllNodes(image string)
 
-	WatchOnNewWorkbench(func(workbench Workbench) error) error
-	WatchOnUpdateWorkbench(func(workbench Workbench) error) error
-	WatchOnDeleteWorkbench(func(workbench Workbench) error) error
+	// Watcher operations
+	RegisterOnNewWorkbenchHandler(func(workbench Workbench) error) error
+	RegisterOnUpdateWorkbenchHandler(func(workbench Workbench) error) error
+	RegisterOnDeleteWorkbenchHandler(func(workbench Workbench) error) error
 }
 
 type client struct {
@@ -82,104 +96,35 @@ func NewClient(cfg config.Config) (*client, error) {
 	}
 
 	if cfg.Clients.K8sClient.IsWatcher {
-		go c.watch()
+		go c.watchWorkbenchEvents()
 	}
 
 	return c, nil
 }
 
-func (c *client) watch() {
+// ----------------------------------------------------------------
+// Internal watchers setup
+// ----------------------------------------------------------------
+func (c *client) watchWorkbenchEvents() {
 	factory := dynamicinformer.NewDynamicSharedInformerFactory(c.dynamicClient, 0)
 
-	// namespaceGvr, err := c.getGroupVersionFromKind("Namespace")
-	// if err != nil {
-	// 	logger.TechLog.Error(context.Background(), "Error getting GVR for namespace:", zap.Error(err))
-	// 	return
-	// }
-	// namespaceInformer := factory.ForResource(namespaceGvr).Informer()
-	// namespaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-	// 	AddFunc: func(obj interface{}) {
-	// 		logger.TechLog.Info(context.Background(), "Watcher event: added namespace:")
-	// 		namespace, err := EventInterfaceToNamespace(obj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 	},
-	// 	UpdateFunc: func(oldObj, newObj interface{}) {
-	// 		logger.TechLog.Info(context.Background(), "Watcher event: updated namespace:")
-	// 		newNamespace, err := EventInterfaceToNamespace(newObj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 		oldNamespace, err := EventInterfaceToNamespace(oldObj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 	},
-	// 	DeleteFunc: func(obj interface{}) {
-	// 		logger.TechLog.Info(context.Background(), "Watcher event: deleted namespace:")
-	// 		namespace, err := EventInterfaceToNamespace(obj)
-	// 		if err != nil {
-	// 			logger.TechLog.Error(context.Background(), "Error converting to Namespace:", zap.Error(err))
-	// 			return
-	// 		}
-	// 	},
-	// })
-
+	// Get GVR for Workbench
 	workbenchGvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
 		logger.TechLog.Error(context.Background(), "Error getting GVR for Workbench", zap.Error(err))
 		return
 	}
+
 	workbenchInformer := factory.ForResource(workbenchGvr).Informer()
 	workbenchInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			logger.TechLog.Debug(context.Background(), "added workbench", zap.Any("workbench", obj))
-
-			workbench, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(obj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
-				return
-			}
-
-			if c.onNewWorkbench != nil {
-				if err := c.onNewWorkbench(workbench); err != nil {
-					logger.TechLog.Error(context.Background(), "Error handling new workbench:", zap.Error(err))
-				}
-			}
+			c.handleWorkbenchEvent(obj, "added", c.onNewWorkbench)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			logger.TechLog.Debug(context.Background(), "updated workbench", zap.Any("newWorkbench", newObj), zap.Any("oldWorkbench", oldObj))
-
-			workbench, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(newObj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
-				return
-			}
-
-			if c.onUpdateWorkbench != nil {
-				if err := c.onUpdateWorkbench(workbench); err != nil {
-					logger.TechLog.Error(context.Background(), "Error handling updated workbench:", zap.Error(err))
-				}
-			}
+			c.handleWorkbenchEvent(newObj, "updated", c.onUpdateWorkbench)
 		},
 		DeleteFunc: func(obj interface{}) {
-			logger.TechLog.Debug(context.Background(), "deleted workbench", zap.Any("workbench", obj))
-
-			workbench, err := c.eventInterfaceToNamespaceWorkbenchTenantApps(obj)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "Error converting to Namespace/Workbench/TenantID/Apps:", zap.Error(err))
-				return
-			}
-
-			if c.onDeleteWorkbench != nil {
-				if err := c.onDeleteWorkbench(workbench); err != nil {
-					logger.TechLog.Error(context.Background(), "Error handling deleted workbench:", zap.Error(err))
-				}
-			}
+			c.handleWorkbenchEvent(obj, "deleted", c.onDeleteWorkbench)
 		},
 	})
 
@@ -201,106 +146,31 @@ func (c *client) watch() {
 	logger.TechLog.Info(context.Background(), "Informers stopped.")
 }
 
-func (c *client) eventInterfaceToNamespaceWorkbenchTenantApps(obj interface{}) (Workbench, error) {
-	k8sWorkbench, err := EventInterfaceToWorkbench(obj)
+// Generic handler for workbench events
+func (c *client) handleWorkbenchEvent(obj any, eventType string, handler func(workbench Workbench) error) {
+	logger.TechLog.Debug(context.Background(), fmt.Sprintf("%s workbench", eventType), zap.Any("workbench", obj))
+
+	if obj == nil {
+		logger.TechLog.Error(context.Background(), fmt.Sprintf("nil object received during %s workbench event", eventType))
+		return
+	}
+
+	workbench, err := c.eventInterfaceToWorkbench(obj)
 	if err != nil {
-		return Workbench{}, fmt.Errorf("error converting to Workbench: %w", err)
+		logger.TechLog.Error(context.Background(), "Error converting event interface to Workbench", zap.Error(err))
+		return
 	}
 
-	workbench, err := c.K8sWorkbenchToWorkbench(*k8sWorkbench)
-	if err != nil {
-		return Workbench{}, fmt.Errorf("error converting to Workbench: %w", err)
-	}
-	return workbench, nil
-}
-
-func (c *client) WatchOnNewWorkbench(handler func(workbench Workbench) error) error {
-	c.onNewWorkbench = handler
-	return nil
-}
-func (c *client) WatchOnUpdateWorkbench(handler func(workbench Workbench) error) error {
-	c.onUpdateWorkbench = handler
-	return nil
-}
-func (c *client) WatchOnDeleteWorkbench(handler func(workbench Workbench) error) error {
-	c.onDeleteWorkbench = handler
-	return nil
-}
-
-func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
-	workbench := K8sWorkbench{
-		TypeMeta: v1.TypeMeta{
-			Kind:       "Workbench",
-			APIVersion: "default.chorus-tre.ch/v1alpha1",
-		},
-		ObjectMeta: v1.ObjectMeta{
-			Name:      req.Name,
-			Namespace: req.Namespace,
-			Labels: map[string]string{
-				"chorus-tre.ch/created-by": "chorus-backend",
-				"chorus-tre.ch/tenant-id":  fmt.Sprintf("%d", req.TenantID),
-			},
-		},
-		Spec: WorkbenchSpec{
-			Server: WorkbenchServer{
-				InitialResolutionWidth:  int(req.InitialResolutionWidth),
-				InitialResolutionHeight: int(req.InitialResolutionHeight),
-			},
-			Apps: map[string]WorkbenchApp{},
-		},
-	}
-
-	for _, app := range req.Apps {
-		workbenchApp := c.appInstanceToWorkbenchApp(app)
-		workbench.Spec.Apps[app.UID()] = workbenchApp
-	}
-
-	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) != 0 {
-		workbench.Spec.ImagePullSecrets = []string{c.cfg.Clients.K8sClient.ImagePullSecretName}
-	}
-
-	if c.cfg.Clients.K8sClient.ServerVersion != "" {
-		workbench.Spec.Server.Version = c.cfg.Clients.K8sClient.ServerVersion
-	}
-
-	if c.cfg.Clients.K8sClient.InitContainerVersion != "" {
-		workbench.Spec.InitContainer = &InitContainerConfig{
-			Version: c.cfg.Clients.K8sClient.InitContainerVersion,
+	if handler != nil {
+		if err := handler(workbench); err != nil {
+			logger.TechLog.Error(context.Background(), fmt.Sprintf("Error handling %s workbench event", eventType), zap.Error(err))
 		}
 	}
-
-	username := c.UsernameToK8sUser(req.Username)
-	if c.cfg.Clients.K8sClient.AddUserDetails && username != "" {
-		workbench.Spec.Server.User = username
-		workbench.Spec.Server.UserID = int(c.UserIDToK8sUserID(req.UserID))
-	}
-
-	return workbench, nil
 }
 
-func EncodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, error) {
-	auths := make(map[string]map[string]string)
-
-	for _, entry := range entries {
-		auth := base64.StdEncoding.EncodeToString([]byte(entry.Username + ":" + entry.Password))
-
-		auths[entry.Registry] = map[string]string{
-			"auth": auth,
-		}
-	}
-
-	result := map[string]map[string]map[string]string{
-		"auths": auths,
-	}
-
-	jsonData, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return "", err
-	}
-
-	return string(jsonData), nil
-}
-
+// ----------------------------------------------------------------
+// Workspace (Namespace) operations
+// ----------------------------------------------------------------
 func (c *client) CreateWorkspace(tenantID uint64, namespace string) error {
 	return c.syncNamespace(tenantID, namespace)
 }
@@ -309,28 +179,36 @@ func (c *client) DeleteWorkspace(namespace string) error {
 	return c.deleteNamespace(namespace)
 }
 
-type MakeWorkbenchRequest Workbench
-
-func (c *client) CreateWorkbench(req MakeWorkbenchRequest) error {
-	workbench, err := c.makeWorkbench(req)
+// ----------------------------------------------------------------
+// Workbench operations
+// ----------------------------------------------------------------
+func (c *client) CreateWorkbench(workbench Workbench) error {
+	k8sWorkbench, err := c.workbenchToK8sWorkbench(workbench)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(req.TenantID, workbench, req.Namespace)
+	return c.syncWorkbench(workbench.TenantID, k8sWorkbench, workbench.Namespace)
 }
 
-func (c *client) UpdateWorkbench(req MakeWorkbenchRequest) error {
-	workbench, err := c.makeWorkbench(req)
+func (c *client) UpdateWorkbench(workbench Workbench) error {
+	k8sWorkbench, err := c.workbenchToK8sWorkbench(workbench)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
 	}
 
-	return c.syncWorkbench(req.TenantID, workbench, req.Namespace)
+	return c.syncWorkbench(workbench.TenantID, k8sWorkbench, workbench.Namespace)
 }
 
+func (c *client) DeleteWorkbench(namespace, workbenchName string) error {
+	return c.deleteResource(namespace, "Workbench", workbenchName)
+}
+
+// ----------------------------------------------------------------
+// AppInstance operations
+// ----------------------------------------------------------------
 func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
-	app := c.appInstanceToWorkbenchApp(appInstance)
+	app := c.appInstanceToK8sWorkbenchApp(appInstance)
 
 	gvr, err := c.getGroupVersionFromKind("Workbench")
 	if err != nil {
@@ -415,6 +293,147 @@ func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance 
 	return nil
 }
 
-func (c *client) DeleteWorkbench(namespace, workbenchName string) error {
-	return c.deleteResource(namespace, "Workbench", workbenchName)
+// ----------------------------------------------------------------
+// Utility operations
+// ----------------------------------------------------------------
+func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error) {
+	pods, err := c.k8sClient.CoreV1().Pods(namespace).List(context.Background(), v1.ListOptions{
+		LabelSelector: fmt.Sprintf("workbench=%s", serviceName),
+	})
+	if err != nil {
+		return 0, nil, fmt.Errorf("unable to get pods: %w", err)
+	}
+
+	if len(pods.Items) == 0 {
+		return 0, nil, errors.New("no pods found for the service")
+	}
+
+	podName := pods.Items[0].Name
+	ports := []string{"0:8080"}
+
+	req := c.k8sClient.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Namespace(namespace).
+		Name(podName).
+		SubResource("portforward")
+
+	transport, upgrader, err := spdy.RoundTripperFor(c.restConfig)
+	if err != nil {
+		return 0, nil, fmt.Errorf("unable to get spdy round tripper: %w", err)
+	}
+
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
+
+	stopChan := make(chan struct{}, 1)
+	readyChan := make(chan struct{})
+	out, errOut := io.Discard, io.Discard
+
+	pf, err := portforward.New(dialer, ports, stopChan, readyChan, out, errOut)
+	if err != nil {
+		return 0, nil, fmt.Errorf("unable to create the port forwarder: %w", err)
+	}
+
+	go func() {
+		if err := pf.ForwardPorts(); err != nil {
+			// todo check if err is ErrLostConnectionToPod
+			// if so recreacte portforward
+			logger.TechLog.Error(context.Background(), "portforwarding error", zap.Error(err))
+		}
+	}()
+
+	<-readyChan
+
+	forwardedPorts, err := pf.GetPorts()
+	if err != nil {
+		return 0, nil, fmt.Errorf("unable to get ports: %w", err)
+	}
+	if len(forwardedPorts) != 1 {
+		return 0, nil, errors.New("not right number of forwarded ports")
+	}
+	port := forwardedPorts[0]
+
+	return port.Local, stopChan, nil
+}
+
+func (c *client) PrePullImageOnAllNodes(image string) {
+	err := c.syncImagePullSecret("default")
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "failed to sync image pull secret",
+			zap.String("image", image),
+			zap.Error(err),
+		)
+		return
+	}
+
+	nodeList, err := c.k8sClient.CoreV1().Nodes().List(context.Background(), v1.ListOptions{})
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "failed to list nodes while pre-pulling image",
+			zap.String("image", image),
+			zap.Error(err),
+		)
+
+		return
+	}
+
+	for _, node := range nodeList.Items {
+		job := &batchv1.Job{
+			ObjectMeta: v1.ObjectMeta{
+				GenerateName: "prepull-",
+				Namespace:    "default",
+			},
+			Spec: batchv1.JobSpec{
+				TTLSecondsAfterFinished: ptr.To(int32(60)),
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						NodeName:      node.Name,
+						RestartPolicy: corev1.RestartPolicyNever,
+						Containers: []corev1.Container{
+							{
+								Name:    "puller",
+								Image:   image,
+								Command: []string{"bash", "-c", "exit"},
+							},
+						},
+						ImagePullSecrets: []corev1.LocalObjectReference{
+							{
+								Name: c.cfg.Clients.K8sClient.ImagePullSecretName,
+							},
+						},
+					},
+				},
+			},
+			TypeMeta: v1.TypeMeta{},
+			Status:   batchv1.JobStatus{},
+		}
+
+		_, err := c.k8sClient.BatchV1().Jobs("default").Create(context.Background(), job, v1.CreateOptions{})
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "failed to create job for pre-pulling image",
+				zap.String("image", image),
+				zap.String("node", node.Name),
+				zap.Error(err),
+			)
+		} else {
+			logger.TechLog.Info(context.Background(), "successfully created job for pre-pulling image",
+				zap.String("image", image),
+				zap.String("node", node.Name),
+			)
+		}
+	}
+}
+
+// ----------------------------------------------------------------
+// Watcher registration methods
+// ----------------------------------------------------------------
+func (c *client) RegisterOnNewWorkbenchHandler(handler func(workbench Workbench) error) error {
+	c.onNewWorkbench = handler
+	return nil
+}
+func (c *client) RegisterOnUpdateWorkbenchHandler(handler func(workbench Workbench) error) error {
+	c.onUpdateWorkbench = handler
+	return nil
+}
+func (c *client) RegisterOnDeleteWorkbenchHandler(handler func(workbench Workbench) error) error {
+	c.onDeleteWorkbench = handler
+	return nil
 }
