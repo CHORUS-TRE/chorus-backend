@@ -5,7 +5,7 @@ package health_test
 import (
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	health "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/health/client/health_service"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
