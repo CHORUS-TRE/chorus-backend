@@ -6,7 +6,7 @@ fullnameOverride: ""
 nameOverride: ""
 
 image:
-  repository: harbor.build.chorus-tre.ch/chorus/backend
+  repository: harbor.build.chorus-tre.ch/backend-acceptance/backend
   tag: ""
   imagePullPolicy: IfNotPresent
 

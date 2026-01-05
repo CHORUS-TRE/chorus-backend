@@ -263,6 +263,12 @@ func (c *client) makeWorkbench(req MakeWorkbenchRequest) (K8sWorkbench, error) {
 		workbench.Spec.Server.Version = c.cfg.Clients.K8sClient.ServerVersion
 	}
 
+	if c.cfg.Clients.K8sClient.InitContainerVersion != "" {
+		workbench.Spec.InitContainer = &InitContainerConfig{
+			Version: c.cfg.Clients.K8sClient.InitContainerVersion,
+		}
+	}
+
 	username := c.UsernameToK8sUser(req.Username)
 	if c.cfg.Clients.K8sClient.AddUserDetails && username != "" {
 		workbench.Spec.Server.User = username

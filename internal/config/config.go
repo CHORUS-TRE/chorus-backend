@@ -138,8 +138,9 @@ type (
 		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
 		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
 
-		ServerVersion  string `yaml:"server_version,omitempty"`
-		AddUserDetails bool   `yaml:"add_user_details,omitempty"`
+		ServerVersion        string `yaml:"server_version,omitempty"`
+		InitContainerVersion string `yaml:"init_container_version,omitempty"`
+		AddUserDetails       bool   `yaml:"add_user_details,omitempty"`
 
 		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
 

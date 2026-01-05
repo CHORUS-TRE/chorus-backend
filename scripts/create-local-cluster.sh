@@ -157,6 +157,7 @@ clients:
     enabled: true
     is_watcher: true
     server_version: "6.3.2-1"
+    init_container_version: "0.0.2-3"
     ca: |
 $ca_ident
     token: $token
