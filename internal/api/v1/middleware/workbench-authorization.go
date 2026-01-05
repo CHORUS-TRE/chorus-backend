@@ -33,7 +33,7 @@ func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization
 	}
 }
 
-func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, req *chorus.ListWorkbenchsRequest) (*chorus.ListWorkbenchsReply, error) {
+func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
 	if req.Filter != nil && len(req.Filter.WorkspaceIdsIn) > 0 {
 		for _, id := range req.Filter.WorkspaceIdsIn {
 			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(id))
@@ -66,7 +66,7 @@ func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, re
 				if workspaceIDStr == "*" {
 					fmt.Println("wildcard found, returning all workbenches")
 					req.Filter = nil
-					return c.next.ListWorkbenchs(ctx, req)
+					return c.next.ListWorkbenches(ctx, req)
 				}
 				if req.Filter == nil {
 					req.Filter = &chorus.WorkbenchFilter{}
@@ -81,7 +81,7 @@ func (c workbenchControllerAuthorization) ListWorkbenchs(ctx context.Context, re
 		}
 	}
 
-	return c.next.ListWorkbenchs(ctx, req)
+	return c.next.ListWorkbenches(ctx, req)
 }
 
 func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {

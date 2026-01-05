@@ -23,7 +23,7 @@ import (
 type ProxyWorkbenchHandler func(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 
 func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Config, authorizer authorization.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
-	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/([0-9]+)/stream`)
+	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/([0-9]+)/stream`)
 
 	auth := middleware.NewAuthorization(logger.TechLog, cfg, authorizer, nil)
 

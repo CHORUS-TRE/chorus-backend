@@ -88,12 +88,12 @@ func (o *WorkbenchServiceDeleteWorkbenchOK) Code() int {
 
 func (o *WorkbenchServiceDeleteWorkbenchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workbenchs/{id}][%d] workbenchServiceDeleteWorkbenchOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workbenches/{id}][%d] workbenchServiceDeleteWorkbenchOK %s", 200, payload)
 }
 
 func (o *WorkbenchServiceDeleteWorkbenchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workbenchs/{id}][%d] workbenchServiceDeleteWorkbenchOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workbenches/{id}][%d] workbenchServiceDeleteWorkbenchOK %s", 200, payload)
 }
 
 func (o *WorkbenchServiceDeleteWorkbenchOK) GetPayload() *models.ChorusDeleteWorkbenchReply {
@@ -162,12 +162,12 @@ func (o *WorkbenchServiceDeleteWorkbenchDefault) Code() int {
 
 func (o *WorkbenchServiceDeleteWorkbenchDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workbenchs/{id}][%d] WorkbenchService_DeleteWorkbench default %s", o._statusCode, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workbenches/{id}][%d] WorkbenchService_DeleteWorkbench default %s", o._statusCode, payload)
 }
 
 func (o *WorkbenchServiceDeleteWorkbenchDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workbenchs/{id}][%d] WorkbenchService_DeleteWorkbench default %s", o._statusCode, payload)
+	return fmt.Sprintf("[DELETE /api/rest/v1/workbenches/{id}][%d] WorkbenchService_DeleteWorkbench default %s", o._statusCode, payload)
 }
 
 func (o *WorkbenchServiceDeleteWorkbenchDefault) GetPayload() *models.RPCStatus {

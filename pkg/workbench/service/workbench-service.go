@@ -54,12 +54,12 @@ type WorkbenchFilter struct {
 
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
-	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
 	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
@@ -73,15 +73,15 @@ type Workbencher interface {
 
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error)
 	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error)
 	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
-	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
-	DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
+	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -137,7 +137,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 	}
 
 	go func() {
-		s.updateAllWorkbenchs(context.Background())
+		s.updateAllWorkbenches(context.Background())
 	}()
 
 	go func() {
@@ -158,7 +158,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 			time.Sleep(jitter)
 
 			for {
-				s.cleanIdleWorkbenchs(context.Background())
+				s.cleanIdleWorkbenches(context.Background())
 				time.Sleep(interval)
 			}
 		}()
@@ -252,14 +252,14 @@ func (s *WorkbenchService) SetClientWatchers() {
 	s.client.RegisterOnUpdateWorkbenchHandler(watcher)
 }
 
-func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.ListAllWorkbenches(ctx)
+func (s *WorkbenchService) updateAllWorkbenches(ctx context.Context) {
+	workbenches, err := s.store.ListAllWorkbenches(ctx)
 	if err != nil {
-		logger.TechLog.Error(ctx, "unable to query workbenchs", zap.Error(err))
+		logger.TechLog.Error(ctx, "unable to query workbenches", zap.Error(err))
 		return
 	}
 
-	for _, workbench := range workbenchs {
+	for _, workbench := range workbenches {
 		go func(workbench *model.Workbench) {
 			logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
 			err := s.syncWorkbench(ctx, workbench)
@@ -270,14 +270,14 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 	}
 }
 
-func (s *WorkbenchService) cleanIdleWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.DeleteIdleWorkbenchs(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
+func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
+	workbenches, err := s.store.DeleteIdleWorkbenches(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
 	if err != nil {
-		logger.TechLog.Error(ctx, "unable to query idle workbenchs", zap.Error(err))
+		logger.TechLog.Error(ctx, "unable to query idle workbenches", zap.Error(err))
 		return
 	}
 
-	for _, workbench := range workbenchs {
+	for _, workbench := range workbenches {
 		go func(workbench *model.Workbench) {
 			logger.TechLog.Debug(ctx, "cleaning idle workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
 			// err := s.syncWorkbench(ctx, workbench)
@@ -381,12 +381,12 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
-	workbenchs, paginationRes, err := s.store.ListWorkbenchs(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
+func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+	workbenches, paginationRes, err := s.store.ListWorkbenches(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to query workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to query workbenches: %w", err)
 	}
-	return workbenchs, paginationRes, nil
+	return workbenches, paginationRes, nil
 }
 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
@@ -417,8 +417,8 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 	return nil
 }
 
-func (s *WorkbenchService) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
-	err := s.store.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+func (s *WorkbenchService) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	err := s.store.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
 	}
@@ -634,7 +634,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
-	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
+	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 	tr := s.getRoundtripper()
