@@ -73,6 +73,19 @@ config:
           enabled: false
           certificate_file: ""
           key_file: ""
+    file_stores:
+      archive:
+        type: minio
+        minio_config:
+          enabled: true
+          endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+          access_key_id: ""
+          secret_access_key: "" # set in secret
+          bucket_name: chorus-data
+          use_ssl: false
+          multipart_min_part_size: 5242880 # 5MB
+          multipart_max_part_size: 5368709120 # 5GB
+          multipart_max_total_parts: 10000
 
   services:
     index_service:
@@ -179,19 +192,6 @@ config:
   clients:
     docker_client:
       enabled: true
-    file_stores:
-      archive:
-        type: minio
-        minio_config:
-          enabled: true
-          endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-          access_key_id: ""
-          secret_access_key: "" # set in secret
-          bucket_name: chorus-data
-          use_ssl: false
-          multipart_min_part_size: 5242880 # 5MB
-          multipart_max_part_size: 5368709120 # 5GB
-          multipart_max_total_parts: 10000
     k8s_client:
       enabled: true
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"

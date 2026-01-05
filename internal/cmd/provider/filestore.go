@@ -23,7 +23,7 @@ func ProvideFileStores() map[string]filestore.FileStore {
 		config := ProvideConfig()
 		fileStores = make(map[string]filestore.FileStore)
 
-		for fileStoreName, fileStoreCfg := range config.Clients.FileStores {
+		for fileStoreName, fileStoreCfg := range config.Storage.FileStores {
 			switch fileStoreCfg.Type {
 			case "minio":
 				var minioClient miniorawclient.MinioClienter
