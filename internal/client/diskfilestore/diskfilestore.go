@@ -1,4 +1,4 @@
-package diskblockstore
+package diskfilestore
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/blockstore"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
-var _ blockstore.BlockStore = &diskFileStorage{}
+var _ filestore.FileStore = &diskFileStorage{}
 
 const (
 	multipartDir  = ".multipart"
@@ -28,7 +28,7 @@ const (
 type multipartUpload struct {
 	FilePath   string
 	FileSize   uint64
-	Parts      map[uint64]*blockstore.FilePart
+	Parts      map[uint64]*filestore.FilePart
 	PartSize   uint64
 	TotalParts uint64
 	CreatedAt  time.Time
@@ -42,7 +42,7 @@ type diskFileStorage struct {
 
 // NewDiskFileStorage creates a new disk-based file storage at the given path.
 // It recursively creates all needed folders if they don't exist.
-func NewDiskFileStorage(basePath string) (blockstore.BlockStore, error) {
+func NewDiskFileStorage(basePath string) (filestore.FileStore, error) {
 	// Create base directory if it doesn't exist
 	if err := os.MkdirAll(basePath, 0755); err != nil {
 		return nil, fmt.Errorf("unable to create base directory %s: %w", basePath, err)
@@ -127,7 +127,7 @@ func (s *diskFileStorage) getMimeType(path string) string {
 	return "application/octet-stream"
 }
 
-func (s *diskFileStorage) fileInfoToFile(path string, info os.FileInfo) *blockstore.File {
+func (s *diskFileStorage) fileInfoToFile(path string, info os.FileInfo) *filestore.File {
 	isDir := info.IsDir()
 	var size uint64
 	if !isDir {
@@ -142,7 +142,7 @@ func (s *diskFileStorage) fileInfoToFile(path string, info os.FileInfo) *blockst
 		normalizedPath += "/"
 	}
 
-	return &blockstore.File{
+	return &filestore.File{
 		Path:        normalizedPath,
 		Name:        info.Name(),
 		IsDirectory: isDir,
@@ -152,7 +152,7 @@ func (s *diskFileStorage) fileInfoToFile(path string, info os.FileInfo) *blockst
 	}
 }
 
-func (s *diskFileStorage) StatFile(ctx context.Context, path string) (*blockstore.File, error) {
+func (s *diskFileStorage) StatFile(ctx context.Context, path string) (*filestore.File, error) {
 	fullPath := s.resolvePath(path)
 
 	info, err := os.Stat(fullPath)
@@ -169,7 +169,7 @@ func (s *diskFileStorage) StatFile(ctx context.Context, path string) (*blockstor
 	return file, nil
 }
 
-func (s *diskFileStorage) GetFile(ctx context.Context, path string) (*blockstore.File, error) {
+func (s *diskFileStorage) GetFile(ctx context.Context, path string) (*filestore.File, error) {
 	fullPath := s.resolvePath(path)
 
 	info, err := os.Stat(fullPath)
@@ -196,7 +196,7 @@ func (s *diskFileStorage) GetFile(ctx context.Context, path string) (*blockstore
 	return file, nil
 }
 
-func (s *diskFileStorage) ListFiles(ctx context.Context, path string) ([]*blockstore.File, error) {
+func (s *diskFileStorage) ListFiles(ctx context.Context, path string) ([]*filestore.File, error) {
 	fullPath := s.resolvePath(path)
 
 	entries, err := os.ReadDir(fullPath)
@@ -207,7 +207,7 @@ func (s *diskFileStorage) ListFiles(ctx context.Context, path string) ([]*blocks
 		return nil, fmt.Errorf("unable to list files at path %s: %w", path, err)
 	}
 
-	var files []*blockstore.File
+	var files []*filestore.File
 	for _, entry := range entries {
 		// Skip hidden multipart directory and directory marker files
 		if entry.Name() == multipartDir || entry.Name() == dirMarkerFile {
@@ -228,7 +228,7 @@ func (s *diskFileStorage) ListFiles(ctx context.Context, path string) ([]*blocks
 	return files, nil
 }
 
-func (s *diskFileStorage) CreateFile(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
+func (s *diskFileStorage) CreateFile(ctx context.Context, file *filestore.File) (*filestore.File, error) {
 	if file.IsDirectory {
 		return nil, fmt.Errorf("use CreateDirectory to create directories")
 	}
@@ -269,7 +269,7 @@ func (s *diskFileStorage) CreateFile(ctx context.Context, file *blockstore.File)
 	return createdFile, nil
 }
 
-func (s *diskFileStorage) CreateDirectory(ctx context.Context, file *blockstore.File) (*blockstore.File, error) {
+func (s *diskFileStorage) CreateDirectory(ctx context.Context, file *filestore.File) (*filestore.File, error) {
 	if !file.IsDirectory {
 		return nil, fmt.Errorf("use CreateFile to create files")
 	}
@@ -311,7 +311,7 @@ func (s *diskFileStorage) CreateDirectory(ctx context.Context, file *blockstore.
 	return createdDir, nil
 }
 
-func (s *diskFileStorage) MoveFile(ctx context.Context, oldPath string, newPath string) (*blockstore.File, error) {
+func (s *diskFileStorage) MoveFile(ctx context.Context, oldPath string, newPath string) (*filestore.File, error) {
 	fullOldPath := s.resolvePath(oldPath)
 	fullNewPath := s.resolvePath(newPath)
 
@@ -400,7 +400,7 @@ func (s *diskFileStorage) DeleteDirectory(ctx context.Context, path string) erro
 	return nil
 }
 
-func (s *diskFileStorage) InitiateMultipartUpload(ctx context.Context, file *blockstore.File) (*blockstore.FileUploadInfo, error) {
+func (s *diskFileStorage) InitiateMultipartUpload(ctx context.Context, file *filestore.File) (*filestore.FileUploadInfo, error) {
 	if file.IsDirectory {
 		return nil, fmt.Errorf("use CreateDirectory to create directories")
 	}
@@ -438,7 +438,7 @@ func (s *diskFileStorage) InitiateMultipartUpload(ctx context.Context, file *blo
 	s.multipartUploads[uploadID] = &multipartUpload{
 		FilePath:   path,
 		FileSize:   file.Size,
-		Parts:      make(map[uint64]*blockstore.FilePart),
+		Parts:      make(map[uint64]*filestore.FilePart),
 		PartSize:   partSize,
 		TotalParts: totalParts,
 		CreatedAt:  time.Now(),
@@ -446,7 +446,7 @@ func (s *diskFileStorage) InitiateMultipartUpload(ctx context.Context, file *blo
 	s.mu.Unlock()
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Initiated multipart upload for %s with upload ID %s (%d parts of size %d)", path, uploadID, totalParts, partSize))
-	return &blockstore.FileUploadInfo{
+	return &filestore.FileUploadInfo{
 		UploadID:   uploadID,
 		PartSize:   partSize,
 		TotalParts: totalParts,
@@ -460,7 +460,7 @@ func (s *diskFileStorage) generateUploadID(path string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func (s *diskFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *blockstore.FilePart) (*blockstore.FilePart, error) {
+func (s *diskFileStorage) UploadPart(ctx context.Context, filePath string, uploadId string, part *filestore.FilePart) (*filestore.FilePart, error) {
 	s.mu.RLock()
 	upload, exists := s.multipartUploads[uploadId]
 	s.mu.RUnlock()
@@ -481,20 +481,20 @@ func (s *diskFileStorage) UploadPart(ctx context.Context, filePath string, uploa
 
 	// Store part metadata
 	s.mu.Lock()
-	upload.Parts[part.PartNumber] = &blockstore.FilePart{
+	upload.Parts[part.PartNumber] = &filestore.FilePart{
 		PartNumber: part.PartNumber,
 		ETag:       etag,
 	}
 	s.mu.Unlock()
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Uploaded part %d for upload ID %s", part.PartNumber, uploadId))
-	return &blockstore.FilePart{
+	return &filestore.FilePart{
 		PartNumber: part.PartNumber,
 		ETag:       etag,
 	}, nil
 }
 
-func (s *diskFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*blockstore.FilePart) (*blockstore.File, error) {
+func (s *diskFileStorage) CompleteMultipartUpload(ctx context.Context, filePath string, uploadId string, parts []*filestore.FilePart) (*filestore.File, error) {
 	s.mu.RLock()
 	upload, exists := s.multipartUploads[uploadId]
 	s.mu.RUnlock()

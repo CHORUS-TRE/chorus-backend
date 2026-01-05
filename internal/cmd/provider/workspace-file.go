@@ -19,7 +19,7 @@ func ProvideWorkspaceFile() service.WorkspaceFiler {
 	workspaceFileOnce.Do(func() {
 		var err error
 		workspaceFile, err = service.NewWorkspaceFileService(
-			ProvideBlockStores(),
+			ProvideFileStores(),
 			ProvideConfig().Services.WorkspaceFileService.Stores,
 		)
 		if err != nil {

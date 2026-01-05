@@ -4,15 +4,15 @@ import (
 	"path"
 	"strings"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/blockstore"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
 )
 
-func MinioObjectInfoToFile(info *miniorawclient.MinioObjectInfo) *blockstore.File {
+func MinioObjectInfoToFile(info *miniorawclient.MinioObjectInfo) *filestore.File {
 	isDir := strings.HasSuffix(info.Key, "/")
 	name := path.Base(strings.TrimRight(info.Key, "/"))
 
-	return &blockstore.File{
+	return &filestore.File{
 		Path:        info.Key,
 		Name:        name,
 		IsDirectory: isDir,
@@ -22,14 +22,14 @@ func MinioObjectInfoToFile(info *miniorawclient.MinioObjectInfo) *blockstore.Fil
 	}
 }
 
-func MinioObjectToFile(object *miniorawclient.MinioObject) *blockstore.File {
+func MinioObjectToFile(object *miniorawclient.MinioObject) *filestore.File {
 	file := MinioObjectInfoToFile(&object.MinioObjectInfo)
 	file.Content = object.Content
 
 	return file
 }
 
-func FileToMinioObjectInfo(file *blockstore.File) *miniorawclient.MinioObjectInfo {
+func FileToMinioObjectInfo(file *filestore.File) *miniorawclient.MinioObjectInfo {
 	return &miniorawclient.MinioObjectInfo{
 		Key:          file.Path,
 		Size:         file.Size,
@@ -38,42 +38,42 @@ func FileToMinioObjectInfo(file *blockstore.File) *miniorawclient.MinioObjectInf
 	}
 }
 
-func FileToMinioObject(file *blockstore.File) *miniorawclient.MinioObject {
+func FileToMinioObject(file *filestore.File) *miniorawclient.MinioObject {
 	return &miniorawclient.MinioObject{
 		MinioObjectInfo: *FileToMinioObjectInfo(file),
 		Content:         file.Content,
 	}
 }
 
-func FileToMinioObjectWithoutContent(file *blockstore.File) *miniorawclient.MinioObject {
+func FileToMinioObjectWithoutContent(file *filestore.File) *miniorawclient.MinioObject {
 	return &miniorawclient.MinioObject{
 		MinioObjectInfo: *FileToMinioObjectInfo(file),
 	}
 }
 
-func FilePartToMinioObjectPartInfo(part *blockstore.FilePart) *miniorawclient.MinioObjectPartInfo {
+func FilePartToMinioObjectPartInfo(part *filestore.FilePart) *miniorawclient.MinioObjectPartInfo {
 	return &miniorawclient.MinioObjectPartInfo{
 		PartNumber: int(part.PartNumber),
 		ETag:       part.ETag,
 	}
 }
 
-func MinioObjectPartInfoToFilePart(partInfo *miniorawclient.MinioObjectPartInfo) *blockstore.FilePart {
-	return &blockstore.FilePart{
+func MinioObjectPartInfoToFilePart(partInfo *miniorawclient.MinioObjectPartInfo) *filestore.FilePart {
+	return &filestore.FilePart{
 		PartNumber: uint64(partInfo.PartNumber),
 		ETag:       partInfo.ETag,
 	}
 }
 
-func FilePartToMinioObjectPart(part *blockstore.FilePart) *miniorawclient.MinioObjectPart {
+func FilePartToMinioObjectPart(part *filestore.FilePart) *miniorawclient.MinioObjectPart {
 	return &miniorawclient.MinioObjectPart{
 		MinioObjectPartInfo: *FilePartToMinioObjectPartInfo(part),
 		Data:                part.Data,
 	}
 }
 
-func MinioObjectPartToFilePart(part *miniorawclient.MinioObjectPart) *blockstore.FilePart {
-	return &blockstore.FilePart{
+func MinioObjectPartToFilePart(part *miniorawclient.MinioObjectPart) *filestore.FilePart {
+	return &filestore.FilePart{
 		PartNumber: uint64(part.PartNumber),
 		ETag:       part.ETag,
 		Data:       part.Data,

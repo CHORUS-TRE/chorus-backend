@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/blockstore"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 )
 
-func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*blockstore.File, error) {
+func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*filestore.File, error) {
 	ua, err := FromProtoTimestamp(file.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
-	return &blockstore.File{
+	return &filestore.File{
 		Name:        file.Name,
 		Path:        file.Path,
 		IsDirectory: file.IsDirectory,
@@ -26,7 +26,7 @@ func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*blockstore.File, erro
 	}, nil
 }
 
-func WorkspaceFileFromBusiness(file *blockstore.File) (*chorus.WorkspaceFile, error) {
+func WorkspaceFileFromBusiness(file *filestore.File) (*chorus.WorkspaceFile, error) {
 	if file == nil {
 		return nil, fmt.Errorf("unable to convert nil workspace file")
 	}
@@ -49,19 +49,19 @@ func WorkspaceFileFromBusiness(file *blockstore.File) (*chorus.WorkspaceFile, er
 	}, nil
 }
 
-func WorkspaceFilePartToBusiness(part *chorus.WorkspaceFilePart) (*blockstore.FilePart, error) {
+func WorkspaceFilePartToBusiness(part *chorus.WorkspaceFilePart) (*filestore.FilePart, error) {
 	if part == nil {
 		return nil, fmt.Errorf("unable to convert nil workspace file part")
 	}
 
-	return &blockstore.FilePart{
+	return &filestore.FilePart{
 		PartNumber: part.PartNumber,
 		Data:       part.Data,
 		ETag:       part.Etag,
 	}, nil
 }
 
-func WorkspaceFilePartFromBusiness(part *blockstore.FilePart) (*chorus.WorkspaceFilePart, error) {
+func WorkspaceFilePartFromBusiness(part *filestore.FilePart) (*chorus.WorkspaceFilePart, error) {
 	if part == nil {
 		return nil, fmt.Errorf("unable to convert nil workspace file part")
 	}

@@ -123,7 +123,7 @@ cat <<EOF >configs/dev/files/kind.yaml
 clients:
   docker_client:
     enabled: true
-  block_stores:
+  file_stores:
     archive:
       type: minio
       minio_config:
@@ -152,7 +152,7 @@ clients:
       type: disk
       disk_config:
         enabled: true
-        base_path: docker/.diskblockstore
+        base_path: docker/.diskfilestore
   k8s_client:
     enabled: true
     is_watcher: true

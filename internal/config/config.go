@@ -120,9 +120,9 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient             `yaml:"k8s_client,omitempty"`
-		DockerClient DockerClient          `yaml:"docker_client,omitempty"`
-		BlockStores  map[string]BlockStore `yaml:"block_stores,omitempty"`
+		K8sClient    K8sClient            `yaml:"k8s_client,omitempty"`
+		DockerClient DockerClient         `yaml:"docker_client,omitempty"`
+		FileStores   map[string]FileStore `yaml:"file_stores,omitempty"`
 	}
 
 	K8sClient struct {
@@ -152,13 +152,13 @@ type (
 		Enabled bool `yaml:"enabled,omitempty"`
 	}
 
-	BlockStore struct {
-		Type        string                `yaml:"type"` // "minio" or "disk"
-		MinioConfig BlockStoreMinioConfig `yaml:"minio_config,omitempty"`
-		DiskConfig  BlockStoreDiskConfig  `yaml:"disk_config,omitempty"`
+	FileStore struct {
+		Type        string               `yaml:"type"` // "minio" or "disk"
+		MinioConfig FileStoreMinioConfig `yaml:"minio_config,omitempty"`
+		DiskConfig  FileStoreDiskConfig  `yaml:"disk_config,omitempty"`
 	}
 
-	BlockStoreMinioConfig struct {
+	FileStoreMinioConfig struct {
 		Enabled bool `yaml:"enabled"`
 
 		Endpoint        string    `yaml:"endpoint,omitempty"`
@@ -173,7 +173,7 @@ type (
 		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts"`
 	}
 
-	BlockStoreDiskConfig struct {
+	FileStoreDiskConfig struct {
 		BasePath string `yaml:"base_path"` // Base directory path for disk storage
 	}
 
@@ -333,7 +333,7 @@ type (
 	}
 
 	WorkspaceFileStore struct {
-		BlockStoreName  string `yaml:"block_store_name"` // Reference to block store in clients.block_stores
+		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
 		StorePrefix     string `yaml:"store_prefix,omitempty"`
 		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
 	}

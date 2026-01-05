@@ -283,8 +283,8 @@ config:
   clients:
     docker_client:
       enabled: false
-    block_stores:
-      archive_store:
+    file_stores:
+      archive:
         type: minio
         minio_config:
           enabled: false

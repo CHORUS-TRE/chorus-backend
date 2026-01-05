@@ -1,4 +1,4 @@
-package blockstore
+package filestore
 
 import (
 	"context"
@@ -30,9 +30,9 @@ type FileUploadInfo struct {
 	TotalParts uint64
 }
 
-// The BlockStore interface abstracts UNIX-like file operations which can be performed on a MinIO object storage.
+// The FileStore interface abstracts UNIX-like file operations which can be performed on a MinIO object storage.
 // The directories are represented as objects with keys ending in a '/' character.
-type BlockStore interface {
+type FileStore interface {
 	// Get file metadata at the specified path without downloading the content.
 	StatFile(ctx context.Context, path string) (*File, error)
 

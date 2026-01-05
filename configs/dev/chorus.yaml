@@ -184,11 +184,11 @@ services:
   workspace_file_service:
     stores:
       archive:
-        block_store_name: archive
+        file_store_name: archive
         store_prefix: /archive
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
       scratch:
-        block_store_name: scratch
+        file_store_name: scratch
         store_prefix: /scratch
         workspace_prefix: "workspaces/%s"
 
@@ -196,7 +196,7 @@ services:
 # clients:
 #   docker_client:
 #     enabled: true
-#   block_stores:
+#   file_stores:
 #     archive:
 #       type: minio
 #       minio_config:
@@ -225,7 +225,7 @@ services:
 #       type: disk
 #       disk_config:
 #         enabled: true
-#         base_path: docker/.diskblockstore
+#         base_path: docker/.diskfilestore
 
 log:
   loggers:

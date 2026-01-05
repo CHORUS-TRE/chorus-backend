@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/blockstore"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
@@ -26,7 +26,7 @@ func Logging(logger *logger.ContextLogger) func(service.WorkspaceFiler) service.
 	}
 }
 
-func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*blockstore.File, error) {
+func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
 	now := time.Now()
 
 	res, err := c.next.GetWorkspaceFile(ctx, workspaceID, filePath)
@@ -46,7 +46,7 @@ func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspace
 	return res, nil
 }
 
-func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*blockstore.File, error) {
+func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	now := time.Now()
 
 	files, err := c.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
@@ -67,7 +67,7 @@ func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspa
 	return files, nil
 }
 
-func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *blockstore.File) (*blockstore.File, error) {
+func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error) {
 	now := time.Now()
 
 	newFile, err := c.next.CreateWorkspaceFile(ctx, workspaceID, file)
@@ -88,7 +88,7 @@ func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, worksp
 	return newFile, nil
 }
 
-func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *blockstore.File) (*blockstore.File, error) {
+func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
 	now := time.Now()
 
 	updatedFile, err := c.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)
@@ -130,7 +130,7 @@ func (c workspaceServiceLogging) DeleteWorkspaceFile(ctx context.Context, worksp
 	return nil
 }
 
-func (c workspaceServiceLogging) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *blockstore.File) (*blockstore.FileUploadInfo, error) {
+func (c workspaceServiceLogging) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error) {
 	now := time.Now()
 
 	uploadInfo, err := c.next.InitiateWorkspaceFileUpload(ctx, workspaceID, filePath, file)
@@ -151,7 +151,7 @@ func (c workspaceServiceLogging) InitiateWorkspaceFileUpload(ctx context.Context
 	return uploadInfo, nil
 }
 
-func (c workspaceServiceLogging) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *blockstore.FilePart) (*blockstore.FilePart, error) {
+func (c workspaceServiceLogging) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error) {
 	now := time.Now()
 
 	uploadedPart, err := c.next.UploadWorkspaceFilePart(ctx, workspaceID, filePath, uploadID, part)
@@ -172,7 +172,7 @@ func (c workspaceServiceLogging) UploadWorkspaceFilePart(ctx context.Context, wo
 	return uploadedPart, nil
 }
 
-func (c workspaceServiceLogging) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*blockstore.FilePart) (*blockstore.File, error) {
+func (c workspaceServiceLogging) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*filestore.FilePart) (*filestore.File, error) {
 	now := time.Now()
 
 	completedFile, err := c.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
