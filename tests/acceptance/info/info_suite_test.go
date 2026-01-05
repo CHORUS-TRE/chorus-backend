@@ -7,15 +7,13 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
-	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/ginkgo/v2"
+	"github.com/onsi/ginkgo/v2/reporters"
 	. "github.com/onsi/gomega"
 )
 
 func TestInfo(t *testing.T) {
 	RegisterFailHandler(Fail)
-	config.DefaultReporterConfig.NoColor = true // With colors, the tests reports don't print nicely in Jenkins logs.
 	junitReporter := reporters.NewJUnitReporter("junit.xml")
 	RunSpecsWithDefaultAndCustomReporters(t, "Info Suite", []Reporter{junitReporter})
 }

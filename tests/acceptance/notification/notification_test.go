@@ -13,7 +13,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/models"
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
