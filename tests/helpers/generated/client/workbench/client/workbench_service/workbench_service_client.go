@@ -56,17 +56,31 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	WorkbenchServiceCreateWorkbench(params *WorkbenchServiceCreateWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceCreateWorkbenchOK, error)
 
+	WorkbenchServiceCreateWorkbench2(params *WorkbenchServiceCreateWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceCreateWorkbench2OK, error)
+
 	WorkbenchServiceDeleteWorkbench(params *WorkbenchServiceDeleteWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceDeleteWorkbenchOK, error)
+
+	WorkbenchServiceDeleteWorkbench2(params *WorkbenchServiceDeleteWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceDeleteWorkbench2OK, error)
 
 	WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceGetWorkbenchOK, error)
 
+	WorkbenchServiceGetWorkbench2(params *WorkbenchServiceGetWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceGetWorkbench2OK, error)
+
 	WorkbenchServiceListWorkbenches(params *WorkbenchServiceListWorkbenchesParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchesOK, error)
+
+	WorkbenchServiceListWorkbenches2(params *WorkbenchServiceListWorkbenches2Params, opts ...ClientOption) (*WorkbenchServiceListWorkbenches2OK, error)
 
 	WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServiceManageUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbenchOK, error)
 
+	WorkbenchServiceManageUserRoleInWorkbench2(params *WorkbenchServiceManageUserRoleInWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbench2OK, error)
+
 	WorkbenchServiceRemoveUserFromWorkbench(params *WorkbenchServiceRemoveUserFromWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbenchOK, error)
 
+	WorkbenchServiceRemoveUserFromWorkbench2(params *WorkbenchServiceRemoveUserFromWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbench2OK, error)
+
 	WorkbenchServiceUpdateWorkbench(params *WorkbenchServiceUpdateWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceUpdateWorkbenchOK, error)
+
+	WorkbenchServiceUpdateWorkbench2(params *WorkbenchServiceUpdateWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceUpdateWorkbench2OK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -111,6 +125,45 @@ func (a *Client) WorkbenchServiceCreateWorkbench(params *WorkbenchServiceCreateW
 }
 
 /*
+WorkbenchServiceCreateWorkbench2 creates a workbench
+
+This endpoint creates a workbench
+*/
+func (a *Client) WorkbenchServiceCreateWorkbench2(params *WorkbenchServiceCreateWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceCreateWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceCreateWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_CreateWorkbench2",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workbenchs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceCreateWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceCreateWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceCreateWorkbench2Default)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkbenchServiceDeleteWorkbench deletes a workbench
 
 This endpoint deletes a workbench
@@ -146,6 +199,45 @@ func (a *Client) WorkbenchServiceDeleteWorkbench(params *WorkbenchServiceDeleteW
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkbenchServiceDeleteWorkbenchDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceDeleteWorkbench2 deletes a workbench
+
+This endpoint deletes a workbench
+*/
+func (a *Client) WorkbenchServiceDeleteWorkbench2(params *WorkbenchServiceDeleteWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceDeleteWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceDeleteWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_DeleteWorkbench2",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceDeleteWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceDeleteWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceDeleteWorkbench2Default)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -189,6 +281,45 @@ func (a *Client) WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkben
 }
 
 /*
+WorkbenchServiceGetWorkbench2 gets a workbench
+
+This endpoint returns a workbench
+*/
+func (a *Client) WorkbenchServiceGetWorkbench2(params *WorkbenchServiceGetWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceGetWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceGetWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_GetWorkbench2",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceGetWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceGetWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceGetWorkbench2Default)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkbenchServiceListWorkbenches lists workbenches
 
 This endpoint returns a list of workbenches
@@ -224,6 +355,45 @@ func (a *Client) WorkbenchServiceListWorkbenches(params *WorkbenchServiceListWor
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenchesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceListWorkbenches2 lists workbenches
+
+This endpoint returns a list of workbenches
+*/
+func (a *Client) WorkbenchServiceListWorkbenches2(params *WorkbenchServiceListWorkbenches2Params, opts ...ClientOption) (*WorkbenchServiceListWorkbenches2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceListWorkbenches2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_ListWorkbenches2",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workbenchs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceListWorkbenches2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceListWorkbenches2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenches2Default)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -267,6 +437,45 @@ func (a *Client) WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServ
 }
 
 /*
+WorkbenchServiceManageUserRoleInWorkbench2 manages a user s role in a workbench
+
+This endpoint manages a user's role in a workbench
+*/
+func (a *Client) WorkbenchServiceManageUserRoleInWorkbench2(params *WorkbenchServiceManageUserRoleInWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceManageUserRoleInWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_ManageUserRoleInWorkbench2",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceManageUserRoleInWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceManageUserRoleInWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceManageUserRoleInWorkbench2Default)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkbenchServiceRemoveUserFromWorkbench removes a user from a workbench
 
 This endpoint removes a user from a workbench
@@ -306,6 +515,45 @@ func (a *Client) WorkbenchServiceRemoveUserFromWorkbench(params *WorkbenchServic
 }
 
 /*
+WorkbenchServiceRemoveUserFromWorkbench2 removes a user from a workbench
+
+This endpoint removes a user from a workbench
+*/
+func (a *Client) WorkbenchServiceRemoveUserFromWorkbench2(params *WorkbenchServiceRemoveUserFromWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceRemoveUserFromWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_RemoveUserFromWorkbench2",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}/user/{userId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceRemoveUserFromWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceRemoveUserFromWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceRemoveUserFromWorkbench2Default)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
 WorkbenchServiceUpdateWorkbench updates a workbench
 
 This endpoint updates a workbench
@@ -341,6 +589,45 @@ func (a *Client) WorkbenchServiceUpdateWorkbench(params *WorkbenchServiceUpdateW
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkbenchServiceUpdateWorkbenchDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceUpdateWorkbench2 updates a workbench
+
+This endpoint updates a workbench
+*/
+func (a *Client) WorkbenchServiceUpdateWorkbench2(params *WorkbenchServiceUpdateWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceUpdateWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceUpdateWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_UpdateWorkbench2",
+		Method:             "PUT",
+		PathPattern:        "/api/rest/v1/workbenchs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceUpdateWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceUpdateWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceUpdateWorkbench2Default)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
