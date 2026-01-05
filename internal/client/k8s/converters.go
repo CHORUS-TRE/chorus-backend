@@ -19,7 +19,7 @@ import (
 // Converters from internal types to K8s types
 // ----------------------------------------------------------------
 
-func (c *client) workbenchToK8sWorkbench(workbench *Workbench) (K8sWorkbench, error) {
+func (c *client) workbenchToK8sWorkbench(workbench Workbench) (K8sWorkbench, error) {
 	// Construct K8s Workbench
 	k8sWorkbench := K8sWorkbench{
 		TypeMeta: v1.TypeMeta{
