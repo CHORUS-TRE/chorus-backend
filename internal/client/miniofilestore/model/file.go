@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
-	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore/raw-client"
 )
 
 func MinioObjectInfoToFile(info *miniorawclient.MinioObjectInfo) *filestore.File {

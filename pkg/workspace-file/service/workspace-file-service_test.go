@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
-	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/tests/unit"
 )
@@ -21,7 +21,7 @@ const (
 
 func createTestService() *WorkspaceFileService {
 	client := miniorawclient.NewTestClient()
-	fileStore, _ := minio.NewMinioFileStorage(client)
+	fileStore, _ := miniofilestore.NewMinioFileStorage(client)
 
 	storeConfigs := map[string]config.WorkspaceFileStore{
 		"test": {

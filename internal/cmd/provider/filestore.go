@@ -7,8 +7,8 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/diskfilestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
-	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
@@ -39,7 +39,7 @@ func ProvideFileStores() map[string]filestore.FileStore {
 					}
 				}
 
-				fileStore, err := minio.NewMinioFileStorage(minioClient)
+				fileStore, err := miniofilestore.NewMinioFileStorage(minioClient)
 				if err != nil {
 					logger.TechLog.Fatal(context.Background(), fmt.Sprintf("failed to create minio file store '%s': %v", fileStoreName, err))
 				}

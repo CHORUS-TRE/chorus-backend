@@ -1,4 +1,4 @@
-package minio
+package miniofilestore
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
-	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore/model"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 )
 
