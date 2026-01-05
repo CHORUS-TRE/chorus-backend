@@ -5,44 +5,29 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
 type WorkspaceFiler interface {
-	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.File, error)
-	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.File, error)
-	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error)
-	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error)
+	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
+	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error)
+	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error)
+	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error)
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
-	InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error)
-	UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error)
-	CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error)
+	InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error)
+	UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error)
+	CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*filestore.FilePart) (*filestore.File, error)
 	AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error
 }
 
-type WorkspaceFileStore interface {
-	StatFile(ctx context.Context, path string) (*model.File, error)
-	GetFile(ctx context.Context, path string) (*model.File, error)
-	ListFiles(ctx context.Context, path string) ([]*model.File, error)
-	CreateFile(ctx context.Context, file *model.File) (*model.File, error)
-	CreateDirectory(ctx context.Context, file *model.File) (*model.File, error)
-	MoveFile(ctx context.Context, oldPath string, newPath string) (*model.File, error)
-	DeleteFile(ctx context.Context, path string) error
-	DeleteDirectory(ctx context.Context, dirPath string) error
-	InitiateMultipartUpload(ctx context.Context, file *model.File) (*model.FileUploadInfo, error)
-	UploadPart(ctx context.Context, path string, uploadID string, part *model.FilePart) (*model.FilePart, error)
-	CompleteMultipartUpload(ctx context.Context, path string, uploadID string, parts []*model.FilePart) (*model.File, error)
-	AbortMultipartUpload(ctx context.Context, path string, uploadID string) error
-}
-
 type WorkspaceFileService struct {
-	fileStores   map[string]WorkspaceFileStore
+	fileStores   map[string]filestore.FileStore
 	storeConfigs map[string]config.WorkspaceFileStore
 }
 
-func NewWorkspaceFileService(fileStores map[string]WorkspaceFileStore, fileStoreConfigs map[string]config.WorkspaceFileStore) (*WorkspaceFileService, error) {
+func NewWorkspaceFileService(fileStores map[string]filestore.FileStore, fileStoreConfigs map[string]config.WorkspaceFileStore) (*WorkspaceFileService, error) {
 	// Validate store prefixes uniqueness
 	for storeName, storeCfg := range fileStoreConfigs {
 		for otherStoreName, otherStoreCfg := range fileStoreConfigs {
@@ -102,10 +87,10 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) 
 	return selectedStoreName, nil
 }
 
-func (s *WorkspaceFileService) listStores() []*model.File {
-	var stores []*model.File
+func (s *WorkspaceFileService) listStores() []*filestore.File {
+	var stores []*filestore.File
 	for storeName, storeCfg := range s.storeConfigs {
-		stores = append(stores, &model.File{
+		stores = append(stores, &filestore.File{
 			Path:        storeCfg.StorePrefix,
 			Name:        storeName,
 			IsDirectory: true,
@@ -114,7 +99,7 @@ func (s *WorkspaceFileService) listStores() []*model.File {
 	return stores
 }
 
-func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*model.File, error) {
+func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -131,7 +116,7 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 	return file, nil
 }
 
-func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*model.File, error) {
+func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	if filePath == "" || filePath == "/" {
 		return s.listStores(), nil
 	}
@@ -147,9 +132,9 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 		return nil, fmt.Errorf("unable to list workspace files at path %s: %w", filePath, err)
 	}
 
-	var files []*model.File
+	var files []*filestore.File
 	for _, f := range storeFiles {
-		files = append(files, &model.File{
+		files = append(files, &filestore.File{
 			Path:        s.fromStorePath(storeName, workspaceID, f.Path),
 			Name:        f.Name,
 			IsDirectory: f.IsDirectory,
@@ -162,7 +147,7 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 	return files, nil
 }
 
-func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *model.File) (*model.File, error) {
+func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(file.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -170,9 +155,9 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
 
-	var createdFile *model.File
+	var createdFile *filestore.File
 	if file.IsDirectory {
-		createdFile, err = s.fileStores[storeName].CreateDirectory(ctx, &model.File{
+		createdFile, err = s.fileStores[storeName].CreateDirectory(ctx, &filestore.File{
 			Path:        storePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -181,7 +166,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 			return nil, fmt.Errorf("unable to create workspace directory at path %s: %w", file.Path, err)
 		}
 	} else {
-		createdFile, err = s.fileStores[storeName].CreateFile(ctx, &model.File{
+		createdFile, err = s.fileStores[storeName].CreateFile(ctx, &filestore.File{
 			Path:        storePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -193,7 +178,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 		}
 	}
 
-	return &model.File{
+	return &filestore.File{
 		Path:        s.fromStorePath(storeName, workspaceID, createdFile.Path),
 		Name:        createdFile.Name,
 		IsDirectory: createdFile.IsDirectory,
@@ -203,7 +188,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}, nil
 }
 
-func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *model.File) (*model.File, error) {
+func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
 	oldStoreName, err := s.selectFileStore(oldPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store for old path: %w", err)
@@ -227,7 +212,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 		newStorePath := s.toStorePath(newStoreName, workspaceID, file.Path)
 
 		// Cross-store move
-		createdFile, err := s.fileStores[newStoreName].CreateFile(ctx, &model.File{
+		createdFile, err := s.fileStores[newStoreName].CreateFile(ctx, &filestore.File{
 			Path:        newStorePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -244,7 +229,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 			return nil, fmt.Errorf("unable to delete old workspace file at path %s: %w", oldPath, err)
 		}
 
-		return &model.File{
+		return &filestore.File{
 			Path:        s.fromStorePath(newStoreName, workspaceID, createdFile.Path),
 			Name:        createdFile.Name,
 			IsDirectory: createdFile.IsDirectory,
@@ -288,7 +273,7 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 	return nil
 }
 
-func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *model.File) (*model.FileUploadInfo, error) {
+func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -297,7 +282,7 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 	store := s.fileStores[storeName]
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
 
-	uploadInfo, err := store.InitiateMultipartUpload(ctx, &model.File{
+	uploadInfo, err := store.InitiateMultipartUpload(ctx, &filestore.File{
 		Path:        storePath,
 		Name:        file.Name,
 		IsDirectory: file.IsDirectory,
@@ -311,7 +296,7 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 	return uploadInfo, nil
 }
 
-func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *model.FilePart) (*model.FilePart, error) {
+func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)
@@ -328,7 +313,7 @@ func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, work
 	return uploadedPart, nil
 }
 
-func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*model.FilePart) (*model.File, error) {
+func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*filestore.FilePart) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to select file store: %w", err)

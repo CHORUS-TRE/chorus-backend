@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
-	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/minio/raw-client"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore"
+	miniorawclient "github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore/raw-client"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/tests/unit"
 )
@@ -21,17 +21,17 @@ const (
 
 func createTestService() *WorkspaceFileService {
 	client := miniorawclient.NewTestClient()
-	fileStore, _ := minio.NewMinioFileStorage(client)
+	fileStore, _ := miniofilestore.NewMinioFileStorage(client)
 
 	storeConfigs := map[string]config.WorkspaceFileStore{
 		"test": {
-			ClientName:      "test",
+			FileStoreName:   "test",
 			StorePrefix:     testStorePrefix,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}
 
-	fileStores := map[string]WorkspaceFileStore{
+	fileStores := map[string]filestore.FileStore{
 		"test": fileStore,
 	}
 
@@ -181,7 +181,7 @@ func TestFileLifecycle(t *testing.T) {
 	storage := s.fileStores[testStoreName]
 
 	// Create file
-	createdFile, err := storage.CreateFile(context.Background(), &model.File{
+	createdFile, err := storage.CreateFile(context.Background(), &filestore.File{
 		Path:    storePath,
 		Content: content,
 	})
@@ -231,14 +231,14 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	storage := s.fileStores[testStoreName]
 
 	// Create the file first time
-	_, err := storage.CreateFile(context.Background(), &model.File{
+	_, err := storage.CreateFile(context.Background(), &filestore.File{
 		Path:    storePath,
 		Content: content,
 	})
 	assert.NoError(t, err, "initial file creation should not error: %v", err)
 
 	// Attempt to create the same file again
-	_, err = storage.CreateFile(context.Background(), &model.File{
+	_, err = storage.CreateFile(context.Background(), &filestore.File{
 		Path:    storePath,
 		Content: content,
 	})
@@ -256,7 +256,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
 
 	// Create directory
-	_, err := storage.CreateDirectory(context.Background(), &model.File{
+	_, err := storage.CreateDirectory(context.Background(), &filestore.File{
 		Path:        storeDirPath,
 		IsDirectory: true,
 	})
@@ -277,7 +277,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 
 	// Create a file inside the directory
 	fileInDirPath := storeDirPath + "file.txt"
-	_, err = storage.CreateFile(context.Background(), &model.File{
+	_, err = storage.CreateFile(context.Background(), &filestore.File{
 		Path:    fileInDirPath,
 		Content: []byte("File inside directory"),
 	})
@@ -322,14 +322,14 @@ func TestCreateConflictingDirectory(t *testing.T) {
 	storeFilePath := s.toStorePath(testStoreName, workspaceID, globalFilePath)
 
 	// Create a file first
-	_, err := storage.CreateFile(context.Background(), &model.File{
+	_, err := storage.CreateFile(context.Background(), &filestore.File{
 		Path:    storeFilePath,
 		Content: []byte("This is a file"),
 	})
 	assert.NoError(t, err, "initial file creation should not error: %v", err)
 
 	// Attempt to create a directory with the same name
-	_, err = storage.CreateFile(context.Background(), &model.File{
+	_, err = storage.CreateFile(context.Background(), &filestore.File{
 		Path:        storeFilePath,
 		IsDirectory: true,
 	})
@@ -347,14 +347,14 @@ func TestCreateConflictingFile(t *testing.T) {
 	storage := s.fileStores[testStoreName]
 
 	// Create a directory first
-	_, err := storage.CreateDirectory(context.Background(), &model.File{
+	_, err := storage.CreateDirectory(context.Background(), &filestore.File{
 		Path:        storeDirPath,
 		IsDirectory: true,
 	})
 	assert.NoError(t, err, "initial directory creation should not error: %v", err)
 
 	// Attempt to create a file with the same name
-	_, err = storage.CreateFile(context.Background(), &model.File{
+	_, err = storage.CreateFile(context.Background(), &filestore.File{
 		Path:        storeDirPath,
 		IsDirectory: false,
 		Content:     []byte("This is a file"),
@@ -374,7 +374,7 @@ func TestFileUpload(t *testing.T) {
 	storage := s.fileStores[testStoreName]
 
 	// Initiate multipart upload
-	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &model.File{
+	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
 		Path:        storePath,
 		IsDirectory: false,
 		Size:        fileSize,
@@ -384,14 +384,14 @@ func TestFileUpload(t *testing.T) {
 
 	// Upload parts
 	partSize := uint64(uploadInfo.PartSize)
-	var parts []*model.FilePart
+	var parts []*filestore.FilePart
 	for partNumber := uint64(1); partNumber <= uploadInfo.TotalParts; partNumber++ {
 		partData := make([]byte, partSize)
 		if partNumber == uploadInfo.TotalParts {
 			lastPartSize := int(fileSize - (partNumber-1)*partSize)
 			partData = make([]byte, lastPartSize)
 		}
-		part, err := storage.UploadPart(context.Background(), storePath, uploadInfo.UploadID, &model.FilePart{
+		part, err := storage.UploadPart(context.Background(), storePath, uploadInfo.UploadID, &filestore.FilePart{
 			PartNumber: partNumber,
 			Data:       partData,
 		})
@@ -421,7 +421,7 @@ func TestAbortFileUpload(t *testing.T) {
 	storage := s.fileStores[testStoreName]
 
 	// Initiate multipart upload
-	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &model.File{
+	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
 		Path:        storePath,
 		IsDirectory: false,
 		Size:        5 * 1024 * 1024, // 5 MB file
@@ -497,7 +497,7 @@ func TestFileUploadPartSizeCalculation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &model.File{
+			uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
 				Path:        "/test-client/testfile.txt",
 				IsDirectory: false,
 				Size:        tt.fileSize,

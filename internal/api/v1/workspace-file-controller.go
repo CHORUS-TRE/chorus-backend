@@ -5,7 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/minio/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
@@ -176,7 +176,7 @@ func (c WorkspaceFileController) CompleteWorkspaceFileUpload(ctx context.Context
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	var parts []*model.FilePart
+	var parts []*filestore.FilePart
 	for _, tgPart := range req.Parts {
 		part, err := converter.WorkspaceFilePartToBusiness(tgPart)
 		if err != nil {

@@ -120,9 +120,8 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient              `yaml:"k8s_client,omitempty"`
-		DockerClient DockerClient           `yaml:"docker_client,omitempty"`
-		MinioClients map[string]MinioClient `yaml:"minio_clients,omitempty"`
+		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
+		DockerClient DockerClient `yaml:"docker_client,omitempty"`
 	}
 
 	K8sClient struct {
@@ -150,21 +149,6 @@ type (
 
 	DockerClient struct {
 		Enabled bool `yaml:"enabled,omitempty"`
-	}
-
-	MinioClient struct {
-		Enabled bool `yaml:"enabled"`
-
-		Endpoint        string    `yaml:"endpoint,omitempty"`
-		AccessKeyID     string    `yaml:"access_key_id,omitempty"`
-		SecretAccessKey Sensitive `yaml:"secret_access_key,omitempty"`
-
-		BucketName string `yaml:"bucket_name,omitempty"`
-		UseSSL     bool   `yaml:"use_ssl,omitempty"`
-
-		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size"`
-		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size"`
-		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts"`
 	}
 
 	ImagePullSecret struct {
@@ -218,6 +202,7 @@ type (
 	Storage struct {
 		Description string               `yaml:"description,omitempty"`
 		Datastores  map[string]Datastore `yaml:"datastores,omitempty"`
+		FileStores  map[string]FileStore `yaml:"file_stores,omitempty"`
 	}
 
 	Datastore struct {
@@ -236,6 +221,31 @@ type (
 			CertificateFile string `yaml:"certificate_file"`
 			KeyFile         string `yaml:"key_file"`
 		} `yaml:"ssl"`
+	}
+
+	FileStore struct {
+		Type        string               `yaml:"type"` // "minio" or "disk"
+		MinioConfig FileStoreMinioConfig `yaml:"minio_config,omitempty"`
+		DiskConfig  FileStoreDiskConfig  `yaml:"disk_config,omitempty"`
+	}
+
+	FileStoreMinioConfig struct {
+		Enabled bool `yaml:"enabled"`
+
+		Endpoint        string    `yaml:"endpoint,omitempty"`
+		AccessKeyID     string    `yaml:"access_key_id,omitempty"`
+		SecretAccessKey Sensitive `yaml:"secret_access_key,omitempty"`
+
+		BucketName string `yaml:"bucket_name,omitempty"`
+		UseSSL     bool   `yaml:"use_ssl,omitempty"`
+
+		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size"`
+		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size"`
+		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts"`
+	}
+
+	FileStoreDiskConfig struct {
+		BasePath string `yaml:"base_path"` // Base directory path for disk storage
 	}
 
 	Services struct {
@@ -323,8 +333,7 @@ type (
 	}
 
 	WorkspaceFileStore struct {
-		ClientType      string `yaml:"client_type"`
-		ClientName      string `yaml:"client_name"`
+		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
 		StorePrefix     string `yaml:"store_prefix,omitempty"`
 		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
 	}
