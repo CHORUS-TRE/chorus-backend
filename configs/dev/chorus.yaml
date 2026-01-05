@@ -40,6 +40,36 @@ storage:
         enabled: false
         certificate_file: /chorus/postgres-certs/client.crt
         key_file: /chorus/postgres-certs/client.key
+  file_stores:
+    archive:
+      type: minio
+      minio_config:
+        enabled: true
+        endpoint: localhost:9000
+        access_key_id: minioadmin
+        secret_access_key: minioadmin
+        bucket_name: chorus-data
+        use_ssl: false
+        multipart_min_part_size: 5242880 # 5MB
+        multipart_max_part_size: 5368709120 # 5GB
+        multipart_max_total_parts: 10000
+    scratch:
+      type: minio
+      minio_config:
+        enabled: true
+        endpoint: localhost:9000
+        access_key_id: minioadmin
+        secret_access_key: minioadmin
+        bucket_name: chorus-data
+        use_ssl: false
+        multipart_min_part_size: 5242880 # 5MB
+        multipart_max_part_size: 5368709120 # 5GB
+        multipart_max_total_parts: 10000
+    disk:
+      type: disk
+      disk_config:
+        enabled: true
+        base_path: docker/.diskfilestore
 
 services:
   index_service:
@@ -184,35 +214,22 @@ services:
   workspace_file_service:
     stores:
       archive:
-        client_type: minio
-        client_name: archive
+        file_store_name: archive
         store_prefix: /archive
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
       scratch:
-        client_type: minio
-        client_name: scratch
+        file_store_name: scratch
         store_prefix: /scratch
-        workspace_prefix: "workspaces/%s"
-
+        workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+      disk:
+        file_store_name: disk
+        store_prefix: /disk
+        workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+        
 # Client configurations added using the create-local-cluster.sh script
 # clients:
 #   docker_client:
 #     enabled: true
-#   minio_clients:
-#     archive:
-#       enabled: true
-#       endpoint: localhost:9000
-#       bucket_name: chorus-data
-#       access_key_id: minioadmin
-#       secret_access_key: minioadmin
-#       use_ssl: false
-#       multipart_min_part_size: 5242880 # 5MB
-#       multipart_max_part_size: 5368709120 # 5GB
-#       multipart_max_total_parts: 10000
-#   k8s_client:
-#     server_version: "6.2.3-2"
-#     kube_config: |
-#       ...  
 
 log:
   loggers:
