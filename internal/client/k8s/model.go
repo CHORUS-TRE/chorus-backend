@@ -15,7 +15,7 @@ const (
 )
 
 var appInstanceNameRegex = regexp.MustCompile("[^a-z0-9]+")
-var workbenchUsernameRegex = regexp.MustCompile(`[^a-z0-9_]`)
+var workbenchUsernameRegex = regexp.MustCompile("[^a-z0-9_]")
 
 // ----------------------------------------------------------------
 // Models and related methods

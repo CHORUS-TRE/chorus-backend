@@ -38,8 +38,8 @@ type K8sClienter interface {
 	DeleteWorkspace(namespace string) error
 
 	// Workbench operations
-	CreateWorkbench(workbench *Workbench) error
-	UpdateWorkbench(workbench *Workbench) error
+	CreateWorkbench(workbench Workbench) error
+	UpdateWorkbench(workbench Workbench) error
 	DeleteWorkbench(namespace, workbenchName string) error
 
 	// AppInstance operations
@@ -182,7 +182,7 @@ func (c *client) DeleteWorkspace(namespace string) error {
 // ----------------------------------------------------------------
 // Workbench operations
 // ----------------------------------------------------------------
-func (c *client) CreateWorkbench(workbench *Workbench) error {
+func (c *client) CreateWorkbench(workbench Workbench) error {
 	k8sWorkbench, err := c.workbenchToK8sWorkbench(workbench)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)
@@ -191,7 +191,7 @@ func (c *client) CreateWorkbench(workbench *Workbench) error {
 	return c.syncWorkbench(workbench.TenantID, k8sWorkbench, workbench.Namespace)
 }
 
-func (c *client) UpdateWorkbench(workbench *Workbench) error {
+func (c *client) UpdateWorkbench(workbench Workbench) error {
 	k8sWorkbench, err := c.workbenchToK8sWorkbench(workbench)
 	if err != nil {
 		return fmt.Errorf("error creating workbench: %w", err)

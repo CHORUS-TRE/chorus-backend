@@ -19,11 +19,11 @@ func (c *testClient) DeleteWorkspace(namespace string) error {
 }
 
 // Workbench operations
-func (c *testClient) CreateWorkbench(workbench *Workbench) error {
+func (c *testClient) CreateWorkbench(workbench Workbench) error {
 	return nil
 }
 
-func (c *testClient) UpdateWorkbench(workbench *Workbench) error {
+func (c *testClient) UpdateWorkbench(workbench Workbench) error {
 	return nil
 }
 

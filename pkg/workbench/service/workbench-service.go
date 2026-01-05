@@ -350,7 +350,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(&k8s.Workbench{
+		err = s.client.UpdateWorkbench(k8s.Workbench{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
 			Username:                username,
@@ -461,7 +461,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
-	err = s.client.CreateWorkbench(&k8s.Workbench{
+	err = s.client.CreateWorkbench(k8s.Workbench{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
 		Username:                username,
