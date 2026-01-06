@@ -72,36 +72,106 @@ func local_request_WorkbenchService_GetWorkbench_0(ctx context.Context, marshale
 	return msg, metadata, err
 }
 
-var filter_WorkbenchService_ListWorkbenchs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-
-func request_WorkbenchService_ListWorkbenchs_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_WorkbenchService_GetWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ListWorkbenchsRequest
+		protoReq GetWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.GetWorkbench(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_GetWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.GetWorkbench(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_WorkbenchService_ListWorkbenches_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_WorkbenchService_ListWorkbenches_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListWorkbenchesRequest
 		metadata runtime.ServerMetadata
 	)
 	io.Copy(io.Discard, req.Body)
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenchs_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenches_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := client.ListWorkbenchs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListWorkbenches(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_WorkbenchService_ListWorkbenchs_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_WorkbenchService_ListWorkbenches_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ListWorkbenchsRequest
+		protoReq ListWorkbenchesRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenchs_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenches_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	msg, err := server.ListWorkbenchs(ctx, &protoReq)
+	msg, err := server.ListWorkbenches(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+var filter_WorkbenchService_ListWorkbenches_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_WorkbenchService_ListWorkbenches_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListWorkbenchesRequest
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenches_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.ListWorkbenches(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_ListWorkbenches_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListWorkbenchesRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkbenchService_ListWorkbenches_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListWorkbenches(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -129,6 +199,30 @@ func local_request_WorkbenchService_CreateWorkbench_0(ctx context.Context, marsh
 	return msg, metadata, err
 }
 
+func request_WorkbenchService_CreateWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq Workbench
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.CreateWorkbench(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_CreateWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq Workbench
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.CreateWorkbench(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_WorkbenchService_UpdateWorkbench_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq Workbench
@@ -142,6 +236,30 @@ func request_WorkbenchService_UpdateWorkbench_0(ctx context.Context, marshaler r
 }
 
 func local_request_WorkbenchService_UpdateWorkbench_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq Workbench
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.UpdateWorkbench(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_WorkbenchService_UpdateWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq Workbench
+		metadata runtime.ServerMetadata
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.UpdateWorkbench(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_UpdateWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq Workbench
 		metadata runtime.ServerMetadata
@@ -183,6 +301,64 @@ func request_WorkbenchService_ManageUserRoleInWorkbench_0(ctx context.Context, m
 }
 
 func local_request_WorkbenchService_ManageUserRoleInWorkbench_0(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ManageUserRoleInWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	val, ok = pathParams["userId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "userId")
+	}
+	protoReq.UserId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "userId", err)
+	}
+	msg, err := server.ManageUserRoleInWorkbench(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_WorkbenchService_ManageUserRoleInWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ManageUserRoleInWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	val, ok = pathParams["userId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "userId")
+	}
+	protoReq.UserId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "userId", err)
+	}
+	msg, err := client.ManageUserRoleInWorkbench(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_ManageUserRoleInWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq ManageUserRoleInWorkbenchRequest
 		metadata runtime.ServerMetadata
@@ -264,6 +440,59 @@ func local_request_WorkbenchService_RemoveUserFromWorkbench_0(ctx context.Contex
 	return msg, metadata, err
 }
 
+func request_WorkbenchService_RemoveUserFromWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RemoveUserFromWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	val, ok = pathParams["userId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "userId")
+	}
+	protoReq.UserId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "userId", err)
+	}
+	msg, err := client.RemoveUserFromWorkbench(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_RemoveUserFromWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq RemoveUserFromWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	val, ok = pathParams["userId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "userId")
+	}
+	protoReq.UserId, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "userId", err)
+	}
+	msg, err := server.RemoveUserFromWorkbench(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_WorkbenchService_DeleteWorkbench_0(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq DeleteWorkbenchRequest
@@ -301,6 +530,43 @@ func local_request_WorkbenchService_DeleteWorkbench_0(ctx context.Context, marsh
 	return msg, metadata, err
 }
 
+func request_WorkbenchService_DeleteWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, client WorkbenchServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq DeleteWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.DeleteWorkbench(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkbenchService_DeleteWorkbench_1(ctx context.Context, marshaler runtime.Marshaler, server WorkbenchServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq DeleteWorkbenchRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.DeleteWorkbench(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterWorkbenchServiceHandlerServer registers the http handlers for service WorkbenchService to "mux".
 // UnaryRPC     :call WorkbenchServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -313,7 +579,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -327,25 +593,65 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_GetWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_WorkbenchService_ListWorkbenchs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_WorkbenchService_GetWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenchs", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_WorkbenchService_ListWorkbenchs_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_WorkbenchService_GetWorkbench_1(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_WorkbenchService_ListWorkbenchs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkbenchService_GetWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_WorkbenchService_ListWorkbenches_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenches", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_ListWorkbenches_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_ListWorkbenches_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_WorkbenchService_ListWorkbenches_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenches", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_ListWorkbenches_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_ListWorkbenches_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_WorkbenchService_CreateWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -353,7 +659,7 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -367,13 +673,33 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_CreateWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_WorkbenchService_CreateWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_CreateWorkbench_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_CreateWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPut, pattern_WorkbenchService_UpdateWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -387,13 +713,33 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_UpdateWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPut, pattern_WorkbenchService_UpdateWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_UpdateWorkbench_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_UpdateWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_WorkbenchService_ManageUserRoleInWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ManageUserRoleInWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}/role"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ManageUserRoleInWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}/user/{userId}/role"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -407,13 +753,33 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_ManageUserRoleInWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_WorkbenchService_ManageUserRoleInWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/ManageUserRoleInWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}/role"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_ManageUserRoleInWorkbench_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_ManageUserRoleInWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodDelete, pattern_WorkbenchService_RemoveUserFromWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/RemoveUserFromWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/RemoveUserFromWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}/user/{userId}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -427,13 +793,33 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_RemoveUserFromWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodDelete, pattern_WorkbenchService_RemoveUserFromWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/RemoveUserFromWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_RemoveUserFromWorkbench_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_RemoveUserFromWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodDelete, pattern_WorkbenchService_DeleteWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -446,6 +832,26 @@ func RegisterWorkbenchServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 			return
 		}
 		forward_WorkbenchService_DeleteWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_WorkbenchService_DeleteWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkbenchService_DeleteWorkbench_1(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_DeleteWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -491,7 +897,7 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -504,28 +910,62 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_GetWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_WorkbenchService_ListWorkbenchs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodGet, pattern_WorkbenchService_GetWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenchs", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/GetWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_WorkbenchService_ListWorkbenchs_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_WorkbenchService_GetWorkbench_1(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_WorkbenchService_ListWorkbenchs_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkbenchService_GetWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_WorkbenchService_ListWorkbenches_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenches", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_ListWorkbenches_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_ListWorkbenches_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_WorkbenchService_ListWorkbenches_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ListWorkbenches", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_ListWorkbenches_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_ListWorkbenches_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodPost, pattern_WorkbenchService_CreateWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -538,11 +978,28 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_CreateWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_WorkbenchService_CreateWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/CreateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_CreateWorkbench_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_CreateWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPut, pattern_WorkbenchService_UpdateWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -555,11 +1012,28 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_UpdateWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPut, pattern_WorkbenchService_UpdateWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/UpdateWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_UpdateWorkbench_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_UpdateWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_WorkbenchService_ManageUserRoleInWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ManageUserRoleInWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}/role"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ManageUserRoleInWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}/user/{userId}/role"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -572,11 +1046,28 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_ManageUserRoleInWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_WorkbenchService_ManageUserRoleInWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/ManageUserRoleInWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}/role"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_ManageUserRoleInWorkbench_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_ManageUserRoleInWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodDelete, pattern_WorkbenchService_RemoveUserFromWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/RemoveUserFromWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/RemoveUserFromWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}/user/{userId}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -589,11 +1080,28 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_RemoveUserFromWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodDelete, pattern_WorkbenchService_RemoveUserFromWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/RemoveUserFromWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}/user/{userId}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_RemoveUserFromWorkbench_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_RemoveUserFromWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodDelete, pattern_WorkbenchService_DeleteWorkbench_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenches/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -606,25 +1114,56 @@ func RegisterWorkbenchServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkbenchService_DeleteWorkbench_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodDelete, pattern_WorkbenchService_DeleteWorkbench_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkbenchService/DeleteWorkbench", runtime.WithHTTPPathPattern("/api/rest/v1/workbenchs/{id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkbenchService_DeleteWorkbench_1(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkbenchService_DeleteWorkbench_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_WorkbenchService_GetWorkbench_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenchs", "id"}, ""))
-	pattern_WorkbenchService_ListWorkbenchs_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
-	pattern_WorkbenchService_CreateWorkbench_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
-	pattern_WorkbenchService_UpdateWorkbench_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
-	pattern_WorkbenchService_ManageUserRoleInWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "rest", "v1", "workbenchs", "id", "user", "userId", "role"}, ""))
-	pattern_WorkbenchService_RemoveUserFromWorkbench_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workbenchs", "id", "user", "userId"}, ""))
-	pattern_WorkbenchService_DeleteWorkbench_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenchs", "id"}, ""))
+	pattern_WorkbenchService_GetWorkbench_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenches", "id"}, ""))
+	pattern_WorkbenchService_GetWorkbench_1              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenchs", "id"}, ""))
+	pattern_WorkbenchService_ListWorkbenches_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenches"}, ""))
+	pattern_WorkbenchService_ListWorkbenches_1           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
+	pattern_WorkbenchService_CreateWorkbench_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenches"}, ""))
+	pattern_WorkbenchService_CreateWorkbench_1           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
+	pattern_WorkbenchService_UpdateWorkbench_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenches"}, ""))
+	pattern_WorkbenchService_UpdateWorkbench_1           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workbenchs"}, ""))
+	pattern_WorkbenchService_ManageUserRoleInWorkbench_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "rest", "v1", "workbenches", "id", "user", "userId", "role"}, ""))
+	pattern_WorkbenchService_ManageUserRoleInWorkbench_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "rest", "v1", "workbenchs", "id", "user", "userId", "role"}, ""))
+	pattern_WorkbenchService_RemoveUserFromWorkbench_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workbenches", "id", "user", "userId"}, ""))
+	pattern_WorkbenchService_RemoveUserFromWorkbench_1   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workbenchs", "id", "user", "userId"}, ""))
+	pattern_WorkbenchService_DeleteWorkbench_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenches", "id"}, ""))
+	pattern_WorkbenchService_DeleteWorkbench_1           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workbenchs", "id"}, ""))
 )
 
 var (
 	forward_WorkbenchService_GetWorkbench_0              = runtime.ForwardResponseMessage
-	forward_WorkbenchService_ListWorkbenchs_0            = runtime.ForwardResponseMessage
+	forward_WorkbenchService_GetWorkbench_1              = runtime.ForwardResponseMessage
+	forward_WorkbenchService_ListWorkbenches_0           = runtime.ForwardResponseMessage
+	forward_WorkbenchService_ListWorkbenches_1           = runtime.ForwardResponseMessage
 	forward_WorkbenchService_CreateWorkbench_0           = runtime.ForwardResponseMessage
+	forward_WorkbenchService_CreateWorkbench_1           = runtime.ForwardResponseMessage
 	forward_WorkbenchService_UpdateWorkbench_0           = runtime.ForwardResponseMessage
+	forward_WorkbenchService_UpdateWorkbench_1           = runtime.ForwardResponseMessage
 	forward_WorkbenchService_ManageUserRoleInWorkbench_0 = runtime.ForwardResponseMessage
+	forward_WorkbenchService_ManageUserRoleInWorkbench_1 = runtime.ForwardResponseMessage
 	forward_WorkbenchService_RemoveUserFromWorkbench_0   = runtime.ForwardResponseMessage
+	forward_WorkbenchService_RemoveUserFromWorkbench_1   = runtime.ForwardResponseMessage
 	forward_WorkbenchService_DeleteWorkbench_0           = runtime.ForwardResponseMessage
+	forward_WorkbenchService_DeleteWorkbench_1           = runtime.ForwardResponseMessage
 )

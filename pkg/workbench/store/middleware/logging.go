@@ -26,12 +26,12 @@ func Logging(logger *logger.ContextLogger) func(service.WorkbenchStore) service.
 	}
 }
 
-func (c workbenchStorageLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (c workbenchStorageLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, paginationRes, err := c.next.ListWorkbenchs(ctx, tenantID, pagination, workspaceIDsIn)
+	res, paginationRes, err := c.next.ListWorkbenches(ctx, tenantID, pagination, workspaceIDsIn)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -68,12 +68,12 @@ func (c workbenchStorageLogging) ListWorkbenchAppInstances(ctx context.Context, 
 	return res, nil
 }
 
-func (c workbenchStorageLogging) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
+func (c workbenchStorageLogging) DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, err := c.next.DeleteIdleWorkbenchs(ctx, idleTimeout)
+	res, err := c.next.DeleteIdleWorkbenches(ctx, idleTimeout)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -171,11 +171,11 @@ func (c workbenchStorageLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
-func (c workbenchStorageLogging) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+func (c workbenchStorageLogging) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 
-	err := c.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	err := c.next.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

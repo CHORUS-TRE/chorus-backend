@@ -34,7 +34,7 @@ type Workspaceer interface {
 }
 
 type Workbencher interface {
-	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 }
 
 type WorkspaceStore interface {
@@ -155,9 +155,9 @@ func (s *WorkspaceService) GetWorkspace(ctx context.Context, tenantID, workspace
 }
 
 func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
-	err := s.workbencher.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	err := s.workbencher.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
-		return fmt.Errorf("unable to delete workbenchs in workspace %v: %w", workspaceID, err)
+		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
 	}
 
 	err = s.store.DeleteWorkspace(ctx, tenantID, workspaceID)

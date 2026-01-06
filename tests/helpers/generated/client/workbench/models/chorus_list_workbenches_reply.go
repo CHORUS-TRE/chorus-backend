@@ -13,20 +13,20 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusListWorkbenchsReply chorus list workbenchs reply
+// ChorusListWorkbenchesReply chorus list workbenches reply
 //
-// swagger:model chorusListWorkbenchsReply
-type ChorusListWorkbenchsReply struct {
+// swagger:model chorusListWorkbenchesReply
+type ChorusListWorkbenchesReply struct {
 
 	// pagination
 	Pagination *ChorusPaginationResult `json:"pagination,omitempty"`
 
 	// result
-	Result *ChorusListWorkbenchsResult `json:"result,omitempty"`
+	Result *ChorusListWorkbenchesResult `json:"result,omitempty"`
 }
 
-// Validate validates this chorus list workbenchs reply
-func (m *ChorusListWorkbenchsReply) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus list workbenches reply
+func (m *ChorusListWorkbenchesReply) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validatePagination(formats); err != nil {
@@ -43,7 +43,7 @@ func (m *ChorusListWorkbenchsReply) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusListWorkbenchsReply) validatePagination(formats strfmt.Registry) error {
+func (m *ChorusListWorkbenchesReply) validatePagination(formats strfmt.Registry) error {
 	if swag.IsZero(m.Pagination) { // not required
 		return nil
 	}
@@ -62,7 +62,7 @@ func (m *ChorusListWorkbenchsReply) validatePagination(formats strfmt.Registry) 
 	return nil
 }
 
-func (m *ChorusListWorkbenchsReply) validateResult(formats strfmt.Registry) error {
+func (m *ChorusListWorkbenchesReply) validateResult(formats strfmt.Registry) error {
 	if swag.IsZero(m.Result) { // not required
 		return nil
 	}
@@ -81,8 +81,8 @@ func (m *ChorusListWorkbenchsReply) validateResult(formats strfmt.Registry) erro
 	return nil
 }
 
-// ContextValidate validate this chorus list workbenchs reply based on the context it is used
-func (m *ChorusListWorkbenchsReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus list workbenches reply based on the context it is used
+func (m *ChorusListWorkbenchesReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidatePagination(ctx, formats); err != nil {
@@ -99,7 +99,7 @@ func (m *ChorusListWorkbenchsReply) ContextValidate(ctx context.Context, formats
 	return nil
 }
 
-func (m *ChorusListWorkbenchsReply) contextValidatePagination(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusListWorkbenchesReply) contextValidatePagination(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Pagination != nil {
 
@@ -120,7 +120,7 @@ func (m *ChorusListWorkbenchsReply) contextValidatePagination(ctx context.Contex
 	return nil
 }
 
-func (m *ChorusListWorkbenchsReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusListWorkbenchesReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Result != nil {
 
@@ -142,7 +142,7 @@ func (m *ChorusListWorkbenchsReply) contextValidateResult(ctx context.Context, f
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusListWorkbenchsReply) MarshalBinary() ([]byte, error) {
+func (m *ChorusListWorkbenchesReply) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -150,8 +150,8 @@ func (m *ChorusListWorkbenchsReply) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusListWorkbenchsReply) UnmarshalBinary(b []byte) error {
-	var res ChorusListWorkbenchsReply
+func (m *ChorusListWorkbenchesReply) UnmarshalBinary(b []byte) error {
+	var res ChorusListWorkbenchesReply
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

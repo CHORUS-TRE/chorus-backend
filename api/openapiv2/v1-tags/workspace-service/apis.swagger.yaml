@@ -374,7 +374,7 @@ definitions:
         type: string
       isMain:
         type: boolean
-      appInsanceIds:
+      appInstanceIds:
         type: array
         items:
           type: string

@@ -26,11 +26,11 @@ func Validation(validate *val.Validate) func(service.Workbencher) service.Workbe
 	}
 }
 
-func (v validation) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (v validation) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, err
 	}
-	return v.next.ListWorkbenchs(ctx, tenantID, pagination, filter)
+	return v.next.ListWorkbenches(ctx, tenantID, pagination, filter)
 }
 func (v validation) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	return v.next.ProxyWorkbench(ctx, tenantID, workbenchID, w, r)
@@ -44,8 +44,8 @@ func (v validation) DeleteWorkbench(ctx context.Context, tenantID, workbenchID u
 	return v.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
-func (v validation) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
-	return v.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+func (v validation) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
+	return v.next.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 }
 
 func (v validation) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {

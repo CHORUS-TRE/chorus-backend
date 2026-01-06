@@ -29,20 +29,20 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, paginationRes, err := c.next.ListWorkbenchs(ctx, tenantID, pagination, filter)
+	res, paginationRes, err := c.next.ListWorkbenches(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to get workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to get workbenches: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
-		zap.Int("num_workbenchs", len(res)),
+		zap.Int("num_workbenches", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return res, paginationRes, nil
@@ -57,7 +57,7 @@ func (c workbenchServiceLogging) ProxyWorkbench(ctx context.Context, tenantID, w
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to proxy workbenchs: %w", err)
+		return fmt.Errorf("unable to proxy workbenches: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -107,17 +107,17 @@ func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 	return nil
 }
 
-func (c workbenchServiceLogging) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
+func (c workbenchServiceLogging) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
 	now := time.Now()
 
-	err := c.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+	err := c.next.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			logger.WithWorkspaceIDField(workspaceID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete workbenchs in workspace %v: %w", workspaceID, err)
+		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,

@@ -15,16 +15,16 @@ consumes:
 produces:
   - application/json
 paths:
-  /api/rest/v1/workbenchs:
+  /api/rest/v1/workbenches:
     get:
-      summary: List workbenchs
-      description: This endpoint returns a list of workbenchs
-      operationId: WorkbenchService_ListWorkbenchs
+      summary: List workbenches
+      description: This endpoint returns a list of workbenches
+      operationId: WorkbenchService_ListWorkbenches
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListWorkbenchsReply'
+            $ref: '#/definitions/chorusListWorkbenchesReply'
         default:
           description: An unexpected error response.
           schema:
@@ -113,7 +113,7 @@ paths:
             $ref: '#/definitions/chorusWorkbench'
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}:
+  /api/rest/v1/workbenches/{id}:
     get:
       summary: Get a workbench
       description: This endpoint returns a workbench
@@ -156,7 +156,7 @@ paths:
           format: uint64
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}/user/{userId}:
+  /api/rest/v1/workbenches/{id}/user/{userId}:
     delete:
       summary: Remove a user from a workbench
       description: This endpoint removes a user from a workbench
@@ -183,11 +183,211 @@ paths:
           format: uint64
       tags:
         - WorkbenchService
-  /api/rest/v1/workbenchs/{id}/user/{userId}/role:
+  /api/rest/v1/workbenches/{id}/user/{userId}/role:
     post:
       summary: Manage a user's role in a workbench
       description: This endpoint manages a user's role in a workbench
       operationId: WorkbenchService_ManageUserRoleInWorkbench
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/WorkbenchServiceManageUserRoleInWorkbenchBody'
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs:
+    get:
+      summary: List workbenches
+      description: This endpoint returns a list of workbenches
+      operationId: WorkbenchService_ListWorkbenches2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkbenchesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.workspaceIdsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+      tags:
+        - WorkbenchService
+    post:
+      summary: Create a workbench
+      description: This endpoint creates a workbench
+      operationId: WorkbenchService_CreateWorkbench2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkbench'
+      tags:
+        - WorkbenchService
+    put:
+      summary: Update a workbench
+      description: This endpoint updates a workbench
+      operationId: WorkbenchService_UpdateWorkbench2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkbench'
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}:
+    get:
+      summary: Get a workbench
+      description: This endpoint returns a workbench
+      operationId: WorkbenchService_GetWorkbench2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
+    delete:
+      summary: Delete a workbench
+      description: This endpoint deletes a workbench
+      operationId: WorkbenchService_DeleteWorkbench2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/user/{userId}:
+    delete:
+      summary: Remove a user from a workbench
+      description: This endpoint removes a user from a workbench
+      operationId: WorkbenchService_RemoveUserFromWorkbench2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusRemoveUserFromWorkbenchReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkbenchService
+  /api/rest/v1/workbenchs/{id}/user/{userId}/role:
+    post:
+      summary: Manage a user's role in a workbench
+      description: This endpoint manages a user's role in a workbench
+      operationId: WorkbenchService_ManageUserRoleInWorkbench2
       responses:
         "200":
           description: A successful response.
@@ -248,17 +448,17 @@ definitions:
     properties:
       workbench:
         $ref: '#/definitions/chorusWorkbench'
-  chorusListWorkbenchsReply:
+  chorusListWorkbenchesReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/chorusListWorkbenchsResult'
+        $ref: '#/definitions/chorusListWorkbenchesResult'
       pagination:
         $ref: '#/definitions/chorusPaginationResult'
-  chorusListWorkbenchsResult:
+  chorusListWorkbenchesResult:
     type: object
     properties:
-      workbenchs:
+      workbenches:
         type: array
         items:
           type: object

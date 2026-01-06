@@ -98,8 +98,8 @@ func (c WorkbenchController) DeleteWorkbench(ctx context.Context, req *chorus.De
 	return &chorus.DeleteWorkbenchReply{Result: &chorus.DeleteWorkbenchResult{}}, nil
 }
 
-// ListWorkbenchs extracts the retrieved workbenchs from the service and inserts them into a reply object.
-func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.ListWorkbenchsRequest) (*chorus.ListWorkbenchsReply, error) {
+// ListWorkbenches extracts the retrieved workbenches from the service and inserts them into a reply object.
+func (c WorkbenchController) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -116,18 +116,18 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
 	}
 
-	res, paginationRes, err := c.workbench.ListWorkbenchs(ctx, tenantID, &pagination, filter)
+	res, paginationRes, err := c.workbench.ListWorkbenches(ctx, tenantID, &pagination, filter)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenchs': %v", err.Error())
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenches': %v", err.Error())
 	}
 
-	var workbenchs []*chorus.Workbench
+	var workbenches []*chorus.Workbench
 	for _, r := range res {
 		workbench, err := converter.WorkbenchFromBusiness(r)
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 		}
-		workbenchs = append(workbenchs, workbench)
+		workbenches = append(workbenches, workbench)
 	}
 
 	var paginationResult *chorus.PaginationResult
@@ -135,7 +135,7 @@ func (c WorkbenchController) ListWorkbenchs(ctx context.Context, req *chorus.Lis
 		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
 	}
 
-	return &chorus.ListWorkbenchsReply{Result: &chorus.ListWorkbenchsResult{Workbenchs: workbenchs}, Pagination: paginationResult}, nil
+	return &chorus.ListWorkbenchesReply{Result: &chorus.ListWorkbenchesResult{Workbenches: workbenches}, Pagination: paginationResult}, nil
 }
 
 // CreateWorkbench extracts the workbench from the request and passes it to the workbench service.
