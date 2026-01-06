@@ -1,5 +1,5 @@
 image:
-  repository: harbor.int.chorus-tre.ch/backend-master
+  repository: harbor.int.chorus-tre.ch/backend-master/backend
   tag: latest
   imagePullPolicy: Always
 
