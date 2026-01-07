@@ -12,7 +12,7 @@ import (
 	authentication "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/authentication/client/authentication_service"
 	models "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/authentication/models"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/pquerna/otp/totp"
 )

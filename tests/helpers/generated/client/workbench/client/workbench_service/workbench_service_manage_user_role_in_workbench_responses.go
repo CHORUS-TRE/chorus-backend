@@ -88,12 +88,12 @@ func (o *WorkbenchServiceManageUserRoleInWorkbenchOK) Code() int {
 
 func (o *WorkbenchServiceManageUserRoleInWorkbenchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role][%d] workbenchServiceManageUserRoleInWorkbenchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workbenches/{id}/user/{userId}/role][%d] workbenchServiceManageUserRoleInWorkbenchOK %s", 200, payload)
 }
 
 func (o *WorkbenchServiceManageUserRoleInWorkbenchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role][%d] workbenchServiceManageUserRoleInWorkbenchOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workbenches/{id}/user/{userId}/role][%d] workbenchServiceManageUserRoleInWorkbenchOK %s", 200, payload)
 }
 
 func (o *WorkbenchServiceManageUserRoleInWorkbenchOK) GetPayload() *models.ChorusManageUserRoleInWorkbenchReply {
@@ -162,12 +162,12 @@ func (o *WorkbenchServiceManageUserRoleInWorkbenchDefault) Code() int {
 
 func (o *WorkbenchServiceManageUserRoleInWorkbenchDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role][%d] WorkbenchService_ManageUserRoleInWorkbench default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workbenches/{id}/user/{userId}/role][%d] WorkbenchService_ManageUserRoleInWorkbench default %s", o._statusCode, payload)
 }
 
 func (o *WorkbenchServiceManageUserRoleInWorkbenchDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role][%d] WorkbenchService_ManageUserRoleInWorkbench default %s", o._statusCode, payload)
+	return fmt.Sprintf("[POST /api/rest/v1/workbenches/{id}/user/{userId}/role][%d] WorkbenchService_ManageUserRoleInWorkbench default %s", o._statusCode, payload)
 }
 
 func (o *WorkbenchServiceManageUserRoleInWorkbenchDefault) GetPayload() *models.RPCStatus {

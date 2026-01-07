@@ -1,5 +1,5 @@
 image:
-  repository: harbor.exodev.chorus-tre.ch/chorus/backend
+  repository: harbor.exodev.chorus-tre.ch/backend-master/backend
   tag: latest
   imagePullPolicy: Always
 
@@ -73,6 +73,31 @@ config:
           enabled: false
           certificate_file: ""
           key_file: ""
+    file_stores:
+      archive:
+        type: minio
+        minio_config:
+          enabled: true
+          endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+          access_key_id: ""
+          secret_access_key: "" # set in secret
+          bucket_name: chorus-data
+          use_ssl: false
+          multipart_min_part_size: 5242880 # 5MB
+          multipart_max_part_size: 5368709120 # 5GB
+          multipart_max_total_parts: 10000
+      scratch:
+        type: minio
+        minio_config:
+          enabled: true
+          endpoint: s3.exodev.chorus-tre.ch:443
+          bucket_name: nfs
+          access_key_id: ""  # set in secret
+          secret_access_key: "" # set in secret
+          use_ssl: true
+          multipart_min_part_size: 5242880 # 5MB
+          multipart_max_part_size: 5368709120 # 5GB
+          multipart_max_total_parts: 10000
 
   services:
     index_service:
@@ -172,40 +197,17 @@ config:
     workspace_file_service:
       stores:
         archive:
-          client_type: minio
-          client_name: s3
+          file_store_name: archive
           store_prefix: /workspace-archive
           workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
         scratch:
-          client_type: minio
-          client_name: nfs
+          file_store_name: scratch
           store_prefix: /workspace-scratch
           workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
 
   clients:
     docker_client:
       enabled: true
-    minio_clients:
-      s3:
-        enabled: true
-        endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-        access_key_id: ""
-        secret_access_key: "" # set in secret
-        bucket_name: chorus-data
-        use_ssl: false
-        multipart_min_part_size: 5242880 # 5MB
-        multipart_max_part_size: 5368709120 # 5GB
-        multipart_max_total_parts: 10000
-      nfs:
-        enabled: true
-        endpoint: s3.exodev.chorus-tre.ch:443
-        bucket_name: nfs
-        access_key_id: ""  # set in secret
-        secret_access_key: "" # set in secret
-        use_ssl: true
-        multipart_min_part_size: 5242880 # 5MB
-        multipart_max_part_size: 5368709120 # 5GB
-        multipart_max_total_parts: 10000
     k8s_client:
       enabled: true
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"

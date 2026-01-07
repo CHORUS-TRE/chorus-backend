@@ -6,7 +6,7 @@ fullnameOverride: ""
 nameOverride: ""
 
 image:
-  repository: harbor.build.chorus-tre.ch/chorus/backend
+  repository: harbor.build.chorus-tre.ch/backend-acceptance/backend
   tag: ""
   imagePullPolicy: IfNotPresent
 
@@ -200,6 +200,16 @@ config:
           enabled: false
           certificate_file: ""
           key_file: ""
+    file_stores:
+      archive:
+        type: minio
+        minio_config:
+          enabled: false
+          endpoint: ""
+          access_key_id: ""
+          secret_access_key: "" # set in secret
+          bucket_name: ""
+          use_ssl: false
 
   services:
     index_service:
@@ -283,14 +293,6 @@ config:
   clients:
     docker_client:
       enabled: false
-    minio_clients:
-      s3:
-        enabled: false
-        endpoint: ""
-        access_key_id: ""
-        secret_access_key: "" # set in secret
-        bucket_name: ""
-        use_ssl: false
     k8s_client:
       enabled: false
       sa_secret_path: ""

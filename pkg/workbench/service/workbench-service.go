@@ -24,6 +24,7 @@ import (
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
@@ -43,18 +44,22 @@ var (
 	_ = prometheus.DefaultRegisterer.Register(workbenchProxyRequest)
 )
 
+type NotificationStore interface {
+	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
+}
+
 type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
 }
 
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
-	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
 	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
@@ -68,15 +73,15 @@ type Workbencher interface {
 
 type WorkbenchStore interface {
 	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error)
 	ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error)
 	ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error)
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
-	DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
-	DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
+	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
@@ -103,9 +108,10 @@ type WorkbenchService struct {
 	store  WorkbenchStore
 	client k8s.K8sClienter
 
-	apper         app_service.Apper
-	userer        user_service.Userer
-	authenticator authentication_service.Authenticator
+	apper             app_service.Apper
+	userer            user_service.Userer
+	authenticator     authentication_service.Authenticator
+	notificationStore NotificationStore
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
@@ -114,15 +120,16 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
 		client: client,
 
-		apper:         apper,
-		userer:        userer,
-		authenticator: authenticator,
+		apper:             apper,
+		userer:            userer,
+		authenticator:     authenticator,
+		notificationStore: notificationStore,
 
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),
@@ -130,7 +137,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 	}
 
 	go func() {
-		s.updateAllWorkbenchs(context.Background())
+		s.updateAllWorkbenches(context.Background())
 	}()
 
 	go func() {
@@ -151,7 +158,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 			time.Sleep(jitter)
 
 			for {
-				s.cleanIdleWorkbenchs(context.Background())
+				s.cleanIdleWorkbenches(context.Background())
 				time.Sleep(interval)
 			}
 		}()
@@ -204,8 +211,8 @@ func (s *WorkbenchService) SetClientWatchers() {
 			appInstance := &model.AppInstance{
 				ID: app.ID,
 
-				Status:    k8sState.ToStatus(),
-				K8sState:  k8sState,
+				Status:    k8sState.ToAppInstanceStatus(),
+				K8sState:  k8sState, // TODO: THE STATE SHOULD COME FROM DATABASE
 				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
 			}
 
@@ -241,18 +248,18 @@ func (s *WorkbenchService) SetClientWatchers() {
 		return nil
 	}
 
-	s.client.WatchOnNewWorkbench(watcher)
-	s.client.WatchOnUpdateWorkbench(watcher)
+	s.client.RegisterOnNewWorkbenchHandler(watcher)
+	s.client.RegisterOnUpdateWorkbenchHandler(watcher)
 }
 
-func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.ListAllWorkbenches(ctx)
+func (s *WorkbenchService) updateAllWorkbenches(ctx context.Context) {
+	workbenches, err := s.store.ListAllWorkbenches(ctx)
 	if err != nil {
-		logger.TechLog.Error(ctx, "unable to query workbenchs", zap.Error(err))
+		logger.TechLog.Error(ctx, "unable to query workbenches", zap.Error(err))
 		return
 	}
 
-	for _, workbench := range workbenchs {
+	for _, workbench := range workbenches {
 		go func(workbench *model.Workbench) {
 			logger.TechLog.Debug(ctx, "syncing workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
 			err := s.syncWorkbench(ctx, workbench)
@@ -263,14 +270,14 @@ func (s *WorkbenchService) updateAllWorkbenchs(ctx context.Context) {
 	}
 }
 
-func (s *WorkbenchService) cleanIdleWorkbenchs(ctx context.Context) {
-	workbenchs, err := s.store.DeleteIdleWorkbenchs(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
+func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
+	workbenches, err := s.store.DeleteIdleWorkbenches(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
 	if err != nil {
-		logger.TechLog.Error(ctx, "unable to query idle workbenchs", zap.Error(err))
+		logger.TechLog.Error(ctx, "unable to query idle workbenches", zap.Error(err))
 		return
 	}
 
-	for _, workbench := range workbenchs {
+	for _, workbench := range workbenches {
 		go func(workbench *model.Workbench) {
 			logger.TechLog.Debug(ctx, "cleaning idle workbench", zap.Uint64("workbenchID", workbench.ID), zap.String("status", string(workbench.Status)), zap.Any("workbench", workbench))
 			// err := s.syncWorkbench(ctx, workbench)
@@ -299,7 +306,8 @@ func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, wo
 }
 
 func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.Workbench) error {
-	if workbench.Status == model.WorkbenchActive {
+	switch workbench.Status {
+	case model.WorkbenchActive:
 
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
 		if err != nil {
@@ -315,6 +323,8 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
 				AppImage:    utils.ToString(app.AppDockerImageName),
 				AppTag:      utils.ToString(app.AppDockerImageTag),
+
+				// K8sState: string(app.K8sState), // TODO: ADD THIS FIELD AND USE IT IN K8S CLIENT
 
 				ShmSize:             utils.ToString(app.AppShmSize),
 				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
@@ -340,7 +350,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
-		err = s.client.UpdateWorkbench(k8s.MakeWorkbenchRequest{
+		err = s.client.UpdateWorkbench(k8s.Workbench{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
 			Username:                username,
@@ -356,7 +366,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 		}
 
 		return nil
-	} else if workbench.Status == model.WorkbenchDeleted {
+	case model.WorkbenchDeleted:
 		err := s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID))
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to delete workbench", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
@@ -371,12 +381,12 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
-	workbenchs, paginationRes, err := s.store.ListWorkbenchs(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
+func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+	workbenches, paginationRes, err := s.store.ListWorkbenches(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to query workbenchs: %w", err)
+		return nil, nil, fmt.Errorf("unable to query workbenches: %w", err)
 	}
-	return workbenchs, paginationRes, nil
+	return workbenches, paginationRes, nil
 }
 
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
@@ -407,8 +417,8 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 	return nil
 }
 
-func (s *WorkbenchService) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
-	err := s.store.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+func (s *WorkbenchService) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	err := s.store.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
 	}
@@ -434,7 +444,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	r := authorization_model.NewRole(authorization_model.RoleWorkbenchAdmin,
 		authorization_model.WithWorkbench(newWorkbench.ID),
 		authorization_model.WithWorkspace(newWorkbench.WorkspaceID))
-	err = s.userer.CreateUserRoles(ctx, workbench.UserID, []user_model.UserRole{{Role: r}})
+	err = s.userer.CreateUserRoles(ctx, workbench.TenantID, workbench.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", workbench.UserID, newWorkbench.ID, err)
 	}
@@ -451,7 +461,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
-	err = s.client.CreateWorkbench(k8s.MakeWorkbenchRequest{
+	err = s.client.CreateWorkbench(k8s.Workbench{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
 		Username:                username,
@@ -491,7 +501,7 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 	}
 
 	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
 			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, tenantID, err)
 		}
@@ -501,9 +511,23 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 
 	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
 
-	err = s.userer.CreateUserRoles(ctx, userID, []user_model.UserRole{role})
+	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
 	if err != nil {
 		return fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", userID, tenantID, err)
+	}
+
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		Message:  fmt.Sprintf("You have been assigned the role %v in workbench %v", role.Role, workbench.Name),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return fmt.Errorf("unable to create notification for user %v about new role %v in workspace %v: %w", userID, role.Role, role.Context["workspace"], err)
 	}
 
 	return nil
@@ -523,7 +547,7 @@ func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID
 	}
 
 	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, userID, matchingRolesIDs)
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
 			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, workbenchID, err)
 		}
@@ -596,7 +620,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	if !s.cfg.Services.WorkbenchService.BackendInK8S {
 		port, stopChan, err = s.client.CreatePortForward(proxyID.namespace, proxyID.workbench)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to create port forward: %w", err)
+			return nil, fmt.Errorf("failed to create port forward: %w", err)
 		}
 
 		xpraUrl = fmt.Sprintf("http://localhost:%v", port)
@@ -607,10 +631,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 
 	targetURL, err := url.Parse(xpraUrl)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse url: %w", err)
+		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
-	reg := regexp.MustCompile(`^/api/rest/v1/workbenchs/[0-9]+/stream`)
+	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 	tr := s.getRoundtripper()

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Workbench maps an entry in the 'workbenchs' database table.
+// Workbench maps an entry in the 'workbenches' database table.
 type Workbench struct {
 	ID uint64
 

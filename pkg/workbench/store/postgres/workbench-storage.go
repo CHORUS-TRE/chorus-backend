@@ -12,7 +12,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	common_storage "github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
@@ -30,7 +29,7 @@ func NewWorkbenchStorage(db *sqlx.DB) *WorkbenchStorage {
 func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	const query = `
 		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-			FROM workbenchs
+			FROM workbenches
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
@@ -42,13 +41,13 @@ func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, wo
 	return &workbench, nil
 }
 
-func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (s *WorkbenchStorage) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	args := []interface{}{tenantID}
 
-	countQuery := `SELECT COUNT(*) FROM workbenchs WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL`
+	countQuery := `SELECT COUNT(*) FROM workbenches WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL`
 	if workspaceIDsIn != nil {
 		countQuery += " AND workspaceid = ANY($2)"
-		args = append(args, storage.Uint64ToPqInt64(*workspaceIDsIn))
+		args = append(args, common_storage.Uint64ToPqInt64(*workspaceIDsIn))
 	}
 	var totalCount int64
 	if err := s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
@@ -58,7 +57,7 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 	// Get workbenches query
 	query := `
 		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-		FROM workbenchs
+		FROM workbenches
 		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
 	`
 	if workspaceIDsIn != nil {
@@ -80,17 +79,17 @@ func (s *WorkbenchStorage) ListWorkbenchs(ctx context.Context, tenantID uint64, 
 		paginationRes.Sort = validatedPagination.Sort
 	}
 
-	var workbenchs []*model.Workbench
-	if err := s.db.SelectContext(ctx, &workbenchs, query, args...); err != nil {
+	var workbenches []*model.Workbench
+	if err := s.db.SelectContext(ctx, &workbenches, query, args...); err != nil {
 		return nil, nil, err
 	}
 
-	return workbenchs, paginationRes, nil
+	return workbenches, paginationRes, nil
 }
 
-func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
+func (s *WorkbenchStorage) DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error) {
 	const query = `
-		UPDATE workbenchs
+		UPDATE workbenches
 		SET (status, name, updatedat, deletedat) = ($1, concat(name, $2::TEXT), NOW(), NOW())
 		WHERE accessedat IS NOT NULL
 		  AND accessedat < NOW() - $3::INTERVAL
@@ -99,13 +98,13 @@ func (s *WorkbenchStorage) DeleteIdleWorkbenchs(ctx context.Context, idleTimeout
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
-	var deletedWorkbenchs []*model.Workbench
-	err := s.db.SelectContext(ctx, &deletedWorkbenchs, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(idleTimeout.Seconds())))
+	var deletedWorkbenches []*model.Workbench
+	err := s.db.SelectContext(ctx, &deletedWorkbenches, query, model.WorkbenchDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(idleTimeout.Seconds())))
 	if err != nil {
 		return nil, fmt.Errorf("unable to exec: %w", err)
 	}
 
-	return deletedWorkbenchs, nil
+	return deletedWorkbenches, nil
 }
 
 func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {
@@ -161,20 +160,20 @@ ORDER BY ai.createdat ASC;
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
 SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-	FROM workbenchs
+	FROM workbenches
 WHERE deletedat IS NULL;
 `
-	var workbenchs []*model.Workbench
-	if err := s.db.SelectContext(ctx, &workbenchs, query); err != nil {
+	var workbenches []*model.Workbench
+	if err := s.db.SelectContext(ctx, &workbenches, query); err != nil {
 		return nil, err
 	}
 
-	return workbenchs, nil
+	return workbenches, nil
 }
 
 func (s *WorkbenchStorage) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error {
 	const query = `
-UPDATE public.workbenchs
+UPDATE public.workbenches
 SET 
     accessedat = batch_data.date,
     accessedcount = accessedcount + batch_data.count,
@@ -182,7 +181,7 @@ SET
 FROM (
     SELECT UNNEST($1::BIGINT[]) AS id, UNNEST($2::TIMESTAMP[]) AS date, UNNEST($3::BIGINT[]) AS count
 ) AS batch_data
-WHERE workbenchs.id = batch_data.id
+WHERE workbenches.id = batch_data.id
 ;
 `
 	ids := make([]uint64, 0, len(proxyHitCountMap))
@@ -200,10 +199,10 @@ WHERE workbenchs.id = batch_data.id
 	return err
 }
 
-// CreateWorkbench saves the provided workbench object in the database 'workbenchs' table.
+// CreateWorkbench saves the provided workbench object in the database 'workbenches' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchQuery = `
-		INSERT INTO workbenchs (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, serverpodstatus, k8sstatus, createdat, updatedat)
+		INSERT INTO workbenches (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, serverpodstatus, k8sstatus, createdat, updatedat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) 
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
@@ -221,7 +220,7 @@ func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64,
 
 func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchUpdateQuery = `
-		UPDATE workbenchs
+		UPDATE workbenches
 		SET status = $3, serverpodstatus = $4, k8sstatus = $5, description = $6, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
@@ -244,7 +243,7 @@ func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64,
 	}
 
 	const query = `
-		UPDATE workbenchs
+		UPDATE workbenches
 		SET (status, name, updatedat, deletedat) = ($3, concat(name, $4::TEXT), NOW(), NOW())
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -265,19 +264,19 @@ func (s *WorkbenchStorage) DeleteWorkbench(ctx context.Context, tenantID uint64,
 	return nil
 }
 
-func (s *WorkbenchStorage) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+func (s *WorkbenchStorage) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
 	// TODO: batch
 	const query = `
-		SELECT id FROM workbenchs
+		SELECT id FROM workbenches
 		WHERE tenantid = $1 AND workspaceid = $2 AND status != 'deleted' AND deletedat IS NULL;
 	`
 
 	var workbenchIDs []uint64
 	if err := s.db.SelectContext(ctx, &workbenchIDs, query, tenantID, workspaceID); err != nil {
-		return fmt.Errorf("unable to select workbenchs: %w", err)
+		return fmt.Errorf("unable to select workbenches: %w", err)
 	}
 
-	// Delete workbenchs
+	// Delete workbenches
 	for _, workbenchID := range workbenchIDs {
 		if err := s.DeleteWorkbench(ctx, tenantID, workbenchID); err != nil {
 			return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)

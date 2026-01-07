@@ -123,31 +123,11 @@ cat <<EOF >configs/dev/files/kind.yaml
 clients:
   docker_client:
     enabled: true
-  minio_clients:
-    archive:
-      enabled: true
-      endpoint: localhost:9000
-      access_key_id: minioadmin
-      secret_access_key: minioadmin
-      bucket_name: chorus-data
-      use_ssl: false
-      multipart_min_part_size: 5242880 # 5MB
-      multipart_max_part_size: 5368709120 # 5GB
-      multipart_max_total_parts: 10000
-    scratch:
-      enabled: true
-      endpoint: localhost:9000
-      access_key_id: minioadmin
-      secret_access_key: minioadmin
-      bucket_name: chorus-data
-      use_ssl: false
-      multipart_min_part_size: 5242880 # 5MB
-      multipart_max_part_size: 5368709120 # 5GB
-      multipart_max_total_parts: 10000
   k8s_client:
     enabled: true
     is_watcher: true
     server_version: "6.3.2-1"
+    init_container_version: "0.0.2-3"
     ca: |
 $ca_ident
     token: $token

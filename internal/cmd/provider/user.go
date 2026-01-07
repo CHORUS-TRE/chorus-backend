@@ -27,6 +27,7 @@ func ProvideUser() service.Userer {
 			ProvideDaemonEncryptionKey(),
 			ProvideUserStore(),
 			ProvideMailer(),
+			ProvideNotificationStore(),
 		)
 		user = service_mw.Logging(logger.BizLog)(user)
 		user = service_mw.Validation(ProvideValidator())(user)

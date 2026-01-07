@@ -1,5 +1,5 @@
 image:
-  repository: harbor.int.chorus-tre.ch/chorus/backend
+  repository: harbor.int.chorus-tre.ch/backend-master/backend
   tag: latest
   imagePullPolicy: Always
 
@@ -73,6 +73,19 @@ config:
           enabled: false
           certificate_file: ""
           key_file: ""
+    file_stores:
+      archive:
+        type: minio
+        minio_config:
+          enabled: true
+          endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
+          access_key_id: ""
+          secret_access_key: "" # set in secret
+          bucket_name: chorus-data
+          use_ssl: false
+          multipart_min_part_size: 5242880 # 5MB
+          multipart_max_part_size: 5368709120 # 5GB
+          multipart_max_total_parts: 10000
 
   services:
     index_service:
@@ -84,7 +97,7 @@ config:
         internal:
           type: internal
           enabled: true
-          public_registration_enabled: false
+          public_registration_enabled: true
           button_text: "Login with Chorus"
           icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 1
@@ -121,22 +134,22 @@ config:
           order: 3
           openid:
             id: keycloakdev
-          chorus_backend_host: "https://backend.int.chorus-tre.ch"
-          enable_frontend_redirect: true
-          chorus_frontend_redirect_url: "http://localhost:3000/oauthredirect"
-          authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
-          token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
-          user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
-          logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
-          user_name_claim: "preferred_username"
-          # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
-          client_id: chorus
-          client_secret: ""  # set in secret
-          scopes:
-            - openid
-            - profile
-            - email
-            - roles
+            chorus_backend_host: "https://backend.int.chorus-tre.ch"
+            enable_frontend_redirect: true
+            chorus_frontend_redirect_url: "http://localhost:3000/oauthredirect"
+            authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
+            user_name_claim: "preferred_username"
+            # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+            client_id: chorus
+            client_secret: ""  # set in secret
+            scopes:
+              - openid
+              - profile
+              - email
+              - roles
     steward:
       init_tenant:
         enabled: true
@@ -172,25 +185,13 @@ config:
     workspace_file_service:
       stores:
         archive:
-          client_type: minio
-          client_name: s3
+          file_store_name: archive
           store_prefix: /workspace-archive
           workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
 
   clients:
     docker_client:
       enabled: true
-    minio_clients:
-      s3:
-        enabled: true
-        endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-        access_key_id: ""
-        secret_access_key: "" # set in secret
-        bucket_name: chorus-data
-        use_ssl: false
-        multipart_min_part_size: 5242880 # 5MB
-        multipart_max_part_size: 5368709120 # 5GB
-        multipart_max_total_parts: 10000
     k8s_client:
       enabled: true
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"

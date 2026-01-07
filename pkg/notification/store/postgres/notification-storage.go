@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	"github.com/jmoiron/sqlx"
@@ -19,14 +21,44 @@ type NotificationStorage struct {
 	db *sqlx.DB
 }
 
+// notificationRow is a helper struct for scanning database rows
+type notificationRow struct {
+	ID                 string     `db:"id"`
+	TenantID           uint64     `db:"tenantid"`
+	Message            string     `db:"message"`
+	Type               string     `db:"type"`
+	RefreshJWTRequired bool       `db:"refreshjwtrequired"`
+	CreatedAt          time.Time  `db:"createdat"`
+	ReadAt             *time.Time `db:"readat"`
+}
+
+func (nr *notificationRow) toNotification() *model.Notification {
+	return &model.Notification{
+		ID:       nr.ID,
+		TenantID: nr.TenantID,
+		Message:  nr.Message,
+		Content: model.NotificationContent{
+			Type: nr.Type,
+			SystemNotification: model.SystemNotification{
+				RefreshJWTRequired: nr.RefreshJWTRequired,
+			},
+		},
+		CreatedAt: nr.CreatedAt,
+		ReadAt:    nr.ReadAt,
+	}
+}
+
 func NewNotificationStorage(db *sqlx.DB) *NotificationStorage {
 	return &NotificationStorage{db: db}
 }
 
 func (s *NotificationStorage) CreateNotification(ctx context.Context, notification *model.Notification, userIDs []uint64) error {
-	const query = `INSERT INTO notifications (id, tenantid, message) VALUES ($1, $2, $3)`
+	if notification.ID == "" {
+		notification.ID = uuid.Next()
+	}
+	const query = `INSERT INTO notifications (id, tenantid, message, type, refreshjwtrequired) VALUES ($1, $2, $3, $4, $5)`
 
-	if _, err := s.db.ExecContext(ctx, query, notification.ID, notification.TenantID, notification.Message); err != nil {
+	if _, err := s.db.ExecContext(ctx, query, notification.ID, notification.TenantID, notification.Message, notification.Content.Type, notification.Content.SystemNotification.RefreshJWTRequired); err != nil {
 		// on duplicate key return no error
 		const DuplicateKeyErrorCode = "23505"
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == DuplicateKeyErrorCode {
@@ -123,7 +155,7 @@ func buildSortClause(args []interface{}, sort common.Sort, offset uint64, limit 
 
 func (s *NotificationStorage) getNotifications(ctx context.Context, whereClause, sortClause string, args []interface{}) ([]*model.Notification, error) {
 	selectQuery := `
-SELECT n.id, n.tenantid, n.message, n.createdat, nrb.readat FROM notifications n
+SELECT n.id, n.tenantid, n.message, n.type, n.refreshjwtrequired, n.createdat, nrb.readat FROM notifications n
 left join notifications_read_by nrb on n.id = nrb.notificationid
 ` + whereClause + sortClause
 	query, args, err := sqlx.In(selectQuery, args...)
@@ -131,11 +163,16 @@ left join notifications_read_by nrb on n.id = nrb.notificationid
 		return nil, err
 	}
 	query = sqlx.Rebind(sqlx.DOLLAR, query)
-	var tokens []*model.Notification
-	if err := s.db.SelectContext(ctx, &tokens, query, args...); err != nil {
+	var rows []*notificationRow
+	if err := s.db.SelectContext(ctx, &rows, query, args...); err != nil {
 		return nil, err
 	}
-	return tokens, nil
+
+	notifications := make([]*model.Notification, len(rows))
+	for i, row := range rows {
+		notifications[i] = row.toNotification()
+	}
+	return notifications, nil
 }
 
 func (s *NotificationStorage) countNotifications(ctx context.Context, whereClauses string, args []interface{}) (uint32, error) {

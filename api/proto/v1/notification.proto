@@ -8,6 +8,19 @@ message Notification {
     string id = 1;
     uint64 tenantId = 2;
     string message = 3;
-    google.protobuf.Timestamp createdAt = 4;
-    google.protobuf.Timestamp readAt = 5;
+    NotificationContent content = 4;
+    google.protobuf.Timestamp createdAt = 5;
+    google.protobuf.Timestamp readAt = 6;
+}
+
+message NotificationContent {
+    oneof content {
+        SystemNotification systemNotification = 1;
+    }
+}
+
+message SystemNotification {
+    oneof systemNotificationContent {
+        bool refreshJWTRequired = 1;
+    }
 }

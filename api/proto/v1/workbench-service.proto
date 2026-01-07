@@ -25,16 +25,16 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 };
 
-message ListWorkbenchsRequest {
+message ListWorkbenchesRequest {
     PaginationQuery pagination = 1;
     optional WorkbenchFilter filter = 2;
 }
-message ListWorkbenchsReply {
-    ListWorkbenchsResult result = 1;
+message ListWorkbenchesReply {
+    ListWorkbenchesResult result = 1;
     optional PaginationResult pagination = 2;
 }
-message ListWorkbenchsResult {
-    repeated Workbench workbenchs = 1;
+message ListWorkbenchesResult {
+    repeated Workbench workbenches = 1;
 }
 message WorkbenchFilter {
     repeated uint64 workspace_ids_in = 1;
@@ -100,7 +100,10 @@ message DeleteWorkbenchResult {}
 service WorkbenchService {
     rpc GetWorkbench(GetWorkbenchRequest) returns (GetWorkbenchReply) {
         option (google.api.http) = {
-            get: "/api/rest/v1/workbenchs/{id}"
+            get: "/api/rest/v1/workbenches/{id}"
+            additional_bindings: [{
+                get: "/api/rest/v1/workbenchs/{id}"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a workbench";
@@ -109,21 +112,28 @@ service WorkbenchService {
         };
     };
 
-    rpc ListWorkbenchs(ListWorkbenchsRequest) returns (ListWorkbenchsReply) {
+    rpc ListWorkbenches(ListWorkbenchesRequest) returns (ListWorkbenchesReply) {
         option (google.api.http) = {
-            get: "/api/rest/v1/workbenchs"
+            get: "/api/rest/v1/workbenches"
+            additional_bindings: [{
+                get: "/api/rest/v1/workbenchs"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "List workbenchs";
-            description: "This endpoint returns a list of workbenchs";
+            summary: "List workbenches";
+            description: "This endpoint returns a list of workbenches";
             tags: "WorkbenchService";
         };
     };
 
     rpc CreateWorkbench(Workbench) returns (CreateWorkbenchReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workbenchs"
+            post: "/api/rest/v1/workbenches"
             body: "*"
+            additional_bindings: [{
+                post: "/api/rest/v1/workbenchs"
+                body: "*"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Create a workbench";
@@ -134,8 +144,12 @@ service WorkbenchService {
 
     rpc UpdateWorkbench(Workbench) returns (UpdateWorkbenchReply) {
         option (google.api.http) = {
-            put: "/api/rest/v1/workbenchs"
+            put: "/api/rest/v1/workbenches"
             body: "*"
+            additional_bindings: [{
+                put: "/api/rest/v1/workbenchs"
+                body: "*"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Update a workbench";
@@ -146,8 +160,12 @@ service WorkbenchService {
 
     rpc ManageUserRoleInWorkbench(ManageUserRoleInWorkbenchRequest) returns (ManageUserRoleInWorkbenchReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workbenchs/{id}/user/{userId}/role"
+            post: "/api/rest/v1/workbenches/{id}/user/{userId}/role"
             body: "*"
+            additional_bindings: [{
+                post: "/api/rest/v1/workbenchs/{id}/user/{userId}/role"
+                body: "*"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Manage a user's role in a workbench";
@@ -158,7 +176,10 @@ service WorkbenchService {
 
     rpc RemoveUserFromWorkbench(RemoveUserFromWorkbenchRequest) returns (RemoveUserFromWorkbenchReply) {
         option (google.api.http) = {
-            delete: "/api/rest/v1/workbenchs/{id}/user/{userId}"
+            delete: "/api/rest/v1/workbenches/{id}/user/{userId}"
+            additional_bindings: [{
+                delete: "/api/rest/v1/workbenchs/{id}/user/{userId}"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Remove a user from a workbench";
@@ -169,7 +190,10 @@ service WorkbenchService {
 
     rpc DeleteWorkbench(DeleteWorkbenchRequest) returns (DeleteWorkbenchReply) {
         option (google.api.http) = {
-            delete: "/api/rest/v1/workbenchs/{id}"
+            delete: "/api/rest/v1/workbenches/{id}"
+            additional_bindings: [{
+                delete: "/api/rest/v1/workbenchs/{id}"
+            }];
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete a workbench";

@@ -34,13 +34,13 @@ type Caching struct {
 	next  service.Workbencher
 }
 
-func (c *Caching) ListWorkbenchs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) (reply []*model.Workbench, paginationRes *common_model.PaginationResult, err error) {
+func (c *Caching) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) (reply []*model.Workbench, paginationRes *common_model.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination), cache.WithInterface(filter))
 	reply = []*model.Workbench{}
 	paginationRes = &common_model.PaginationResult{}
 
 	if ok := entry.Get(ctx, &reply, &paginationRes); !ok {
-		reply, paginationRes, err = c.next.ListWorkbenchs(ctx, tenantID, pagination, filter)
+		reply, paginationRes, err = c.next.ListWorkbenches(ctx, tenantID, pagination, filter)
 		if err == nil {
 			entry.Set(ctx, defaultCacheExpiration, reply, paginationRes)
 		}
@@ -72,8 +72,8 @@ func (c *Caching) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uin
 	return c.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
-func (c *Caching) DeleteWorkbenchsInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
-	return c.next.DeleteWorkbenchsInWorkspace(ctx, tenantID, workspaceID)
+func (c *Caching) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
+	return c.next.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 }
 
 func (c *Caching) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
