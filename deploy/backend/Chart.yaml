@@ -2,8 +2,11 @@ apiVersion: v2
 name: backend
 description: Chorus Backend
 type: application
-version: 0.4.0
-appVersion: 0.4.0
+
+# version and appVersion are placeholders and will be overridden
+# by the tag when packaging the chart for a release
+version: 0.0.0
+appVersion: 0.0.0
 
 dependencies:
   - name: postgresql
