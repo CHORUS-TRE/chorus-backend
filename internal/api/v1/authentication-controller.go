@@ -178,13 +178,6 @@ func (a AuthenticationController) Logout(ctx context.Context, req *chorus.Logout
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 
-	if redirectURL != "" {
-		header := metadata.Pairs("Location", redirectURL)
-		if err := grpc.SetHeader(ctx, header); err != nil {
-			return nil, status.Errorf(codes.Internal, "%v", err)
-		}
-	}
-
 	return &chorus.LogoutReply{RedirectURL: utils.FromString(redirectURL)}, nil
 }
 
