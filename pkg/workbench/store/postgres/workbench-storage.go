@@ -350,7 +350,7 @@ func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint6
 
 	var newAppInstance model.AppInstance
 	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, appInstance.Status, appInstance.K8sStatus, appInstance.K8sState, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceActive.String(), model.K8sAppInstanceStatusUnknown.String(), model.K8sAppInstanceStateRunning.String(), appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
 	)
 	if err != nil {
 		return nil, err
