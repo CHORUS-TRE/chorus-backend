@@ -29,7 +29,7 @@ func NewWorkbenchStorage(db *sqlx.DB) *WorkbenchStorage {
 func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	const query = `
 		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-			FROM workbenches
+		FROM workbenches
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
@@ -109,45 +109,45 @@ func (s *WorkbenchStorage) DeleteIdleWorkbenches(ctx context.Context, idleTimeou
 
 func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbenchID uint64) ([]*model.AppInstance, error) {
 	const query = `
-SELECT 
-    ai.id,
-    ai.tenantid,
-    ai.userid,
-    ai.appid,
-    ai.workspaceid,
-    ai.workbenchid,
-    ai.status,
+		SELECT 
+			ai.id,
+			ai.tenantid,
+			ai.userid,
+			ai.appid,
+			ai.workspaceid,
+			ai.workbenchid,
+			ai.status,
 			ai.k8sstatus,
 			ai.k8sstate,
-	ai.initialresolutionwidth,
-	ai.initialresolutionheight,
-    ai.createdat,
-    ai.updatedat,
-	ai.kioskconfigjwttoken,
+			ai.initialresolutionwidth,
+			ai.initialresolutionheight,
+			ai.createdat,
+			ai.updatedat,
+			ai.kioskconfigjwttoken,
 
-	a.name as AppName,
-    a.dockerimageregistry as AppDockerImageRegistry,
-    a.dockerimagename as AppDockerImageName,
-    a.dockerimagetag as AppDockerImageTag,
-	a.shmsize as AppShmSize,
-	a.kioskconfigurl as AppKioskConfigURL,
-	a.kioskconfigjwturl as AppKioskConfigJWTUrl,
-	a.maxcpu as AppMaxCPU,
-	a.mincpu as AppMinCPU,
-	a.maxmemory as AppMaxMemory,
-	a.minmemory as AppMinMemory,
-	a.maxephemeralstorage as AppMaxEphemeralStorage,
-	a.minephemeralstorage as AppMinEphemeralStorage,
-	a.iconurl as AppIconURL
-FROM 
-    app_instances ai
-JOIN 
-    apps a ON ai.appid = a.id
-WHERE 
-    ai.workbenchid = $1 
-    AND ai.status != 'deleted'
-	AND ai.deletedat IS NULL
-ORDER BY ai.createdat ASC;
+			a.name as AppName,
+			a.dockerimageregistry as AppDockerImageRegistry,
+			a.dockerimagename as AppDockerImageName,
+			a.dockerimagetag as AppDockerImageTag,
+			a.shmsize as AppShmSize,
+			a.kioskconfigurl as AppKioskConfigURL,
+			a.kioskconfigjwturl as AppKioskConfigJWTUrl,
+			a.maxcpu as AppMaxCPU,
+			a.mincpu as AppMinCPU,
+			a.maxmemory as AppMaxMemory,
+			a.minmemory as AppMinMemory,
+			a.maxephemeralstorage as AppMaxEphemeralStorage,
+			a.minephemeralstorage as AppMinEphemeralStorage,
+			a.iconurl as AppIconURL
+		FROM 
+			app_instances ai
+		JOIN 
+			apps a ON ai.appid = a.id
+		WHERE 
+			ai.workbenchid = $1 
+			AND ai.status != 'deleted'
+			AND ai.deletedat IS NULL
+		ORDER BY ai.createdat ASC;
 	;`
 
 	var appInstances []*model.AppInstance
@@ -160,10 +160,10 @@ ORDER BY ai.createdat ASC;
 
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
-SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
-	FROM workbenches
-WHERE deletedat IS NULL;
-`
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		FROM workbenches
+		WHERE deletedat IS NULL;
+	`
 
 	var workbenches []*model.Workbench
 	if err := s.db.SelectContext(ctx, &workbenches, query); err != nil {
@@ -175,16 +175,16 @@ WHERE deletedat IS NULL;
 
 func (s *WorkbenchStorage) SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error {
 	const query = `
-UPDATE public.workbenches
-SET 
-    accessedat = batch_data.date,
-    accessedcount = accessedcount + batch_data.count,
-	updatedat = NOW()
-FROM (
-    SELECT UNNEST($1::BIGINT[]) AS id, UNNEST($2::TIMESTAMP[]) AS date, UNNEST($3::BIGINT[]) AS count
-) AS batch_data
+		UPDATE public.workbenches
+		SET 
+			accessedat = batch_data.date,
+			accessedcount = accessedcount + batch_data.count,
+			updatedat = NOW()
+		FROM (
+				SELECT UNNEST($1::BIGINT[]) AS id, UNNEST($2::TIMESTAMP[]) AS date, UNNEST($3::BIGINT[]) AS count
+		) AS batch_data
 		WHERE workbenches.id = batch_data.id;
-`
+	`
 
 	ids := make([]uint64, 0, len(proxyHitCountMap))
 	dates := make([]string, 0, len(proxyHitCountMap))
@@ -291,7 +291,7 @@ func (s *WorkbenchStorage) DeleteWorkbenchesInWorkspace(ctx context.Context, ten
 func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
 		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstatus, k8sstate, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
-			FROM app_instances
+		FROM app_instances
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
