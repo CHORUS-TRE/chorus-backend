@@ -101,8 +101,9 @@ type WorkbenchStatusApp struct {
 }
 
 type WorkbenchStatus struct {
-	ServerDeployment WorkbenchStatusServer         `json:"serverDeployment"`
-	Apps             map[string]WorkbenchStatusApp `json:"apps,omitempty"`
+	ObservedGeneration int64                         `json:"observedGeneration,omitempty"`
+	ServerDeployment   WorkbenchStatusServer         `json:"serverDeployment"`
+	Apps               map[string]WorkbenchStatusApp `json:"apps,omitempty"`
 }
 
 type K8sWorkbench struct {
