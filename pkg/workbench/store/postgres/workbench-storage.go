@@ -304,7 +304,7 @@ func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, 
 }
 
 func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
-	countQuery := `SELECT COUNT(*) FROM app_instances WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL;`
+	countQuery := `SELECT COUNT(*) FROM app_instances WHERE tenantid = $1 AND deletedat IS NULL;`
 	var totalCount int64
 	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
 		return nil, nil, err
@@ -314,7 +314,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 	query := `
 		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstatus, k8sstate, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
-		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
+		WHERE tenantid = $1 AND deletedat IS NULL
 	`
 
 	// Add pagination
