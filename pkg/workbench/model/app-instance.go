@@ -80,6 +80,23 @@ const (
 	K8sAppInstanceStatusFailed      K8sAppInstanceStatus = "Failed"
 )
 
+func (s K8sAppInstanceStatus) ToAppInstanceStatus() AppInstanceStatus {
+	switch s {
+	case K8sAppInstanceStatusUnknown:
+		return AppInstanceInactive
+	case K8sAppInstanceStatusRunning:
+		return AppInstanceActive
+	case K8sAppInstanceStatusComplete:
+		return AppInstanceDeleted
+	case K8sAppInstanceStatusFailed:
+		return AppInstanceDeleted
+	case K8sAppInstanceStatusProgressing:
+		return AppInstanceInactive
+	default:
+		return AppInstanceInactive
+	}
+}
+
 func (s K8sAppInstanceStatus) String() string {
 	return string(s)
 }
