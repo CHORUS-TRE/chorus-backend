@@ -3,6 +3,9 @@ package model
 import (
 	"errors"
 	"time"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 )
 
 // AppInstance maps an entry in the 'app_instances' database table.
@@ -43,6 +46,32 @@ type AppInstance struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+}
+
+func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
+	return k8s.AppInstance{
+		ID:      a.ID,
+		AppName: utils.ToString(a.AppName),
+
+		AppRegistry: utils.ToString(a.AppDockerImageRegistry),
+		AppImage:    utils.ToString(a.AppDockerImageName),
+		AppTag:      utils.ToString(a.AppDockerImageTag),
+
+		K8sState:  a.K8sState.String(),
+		K8sStatus: a.K8sStatus.String(),
+
+		KioskConfigURL:      utils.ToString(a.AppKioskConfigURL),
+		KioskConfigJWTURL:   utils.ToString(a.AppKioskConfigJWTURL),
+		KioskConfigJWTToken: a.KioskConfigJWTToken,
+
+		ShmSize:             utils.ToString(a.AppShmSize),
+		MaxCPU:              utils.ToString(a.AppMaxCPU),
+		MinCPU:              utils.ToString(a.AppMinCPU),
+		MaxMemory:           utils.ToString(a.AppMaxMemory),
+		MinMemory:           utils.ToString(a.AppMinMemory),
+		MaxEphemeralStorage: utils.ToString(a.AppMaxEphemeralStorage),
+		MinEphemeralStorage: utils.ToString(a.AppMinEphemeralStorage),
+	}
 }
 
 type K8sAppInstanceState string
