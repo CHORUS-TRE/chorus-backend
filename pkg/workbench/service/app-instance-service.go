@@ -50,7 +50,7 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 		return fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
 	}
 
-	err = s.client.DeleteAppInstance(wsName, wbName, clientApp)
+	err = s.client.UpdateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
 		return fmt.Errorf("unable to delete app instance %v: %w", appInstance.ID, err)
 	}
