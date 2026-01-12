@@ -206,12 +206,11 @@ func (s *WorkbenchService) SetClientWatchers() {
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
 		appInstanceIDsToDelete := []uint64{}
 		for _, app := range k8sWorkbench.Apps {
-			k8sState := model.K8sAppInstanceState(app.K8sState)
+			k8sStatus := model.K8sAppInstanceStatus(app.K8sStatus)
 			appInstance := &model.AppInstance{
 				ID: app.ID,
 
-				Status:    k8sState.ToAppInstanceStatus(),
-				K8sState:  k8sState, // TODO: THE STATE SHOULD COME FROM DATABASE
+				Status:    k8sStatus.ToAppInstanceStatus(),
 				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
 			}
 
