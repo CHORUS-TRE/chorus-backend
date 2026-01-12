@@ -19,7 +19,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
@@ -207,12 +206,11 @@ func (s *WorkbenchService) SetClientWatchers() {
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
 		appInstanceIDsToDelete := []uint64{}
 		for _, app := range k8sWorkbench.Apps {
-			k8sState := model.K8sAppInstanceState(app.K8sState)
+			k8sStatus := model.K8sAppInstanceStatus(app.K8sStatus)
 			appInstance := &model.AppInstance{
 				ID: app.ID,
 
-				Status:    k8sState.ToAppInstanceStatus(),
-				K8sState:  k8sState, // TODO: THE STATE SHOULD COME FROM DATABASE
+				Status:    k8sStatus.ToAppInstanceStatus(),
 				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
 			}
 
@@ -308,33 +306,15 @@ func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, wo
 func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.Workbench) error {
 	switch workbench.Status {
 	case model.WorkbenchActive:
-
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			return err
 		}
+
 		clientApps := []k8s.AppInstance{}
 		for _, app := range apps {
-			clientApps = append(clientApps, k8s.AppInstance{
-				ID:      app.ID,
-				AppName: utils.ToString(app.AppName),
-
-				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
-				AppImage:    utils.ToString(app.AppDockerImageName),
-				AppTag:      utils.ToString(app.AppDockerImageTag),
-
-				// K8sState: string(app.K8sState), // TODO: ADD THIS FIELD AND USE IT IN K8S CLIENT
-
-				ShmSize:             utils.ToString(app.AppShmSize),
-				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
-				MaxCPU:              utils.ToString(app.AppMaxCPU),
-				MinCPU:              utils.ToString(app.AppMinCPU),
-				MaxMemory:           utils.ToString(app.AppMaxMemory),
-				MinMemory:           utils.ToString(app.AppMinMemory),
-				MaxEphemeralStorage: utils.ToString(app.AppMaxEphemeralStorage),
-				MinEphemeralStorage: utils.ToString(app.AppMinEphemeralStorage),
-			})
+			clientApps = append(clientApps, app.ToK8sAppInstance())
 		}
 
 		user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: workbench.TenantID, ID: workbench.UserID})
