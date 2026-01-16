@@ -349,15 +349,15 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			TotpEnabled: false,
 		}
 
-		_, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
+		createdUser, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
 		if err != nil {
 			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
 		}
 
-		err = a.userer.CreateUserRoles(ctx, 1, user.ID, []userModel.UserRole{{
+		err = a.userer.CreateUserRoles(ctx, 1, createdUser.ID, []userModel.UserRole{{
 			Role: authorization_model.NewRole(
 				authorization_model.RoleAuthenticated,
-				authorization_model.WithUser(user.ID),
+				authorization_model.WithUser(createdUser.ID),
 			),
 		}})
 		if err != nil {
