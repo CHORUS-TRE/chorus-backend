@@ -50,3 +50,8 @@ func ProvideAuditStore() service.AuditStore {
 	})
 	return auditStore
 }
+
+// ProvideAuditWriter returns the audit service as an AuditWriter for middleware
+func ProvideAuditWriter() service.AuditWriter {
+	return ProvideAuditService()
+}
