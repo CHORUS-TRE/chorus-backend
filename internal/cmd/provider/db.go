@@ -33,6 +33,10 @@ func ProvideMainDB(opts ...Option) *Database {
 	return ProvideDB("chorus", opts...)
 }
 
+func ProvideAuditDB(opts ...Option) *Database {
+	return ProvideDB("audit", opts...)
+}
+
 var dbsOnce sync.Once
 var dbs map[string]map[string]*Database
 
