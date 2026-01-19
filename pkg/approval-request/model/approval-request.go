@@ -26,19 +26,19 @@ type ApprovalRequest struct {
 }
 
 type ApprovalRequestDetails struct {
-	DataExtractionDetails *DataExtractionDetails
-	DataTransferDetails   *DataTransferDetails
+	DataExtractionDetails *DataExtractionDetails `json:"data_extraction_details,omitempty"`
+	DataTransferDetails   *DataTransferDetails   `json:"data_transfer_details,omitempty"`
 }
 
 type DataExtractionDetails struct {
-	SourceWorkspaceID uint64
-	Files             []ApprovalRequestFile
+	SourceWorkspaceID uint64                `json:"source_workspace_id"`
+	Files             []ApprovalRequestFile `json:"files"`
 }
 
 type DataTransferDetails struct {
-	SourceWorkspaceID      uint64
-	DestinationWorkspaceID uint64
-	Files                  []ApprovalRequestFile
+	SourceWorkspaceID      uint64                `json:"source_workspace_id"`
+	DestinationWorkspaceID uint64                `json:"destination_workspace_id"`
+	Files                  []ApprovalRequestFile `json:"files"`
 }
 
 func (r *ApprovalRequest) IsFinalState() bool {
@@ -67,13 +67,13 @@ func (r *ApprovalRequest) CanBeApprovedBy(userID uint64) bool {
 }
 
 func GetApprovalRequestStoragePath(requestID uint64) string {
-	return fmt.Sprintf("approval-request%v", requestID)
+	return fmt.Sprintf("approval-request-%v", requestID)
 }
 
 type ApprovalRequestFile struct {
-	SourcePath      string
-	DestinationPath string
-	Size            uint64
+	SourcePath      string `json:"source_path"`
+	DestinationPath string `json:"destination_path"`
+	Size            uint64 `json:"size"`
 }
 
 type ApprovalRequestType string
