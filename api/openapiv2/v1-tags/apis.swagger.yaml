@@ -9,11 +9,11 @@ info:
 tags:
   - name: AppInstanceService
   - name: AppService
+  - name: ApprovalRequestService
   - name: AuthenticationService
   - name: DevstoreService
   - name: HealthService
   - name: NotificationService
-  - name: RequestService
   - name: StewardService
   - name: UserService
   - name: WorkbenchService
@@ -250,6 +250,309 @@ paths:
           format: uint64
       tags:
         - AppInstanceService
+  /api/rest/v1/approval-requests:
+    get:
+      summary: List approval requests
+      description: This endpoint returns a list of approval requests
+      operationId: ApprovalRequestService_ListApprovalRequests
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListApprovalRequestsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.statusesIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            enum:
+              - APPROVAL_REQUEST_STATUS_UNSPECIFIED
+              - APPROVAL_REQUEST_STATUS_PENDING
+              - APPROVAL_REQUEST_STATUS_APPROVED
+              - APPROVAL_REQUEST_STATUS_REJECTED
+              - APPROVAL_REQUEST_STATUS_CANCELLED
+          collectionFormat: multi
+        - name: filter.typesIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            enum:
+              - APPROVAL_REQUEST_TYPE_UNSPECIFIED
+              - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
+              - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
+          collectionFormat: multi
+        - name: filter.sourceWorkspaceId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.pendingApproval
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/data-extraction:
+    post:
+      summary: Create a data extraction request
+      description: This endpoint creates a data extraction approval request. Files are copied to a staging area for approval before extraction/download.
+      operationId: ApprovalRequestService_CreateDataExtractionRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateDataExtractionRequestReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateDataExtractionRequestRequest'
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/data-transfer:
+    post:
+      summary: Create a data transfer request
+      description: This endpoint creates a data transfer approval request. Files are copied to a staging area for approval before transfer to destination workspace.
+      operationId: ApprovalRequestService_CreateDataTransferRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateDataTransferRequestReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateDataTransferRequestRequest'
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/{id}:
+    get:
+      summary: Get an approval request
+      description: This endpoint returns an approval request
+      operationId: ApprovalRequestService_GetApprovalRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetApprovalRequestReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - ApprovalRequestService
+    delete:
+      summary: Delete an approval request
+      description: This endpoint deletes an approval request. Only pending requests can be deleted.
+      operationId: ApprovalRequestService_DeleteApprovalRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteApprovalRequestReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/{id}/approve:
+    post:
+      summary: Approve or reject an approval request
+      description: This endpoint approves or rejects an approval request
+      operationId: ApprovalRequestService_ApproveApprovalRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusApproveApprovalRequestReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ApprovalRequestServiceApproveApprovalRequestBody'
+      tags:
+        - ApprovalRequestService
   /api/rest/v1/apps:
     get:
       summary: List apps
@@ -1484,268 +1787,6 @@ paths:
             $ref: '#/definitions/chorusMarkNotificationsAsReadRequest'
       tags:
         - NotificationService
-  /api/rest/v1/requests:
-    get:
-      summary: List requests
-      description: This endpoint returns a list of data transfer requests
-      operationId: RequestService_ListRequests
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusListRequestsReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: pagination.offset
-          description: Optionally offset the number of results
-          in: query
-          required: false
-          type: integer
-          format: int64
-        - name: pagination.limit
-          description: Optionally limit the number of results (between 1 and 500)
-          in: query
-          required: false
-          type: integer
-          format: int64
-        - name: pagination.sort.order
-          in: query
-          required: false
-          type: string
-        - name: pagination.sort.type
-          in: query
-          required: false
-          type: string
-        - name: pagination.query
-          description: Optionally filter the results
-          in: query
-          required: false
-          type: array
-          items:
-            type: string
-          collectionFormat: multi
-          x-example:
-            - user_id=9999
-            - status=STATUS_CREATED,STATUS_CLOSED
-        - name: filter.statusesIn
-          in: query
-          required: false
-          type: array
-          items:
-            type: string
-            enum:
-              - REQUEST_STATUS_UNSPECIFIED
-              - REQUEST_STATUS_PENDING
-              - REQUEST_STATUS_APPROVED
-              - REQUEST_STATUS_REJECTED
-              - REQUEST_STATUS_CANCELLED
-          collectionFormat: multi
-        - name: filter.typesIn
-          in: query
-          required: false
-          type: array
-          items:
-            type: string
-            enum:
-              - REQUEST_TYPE_UNSPECIFIED
-              - REQUEST_TYPE_DOWNLOAD
-              - REQUEST_TYPE_COPY_TO_WORKSPACE
-          collectionFormat: multi
-        - name: filter.sourceWorkspaceId
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: filter.pendingApproval
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - RequestService
-    post:
-      summary: Create a request
-      description: This endpoint creates a data transfer request. Files are copied to a staging area for approval.
-      operationId: RequestService_CreateRequest
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusCreateRequestReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/chorusCreateRequestRequest'
-      tags:
-        - RequestService
-  /api/rest/v1/requests/{id}:
-    get:
-      summary: Get a request
-      description: This endpoint returns a data transfer request
-      operationId: RequestService_GetRequest
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusGetRequestReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - RequestService
-    delete:
-      summary: Delete a request
-      description: This endpoint deletes a data transfer request. Only pending requests can be deleted.
-      operationId: RequestService_DeleteRequest
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusDeleteRequestReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - RequestService
-  /api/rest/v1/requests/{id}/approve:
-    post:
-      summary: Approve or reject a request
-      description: This endpoint approves or rejects a data transfer request
-      operationId: RequestService_ApproveRequest
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusApproveRequestReply'
-        "400":
-          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
-          schema: {}
-        "401":
-          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
-          schema: {}
-        "403":
-          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
-          schema: {}
-        "404":
-          description: 'Not Found: indicates that the server cannot find the requested resource'
-          schema: {}
-        "500":
-          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
-          schema: {}
-        "503":
-          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
-          schema: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/RequestServiceApproveRequestBody'
-      tags:
-        - RequestService
   /api/rest/v1/steward/tenants/initialize:
     post:
       summary: Initialize a tenant
@@ -3746,6 +3787,13 @@ paths:
       tags:
         - WorkspaceFileService
 definitions:
+  ApprovalRequestServiceApproveApprovalRequestBody:
+    type: object
+    properties:
+      approve:
+        type: boolean
+      comment:
+        type: string
   AuthenticationServiceAuthenticateOauthRedirectBody:
     type: object
     properties:
@@ -3761,13 +3809,6 @@ definitions:
       key:
         type: string
       value:
-        type: string
-  RequestServiceApproveRequestBody:
-    type: object
-    properties:
-      approve:
-        type: boolean
-      comment:
         type: string
   UserServiceCreateUserRoleBody:
     type: object
@@ -3887,16 +3928,104 @@ definitions:
       updatedAt:
         type: string
         format: date-time
-  chorusApproveRequestReply:
+  chorusApprovalRequest:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      requesterId:
+        type: string
+        format: uint64
+      type:
+        $ref: '#/definitions/chorusApprovalRequestType'
+      status:
+        $ref: '#/definitions/chorusApprovalRequestStatus'
+      title:
+        type: string
+      description:
+        type: string
+      dataExtraction:
+        $ref: '#/definitions/chorusDataExtractionDetails'
+      dataTransfer:
+        $ref: '#/definitions/chorusDataTransferDetails'
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequestFile'
+      approverIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+      approvedById:
+        type: string
+        format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+      approvedAt:
+        type: string
+        format: date-time
+  chorusApprovalRequestFile:
+    type: object
+    properties:
+      sourcePath:
+        type: string
+      destinationPath:
+        type: string
+      size:
+        type: string
+        format: uint64
+  chorusApprovalRequestFilter:
+    type: object
+    properties:
+      statusesIn:
+        type: array
+        items:
+          $ref: '#/definitions/chorusApprovalRequestStatus'
+      typesIn:
+        type: array
+        items:
+          $ref: '#/definitions/chorusApprovalRequestType'
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      pendingApproval:
+        type: boolean
+  chorusApprovalRequestStatus:
+    type: string
+    enum:
+      - APPROVAL_REQUEST_STATUS_UNSPECIFIED
+      - APPROVAL_REQUEST_STATUS_PENDING
+      - APPROVAL_REQUEST_STATUS_APPROVED
+      - APPROVAL_REQUEST_STATUS_REJECTED
+      - APPROVAL_REQUEST_STATUS_CANCELLED
+    default: APPROVAL_REQUEST_STATUS_UNSPECIFIED
+  chorusApprovalRequestType:
+    type: string
+    enum:
+      - APPROVAL_REQUEST_TYPE_UNSPECIFIED
+      - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
+      - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
+    default: APPROVAL_REQUEST_TYPE_UNSPECIFIED
+  chorusApproveApprovalRequestReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/chorusApproveRequestResult'
-  chorusApproveRequestResult:
+        $ref: '#/definitions/chorusApproveApprovalRequestResult'
+  chorusApproveApprovalRequestResult:
     type: object
     properties:
-      request:
-        $ref: '#/definitions/chorusRequest'
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
   chorusAuthenticateOauthRedirectReply:
     type: object
     properties:
@@ -3994,22 +4123,17 @@ definitions:
     properties:
       app:
         $ref: '#/definitions/chorusApp'
-  chorusCreateRequestReply:
+  chorusCreateDataExtractionRequestReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/chorusCreateRequestResult'
-  chorusCreateRequestRequest:
+        $ref: '#/definitions/chorusCreateDataExtractionRequestResult'
+  chorusCreateDataExtractionRequestRequest:
     type: object
     properties:
       sourceWorkspaceId:
         type: string
         format: uint64
-      destinationWorkspaceId:
-        type: string
-        format: uint64
-      type:
-        $ref: '#/definitions/chorusRequestType'
       title:
         type: string
       description:
@@ -4023,11 +4147,43 @@ definitions:
         items:
           type: string
           format: uint64
-  chorusCreateRequestResult:
+  chorusCreateDataExtractionRequestResult:
     type: object
     properties:
-      request:
-        $ref: '#/definitions/chorusRequest'
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
+  chorusCreateDataTransferRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateDataTransferRequestResult'
+  chorusCreateDataTransferRequestRequest:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      destinationWorkspaceId:
+        type: string
+        format: uint64
+      title:
+        type: string
+      description:
+        type: string
+      filePaths:
+        type: array
+        items:
+          type: string
+      approverIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+  chorusCreateDataTransferRequestResult:
+    type: object
+    properties:
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
   chorusCreateUserReply:
     type: object
     properties:
@@ -4088,6 +4244,21 @@ definitions:
         type: string
       totp:
         type: string
+  chorusDataExtractionDetails:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+  chorusDataTransferDetails:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      destinationWorkspaceId:
+        type: string
+        format: uint64
   chorusDeleteAppInstanceReply:
     type: object
     properties:
@@ -4102,19 +4273,19 @@ definitions:
         $ref: '#/definitions/chorusDeleteAppResult'
   chorusDeleteAppResult:
     type: object
+  chorusDeleteApprovalRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteApprovalRequestResult'
+  chorusDeleteApprovalRequestResult:
+    type: object
   chorusDeleteEntryReply:
     type: object
     properties:
       result:
         $ref: '#/definitions/chorusDeleteEntryResult'
   chorusDeleteEntryResult:
-    type: object
-  chorusDeleteRequestReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusDeleteRequestResult'
-  chorusDeleteRequestResult:
     type: object
   chorusDeleteUserReply:
     type: object
@@ -4187,6 +4358,16 @@ definitions:
     properties:
       app:
         $ref: '#/definitions/chorusApp'
+  chorusGetApprovalRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetApprovalRequestResult'
+  chorusGetApprovalRequestResult:
+    type: object
+    properties:
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
   chorusGetAuthenticationModesReply:
     type: object
     properties:
@@ -4225,16 +4406,6 @@ definitions:
       totalItems:
         type: integer
         format: int64
-  chorusGetRequestReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusGetRequestResult'
-  chorusGetRequestResult:
-    type: object
-    properties:
-      request:
-        $ref: '#/definitions/chorusRequest'
   chorusGetUserMeReply:
     type: object
     properties:
@@ -4327,6 +4498,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusAppInstance'
+  chorusListApprovalRequestsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListApprovalRequestsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListApprovalRequestsResult:
+    type: object
+    properties:
+      approvalRequests:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequest'
   chorusListAppsReply:
     type: object
     properties:
@@ -4354,21 +4540,6 @@ definitions:
         type: object
         additionalProperties:
           type: string
-  chorusListRequestsReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusListRequestsResult'
-      pagination:
-        $ref: '#/definitions/chorusPaginationResult'
-  chorusListRequestsResult:
-    type: object
-    properties:
-      requests:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusRequest'
   chorusListUsersReply:
     type: object
     properties:
@@ -4582,96 +4753,6 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
-  chorusRequest:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uint64
-      tenantId:
-        type: string
-        format: uint64
-      requesterId:
-        type: string
-        format: uint64
-      sourceWorkspaceId:
-        type: string
-        format: uint64
-      destinationWorkspaceId:
-        type: string
-        format: uint64
-      type:
-        $ref: '#/definitions/chorusRequestType'
-      status:
-        $ref: '#/definitions/chorusRequestStatus'
-      title:
-        type: string
-      description:
-        type: string
-      files:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusRequestFile'
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
-      approvedById:
-        type: string
-        format: uint64
-      createdAt:
-        type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
-      approvedAt:
-        type: string
-        format: date-time
-  chorusRequestFile:
-    type: object
-    properties:
-      sourcePath:
-        type: string
-      destinationPath:
-        type: string
-      size:
-        type: string
-        format: uint64
-  chorusRequestFilter:
-    type: object
-    properties:
-      statusesIn:
-        type: array
-        items:
-          $ref: '#/definitions/chorusRequestStatus'
-      typesIn:
-        type: array
-        items:
-          $ref: '#/definitions/chorusRequestType'
-      sourceWorkspaceId:
-        type: string
-        format: uint64
-      pendingApproval:
-        type: boolean
-  chorusRequestStatus:
-    type: string
-    enum:
-      - REQUEST_STATUS_UNSPECIFIED
-      - REQUEST_STATUS_PENDING
-      - REQUEST_STATUS_APPROVED
-      - REQUEST_STATUS_REJECTED
-      - REQUEST_STATUS_CANCELLED
-    default: REQUEST_STATUS_UNSPECIFIED
-  chorusRequestType:
-    type: string
-    enum:
-      - REQUEST_TYPE_UNSPECIFIED
-      - REQUEST_TYPE_DOWNLOAD
-      - REQUEST_TYPE_COPY_TO_WORKSPACE
-    default: REQUEST_TYPE_UNSPECIFIED
   chorusResetPasswordReply:
     type: object
     properties:
