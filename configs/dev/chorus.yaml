@@ -41,6 +41,7 @@ storage:
         certificate_file: /chorus/postgres-certs/client.crt
         key_file: /chorus/postgres-certs/client.key
     audit:
+      type: postgres
       host: 127.0.0.1
       port: 5432
       username: audit
