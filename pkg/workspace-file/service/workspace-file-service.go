@@ -12,6 +12,7 @@ import (
 
 type WorkspaceFiler interface {
 	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
+	GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error)
 	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error)
 	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error)
@@ -111,6 +112,22 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 	file, err := s.fileStores[storeName].StatFile(ctx, storePath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get workspace file at path %s: %w", filePath, err)
+	}
+
+	return file, nil
+}
+
+func (s *WorkspaceFileService) GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
+	storeName, err := s.selectFileStore(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to select file store: %w", err)
+	}
+
+	storePath := s.toStorePath(storeName, workspaceID, filePath)
+
+	file, err := s.fileStores[storeName].GetFile(ctx, storePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get workspace file with content at path %s: %w", filePath, err)
 	}
 
 	return file, nil

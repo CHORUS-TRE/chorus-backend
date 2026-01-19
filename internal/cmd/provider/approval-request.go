@@ -23,17 +23,10 @@ func ProvideApprovalRequestService() service.ApprovalRequester {
 	approvalRequestServiceOnce.Do(func() {
 		cfg := ProvideConfig()
 
-		var workspacePrefix string
-		for _, storeCfg := range cfg.Services.WorkspaceFileService.Stores {
-			workspacePrefix = storeCfg.WorkspacePrefix
-			break
-		}
-
 		approvalRequestService = service.NewApprovalRequestService(
 			ProvideApprovalRequestStore(),
-			ProvideApprovalRequestSourceFileStore(),
-			ProvideApprovalRequestStagingFileStore(),
-			workspacePrefix,
+			ProvideWorkspaceFile(),
+			ProvideApprovalRequestStagingFileStore(cfg.Services.ApprovalRequestService.StagingFileStoreName),
 		)
 		approvalRequestService = service_mw.Logging(logger.BizLog)(approvalRequestService)
 		approvalRequestService = service_mw.Validation(ProvideValidator())(approvalRequestService)
@@ -70,33 +63,22 @@ func ProvideApprovalRequestStore() service.ApprovalRequestStore {
 	return approvalRequestStore
 }
 
-var approvalRequestSourceFileStoreOnce sync.Once
-var approvalRequestSourceFileStore filestore.FileStore
-
-func ProvideApprovalRequestSourceFileStore() filestore.FileStore {
-	approvalRequestSourceFileStoreOnce.Do(func() {
-		fileStores := ProvideFileStores()
-		for _, fs := range fileStores {
-			approvalRequestSourceFileStore = fs
-			break
-		}
-		if approvalRequestSourceFileStore == nil {
-			logger.TechLog.Fatal(context.Background(), "no file store available for approval request source files")
-		}
-	})
-	return approvalRequestSourceFileStore
-}
-
 var approvalRequestStagingFileStoreOnce sync.Once
 var approvalRequestStagingFileStore filestore.FileStore
 
-func ProvideApprovalRequestStagingFileStore() filestore.FileStore {
+func ProvideApprovalRequestStagingFileStore(stagingStoreName string) filestore.FileStore {
 	approvalRequestStagingFileStoreOnce.Do(func() {
 		fileStores := ProvideFileStores()
-		for _, fs := range fileStores {
-			approvalRequestStagingFileStore = fs
-			break
+		if stagingStoreName == "" {
+			logger.TechLog.Fatal(context.Background(), "staging file store not specified: "+stagingStoreName)
 		}
+
+		if store, ok := fileStores[stagingStoreName]; ok {
+			approvalRequestStagingFileStore = store
+		} else {
+			logger.TechLog.Fatal(context.Background(), "staging file store not found: "+stagingStoreName)
+		}
+
 		if approvalRequestStagingFileStore == nil {
 			logger.TechLog.Fatal(context.Background(), "no file store available for approval request staging files")
 		}

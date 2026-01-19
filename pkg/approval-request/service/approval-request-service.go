@@ -8,7 +8,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
+	workspace_file_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 )
 
 var _ ApprovalRequester = (*ApprovalRequestService)(nil)
@@ -38,18 +38,16 @@ type ApprovalRequestStore interface {
 }
 
 type ApprovalRequestService struct {
-	store            ApprovalRequestStore
-	sourceFileStore  filestore.FileStore
-	requestFileStore filestore.FileStore
-	workspacePrefix  string
+	store              ApprovalRequestStore
+	workspaceFileStore workspace_file_service.WorkspaceFiler
+	stagingFileStore   filestore.FileStore
 }
 
-func NewApprovalRequestService(store ApprovalRequestStore, sourceFileStore filestore.FileStore, requestFileStore filestore.FileStore, workspacePrefix string) *ApprovalRequestService {
+func NewApprovalRequestService(store ApprovalRequestStore, workspaceFileStore workspace_file_service.WorkspaceFiler, stagingFileStore filestore.FileStore) *ApprovalRequestService {
 	return &ApprovalRequestService{
-		store:            store,
-		sourceFileStore:  sourceFileStore,
-		requestFileStore: requestFileStore,
-		workspacePrefix:  workspacePrefix,
+		store:              store,
+		workspaceFileStore: workspaceFileStore,
+		stagingFileStore:   stagingFileStore,
 	}
 }
 
@@ -188,14 +186,12 @@ func (s *ApprovalRequestService) DeleteApprovalRequest(ctx context.Context, tena
 func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, requestID, sourceWorkspaceID uint64, filePaths []string) ([]model.ApprovalRequestFile, error) {
 	var requestFiles []model.ApprovalRequestFile
 
-	workspaceDir := fmt.Sprintf(s.workspacePrefix, workspace_model.GetWorkspaceClusterName(sourceWorkspaceID))
 	requestDir := model.GetApprovalRequestStoragePath(requestID)
 
 	for _, filePath := range filePaths {
-		sourcePath := path.Join(workspaceDir, filePath)
 		destPath := path.Join(requestDir, filePath)
 
-		file, err := s.sourceFileStore.GetFile(ctx, sourcePath)
+		file, err := s.workspaceFileStore.GetWorkspaceFileWithContent(ctx, sourceWorkspaceID, filePath)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get source file %s: %w", filePath, err)
 		}
@@ -210,7 +206,7 @@ func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, 
 			Content: file.Content,
 		}
 
-		_, err = s.requestFileStore.CreateFile(ctx, destFile)
+		_, err = s.stagingFileStore.CreateFile(ctx, destFile)
 		if err != nil {
 			return nil, fmt.Errorf("unable to copy file %s to request storage: %w", filePath, err)
 		}
@@ -227,7 +223,7 @@ func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, 
 
 func (s *ApprovalRequestService) cleanupRequestStorage(ctx context.Context, requestID uint64) error {
 	requestDir := model.GetApprovalRequestStoragePath(requestID)
-	return s.requestFileStore.DeleteDirectory(ctx, requestDir)
+	return s.stagingFileStore.DeleteDirectory(ctx, requestDir)
 }
 
 func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, request *model.ApprovalRequest) error {
@@ -246,22 +242,19 @@ func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, req
 }
 
 func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Context, details model.DataTransferDetails) error {
-	destWorkspaceDir := fmt.Sprintf(s.workspacePrefix, workspace_model.GetWorkspaceClusterName(details.DestinationWorkspaceID))
-
 	for _, reqFile := range details.Files {
-		file, err := s.requestFileStore.GetFile(ctx, reqFile.DestinationPath)
+		file, err := s.stagingFileStore.GetFile(ctx, reqFile.DestinationPath)
 		if err != nil {
 			return fmt.Errorf("unable to get file from request storage %s: %w", reqFile.DestinationPath, err)
 		}
 
-		destPath := path.Join(destWorkspaceDir, reqFile.SourcePath)
 		destFile := &filestore.File{
-			Path:    destPath,
+			Path:    reqFile.SourcePath,
 			Name:    file.Name,
 			Content: file.Content,
 		}
 
-		_, err = s.sourceFileStore.CreateFile(ctx, destFile)
+		_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
 		if err != nil {
 			return fmt.Errorf("unable to copy file to destination workspace: %w", err)
 		}
