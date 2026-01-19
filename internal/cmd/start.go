@@ -158,6 +158,7 @@ func registerGRPCServices(server *google_grpc.Server) {
 	chorus.RegisterWorkspaceFileServiceServer(server, provider.ProvideWorkspaceFileController())
 	chorus.RegisterWorkbenchServiceServer(server, provider.ProvideWorkbenchController())
 	chorus.RegisterDevstoreServiceServer(server, provider.ProvideDevstoreController())
+	chorus.RegisterRequestServiceServer(server, provider.ProvideRequestController())
 
 	// Setup a standard health check service to allow a client to poll the
 	// status.
@@ -200,5 +201,8 @@ func registerHTTPEndpoints(ctx context.Context, mux *runtime.ServeMux, grpcHostP
 	}
 	if err := chorus.RegisterDevstoreServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 		logger.TechLog.Fatal(ctx, "failed to register http devstore service handler", logger.WithErrorField(err))
+	}
+	if err := chorus.RegisterRequestServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
+		logger.TechLog.Fatal(ctx, "failed to register http request service handler", logger.WithErrorField(err))
 	}
 }

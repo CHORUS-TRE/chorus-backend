@@ -1,0 +1,149 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "common.proto";
+import "request.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus request service";
+        version: "1.0";
+        contact: {
+            name: "chorus request service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+
+message ListRequestsRequest {
+    PaginationQuery pagination = 1;
+    optional RequestFilter filter = 2;
+}
+message ListRequestsReply {
+    ListRequestsResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListRequestsResult {
+    repeated Request requests = 1;
+}
+message RequestFilter {
+    repeated RequestStatus statusesIn = 1;
+    repeated RequestType typesIn = 2;
+    optional uint64 sourceWorkspaceId = 3;
+    optional bool pendingApproval = 4;
+}
+
+message GetRequestRequest {
+    uint64 id = 1;
+}
+message GetRequestReply {
+    GetRequestResult result = 1;
+}
+message GetRequestResult {
+    Request request = 1;
+}
+
+message CreateRequestRequest {
+    uint64 sourceWorkspaceId = 1;
+    optional uint64 destinationWorkspaceId = 2;
+    RequestType type = 3;
+    string title = 4;
+    string description = 5;
+    repeated string filePaths = 6;
+    repeated uint64 approverIds = 7;
+}
+message CreateRequestReply {
+    CreateRequestResult result = 1;
+}
+message CreateRequestResult {
+    Request request = 1;
+}
+
+message ApproveRequestRequest {
+    uint64 id = 1;
+    bool approve = 2;
+    optional string comment = 3;
+}
+message ApproveRequestReply {
+    ApproveRequestResult result = 1;
+}
+message ApproveRequestResult {
+    Request request = 1;
+}
+
+message DeleteRequestRequest {
+    uint64 id = 1;
+}
+message DeleteRequestReply {
+    DeleteRequestResult result = 1;
+}
+message DeleteRequestResult {}
+
+
+service RequestService {
+    rpc GetRequest(GetRequestRequest) returns (GetRequestReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/requests/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a request";
+            description: "This endpoint returns a data transfer request";
+            tags: "RequestService";
+        };
+    };
+
+    rpc ListRequests(ListRequestsRequest) returns (ListRequestsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/requests"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List requests";
+            description: "This endpoint returns a list of data transfer requests";
+            tags: "RequestService";
+        };
+    };
+
+    rpc CreateRequest(CreateRequestRequest) returns (CreateRequestReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/requests"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a request";
+            description: "This endpoint creates a data transfer request. Files are copied to a staging area for approval.";
+            tags: "RequestService";
+        };
+    };
+
+    rpc ApproveRequest(ApproveRequestRequest) returns (ApproveRequestReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/requests/{id}/approve"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Approve or reject a request";
+            description: "This endpoint approves or rejects a data transfer request";
+            tags: "RequestService";
+        };
+    };
+
+    rpc DeleteRequest(DeleteRequestRequest) returns (DeleteRequestReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/requests/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a request";
+            description: "This endpoint deletes a data transfer request. Only pending requests can be deleted.";
+            tags: "RequestService";
+        };
+    };
+}

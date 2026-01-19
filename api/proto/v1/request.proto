@@ -1,0 +1,46 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+enum RequestType {
+    REQUEST_TYPE_UNSPECIFIED = 0;
+    REQUEST_TYPE_DOWNLOAD = 1;
+    REQUEST_TYPE_COPY_TO_WORKSPACE = 2;
+}
+
+enum RequestStatus {
+    REQUEST_STATUS_UNSPECIFIED = 0;
+    REQUEST_STATUS_PENDING = 1;
+    REQUEST_STATUS_APPROVED = 2;
+    REQUEST_STATUS_REJECTED = 3;
+    REQUEST_STATUS_CANCELLED = 4;
+}
+
+message RequestFile {
+    string sourcePath = 1;
+    string destinationPath = 2;
+    uint64 size = 3;
+}
+
+message Request {
+    uint64 id = 1;
+    uint64 tenantId = 2;
+    uint64 requesterId = 3;
+    uint64 sourceWorkspaceId = 4;
+    optional uint64 destinationWorkspaceId = 5;
+
+    RequestType type = 6;
+    RequestStatus status = 7;
+    string title = 8;
+    string description = 9;
+
+    repeated RequestFile files = 10;
+    repeated uint64 approverIds = 11;
+    optional uint64 approvedById = 12;
+
+    google.protobuf.Timestamp createdAt = 13;
+    google.protobuf.Timestamp updatedAt = 14;
+    optional google.protobuf.Timestamp approvedAt = 15;
+}
