@@ -242,11 +242,6 @@ definitions:
         $ref: '#/definitions/chorusDataExtractionDetails'
       dataTransfer:
         $ref: '#/definitions/chorusDataTransferDetails'
-      files:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusApprovalRequestFile'
       approverIds:
         type: array
         items:
@@ -383,6 +378,11 @@ definitions:
       sourceWorkspaceId:
         type: string
         format: uint64
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequestFile'
   chorusDataTransferDetails:
     type: object
     properties:
@@ -392,6 +392,11 @@ definitions:
       destinationWorkspaceId:
         type: string
         format: uint64
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequestFile'
   chorusDeleteApprovalRequestReply:
     type: object
     properties:

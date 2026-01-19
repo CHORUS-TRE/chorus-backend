@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -14,10 +15,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusApprovalRequest chorus approval request
+// ChorusRequest chorus request
 //
-// swagger:model chorusApprovalRequest
-type ChorusApprovalRequest struct {
+// swagger:model chorusRequest
+type ChorusRequest struct {
 
 	// approved at
 	// Format: date-time
@@ -33,14 +34,14 @@ type ChorusApprovalRequest struct {
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
-	// data extraction
-	DataExtraction *ChorusDataExtractionDetails `json:"dataExtraction,omitempty"`
-
-	// data transfer
-	DataTransfer *ChorusDataTransferDetails `json:"dataTransfer,omitempty"`
-
 	// description
 	Description string `json:"description,omitempty"`
+
+	// destination workspace Id
+	DestinationWorkspaceID string `json:"destinationWorkspaceId,omitempty"`
+
+	// files
+	Files []*ChorusRequestFile `json:"files"`
 
 	// id
 	ID string `json:"id,omitempty"`
@@ -48,8 +49,11 @@ type ChorusApprovalRequest struct {
 	// requester Id
 	RequesterID string `json:"requesterId,omitempty"`
 
+	// source workspace Id
+	SourceWorkspaceID string `json:"sourceWorkspaceId,omitempty"`
+
 	// status
-	Status *ChorusApprovalRequestStatus `json:"status,omitempty"`
+	Status *ChorusRequestStatus `json:"status,omitempty"`
 
 	// tenant Id
 	TenantID string `json:"tenantId,omitempty"`
@@ -58,15 +62,15 @@ type ChorusApprovalRequest struct {
 	Title string `json:"title,omitempty"`
 
 	// type
-	Type *ChorusApprovalRequestType `json:"type,omitempty"`
+	Type *ChorusRequestType `json:"type,omitempty"`
 
 	// updated at
 	// Format: date-time
 	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
 }
 
-// Validate validates this chorus approval request
-func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus request
+func (m *ChorusRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateApprovedAt(formats); err != nil {
@@ -77,11 +81,7 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateDataExtraction(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateDataTransfer(formats); err != nil {
+	if err := m.validateFiles(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -103,7 +103,7 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateApprovedAt(formats strfmt.Registry) error {
+func (m *ChorusRequest) validateApprovedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.ApprovedAt) { // not required
 		return nil
 	}
@@ -115,7 +115,7 @@ func (m *ChorusApprovalRequest) validateApprovedAt(formats strfmt.Registry) erro
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateCreatedAt(formats strfmt.Registry) error {
+func (m *ChorusRequest) validateCreatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
@@ -127,45 +127,33 @@ func (m *ChorusApprovalRequest) validateCreatedAt(formats strfmt.Registry) error
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateDataExtraction(formats strfmt.Registry) error {
-	if swag.IsZero(m.DataExtraction) { // not required
+func (m *ChorusRequest) validateFiles(formats strfmt.Registry) error {
+	if swag.IsZero(m.Files) { // not required
 		return nil
 	}
 
-	if m.DataExtraction != nil {
-		if err := m.DataExtraction.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("dataExtraction")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("dataExtraction")
-			}
-			return err
+	for i := 0; i < len(m.Files); i++ {
+		if swag.IsZero(m.Files[i]) { // not required
+			continue
 		}
+
+		if m.Files[i] != nil {
+			if err := m.Files[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("files" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("files" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateDataTransfer(formats strfmt.Registry) error {
-	if swag.IsZero(m.DataTransfer) { // not required
-		return nil
-	}
-
-	if m.DataTransfer != nil {
-		if err := m.DataTransfer.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("dataTransfer")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("dataTransfer")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *ChorusApprovalRequest) validateStatus(formats strfmt.Registry) error {
+func (m *ChorusRequest) validateStatus(formats strfmt.Registry) error {
 	if swag.IsZero(m.Status) { // not required
 		return nil
 	}
@@ -184,7 +172,7 @@ func (m *ChorusApprovalRequest) validateStatus(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateType(formats strfmt.Registry) error {
+func (m *ChorusRequest) validateType(formats strfmt.Registry) error {
 	if swag.IsZero(m.Type) { // not required
 		return nil
 	}
@@ -203,7 +191,7 @@ func (m *ChorusApprovalRequest) validateType(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateUpdatedAt(formats strfmt.Registry) error {
+func (m *ChorusRequest) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
 	}
@@ -215,15 +203,11 @@ func (m *ChorusApprovalRequest) validateUpdatedAt(formats strfmt.Registry) error
 	return nil
 }
 
-// ContextValidate validate this chorus approval request based on the context it is used
-func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus request based on the context it is used
+func (m *ChorusRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.contextValidateDataExtraction(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateDataTransfer(ctx, formats); err != nil {
+	if err := m.contextValidateFiles(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -241,49 +225,32 @@ func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats str
 	return nil
 }
 
-func (m *ChorusApprovalRequest) contextValidateDataExtraction(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusRequest) contextValidateFiles(ctx context.Context, formats strfmt.Registry) error {
 
-	if m.DataExtraction != nil {
+	for i := 0; i < len(m.Files); i++ {
 
-		if swag.IsZero(m.DataExtraction) { // not required
-			return nil
-		}
+		if m.Files[i] != nil {
 
-		if err := m.DataExtraction.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("dataExtraction")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("dataExtraction")
+			if swag.IsZero(m.Files[i]) { // not required
+				return nil
 			}
-			return err
+
+			if err := m.Files[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("files" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("files" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
 		}
+
 	}
 
 	return nil
 }
 
-func (m *ChorusApprovalRequest) contextValidateDataTransfer(ctx context.Context, formats strfmt.Registry) error {
-
-	if m.DataTransfer != nil {
-
-		if swag.IsZero(m.DataTransfer) { // not required
-			return nil
-		}
-
-		if err := m.DataTransfer.ContextValidate(ctx, formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("dataTransfer")
-			} else if ce, ok := err.(*errors.CompositeError); ok {
-				return ce.ValidateName("dataTransfer")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (m *ChorusApprovalRequest) contextValidateStatus(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusRequest) contextValidateStatus(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Status != nil {
 
@@ -304,7 +271,7 @@ func (m *ChorusApprovalRequest) contextValidateStatus(ctx context.Context, forma
 	return nil
 }
 
-func (m *ChorusApprovalRequest) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusRequest) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Type != nil {
 
@@ -326,7 +293,7 @@ func (m *ChorusApprovalRequest) contextValidateType(ctx context.Context, formats
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusApprovalRequest) MarshalBinary() ([]byte, error) {
+func (m *ChorusRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -334,8 +301,8 @@ func (m *ChorusApprovalRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusApprovalRequest) UnmarshalBinary(b []byte) error {
-	var res ChorusApprovalRequest
+func (m *ChorusRequest) UnmarshalBinary(b []byte) error {
+	var res ChorusRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

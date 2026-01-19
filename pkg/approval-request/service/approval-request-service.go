@@ -65,8 +65,8 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 	request.Status = model.ApprovalRequestStatusPending
 	request.Type = model.ApprovalRequestTypeDataExtraction
 
-	details, ok := request.Details.(model.DataExtractionDetails)
-	if !ok {
+	details := request.Details.DataExtractionDetails
+	if details == nil {
 		return nil, fmt.Errorf("invalid details type for data extraction request")
 	}
 
@@ -81,7 +81,12 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		return nil, fmt.Errorf("unable to copy files to request storage: %w", err)
 	}
 
-	createdRequest.Files = requestFiles
+	createdDetails := createdRequest.Details.DataExtractionDetails
+	if createdDetails == nil {
+		return nil, fmt.Errorf("invalid details type for data extraction request")
+	}
+	createdDetails.Files = requestFiles
+
 	updatedRequest, err := s.store.UpdateApprovalRequest(ctx, request.TenantID, createdRequest)
 	if err != nil {
 		_ = s.cleanupRequestStorage(ctx, createdRequest.ID)
@@ -96,8 +101,8 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 	request.Status = model.ApprovalRequestStatusPending
 	request.Type = model.ApprovalRequestTypeDataTransfer
 
-	details, ok := request.Details.(model.DataTransferDetails)
-	if !ok {
+	details := request.Details.DataTransferDetails
+	if details == nil {
 		return nil, fmt.Errorf("invalid details type for data transfer request")
 	}
 
@@ -116,7 +121,12 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		return nil, fmt.Errorf("unable to copy files to request storage: %w", err)
 	}
 
-	createdRequest.Files = requestFiles
+	createdDetails := createdRequest.Details.DataTransferDetails
+	if createdDetails == nil {
+		return nil, fmt.Errorf("invalid details type for data transfer request")
+	}
+	createdDetails.Files = requestFiles
+
 	updatedRequest, err := s.store.UpdateApprovalRequest(ctx, request.TenantID, createdRequest)
 	if err != nil {
 		_ = s.cleanupRequestStorage(ctx, createdRequest.ID)
@@ -225,20 +235,20 @@ func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, req
 	case model.ApprovalRequestTypeDataExtraction:
 		return nil
 	case model.ApprovalRequestTypeDataTransfer:
-		details, ok := request.Details.(model.DataTransferDetails)
-		if !ok {
+		details := request.Details.DataTransferDetails
+		if details == nil {
 			return fmt.Errorf("invalid details type for data transfer request")
 		}
-		return s.copyFilesToDestinationWorkspace(ctx, request, details.DestinationWorkspaceID)
+		return s.copyFilesToDestinationWorkspace(ctx, *details)
 	default:
 		return fmt.Errorf("unsupported request type: %s", request.Type)
 	}
 }
 
-func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Context, request *model.ApprovalRequest, destWorkspaceID uint64) error {
-	destWorkspaceDir := fmt.Sprintf(s.workspacePrefix, workspace_model.GetWorkspaceClusterName(destWorkspaceID))
+func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Context, details model.DataTransferDetails) error {
+	destWorkspaceDir := fmt.Sprintf(s.workspacePrefix, workspace_model.GetWorkspaceClusterName(details.DestinationWorkspaceID))
 
-	for _, reqFile := range request.Files {
+	for _, reqFile := range details.Files {
 		file, err := s.requestFileStore.GetFile(ctx, reqFile.DestinationPath)
 		if err != nil {
 			return fmt.Errorf("unable to get file from request storage %s: %w", reqFile.DestinationPath, err)

@@ -43,11 +43,8 @@ func (v validation) CreateDataExtractionRequest(ctx context.Context, request *mo
 	if request == nil {
 		return nil, &service.InvalidParametersErr{}
 	}
-	if request.Details == nil {
-		return nil, &service.InvalidParametersErr{}
-	}
-	details, ok := request.Details.(model.DataExtractionDetails)
-	if !ok {
+	details := request.Details.DataExtractionDetails
+	if details == nil {
 		return nil, &service.InvalidParametersErr{}
 	}
 	if details.SourceWorkspaceID == 0 {
@@ -63,11 +60,8 @@ func (v validation) CreateDataTransferRequest(ctx context.Context, request *mode
 	if request == nil {
 		return nil, &service.InvalidParametersErr{}
 	}
-	if request.Details == nil {
-		return nil, &service.InvalidParametersErr{}
-	}
-	details, ok := request.Details.(model.DataTransferDetails)
-	if !ok {
+	details := request.Details.DataTransferDetails
+	if details == nil {
 		return nil, &service.InvalidParametersErr{}
 	}
 	if details.SourceWorkspaceID == 0 {

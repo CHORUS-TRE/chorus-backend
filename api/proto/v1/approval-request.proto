@@ -26,11 +26,13 @@ message ApprovalRequestFile {
 
 message DataExtractionDetails {
     uint64 sourceWorkspaceId = 1;
+    repeated ApprovalRequestFile files = 2;
 }
 
 message DataTransferDetails {
     uint64 sourceWorkspaceId = 1;
     uint64 destinationWorkspaceId = 2;
+    repeated ApprovalRequestFile files = 3;
 }
 
 message ApprovalRequest {
@@ -48,11 +50,10 @@ message ApprovalRequest {
         DataTransferDetails dataTransfer = 9;
     }
 
-    repeated ApprovalRequestFile files = 10;
-    repeated uint64 approverIds = 11;
-    optional uint64 approvedById = 12;
+    repeated uint64 approverIds = 10;
+    optional uint64 approvedById = 11;
 
-    google.protobuf.Timestamp createdAt = 13;
-    google.protobuf.Timestamp updatedAt = 14;
-    optional google.protobuf.Timestamp approvedAt = 15;
+    google.protobuf.Timestamp createdAt = 12;
+    google.protobuf.Timestamp updatedAt = 13;
+    optional google.protobuf.Timestamp approvedAt = 14;
 }

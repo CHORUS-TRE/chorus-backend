@@ -26,15 +26,6 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 		return nil, fmt.Errorf("unable to convert approvedAt timestamp: %w", err)
 	}
 
-	var files []*chorus.ApprovalRequestFile
-	for _, f := range request.Files {
-		files = append(files, &chorus.ApprovalRequestFile{
-			SourcePath:      f.SourcePath,
-			DestinationPath: f.DestinationPath,
-			Size:            f.Size,
-		})
-	}
-
 	protoRequest := &chorus.ApprovalRequest{
 		Id:          request.ID,
 		TenantId:    request.TenantID,
@@ -43,7 +34,6 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 		Status:      ApprovalRequestStatusFromBusiness(request.Status),
 		Title:       request.Title,
 		Description: request.Description,
-		Files:       files,
 		ApproverIds: request.ApproverIDs,
 		CreatedAt:   ca,
 		UpdatedAt:   ua,
@@ -54,23 +44,50 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 		protoRequest.ApprovedById = request.ApprovedByID
 	}
 
-	switch details := request.Details.(type) {
-	case model.DataExtractionDetails:
+	switch request.Type {
+	case model.ApprovalRequestTypeDataExtraction:
+
 		protoRequest.Details = &chorus.ApprovalRequest_DataExtraction{
 			DataExtraction: &chorus.DataExtractionDetails{
-				SourceWorkspaceId: details.SourceWorkspaceID,
+				SourceWorkspaceId: request.Details.DataExtractionDetails.SourceWorkspaceID,
+				Files:             FilesFromBusiness(request.Details.DataExtractionDetails.Files),
 			},
 		}
-	case model.DataTransferDetails:
+	case model.ApprovalRequestTypeDataTransfer:
 		protoRequest.Details = &chorus.ApprovalRequest_DataTransfer{
 			DataTransfer: &chorus.DataTransferDetails{
-				SourceWorkspaceId:      details.SourceWorkspaceID,
-				DestinationWorkspaceId: details.DestinationWorkspaceID,
+				SourceWorkspaceId:      request.Details.DataTransferDetails.SourceWorkspaceID,
+				DestinationWorkspaceId: request.Details.DataTransferDetails.DestinationWorkspaceID,
+				Files:                  FilesFromBusiness(request.Details.DataTransferDetails.Files),
 			},
 		}
 	}
 
 	return protoRequest, nil
+}
+
+func FilesFromBusiness(files []model.ApprovalRequestFile) []*chorus.ApprovalRequestFile {
+	var result []*chorus.ApprovalRequestFile
+	for _, f := range files {
+		result = append(result, &chorus.ApprovalRequestFile{
+			SourcePath:      f.SourcePath,
+			DestinationPath: f.DestinationPath,
+			Size:            f.Size,
+		})
+	}
+	return result
+}
+
+func FilesToBusiness(files []*chorus.ApprovalRequestFile) []model.ApprovalRequestFile {
+	var result []model.ApprovalRequestFile
+	for _, f := range files {
+		result = append(result, model.ApprovalRequestFile{
+			SourcePath:      f.SourcePath,
+			DestinationPath: f.DestinationPath,
+			Size:            f.Size,
+		})
+	}
+	return result
 }
 
 func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.ApprovalRequest, error) {
@@ -96,15 +113,6 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 		approvedAt = &aa
 	}
 
-	var files []model.ApprovalRequestFile
-	for _, f := range request.Files {
-		files = append(files, model.ApprovalRequestFile{
-			SourcePath:      f.SourcePath,
-			DestinationPath: f.DestinationPath,
-			Size:            f.Size,
-		})
-	}
-
 	result := &model.ApprovalRequest{
 		ID:           request.Id,
 		TenantID:     request.TenantId,
@@ -113,7 +121,6 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 		Status:       ApprovalRequestStatusToBusiness(request.Status),
 		Title:        request.Title,
 		Description:  request.Description,
-		Files:        files,
 		ApproverIDs:  request.ApproverIds,
 		ApprovedByID: request.ApprovedById,
 		CreatedAt:    ca,
@@ -124,15 +131,21 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 	switch d := request.Details.(type) {
 	case *chorus.ApprovalRequest_DataExtraction:
 		if d.DataExtraction != nil {
-			result.Details = model.DataExtractionDetails{
-				SourceWorkspaceID: d.DataExtraction.SourceWorkspaceId,
+			result.Details = model.ApprovalRequestDetails{
+				DataExtractionDetails: &model.DataExtractionDetails{
+					SourceWorkspaceID: d.DataExtraction.SourceWorkspaceId,
+					Files:             FilesToBusiness(d.DataExtraction.Files),
+				},
 			}
 		}
 	case *chorus.ApprovalRequest_DataTransfer:
 		if d.DataTransfer != nil {
-			result.Details = model.DataTransferDetails{
-				SourceWorkspaceID:      d.DataTransfer.SourceWorkspaceId,
-				DestinationWorkspaceID: d.DataTransfer.DestinationWorkspaceId,
+			result.Details = model.ApprovalRequestDetails{
+				DataTransferDetails: &model.DataTransferDetails{
+					SourceWorkspaceID:      d.DataTransfer.SourceWorkspaceId,
+					DestinationWorkspaceID: d.DataTransfer.DestinationWorkspaceId,
+					Files:                  FilesToBusiness(d.DataTransfer.Files),
+				},
 			}
 		}
 	}

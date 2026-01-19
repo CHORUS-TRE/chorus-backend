@@ -17,7 +17,6 @@ type ApprovalRequest struct {
 
 	Details ApprovalRequestDetails
 
-	Files        []ApprovalRequestFile
 	ApproverIDs  []uint64
 	ApprovedByID *uint64
 
@@ -26,28 +25,20 @@ type ApprovalRequest struct {
 	ApprovedAt *time.Time
 }
 
-type ApprovalRequestDetails interface {
-	isApprovalRequestDetails()
-	GetSourceWorkspaceID() uint64
+type ApprovalRequestDetails struct {
+	DataExtractionDetails *DataExtractionDetails
+	DataTransferDetails   *DataTransferDetails
 }
 
 type DataExtractionDetails struct {
 	SourceWorkspaceID uint64
-}
-
-func (d DataExtractionDetails) isApprovalRequestDetails() {}
-func (d DataExtractionDetails) GetSourceWorkspaceID() uint64 {
-	return d.SourceWorkspaceID
+	Files             []ApprovalRequestFile
 }
 
 type DataTransferDetails struct {
 	SourceWorkspaceID      uint64
 	DestinationWorkspaceID uint64
-}
-
-func (d DataTransferDetails) isApprovalRequestDetails() {}
-func (d DataTransferDetails) GetSourceWorkspaceID() uint64 {
-	return d.SourceWorkspaceID
+	Files                  []ApprovalRequestFile
 }
 
 func (r *ApprovalRequest) IsFinalState() bool {

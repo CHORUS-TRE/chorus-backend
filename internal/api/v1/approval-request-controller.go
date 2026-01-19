@@ -131,8 +131,10 @@ func (c ApprovalRequestController) CreateDataExtractionRequest(ctx context.Conte
 		Title:       req.Title,
 		Description: req.Description,
 		ApproverIDs: req.ApproverIds,
-		Details: model.DataExtractionDetails{
-			SourceWorkspaceID: req.SourceWorkspaceId,
+		Details: model.ApprovalRequestDetails{
+			DataExtractionDetails: &model.DataExtractionDetails{
+				SourceWorkspaceID: req.SourceWorkspaceId,
+			},
 		},
 	}
 
@@ -170,9 +172,11 @@ func (c ApprovalRequestController) CreateDataTransferRequest(ctx context.Context
 		Title:       req.Title,
 		Description: req.Description,
 		ApproverIDs: req.ApproverIds,
-		Details: model.DataTransferDetails{
-			SourceWorkspaceID:      req.SourceWorkspaceId,
-			DestinationWorkspaceID: req.DestinationWorkspaceId,
+		Details: model.ApprovalRequestDetails{
+			DataTransferDetails: &model.DataTransferDetails{
+				SourceWorkspaceID:      req.SourceWorkspaceId,
+				DestinationWorkspaceID: req.DestinationWorkspaceId,
+			},
 		},
 	}
 
