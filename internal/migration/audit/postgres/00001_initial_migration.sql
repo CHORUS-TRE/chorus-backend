@@ -15,3 +15,4 @@ CREATE TABLE public.audit (
     createdat TIMESTAMP NOT NULL,
     CONSTRAINT audit_pkey PRIMARY KEY (id)
 );
+-- +migrate StatementEnd
