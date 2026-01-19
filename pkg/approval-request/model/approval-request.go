@@ -131,3 +131,16 @@ func ToApprovalRequestStatus(s string) (ApprovalRequestStatus, error) {
 		return ApprovalRequestStatusUnspecified, fmt.Errorf("unexpected ApprovalRequestStatus: %s", s)
 	}
 }
+
+func (ApprovalRequest) IsValidSortType(sortType string) bool {
+	validSortTypes := map[string]bool{
+		"id":         true,
+		"type":       true,
+		"status":     true,
+		"title":      true,
+		"createdat":  true,
+		"updatedat":  true,
+		"approvedat": true,
+	}
+	return validSortTypes[sortType]
+}
