@@ -34,6 +34,9 @@ type AuditEntry struct {
 	ResourceType  AuditResourceType
 	ResourceID    uint64
 	CorrelationID string
+	Method        string         // gRPC method name
+	StatusCode    int            // gRPC status code
+	ErrorMessage  string         // Error message if any
 	Details       map[string]any // JSONB for flexible querying
 	CreatedAt     time.Time
 }

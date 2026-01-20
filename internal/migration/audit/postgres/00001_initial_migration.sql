@@ -11,6 +11,9 @@ CREATE TABLE public.audit (
     resourcetype TEXT NULL,
     resourceid BIGINT NULL,
     correlationid TEXT NULL,
+    method TEXT NULL,
+    statuscode INT NULL,
+    errormessage TEXT NULL,
     details JSONB NULL,
     createdat TIMESTAMP NOT NULL,
     CONSTRAINT audit_pkey PRIMARY KEY (id)
