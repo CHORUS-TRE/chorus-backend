@@ -1,3 +1,6 @@
 CREATE DATABASE audit;
 CREATE USER audit WITH ENCRYPTED PASSWORD 'password';
 GRANT ALL PRIVILEGES ON DATABASE audit TO audit;
+
+\c audit
+GRANT ALL ON SCHEMA public TO audit;
