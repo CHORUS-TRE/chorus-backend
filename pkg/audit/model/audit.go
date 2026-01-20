@@ -30,14 +30,15 @@ type AuditEntry struct {
 	TenantID      uint64
 	UserID        uint64
 	Username      string
-	Action        AuditAction
-	ResourceType  AuditResourceType
-	ResourceID    uint64
-	CorrelationID string
-	Method        string         // gRPC method name
-	StatusCode    int            // gRPC status code
-	ErrorMessage  string         // Error message if any
-	Details       map[string]any // JSONB for flexible querying
+	Action        AuditAction       // Type of action performed
+	ResourceType  AuditResourceType // Type of the resource
+	ResourceID    uint64            // ID of the resource
+	CorrelationID string            // To correlate with other logs
+	Method        string            // gRPC method name
+	StatusCode    int               // gRPC status code
+	ErrorMessage  string            // Error message if any
+	Description   string            // Human readable description of the action
+	Details       map[string]any    // JSONB for flexible querying
 	CreatedAt     time.Time
 }
 
@@ -50,6 +51,4 @@ type AuditFilter struct {
 	Action       *AuditAction
 	FromTime     *time.Time
 	ToTime       *time.Time
-	Limit        int
-	Offset       int
 }

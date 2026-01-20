@@ -14,6 +14,7 @@ CREATE TABLE public.audit (
     method TEXT NULL,
     statuscode INT NULL,
     errormessage TEXT NULL,
+    description TEXT NULL,
     details JSONB NULL,
     createdat TIMESTAMP NOT NULL,
     CONSTRAINT audit_pkey PRIMARY KEY (id)
