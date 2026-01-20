@@ -1,4 +1,4 @@
---- +migrate Up
+-- +migrate Up
 
 CREATE SEQUENCE public.audit_seq MINVALUE 1 MAXVALUE 9007199254740991 INCREMENT 1 START 1;
 -- +migrate StatementBegin
