@@ -80,7 +80,7 @@ storage:
       type: disk
       disk_config:
         enabled: true
-        base_path: docker/.diskfilestore  
+        base_path: docker/.diskfilestore
 
 services:
   audit_service:
