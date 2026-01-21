@@ -21,12 +21,12 @@ func ProvideAuditService() service.Auditer {
 
 		if !cfg.Services.AuditService.Enabled {
 			logger.TechLog.Info(context.Background(), "Audit service is disabled")
-			auditService = service.NewAuditService(nil, false)
+			auditService = service.NewNoOpAuditer()
 			return
 		}
 
 		auditStore := ProvideAuditStore()
-		auditService = service.NewAuditService(auditStore, true)
+		auditService = service.NewAuditService(auditStore)
 
 		auditService = service_mw.Logging(logger.BizLog)(auditService)
 	})
