@@ -25,10 +25,6 @@ func Logging(logger *logger.ContextLogger) func(service.Auditer) service.Auditer
 	}
 }
 
-func (c auditServiceLogging) IsEnabled() bool {
-	return c.next.IsEnabled()
-}
-
 func (c auditServiceLogging) Record(ctx context.Context, entry *model.AuditEntry) error {
 	c.logger.Debug(ctx, "request started")
 
