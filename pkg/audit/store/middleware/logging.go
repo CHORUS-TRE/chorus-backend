@@ -46,12 +46,12 @@ func (c auditStorageLogging) Record(ctx context.Context, entry *model.AuditEntry
 	return nil
 }
 
-func (c auditStorageLogging) RecordBatch(ctx context.Context, entries []*model.AuditEntry) error {
+func (c auditStorageLogging) BulkRecord(ctx context.Context, entries []*model.AuditEntry) error {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.RecordBatch(ctx, entries)
+	err := c.next.BulkRecord(ctx, entries)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

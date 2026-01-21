@@ -45,7 +45,7 @@ func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) erro
 	return err
 }
 
-func (s *AuditStorage) RecordBatch(ctx context.Context, entries []*model.AuditEntry) error {
+func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEntry) error {
 	return fmt.Errorf("Not implemented")
 }
 

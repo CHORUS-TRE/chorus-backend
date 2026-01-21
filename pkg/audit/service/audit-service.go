@@ -23,7 +23,7 @@ type AuditReader interface {
 
 type AuditStore interface {
 	Record(ctx context.Context, entry *model.AuditEntry) error
-	RecordBatch(ctx context.Context, entries []*model.AuditEntry) error
+	BulkRecord(ctx context.Context, entries []*model.AuditEntry) error
 	List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
 	Count(ctx context.Context, filter *model.AuditFilter) (int64, error)
 }
