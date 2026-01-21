@@ -11,8 +11,6 @@ import (
 type Auditer interface {
 	AuditWriter
 	AuditReader
-
-	IsEnabled() bool
 }
 
 type AuditWriter interface {
@@ -30,34 +28,35 @@ type AuditStore interface {
 	Count(ctx context.Context, filter *model.AuditFilter) (int64, error)
 }
 
-type AuditService struct {
-	store   AuditStore
-	enabled bool
+type auditService struct {
+	store AuditStore
 }
 
-func NewAuditService(store AuditStore, enabled bool) *AuditService {
-	return &AuditService{
-		enabled: enabled,
-		store:   store,
+func NewAuditService(store AuditStore) *auditService {
+	return &auditService{
+		store: store,
 	}
 }
 
-func (s *AuditService) IsEnabled() bool {
-	return s.enabled
-}
-
-func (s *AuditService) Record(ctx context.Context, entry *model.AuditEntry) error {
-	if !s.enabled {
-		return nil
-	}
-
+func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) error {
 	return fmt.Errorf("Not implemented")
 }
 
-func (s *AuditService) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
-	if !s.enabled {
-		return []*model.AuditEntry{}, nil, nil
-	}
-
+func (s *auditService) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	return nil, nil, fmt.Errorf("Not implemented")
+}
+
+// noOpAuditer is a no-operation implementation of the Auditer interface when audit logging is disabled
+type noOpAuditer struct{}
+
+func NewNoOpAuditer() Auditer {
+	return &noOpAuditer{}
+}
+
+func (n *noOpAuditer) Record(ctx context.Context, entry *model.AuditEntry) error {
+	return nil
+}
+
+func (n *noOpAuditer) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+	return []*model.AuditEntry{}, &common_model.PaginationResult{}, nil
 }
