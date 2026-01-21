@@ -20,7 +20,29 @@ func NewAuditStorage(db *sqlx.DB) *AuditStorage {
 }
 
 func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) error {
-	return fmt.Errorf("Not implemented")
+	const query = `
+		INSERT INTO audit_entries (id, tenantid, userid, username, action, resourcetype, resourceid, correlationid, method, statuscode, errormessage, description, details, createdat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);
+	`
+
+	_, err := s.db.ExecContext(ctx, query,
+		entry.ID,
+		entry.TenantID,
+		entry.UserID,
+		entry.Username,
+		entry.Action,
+		entry.ResourceType,
+		entry.ResourceID,
+		entry.CorrelationID,
+		entry.Method,
+		entry.StatusCode,
+		entry.ErrorMessage,
+		entry.Description,
+		entry.Details,
+		entry.CreatedAt,
+	)
+
+	return err
 }
 
 func (s *AuditStorage) RecordBatch(ctx context.Context, entries []*model.AuditEntry) error {
