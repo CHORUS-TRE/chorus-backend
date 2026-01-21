@@ -44,6 +44,17 @@ func TestDecodeStorage(t *testing.T) {
 	require.Equal(t, true, s.SSL.Enabled)
 	require.Equal(t, "/chorus/postgres-certs/client.crt", s.SSL.CertificateFile)
 	require.Equal(t, "/chorus/postgres-certs/client.key", s.SSL.KeyFile)
+
+	s = cfg.Storage.Datastores["audit"]
+	require.Equal(t, "postgres", s.Type)
+	require.Equal(t, "localhost", s.Host)
+	require.Equal(t, "4567", s.Port)
+	require.Equal(t, "audit_user", s.Username)
+	require.Equal(t, Sensitive("password"), s.Password)
+	require.Equal(t, "audit", s.Database)
+	require.Equal(t, 10, s.MaxConnections)
+	require.Equal(t, 10*time.Second, s.MaxLifetime)
+	require.Equal(t, false, s.SSL.Enabled)
 }
 
 func TestDecodeLog(t *testing.T) {
@@ -99,6 +110,14 @@ func TestDecodeLog(t *testing.T) {
 	require.Equal(t, 5*time.Second, l.GraylogTimeout)
 	require.True(t, l.GraylogBulkReceiving)
 	require.True(t, l.GraylogAuthorizeSelfSignedCertificate)
+}
+
+func TestDecodeAuditService(t *testing.T) {
+	cfg := config(t)
+
+	// Audit
+	require.True(t, cfg.Services.AuditService.Enabled)
+	require.Equal(t, "audit", cfg.Services.AuditService.DatastoreName)
 }
 
 func TestDecodeSteward(t *testing.T) {

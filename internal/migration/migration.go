@@ -9,8 +9,13 @@ package migration
 import (
 	"bytes"
 	"context"
+	"embed"
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -23,6 +28,51 @@ import (
 const (
 	POSTGRES = "postgres"
 )
+
+func readFile(migrationFS embed.FS, file string) (string, error) {
+	r, err := migrationFS.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer r.Close()
+
+	contents, err := io.ReadAll(r)
+	if err != nil {
+		return "", err
+	}
+	return string(contents), nil
+}
+
+func filePath(storageType, fileName string) string {
+	return fmt.Sprintf("%s/%s", storageType, fileName)
+}
+
+func removeFileExtension(f string) string {
+	extension := filepath.Ext(f)
+	return strings.TrimSuffix(f, extension)
+}
+
+func listMigrationFiles(migrationFS embed.FS, path string) ([]string, error) {
+	files := []string{}
+
+	err := fs.WalkDir(migrationFS, path, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			files = append(files, info.Name())
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
 
 // ErrNoMigration is returned when the migration with given ID is not found.
 var ErrNoMigration = errors.New("migration not found")

@@ -249,6 +249,11 @@ type (
 	}
 
 	Services struct {
+		AuditService struct {
+			Enabled       bool   `yaml:"enabled"`
+			DatastoreName string `yaml:"datastore_name"`
+		} `yaml:"audit_service"`
+
 		MailerService struct {
 			SMTP struct {
 				User             string    `yaml:"user"`
