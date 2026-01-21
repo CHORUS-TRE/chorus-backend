@@ -35,3 +35,10 @@ docker/.miniovolume
 docker/.postgresvolume
 
 local-doc/**/*
+
+# sonar local setup
+sonar-local-project.properties
+
+# claude & copilot files
+CLAUDE.md
+go-backend-expert.chatmode.md
