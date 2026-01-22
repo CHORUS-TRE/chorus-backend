@@ -5,9 +5,11 @@ import (
 	"time"
 
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/correlation"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )
 
@@ -42,10 +44,21 @@ func NewEntry(ctx context.Context, action model.AuditAction, resourceType model.
 	return entry
 }
 
-// Record is a convenience function that creates an entry and writes it
-func Record(ctx context.Context, writer service.AuditWriter, action model.AuditAction, resourceType model.AuditResourceType, resourceID uint64, opts ...Option) error {
+// Record is a convenience function that creates an entry and writes it asynchronously
+func Record(ctx context.Context, writer service.AuditWriter, action model.AuditAction, resourceType model.AuditResourceType, resourceID uint64, opts ...Option) {
+	// Create the audit entry synchronously
 	entry := NewEntry(ctx, action, resourceType, resourceID, opts...)
-	return writer.Record(ctx, entry)
+
+	// Write the audit entry asynchronously
+	go func() {
+		err := writer.Record(ctx, entry)
+		if err != nil {
+			logger.TechLog.Error(context.Background(), "failed to record audit entry",
+				zap.Error(err),
+				zap.Any("entry", entry),
+			)
+		}
+	}()
 }
 
 func WithWorkspaceID(workspaceID uint64) Option {
