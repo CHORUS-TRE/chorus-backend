@@ -20,13 +20,15 @@ func NewAuditStorage(db *sqlx.DB) *AuditStorage {
 	return &AuditStorage{db: db}
 }
 
-func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) error {
+func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
 	const query = `
 		INSERT INTO audit (id, tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+		RETURNING id, tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat;
 	`
 
-	_, err := s.db.ExecContext(ctx, query,
+	var createdEntry model.AuditEntry
+	err := s.db.GetContext(ctx, &createdEntry, query,
 		entry.ID,
 		entry.TenantID,
 		entry.UserID,
@@ -44,12 +46,15 @@ func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) erro
 		entry.Details,
 		entry.CreatedAt,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to record audit entry: %w", err)
+	}
 
-	return err
+	return &createdEntry, nil
 }
 
-func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEntry) error {
-	return fmt.Errorf("Not implemented")
+func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEntry) ([]*model.AuditEntry, error) {
+	return nil, fmt.Errorf("Not implemented")
 }
 
 func (s *AuditStorage) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {

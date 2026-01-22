@@ -14,7 +14,7 @@ type Auditer interface {
 }
 
 type AuditWriter interface {
-	Record(ctx context.Context, entry *model.AuditEntry) error
+	Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error)
 }
 
 type AuditReader interface {
@@ -22,8 +22,8 @@ type AuditReader interface {
 }
 
 type AuditStore interface {
-	Record(ctx context.Context, entry *model.AuditEntry) error
-	BulkRecord(ctx context.Context, entries []*model.AuditEntry) error
+	Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error)
+	BulkRecord(ctx context.Context, entries []*model.AuditEntry) ([]*model.AuditEntry, error)
 	List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
 	Count(ctx context.Context, filter *model.AuditFilter) (int64, error)
 }
@@ -38,8 +38,13 @@ func NewAuditService(store AuditStore) *auditService {
 	}
 }
 
-func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) error {
-	return fmt.Errorf("Not implemented")
+func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
+	createdEntry, err := s.store.Record(ctx, entry)
+	if err != nil {
+		return nil, fmt.Errorf("unable to record audit entry: %w", err)
+	}
+
+	return createdEntry, nil
 }
 
 func (s *auditService) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
@@ -53,8 +58,8 @@ func NewNoOpAuditer() Auditer {
 	return &noOpAuditer{}
 }
 
-func (n *noOpAuditer) Record(ctx context.Context, entry *model.AuditEntry) error {
-	return nil
+func (n *noOpAuditer) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
+	return nil, nil
 }
 
 func (n *noOpAuditer) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
