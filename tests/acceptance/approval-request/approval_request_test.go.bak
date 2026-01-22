@@ -92,6 +92,7 @@ var _ = Describe("approval request service", func() {
 					wsClient := WorkspaceServiceHTTPClient()
 					createWsReq := workspace.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
 						&workspace_models.ChorusWorkspace{
+							UserID:      fmt.Sprintf("%d", requesterUserID),
 							Name:        "Test Workspace for Approval",
 							ShortName:   "test-ws",
 							Description: "A workspace for testing approval requests",
@@ -194,13 +195,13 @@ func setupTables() {
 
 func cleanTables() {
 	q := `
-	DELETE FROM approval_request_files WHERE approval_request_id IN (SELECT id FROM approval_requests WHERE tenant_id = 88888);
-	DELETE FROM approval_request_approvers WHERE approval_request_id IN (SELECT id FROM approval_requests WHERE tenant_id = 88888);
-	DELETE FROM approval_requests WHERE tenant_id = 88888;
-	DELETE FROM workspace_files WHERE workspace_id IN (SELECT id FROM workspaces WHERE tenantid = 88888);
+	DELETE FROM approval_requests WHERE tenantid = 88888;
 	DELETE FROM workspaces WHERE tenantid = 88888;
 	DELETE FROM user_role WHERE id IN (99881, 99882, 99883);
 	DELETE FROM role_definitions WHERE id IN (98881, 98882, 98883);
+	DELETE FROM notifications_read_by WHERE tenantid = 88888;
+	DELETE FROM notifications WHERE tenantid = 88888;
+	DELETE FROM user_role where userid in (SELECT id FROM users WHERE tenantid = 88888 or username='user88888');
 	DELETE FROM users WHERE tenantid = 88888;
 	DELETE FROM tenants WHERE id = 88888;
 	`
