@@ -99,18 +99,21 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		return nil, fmt.Errorf("unable to update request with files: %w", err)
 	}
 
-	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
-		TenantID: request.TenantID,
-		Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
-		Content: notification_model.NotificationContent{
-			Type: "ApprovalRequestNotification",
-			ApprovalRequest: notification_model.ApprovalRequestNotification{
-				ApprovalRequestID: request.ID,
+	for _, approverID := range request.ApproverIDs {
+		err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+			TenantID: request.TenantID,
+			UserID:   approverID,
+			Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
+			Content: notification_model.NotificationContent{
+				Type: "ApprovalRequestNotification",
+				ApprovalRequest: &notification_model.ApprovalRequestNotification{
+					ApprovalRequestID: request.ID,
+				},
 			},
-		},
-	}, request.ApproverIDs)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create notification for approvers: %w", err)
+		}, []uint64{approverID})
+		if err != nil {
+			return nil, fmt.Errorf("unable to create notification for approvers: %w", err)
+		}
 	}
 
 	return updatedRequest, nil

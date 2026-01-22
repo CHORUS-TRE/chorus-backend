@@ -3995,6 +3995,12 @@ definitions:
         format: uint64
       pendingApproval:
         type: boolean
+  chorusApprovalRequestNotification:
+    type: object
+    properties:
+      approvalRequestId:
+        type: string
+        format: uint64
   chorusApprovalRequestStatus:
     type: string
     enum:
@@ -4647,6 +4653,9 @@ definitions:
       tenantId:
         type: string
         format: uint64
+      userId:
+        type: string
+        format: uint64
       message:
         type: string
       content:
@@ -4662,6 +4671,8 @@ definitions:
     properties:
       systemNotification:
         $ref: '#/definitions/chorusSystemNotification'
+      approvalRequestNotification:
+        $ref: '#/definitions/chorusApprovalRequestNotification'
   chorusOpenID:
     type: object
     properties:

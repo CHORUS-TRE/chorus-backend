@@ -21,15 +21,15 @@ var NotificationSortTypeToString = map[string]string{
 }
 
 type NotificationContent struct {
-	Type               string
-	SystemNotification SystemNotification
-	ApprovalRequest    ApprovalRequestNotification
+	Type               string                      `json:"type,omitempty"`
+	SystemNotification *SystemNotification         `json:"system_notification,omitempty"`
+	ApprovalRequest    *ApprovalRequestNotification `json:"approval_request,omitempty"`
 }
 
 type SystemNotification struct {
-	RefreshJWTRequired bool
+	RefreshJWTRequired bool `json:"refresh_jwt_required,omitempty"`
 }
 
 type ApprovalRequestNotification struct {
-	ApprovalRequestID uint64
+	ApprovalRequestID uint64 `json:"approval_request_id,omitempty"`
 }
