@@ -48,7 +48,12 @@ func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) (*mo
 }
 
 func (s *auditService) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
-	return nil, nil, fmt.Errorf("Not implemented")
+	entries, paginationRes, err := s.store.List(ctx, pagination, filter)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to list audit entries: %w", err)
+	}
+
+	return entries, paginationRes, nil
 }
 
 // noOpAuditer is a no-operation implementation of the Auditer interface when audit logging is disabled
