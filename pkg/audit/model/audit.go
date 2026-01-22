@@ -2,26 +2,22 @@ package model
 
 import "time"
 
-// AuditAction represents the type of action performed
-type AuditAction string
-
-const (
-	AuditActionCreate AuditAction = "CREATE"
-	AuditActionRead   AuditAction = "READ"
-	AuditActionUpdate AuditAction = "UPDATE"
-	AuditActionDelete AuditAction = "DELETE"
-	AuditActionList   AuditAction = "LIST"
-)
-
 // AuditResourceType represents the type of resource being audited
 type AuditResourceType string
 
 const (
-	AuditResourceUser        AuditResourceType = "USER"
-	AuditResourceApp         AuditResourceType = "APP"
-	AuditResourceAppInstance AuditResourceType = "APP_INSTANCE"
-	AuditResourceWorkbench   AuditResourceType = "WORKBENCH"
-	AuditResourceWorkspace   AuditResourceType = "WORKSPACE"
+	AuditResourceTenant          AuditResourceType = "TENANT"
+	AuditResourceUser            AuditResourceType = "USER"
+	AuditResourceUseerRole       AuditResourceType = "USER_ROLE"
+	AuditResourceUserPassword    AuditResourceType = "USER_PASSWORD"
+	AuditResourceUserTotp        AuditResourceType = "USER_TOTP"
+	AuditResourceWorkspace       AuditResourceType = "WORKSPACE"
+	AuditResourceWorkspaceFile   AuditResourceType = "WORKSPACE_FILE"
+	AuditResourceWorkspaceMember AuditResourceType = "WORKSPACE_MEMBER"
+	AuditResourceWorkbench       AuditResourceType = "WORKBENCH"
+	AuditResourceWorkbenchMember AuditResourceType = "WORKBENCH_MEMBER"
+	AuditResourceApp             AuditResourceType = "APP"
+	AuditResourceAppInstance     AuditResourceType = "APP_INSTANCE"
 )
 
 // AuditEntry represents a single audit log entry
