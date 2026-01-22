@@ -204,6 +204,8 @@ config:
           file_store_name: scratch
           store_prefix: /workspace-scratch
           workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+    approval_request_service:
+      staging_file_store_name: archive
 
   clients:
     docker_client:
