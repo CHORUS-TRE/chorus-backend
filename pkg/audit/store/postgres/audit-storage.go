@@ -21,7 +21,7 @@ func NewAuditStorage(db *sqlx.DB) *AuditStorage {
 
 func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) error {
 	const query = `
-		INSERT INTO audit_entries (id, tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat)
+		INSERT INTO audit (id, tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
 	`
 
