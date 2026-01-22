@@ -51,7 +51,7 @@ func Record(ctx context.Context, writer service.AuditWriter, action model.AuditA
 
 	// Write the audit entry asynchronously
 	go func() {
-		_, err := writer.Record(ctx, entry)
+		_, err := writer.Record(context.Background(), entry)
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "failed to record audit entry",
 				zap.Error(err),
