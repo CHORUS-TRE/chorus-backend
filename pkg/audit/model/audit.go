@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // AuditResourceType represents the type of resource being audited
 type AuditResourceType string
@@ -51,4 +53,13 @@ type AuditFilter struct {
 	WorkbenchID  *uint64
 	FromTime     *time.Time
 	ToTime       *time.Time
+}
+
+func (AuditEntry) IsValidSortType(sortType string) bool {
+	switch sortType {
+	case "createdat":
+		return true
+	default:
+		return false
+	}
 }
