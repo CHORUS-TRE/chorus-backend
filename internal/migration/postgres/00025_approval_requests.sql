@@ -28,8 +28,3 @@ CREATE INDEX approval_requests_tenantid_idx ON public.approval_requests (tenanti
 CREATE INDEX approval_requests_requesterid_idx ON public.approval_requests (requesterid);
 CREATE INDEX approval_requests_status_idx ON public.approval_requests (status);
 CREATE INDEX approval_requests_type_idx ON public.approval_requests (type);
-
--- +migrate Down
-
-DROP TABLE IF EXISTS public.approval_requests;
-DROP SEQUENCE IF EXISTS public.approval_requests_seq;

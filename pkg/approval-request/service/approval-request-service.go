@@ -8,6 +8,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	workspace_file_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 )
 
@@ -37,17 +38,23 @@ type ApprovalRequestStore interface {
 	DeleteApprovalRequest(ctx context.Context, tenantID, requestID uint64) error
 }
 
+type NotificationStore interface {
+	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
+}
+
 type ApprovalRequestService struct {
 	store              ApprovalRequestStore
 	workspaceFileStore workspace_file_service.WorkspaceFiler
 	stagingFileStore   filestore.FileStore
+	notificationStore  NotificationStore
 }
 
-func NewApprovalRequestService(store ApprovalRequestStore, workspaceFileStore workspace_file_service.WorkspaceFiler, stagingFileStore filestore.FileStore) *ApprovalRequestService {
+func NewApprovalRequestService(store ApprovalRequestStore, workspaceFileStore workspace_file_service.WorkspaceFiler, stagingFileStore filestore.FileStore, notificationStore NotificationStore) *ApprovalRequestService {
 	return &ApprovalRequestService{
 		store:              store,
 		workspaceFileStore: workspaceFileStore,
 		stagingFileStore:   stagingFileStore,
+		notificationStore:  notificationStore,
 	}
 }
 
@@ -90,6 +97,20 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		_ = s.cleanupRequestStorage(ctx, createdRequest.ID)
 		_ = s.store.DeleteApprovalRequest(ctx, request.TenantID, createdRequest.ID)
 		return nil, fmt.Errorf("unable to update request with files: %w", err)
+	}
+
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: request.TenantID,
+		Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
+		Content: notification_model.NotificationContent{
+			Type: "ApprovalRequestNotification",
+			ApprovalRequest: notification_model.ApprovalRequestNotification{
+				ApprovalRequestID: request.ID,
+			},
+		},
+	}, request.ApproverIDs)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create notification for approvers: %w", err)
 	}
 
 	return updatedRequest, nil

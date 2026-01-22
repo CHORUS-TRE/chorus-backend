@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
@@ -27,6 +28,7 @@ func ProvideApprovalRequestService() service.ApprovalRequester {
 			ProvideApprovalRequestStore(),
 			ProvideWorkspaceFile(),
 			ProvideApprovalRequestStagingFileStore(cfg.Services.ApprovalRequestService.StagingFileStoreName),
+			ProvideNotificationStore(),
 		)
 		approvalRequestService = service_mw.Logging(logger.BizLog)(approvalRequestService)
 		approvalRequestService = service_mw.Validation(ProvideValidator())(approvalRequestService)
@@ -75,6 +77,7 @@ func ProvideApprovalRequestStagingFileStore(stagingStoreName string) filestore.F
 
 		if store, ok := fileStores[stagingStoreName]; ok {
 			approvalRequestStagingFileStore = store
+			fmt.Println("Using staging file store:", stagingStoreName)
 		} else {
 			logger.TechLog.Fatal(context.Background(), "staging file store not found: "+stagingStoreName)
 		}
