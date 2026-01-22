@@ -1,0 +1,174 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "common.proto";
+import "approval-request.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus approval request service";
+        version: "1.0";
+        contact: {
+            name: "chorus approval request service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+
+message ListApprovalRequestsRequest {
+    PaginationQuery pagination = 1;
+    optional ApprovalRequestFilter filter = 2;
+}
+message ListApprovalRequestsReply {
+    ListApprovalRequestsResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListApprovalRequestsResult {
+    repeated ApprovalRequest approvalRequests = 1;
+}
+message ApprovalRequestFilter {
+    repeated ApprovalRequestStatus statusesIn = 1;
+    repeated ApprovalRequestType typesIn = 2;
+    optional uint64 sourceWorkspaceId = 3;
+    optional bool pendingApproval = 4;
+}
+
+message GetApprovalRequestRequest {
+    uint64 id = 1;
+}
+message GetApprovalRequestReply {
+    GetApprovalRequestResult result = 1;
+}
+message GetApprovalRequestResult {
+    ApprovalRequest approvalRequest = 1;
+}
+
+message CreateDataExtractionRequestRequest {
+    uint64 sourceWorkspaceId = 1;
+    string title = 2;
+    string description = 3;
+    repeated string filePaths = 4;
+    repeated uint64 approverIds = 5;
+}
+message CreateDataExtractionRequestReply {
+    CreateDataExtractionRequestResult result = 1;
+}
+message CreateDataExtractionRequestResult {
+    ApprovalRequest approvalRequest = 1;
+}
+
+message CreateDataTransferRequestRequest {
+    uint64 sourceWorkspaceId = 1;
+    uint64 destinationWorkspaceId = 2;
+    string title = 3;
+    string description = 4;
+    repeated string filePaths = 5;
+    repeated uint64 approverIds = 6;
+}
+message CreateDataTransferRequestReply {
+    CreateDataTransferRequestResult result = 1;
+}
+message CreateDataTransferRequestResult {
+    ApprovalRequest approvalRequest = 1;
+}
+
+message ApproveApprovalRequestRequest {
+    uint64 id = 1;
+    bool approve = 2;
+    optional string comment = 3;
+}
+message ApproveApprovalRequestReply {
+    ApproveApprovalRequestResult result = 1;
+}
+message ApproveApprovalRequestResult {
+    ApprovalRequest approvalRequest = 1;
+}
+
+message DeleteApprovalRequestRequest {
+    uint64 id = 1;
+}
+message DeleteApprovalRequestReply {
+    DeleteApprovalRequestResult result = 1;
+}
+message DeleteApprovalRequestResult {}
+
+
+service ApprovalRequestService {
+    rpc GetApprovalRequest(GetApprovalRequestRequest) returns (GetApprovalRequestReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/approval-requests/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get an approval request";
+            description: "This endpoint returns an approval request";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc ListApprovalRequests(ListApprovalRequestsRequest) returns (ListApprovalRequestsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/approval-requests"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List approval requests";
+            description: "This endpoint returns a list of approval requests";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc CreateDataExtractionRequest(CreateDataExtractionRequestRequest) returns (CreateDataExtractionRequestReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/approval-requests/data-extraction"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a data extraction request";
+            description: "This endpoint creates a data extraction approval request. Files are copied to a staging area for approval before extraction/download.";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc CreateDataTransferRequest(CreateDataTransferRequestRequest) returns (CreateDataTransferRequestReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/approval-requests/data-transfer"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a data transfer request";
+            description: "This endpoint creates a data transfer approval request. Files are copied to a staging area for approval before transfer to destination workspace.";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc ApproveApprovalRequest(ApproveApprovalRequestRequest) returns (ApproveApprovalRequestReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/approval-requests/{id}/approve"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Approve or reject an approval request";
+            description: "This endpoint approves or rejects an approval request";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc DeleteApprovalRequest(DeleteApprovalRequestRequest) returns (DeleteApprovalRequestReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/approval-requests/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete an approval request";
+            description: "This endpoint deletes an approval request. Only pending requests can be deleted.";
+            tags: "ApprovalRequestService";
+        };
+    };
+}

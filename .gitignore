@@ -33,6 +33,7 @@ junit.xml
 
 docker/.miniovolume
 docker/.postgresvolume
+docker/.diskfilestore
 
 local-doc/**/*
 
