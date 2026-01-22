@@ -96,6 +96,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.chorus.ssl.key_file", "/chorus/postgres-certs/client.key")
 
 	// Services
+	v.SetDefault("services.audit_service.enabled", false)
 	v.SetDefault("services.authentication_service.enabled", false)
 	v.SetDefault("services.authentication_service.auth_ui_enabled", false)
 	v.SetDefault("services.workspace_service.kill_fixed_check_interval", time.Hour)
