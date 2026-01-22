@@ -33,6 +33,8 @@ type AuditEntry struct {
 	Action        AuditAction       // Type of action performed
 	ResourceType  AuditResourceType // Type of the resource
 	ResourceID    uint64            // ID of the resource
+	WorkspaceID   uint64            // ID of the workspace
+	WorkbenchID   uint64            // ID of the workbench
 	CorrelationID string            // To correlate with other logs
 	Method        string            // gRPC method name
 	StatusCode    int               // gRPC status code
@@ -49,6 +51,8 @@ type AuditFilter struct {
 	ResourceType *AuditResourceType
 	ResourceID   *uint64
 	Action       *AuditAction
+	WorkspaceID  *uint64
+	WorkbenchID  *uint64
 	FromTime     *time.Time
 	ToTime       *time.Time
 }
