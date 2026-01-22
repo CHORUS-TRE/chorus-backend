@@ -48,6 +48,18 @@ func Record(ctx context.Context, writer service.AuditWriter, action model.AuditA
 	return writer.Record(ctx, entry)
 }
 
+func WithWorkspaceID(workspaceID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.WorkspaceID = workspaceID
+	}
+}
+
+func WithWorkbenchID(workbenchID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.WorkbenchID = workbenchID
+	}
+}
+
 // WithMethod sets the gRPC method name
 func WithMethod(method string) Option {
 	return func(entry *model.AuditEntry) {
