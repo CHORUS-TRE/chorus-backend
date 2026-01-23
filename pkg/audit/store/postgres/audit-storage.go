@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -48,7 +49,49 @@ func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) (*mo
 }
 
 func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEntry) ([]*model.AuditEntry, error) {
-	return nil, fmt.Errorf("Not implemented")
+	if len(entries) == 0 {
+		return []*model.AuditEntry{}, nil
+	}
+
+	const baseQuery = `
+		INSERT INTO audit (tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat)
+		VALUES `
+
+	const returnClause = `
+		RETURNING id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat;
+	`
+
+	values := []string{}
+	args := []interface{}{}
+
+	for i, entry := range entries {
+		offset := i * 10 // 10 columns per entry
+		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8, offset+9, offset+10))
+
+		args = append(args,
+			entry.TenantID,
+			entry.UserID,
+			entry.Username,
+			entry.CorrelationID,
+			entry.Action,
+			entry.WorkspaceID,
+			entry.WorkbenchID,
+			entry.Description,
+			entry.Details,
+			entry.CreatedAt,
+		)
+	}
+
+	query := baseQuery + strings.Join(values, ", ") + returnClause
+
+	var createdEntries []*model.AuditEntry
+	err := s.db.SelectContext(ctx, &createdEntries, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to bulk record audit entries: %w", err)
+	}
+
+	return createdEntries, nil
 }
 
 func (s *AuditStorage) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
