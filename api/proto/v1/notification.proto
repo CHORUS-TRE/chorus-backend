@@ -7,15 +7,17 @@ import "google/protobuf/timestamp.proto";
 message Notification {
     string id = 1;
     uint64 tenantId = 2;
-    string message = 3;
-    NotificationContent content = 4;
-    google.protobuf.Timestamp createdAt = 5;
-    google.protobuf.Timestamp readAt = 6;
+    uint64 userId = 3;
+    string message = 4;
+    NotificationContent content = 5;
+    google.protobuf.Timestamp createdAt = 6;
+    google.protobuf.Timestamp readAt = 7;
 }
 
 message NotificationContent {
     oneof content {
         SystemNotification systemNotification = 1;
+        ApprovalRequestNotification approvalRequestNotification = 2;
     }
 }
 
@@ -23,4 +25,8 @@ message SystemNotification {
     oneof systemNotificationContent {
         bool refreshJWTRequired = 1;
     }
+}
+
+message ApprovalRequestNotification {
+    uint64 approvalRequestId = 1;
 }

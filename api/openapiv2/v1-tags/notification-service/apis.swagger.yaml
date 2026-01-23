@@ -107,6 +107,12 @@ paths:
       tags:
         - NotificationService
 definitions:
+  chorusApprovalRequestNotification:
+    type: object
+    properties:
+      approvalRequestId:
+        type: string
+        format: uint64
   chorusCountUnreadNotificationsReply:
     type: object
     properties:
@@ -141,6 +147,9 @@ definitions:
       tenantId:
         type: string
         format: uint64
+      userId:
+        type: string
+        format: uint64
       message:
         type: string
       content:
@@ -156,6 +165,8 @@ definitions:
     properties:
       systemNotification:
         $ref: '#/definitions/chorusSystemNotification'
+      approvalRequestNotification:
+        $ref: '#/definitions/chorusApprovalRequestNotification'
   chorusPaginationQuery:
     type: object
     properties:

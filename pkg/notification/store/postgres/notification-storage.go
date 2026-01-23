@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -21,31 +22,33 @@ type NotificationStorage struct {
 	db *sqlx.DB
 }
 
-// notificationRow is a helper struct for scanning database rows
 type notificationRow struct {
-	ID                 string     `db:"id"`
-	TenantID           uint64     `db:"tenantid"`
-	Message            string     `db:"message"`
-	Type               string     `db:"type"`
-	RefreshJWTRequired bool       `db:"refreshjwtrequired"`
-	CreatedAt          time.Time  `db:"createdat"`
-	ReadAt             *time.Time `db:"readat"`
+	ID        string          `db:"id"`
+	TenantID  uint64          `db:"tenantid"`
+	UserID    uint64          `db:"userid"`
+	Message   string          `db:"message"`
+	Content   json.RawMessage `db:"content"`
+	CreatedAt time.Time       `db:"createdat"`
+	ReadAt    *time.Time      `db:"readat"`
 }
 
-func (nr *notificationRow) toNotification() *model.Notification {
+func (nr *notificationRow) toNotification() (*model.Notification, error) {
+	var content model.NotificationContent
+	if len(nr.Content) > 0 {
+		if err := json.Unmarshal(nr.Content, &content); err != nil {
+			return nil, fmt.Errorf("unable to unmarshal notification content: %w", err)
+		}
+	}
+
 	return &model.Notification{
-		ID:       nr.ID,
-		TenantID: nr.TenantID,
-		Message:  nr.Message,
-		Content: model.NotificationContent{
-			Type: nr.Type,
-			SystemNotification: model.SystemNotification{
-				RefreshJWTRequired: nr.RefreshJWTRequired,
-			},
-		},
+		ID:        nr.ID,
+		TenantID:  nr.TenantID,
+		UserID:    nr.UserID,
+		Message:   nr.Message,
+		Content:   content,
 		CreatedAt: nr.CreatedAt,
 		ReadAt:    nr.ReadAt,
-	}
+	}, nil
 }
 
 func NewNotificationStorage(db *sqlx.DB) *NotificationStorage {
@@ -56,10 +59,15 @@ func (s *NotificationStorage) CreateNotification(ctx context.Context, notificati
 	if notification.ID == "" {
 		notification.ID = uuid.Next()
 	}
-	const query = `INSERT INTO notifications (id, tenantid, message, type, refreshjwtrequired) VALUES ($1, $2, $3, $4, $5)`
 
-	if _, err := s.db.ExecContext(ctx, query, notification.ID, notification.TenantID, notification.Message, notification.Content.Type, notification.Content.SystemNotification.RefreshJWTRequired); err != nil {
-		// on duplicate key return no error
+	contentJSON, err := json.Marshal(notification.Content)
+	if err != nil {
+		return fmt.Errorf("unable to marshal notification content: %w", err)
+	}
+
+	const query = `INSERT INTO notifications (id, tenantid, userid, message, content) VALUES ($1, $2, $3, $4, $5)`
+
+	if _, err := s.db.ExecContext(ctx, query, notification.ID, notification.TenantID, notification.UserID, notification.Message, contentJSON); err != nil {
 		const DuplicateKeyErrorCode = "23505"
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == DuplicateKeyErrorCode {
 			return nil
@@ -155,7 +163,7 @@ func buildSortClause(args []interface{}, sort common.Sort, offset uint64, limit 
 
 func (s *NotificationStorage) getNotifications(ctx context.Context, whereClause, sortClause string, args []interface{}) ([]*model.Notification, error) {
 	selectQuery := `
-SELECT n.id, n.tenantid, n.message, n.type, n.refreshjwtrequired, n.createdat, nrb.readat FROM notifications n
+SELECT n.id, n.tenantid, n.userid, n.message, n.content, n.createdat, nrb.readat FROM notifications n
 left join notifications_read_by nrb on n.id = nrb.notificationid
 ` + whereClause + sortClause
 	query, args, err := sqlx.In(selectQuery, args...)
@@ -170,7 +178,11 @@ left join notifications_read_by nrb on n.id = nrb.notificationid
 
 	notifications := make([]*model.Notification, len(rows))
 	for i, row := range rows {
-		notifications[i] = row.toNotification()
+		notification, err := row.toNotification()
+		if err != nil {
+			return nil, err
+		}
+		notifications[i] = notification
 	}
 	return notifications, nil
 }

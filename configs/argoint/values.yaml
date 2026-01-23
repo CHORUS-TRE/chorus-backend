@@ -188,6 +188,8 @@ config:
           file_store_name: archive
           store_prefix: /workspace-archive
           workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+    approval_request_service:
+      staging_file_store_name: archive
 
   clients:
     docker_client:
