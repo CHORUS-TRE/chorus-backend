@@ -55,6 +55,30 @@ func TestDecodeStorage(t *testing.T) {
 	require.Equal(t, 10, s.MaxConnections)
 	require.Equal(t, 10*time.Second, s.MaxLifetime)
 	require.Equal(t, false, s.SSL.Enabled)
+
+	fs := cfg.Storage.FileStores["archive"]
+	require.Equal(t, "minio", fs.Type)
+	require.Equal(t, true, fs.MinioConfig.Enabled)
+	require.Equal(t, "minio:9000", fs.MinioConfig.Endpoint)
+	require.Equal(t, "minio_access_key", fs.MinioConfig.AccessKeyID)
+	require.Equal(t, Sensitive("minio_secret_key"), fs.MinioConfig.SecretAccessKey)
+	require.Equal(t, "archive-bucket", fs.MinioConfig.BucketName)
+	require.Equal(t, true, fs.MinioConfig.UseSSL)
+	require.Equal(t, uint64(1), fs.MinioConfig.MultipartMinPartSize)
+	require.Equal(t, uint64(2), fs.MinioConfig.MultipartMaxPartSize)
+	require.Equal(t, uint64(3), fs.MinioConfig.MultipartMaxTotalParts)
+
+	fs = cfg.Storage.FileStores["scratch"]
+	require.Equal(t, "minio", fs.Type)
+	require.Equal(t, true, fs.MinioConfig.Enabled)
+	require.Equal(t, "minio:9000", fs.MinioConfig.Endpoint)
+	require.Equal(t, "minio_access_key", fs.MinioConfig.AccessKeyID)
+	require.Equal(t, Sensitive("minio_secret_key"), fs.MinioConfig.SecretAccessKey)
+	require.Equal(t, "archive-bucket", fs.MinioConfig.BucketName)
+	require.Equal(t, true, fs.MinioConfig.UseSSL)
+	require.Equal(t, uint64(1), fs.MinioConfig.MultipartMinPartSize)
+	require.Equal(t, uint64(2), fs.MinioConfig.MultipartMaxPartSize)
+	require.Equal(t, uint64(3), fs.MinioConfig.MultipartMaxTotalParts)
 }
 
 func TestDecodeLog(t *testing.T) {

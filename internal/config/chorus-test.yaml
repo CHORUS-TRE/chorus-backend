@@ -41,6 +41,31 @@ storage:
       max_lifetime: 10s
       ssl:
         enabled: false
+  file_stores:
+    archive:
+      type: minio
+      minio_config:
+        enabled: true
+        endpoint: minio:9000
+        access_key_id: minio_access_key
+        secret_access_key: minio_secret_key
+        bucket_name: archive-bucket
+        use_ssl: true
+        multipart_min_part_size: 1
+        multipart_max_part_size: 2
+        multipart_max_total_parts: 3
+    scratch:
+      type: minio
+      minio_config:
+        enabled: true
+        endpoint: minio:9000
+        access_key_id: minio_access_key
+        secret_access_key: minio_secret_key
+        bucket_name: archive-bucket
+        use_ssl: true
+        multipart_min_part_size: 1
+        multipart_max_part_size: 2
+        multipart_max_total_parts: 3
 log:
   loggers:
     stdout_technical:
