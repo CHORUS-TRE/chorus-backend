@@ -11,18 +11,18 @@ import (
 type AuditResourceType string
 
 const (
-	AuditResourceTenant          AuditResourceType = "TENANT"
-	AuditResourceUser            AuditResourceType = "USER"
-	AuditResourceUseerRole       AuditResourceType = "USER_ROLE"
-	AuditResourceUserPassword    AuditResourceType = "USER_PASSWORD"
-	AuditResourceUserTotp        AuditResourceType = "USER_TOTP"
-	AuditResourceWorkspace       AuditResourceType = "WORKSPACE"
-	AuditResourceWorkspaceFile   AuditResourceType = "WORKSPACE_FILE"
-	AuditResourceWorkspaceMember AuditResourceType = "WORKSPACE_MEMBER"
-	AuditResourceWorkbench       AuditResourceType = "WORKBENCH"
-	AuditResourceWorkbenchMember AuditResourceType = "WORKBENCH_MEMBER"
-	AuditResourceApp             AuditResourceType = "APP"
-	AuditResourceAppInstance     AuditResourceType = "APP_INSTANCE"
+	AuditResourceTenant          AuditResourceType = "Tenant"
+	AuditResourceUser            AuditResourceType = "User"
+	AuditResourceUseerRole       AuditResourceType = "UserRole"
+	AuditResourceUserPassword    AuditResourceType = "UserPassword"
+	AuditResourceUserTotp        AuditResourceType = "UserTotp"
+	AuditResourceWorkspace       AuditResourceType = "Workspace"
+	AuditResourceWorkspaceFile   AuditResourceType = "WorkspaceFile"
+	AuditResourceWorkspaceMember AuditResourceType = "WorkspaceMember"
+	AuditResourceWorkbench       AuditResourceType = "Workbench"
+	AuditResourceWorkbenchMember AuditResourceType = "WorkbenchMember"
+	AuditResourceApp             AuditResourceType = "App"
+	AuditResourceAppInstance     AuditResourceType = "AppInstance"
 )
 
 // AuditEntry represents a single audit log entry
