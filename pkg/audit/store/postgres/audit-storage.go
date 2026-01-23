@@ -22,9 +22,9 @@ func NewAuditStorage(db *sqlx.DB) *AuditStorage {
 
 func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
 	const query = `
-		INSERT INTO audit (tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-		RETURNING id, tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat;
+		INSERT INTO audit (tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat;
 	`
 
 	var createdEntry model.AuditEntry
@@ -32,15 +32,10 @@ func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) (*mo
 		entry.TenantID,
 		entry.UserID,
 		entry.Username,
+		entry.CorrelationID,
 		entry.Action,
-		entry.ResourceType,
-		entry.ResourceID,
 		entry.WorkspaceID,
 		entry.WorkbenchID,
-		entry.CorrelationID,
-		entry.Method,
-		entry.StatusCode,
-		entry.ErrorMessage,
 		entry.Description,
 		entry.Details,
 		entry.CreatedAt,
@@ -74,7 +69,7 @@ func (s *AuditStorage) List(ctx context.Context, pagination *common_model.Pagina
 	}
 
 	// Get audit entries query
-	query := "SELECT id, tenantid, userid, username, action, resourcetype, resourceid, workspaceid, workbenchid, correlationid, method, statuscode, errormessage, description, details, createdat FROM audit"
+	query := "SELECT id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat FROM audit"
 	if filterClause != "" {
 		query += " WHERE " + filterClause
 	}

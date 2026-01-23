@@ -141,16 +141,6 @@ func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}
 		*args = append(*args, filter.UserID)
 	}
 
-	if filter != nil && filter.ResourceType != nil {
-		clauses = append(clauses, fmt.Sprintf("resourcetype = $%d", len(*args)+1))
-		*args = append(*args, filter.ResourceType)
-	}
-
-	if filter != nil && *filter.ResourceID != 0 {
-		clauses = append(clauses, fmt.Sprintf("resourceid = $%d", len(*args)+1))
-		*args = append(*args, filter.ResourceID)
-	}
-
 	if filter != nil && filter.Action != nil {
 		clauses = append(clauses, fmt.Sprintf("action = $%d", len(*args)+1))
 		*args = append(*args, filter.Action)
