@@ -7,24 +7,6 @@ import (
 	"time"
 )
 
-// AuditResourceType represents the type of resource being audited
-type AuditResourceType string
-
-const (
-	AuditResourceTenant          AuditResourceType = "Tenant"
-	AuditResourceUser            AuditResourceType = "User"
-	AuditResourceUseerRole       AuditResourceType = "UserRole"
-	AuditResourceUserPassword    AuditResourceType = "UserPassword"
-	AuditResourceUserTotp        AuditResourceType = "UserTotp"
-	AuditResourceWorkspace       AuditResourceType = "Workspace"
-	AuditResourceWorkspaceFile   AuditResourceType = "WorkspaceFile"
-	AuditResourceWorkspaceMember AuditResourceType = "WorkspaceMember"
-	AuditResourceWorkbench       AuditResourceType = "Workbench"
-	AuditResourceWorkbenchMember AuditResourceType = "WorkbenchMember"
-	AuditResourceApp             AuditResourceType = "App"
-	AuditResourceAppInstance     AuditResourceType = "AppInstance"
-)
-
 // AuditEntry represents a single audit log entry
 type AuditEntry struct {
 	ID uint64
@@ -71,15 +53,13 @@ func (d AuditDetails) Value() (driver.Value, error) {
 
 // AuditFilter for querying audit entries
 type AuditFilter struct {
-	TenantID     *uint64
-	UserID       *uint64
-	ResourceType *AuditResourceType
-	ResourceID   *uint64
-	Action       *AuditAction
-	WorkspaceID  *uint64
-	WorkbenchID  *uint64
-	FromTime     *time.Time
-	ToTime       *time.Time
+	TenantID    *uint64
+	UserID      *uint64
+	Action      *AuditAction
+	WorkspaceID *uint64
+	WorkbenchID *uint64
+	FromTime    *time.Time
+	ToTime      *time.Time
 }
 
 func (AuditEntry) IsValidSortType(sortType string) bool {
