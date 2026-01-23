@@ -245,13 +245,12 @@ func setupTables() {
 
 	q := `
 	INSERT INTO tenants(id, name) VALUES (88888, 'tenant test');
-	INSERT INTO notifications (id, tenantid, message, type, createdat) VALUES 
-		('88888-notEnoughFunds', 88888, 'Fail: err1', '', now()),
-		('88889-notEnoughFunds', 88888, 'Fail: err1', '', '2020-03-08T15:51:50'),
-		('88889-err2', 88888, 'Fail: err2', '', '2020-03-07T15:51:50'),
-		('88890-err3', 88888, 'Fail: The Transaction for cmta deploy has been rejected', '', '2020-03-06T15:51:50');
-
 	INSERT INTO users (id, tenantid, username) VALUES (88888, 88888, 'manager01'), (88889, 88888, 'manager02');
+	INSERT INTO notifications (id, tenantid, userid, message, createdat) VALUES 
+		('88888-notEnoughFunds', 88888, 88888, 'Fail: err1', now()),
+		('88889-notEnoughFunds', 88888, 88888, 'Fail: err1', '2020-03-08T15:51:50'),
+		('88889-err2', 88888, 88888, 'Fail: err2', '2020-03-07T15:51:50'),
+		('88890-err3', 88888, 88888, 'Fail: The Transaction for cmta deploy has been rejected', '2020-03-06T15:51:50');
 
 	INSERT INTO notifications_read_by (tenantid, notificationid, userid, readat) VALUES (88888, '88888-notEnoughFunds', 88888, null),
 		(88888, '88889-notEnoughFunds', 88888, now()), (88888, '88889-err2', 88888, null), (88888, '88890-err3', 88888, now());

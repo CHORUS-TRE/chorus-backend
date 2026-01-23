@@ -239,6 +239,8 @@ services:
         file_store_name: disk
         store_prefix: /disk
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+  approval_request_service:
+    staging_file_store_name: disk
         
 # Client configurations added using the create-local-cluster.sh script
 # clients:

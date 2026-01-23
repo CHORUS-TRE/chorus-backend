@@ -404,10 +404,11 @@ func (u *UserService) CreateUserRoles(ctx context.Context, tenantID, userID uint
 
 	err = u.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
+		UserID:   userID,
 		Message:  "You have been assigned new roles",
 		Content: notification_model.NotificationContent{
 			Type: "SystemNotification",
-			SystemNotification: notification_model.SystemNotification{
+			SystemNotification: &notification_model.SystemNotification{
 				RefreshJWTRequired: true,
 			},
 		},
@@ -427,10 +428,11 @@ func (u *UserService) RemoveUserRoles(ctx context.Context, tenantID, userID uint
 
 	err = u.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
+		UserID:   userID,
 		Message:  "You have been assigned new roles",
 		Content: notification_model.NotificationContent{
 			Type: "SystemNotification",
-			SystemNotification: notification_model.SystemNotification{
+			SystemNotification: &notification_model.SystemNotification{
 				RefreshJWTRequired: true,
 			},
 		},

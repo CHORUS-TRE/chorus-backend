@@ -35,6 +35,10 @@ func (c *Caching) GetWorkspaceFile(ctx context.Context, workspaceID uint64, file
 	return c.next.GetWorkspaceFile(ctx, workspaceID, filePath)
 }
 
+func (c *Caching) GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
+	return c.next.GetWorkspaceFileWithContent(ctx, workspaceID, filePath)
+}
+
 func (c *Caching) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	return c.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
 }

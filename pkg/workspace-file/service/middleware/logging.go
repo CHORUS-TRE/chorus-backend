@@ -46,6 +46,26 @@ func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspace
 	return res, nil
 }
 
+func (c workspaceServiceLogging) GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
+	now := time.Now()
+
+	res, err := c.next.GetWorkspaceFileWithContent(ctx, workspaceID, filePath)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			logger.WithWorkspaceIDField(workspaceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to get workspace file with content: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		logger.WithWorkspaceIDField(workspaceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	now := time.Now()
 

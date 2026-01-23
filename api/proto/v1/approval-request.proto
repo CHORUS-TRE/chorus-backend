@@ -1,0 +1,59 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+enum ApprovalRequestType {
+    APPROVAL_REQUEST_TYPE_UNSPECIFIED = 0;
+    APPROVAL_REQUEST_TYPE_DATA_EXTRACTION = 1;
+    APPROVAL_REQUEST_TYPE_DATA_TRANSFER = 2;
+}
+
+enum ApprovalRequestStatus {
+    APPROVAL_REQUEST_STATUS_UNSPECIFIED = 0;
+    APPROVAL_REQUEST_STATUS_PENDING = 1;
+    APPROVAL_REQUEST_STATUS_APPROVED = 2;
+    APPROVAL_REQUEST_STATUS_REJECTED = 3;
+    APPROVAL_REQUEST_STATUS_CANCELLED = 4;
+}
+
+message ApprovalRequestFile {
+    string sourcePath = 1;
+    string destinationPath = 2;
+    uint64 size = 3;
+}
+
+message DataExtractionDetails {
+    uint64 sourceWorkspaceId = 1;
+    repeated ApprovalRequestFile files = 2;
+}
+
+message DataTransferDetails {
+    uint64 sourceWorkspaceId = 1;
+    uint64 destinationWorkspaceId = 2;
+    repeated ApprovalRequestFile files = 3;
+}
+
+message ApprovalRequest {
+    uint64 id = 1;
+    uint64 tenantId = 2;
+    uint64 requesterId = 3;
+
+    ApprovalRequestType type = 4;
+    ApprovalRequestStatus status = 5;
+    string title = 6;
+    string description = 7;
+
+    oneof details {
+        DataExtractionDetails dataExtraction = 8;
+        DataTransferDetails dataTransfer = 9;
+    }
+
+    repeated uint64 approverIds = 10;
+    optional uint64 approvedById = 11;
+
+    google.protobuf.Timestamp createdAt = 12;
+    google.protobuf.Timestamp updatedAt = 13;
+    optional google.protobuf.Timestamp approvedAt = 14;
+}

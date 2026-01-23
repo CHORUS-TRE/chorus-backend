@@ -312,6 +312,10 @@ type (
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
 
+		ApprovalRequestService struct {
+			StagingFileStoreName string `yaml:"staging_file_store_name"`
+		} `yaml:"approval_request_service"`
+
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`

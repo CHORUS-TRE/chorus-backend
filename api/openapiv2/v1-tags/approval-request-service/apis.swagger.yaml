@@ -1,0 +1,497 @@
+swagger: "2.0"
+info:
+  title: chorus approval request service
+  version: "1.0"
+  contact:
+    name: chorus approval request service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: ApprovalRequestService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/approval-requests:
+    get:
+      summary: List approval requests
+      description: This endpoint returns a list of approval requests
+      operationId: ApprovalRequestService_ListApprovalRequests
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListApprovalRequestsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.statusesIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            enum:
+              - APPROVAL_REQUEST_STATUS_UNSPECIFIED
+              - APPROVAL_REQUEST_STATUS_PENDING
+              - APPROVAL_REQUEST_STATUS_APPROVED
+              - APPROVAL_REQUEST_STATUS_REJECTED
+              - APPROVAL_REQUEST_STATUS_CANCELLED
+          collectionFormat: multi
+        - name: filter.typesIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            enum:
+              - APPROVAL_REQUEST_TYPE_UNSPECIFIED
+              - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
+              - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
+          collectionFormat: multi
+        - name: filter.sourceWorkspaceId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.pendingApproval
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/data-extraction:
+    post:
+      summary: Create a data extraction request
+      description: This endpoint creates a data extraction approval request. Files are copied to a staging area for approval before extraction/download.
+      operationId: ApprovalRequestService_CreateDataExtractionRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateDataExtractionRequestReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateDataExtractionRequestRequest'
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/data-transfer:
+    post:
+      summary: Create a data transfer request
+      description: This endpoint creates a data transfer approval request. Files are copied to a staging area for approval before transfer to destination workspace.
+      operationId: ApprovalRequestService_CreateDataTransferRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateDataTransferRequestReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateDataTransferRequestRequest'
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/{id}:
+    get:
+      summary: Get an approval request
+      description: This endpoint returns an approval request
+      operationId: ApprovalRequestService_GetApprovalRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetApprovalRequestReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - ApprovalRequestService
+    delete:
+      summary: Delete an approval request
+      description: This endpoint deletes an approval request. Only pending requests can be deleted.
+      operationId: ApprovalRequestService_DeleteApprovalRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteApprovalRequestReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/{id}/approve:
+    post:
+      summary: Approve or reject an approval request
+      description: This endpoint approves or rejects an approval request
+      operationId: ApprovalRequestService_ApproveApprovalRequest
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusApproveApprovalRequestReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ApprovalRequestServiceApproveApprovalRequestBody'
+      tags:
+        - ApprovalRequestService
+definitions:
+  ApprovalRequestServiceApproveApprovalRequestBody:
+    type: object
+    properties:
+      approve:
+        type: boolean
+      comment:
+        type: string
+  chorusApprovalRequest:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      requesterId:
+        type: string
+        format: uint64
+      type:
+        $ref: '#/definitions/chorusApprovalRequestType'
+      status:
+        $ref: '#/definitions/chorusApprovalRequestStatus'
+      title:
+        type: string
+      description:
+        type: string
+      dataExtraction:
+        $ref: '#/definitions/chorusDataExtractionDetails'
+      dataTransfer:
+        $ref: '#/definitions/chorusDataTransferDetails'
+      approverIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+      approvedById:
+        type: string
+        format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+      approvedAt:
+        type: string
+        format: date-time
+  chorusApprovalRequestFile:
+    type: object
+    properties:
+      sourcePath:
+        type: string
+      destinationPath:
+        type: string
+      size:
+        type: string
+        format: uint64
+  chorusApprovalRequestFilter:
+    type: object
+    properties:
+      statusesIn:
+        type: array
+        items:
+          $ref: '#/definitions/chorusApprovalRequestStatus'
+      typesIn:
+        type: array
+        items:
+          $ref: '#/definitions/chorusApprovalRequestType'
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      pendingApproval:
+        type: boolean
+  chorusApprovalRequestStatus:
+    type: string
+    enum:
+      - APPROVAL_REQUEST_STATUS_UNSPECIFIED
+      - APPROVAL_REQUEST_STATUS_PENDING
+      - APPROVAL_REQUEST_STATUS_APPROVED
+      - APPROVAL_REQUEST_STATUS_REJECTED
+      - APPROVAL_REQUEST_STATUS_CANCELLED
+    default: APPROVAL_REQUEST_STATUS_UNSPECIFIED
+  chorusApprovalRequestType:
+    type: string
+    enum:
+      - APPROVAL_REQUEST_TYPE_UNSPECIFIED
+      - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
+      - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
+    default: APPROVAL_REQUEST_TYPE_UNSPECIFIED
+  chorusApproveApprovalRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusApproveApprovalRequestResult'
+  chorusApproveApprovalRequestResult:
+    type: object
+    properties:
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
+  chorusCreateDataExtractionRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateDataExtractionRequestResult'
+  chorusCreateDataExtractionRequestRequest:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      title:
+        type: string
+      description:
+        type: string
+      filePaths:
+        type: array
+        items:
+          type: string
+      approverIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+  chorusCreateDataExtractionRequestResult:
+    type: object
+    properties:
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
+  chorusCreateDataTransferRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateDataTransferRequestResult'
+  chorusCreateDataTransferRequestRequest:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      destinationWorkspaceId:
+        type: string
+        format: uint64
+      title:
+        type: string
+      description:
+        type: string
+      filePaths:
+        type: array
+        items:
+          type: string
+      approverIds:
+        type: array
+        items:
+          type: string
+          format: uint64
+  chorusCreateDataTransferRequestResult:
+    type: object
+    properties:
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
+  chorusDataExtractionDetails:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequestFile'
+  chorusDataTransferDetails:
+    type: object
+    properties:
+      sourceWorkspaceId:
+        type: string
+        format: uint64
+      destinationWorkspaceId:
+        type: string
+        format: uint64
+      files:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequestFile'
+  chorusDeleteApprovalRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteApprovalRequestResult'
+  chorusDeleteApprovalRequestResult:
+    type: object
+  chorusGetApprovalRequestReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetApprovalRequestResult'
+  chorusGetApprovalRequestResult:
+    type: object
+    properties:
+      approvalRequest:
+        $ref: '#/definitions/chorusApprovalRequest'
+  chorusListApprovalRequestsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListApprovalRequestsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListApprovalRequestsResult:
+    type: object
+    properties:
+      approvalRequests:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusApprovalRequest'
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusPaginationResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int64
+        description: Total number of results
+      offset:
+        type: integer
+        format: int64
+        description: Offset used for pagination
+      limit:
+        type: integer
+        format: int64
+        description: Limit used for pagination
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Sort order used for pagination
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
