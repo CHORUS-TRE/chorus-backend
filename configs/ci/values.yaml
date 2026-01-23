@@ -214,7 +214,7 @@ config:
         type: disk
         disk_config:
           enabled: true
-          base_path: /chorus/disk/.diskfilestore
+          base_path: /var/lib/chorus/disk/.diskfilestore
 
   services:
     index_service:
