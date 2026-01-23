@@ -214,7 +214,7 @@ config:
         type: disk
         disk_config:
           enabled: true
-          base_path: docker/.diskfilestore
+          base_path: /chorus/disk/.diskfilestore
 
   services:
     index_service:
