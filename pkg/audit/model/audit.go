@@ -27,22 +27,20 @@ const (
 
 // AuditEntry represents a single audit log entry
 type AuditEntry struct {
-	ID            uint64
+	ID uint64
+
 	TenantID      uint64
 	UserID        uint64
 	Username      string
-	Action        AuditAction       // Type of action performed
-	ResourceType  AuditResourceType // Type of the resource
-	ResourceID    uint64            // ID of the resource
-	WorkspaceID   uint64            // ID of the workspace
-	WorkbenchID   uint64            // ID of the workbench
-	CorrelationID string            // To correlate with other logs
-	Method        string            // gRPC method name
-	StatusCode    int               // gRPC status code
-	ErrorMessage  string            // Error message if any
-	Description   string            // Human readable description of the action
-	Details       AuditDetails      // JSONB for flexible querying
-	CreatedAt     time.Time
+	CorrelationID string // To correlate with other logs
+
+	Action      AuditAction  // Type of action performed
+	WorkspaceID uint64       // ID of the workspace
+	WorkbenchID uint64       // ID of the workbench
+	Description string       // Human readable description of the action
+	Details     AuditDetails // JSONB for flexible querying
+
+	CreatedAt time.Time
 }
 
 type AuditDetails map[string]any
