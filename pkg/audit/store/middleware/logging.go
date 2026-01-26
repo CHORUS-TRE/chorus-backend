@@ -87,12 +87,12 @@ func (c auditStorageLogging) List(ctx context.Context, tenantID uint64, paginati
 	return res, paginationRes, nil
 }
 
-func (c auditStorageLogging) Count(ctx context.Context, filter *model.AuditFilter) (int64, error) {
+func (c auditStorageLogging) Count(ctx context.Context, tenantID uint64, filter *model.AuditFilter) (int64, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	count, err := c.next.Count(ctx, filter)
+	count, err := c.next.Count(ctx, tenantID, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

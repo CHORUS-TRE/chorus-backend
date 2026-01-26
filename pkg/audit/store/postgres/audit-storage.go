@@ -95,14 +95,14 @@ func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEnt
 }
 
 func (s *AuditStorage) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
-	args := []interface{}{}
+	args := []interface{}{tenantID}
 
 	filterClause := common_storage.BuildAuditFilterClause(filter, &args)
 
 	// Get total count query
-	countQuery := "SELECT COUNT(*) FROM audit"
+	countQuery := "SELECT COUNT(*) FROM audit WHERE tenantid=$1"
 	if filterClause != "" {
-		countQuery += " WHERE " + filterClause
+		countQuery += " AND " + filterClause
 	}
 
 	var totalCount int64
@@ -112,9 +112,13 @@ func (s *AuditStorage) List(ctx context.Context, tenantID uint64, pagination *co
 	}
 
 	// Get audit entries query
-	query := "SELECT id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat FROM audit"
+	query := `
+		SELECT id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat 
+		FROM audit
+		WHERE tenantid=$1
+	`
 	if filterClause != "" {
-		query += " WHERE " + filterClause
+		query += " AND " + filterClause
 	}
 
 	// Add pagination
@@ -141,13 +145,13 @@ func (s *AuditStorage) List(ctx context.Context, tenantID uint64, pagination *co
 	return entries, paginationRes, nil
 }
 
-func (s *AuditStorage) Count(ctx context.Context, filter *model.AuditFilter) (int64, error) {
-	args := []interface{}{}
+func (s *AuditStorage) Count(ctx context.Context, tenantID uint64, filter *model.AuditFilter) (int64, error) {
+	args := []interface{}{tenantID}
 	filterClause := common_storage.BuildAuditFilterClause(filter, &args)
 
-	query := "SELECT COUNT(*) FROM audit"
+	query := "SELECT COUNT(*) FROM audit WHERE tenantid=$1"
 	if filterClause != "" {
-		query += " WHERE " + filterClause
+		query += " AND " + filterClause
 	}
 
 	var count int64
