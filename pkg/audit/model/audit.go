@@ -53,13 +53,13 @@ func (d AuditDetails) Value() (driver.Value, error) {
 
 // AuditFilter for querying audit entries
 type AuditFilter struct {
-	TenantID    *uint64
-	UserID      *uint64
-	Action      *AuditAction
-	WorkspaceID *uint64
-	WorkbenchID *uint64
-	FromTime    *time.Time
-	ToTime      *time.Time
+	TenantID    uint64
+	UserID      uint64
+	Action      AuditAction
+	WorkspaceID uint64
+	WorkbenchID uint64
+	FromTime    time.Time
+	ToTime      time.Time
 }
 
 func (AuditEntry) IsValidSortType(sortType string) bool {

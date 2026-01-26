@@ -129,39 +129,43 @@ func BuildUserFilterClause(filter *user_service.UserFilter, args *[]interface{})
 }
 
 func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}) string {
+	if filter == nil {
+		return ""
+	}
+
 	var clauses []string
 
-	if filter != nil && *filter.TenantID != 0 {
+	if filter.TenantID != 0 {
 		clauses = append(clauses, fmt.Sprintf("tenantid = $%d", len(*args)+1))
 		*args = append(*args, filter.TenantID)
 	}
 
-	if filter != nil && *filter.UserID != 0 {
+	if filter.UserID != 0 {
 		clauses = append(clauses, fmt.Sprintf("userid = $%d", len(*args)+1))
 		*args = append(*args, filter.UserID)
 	}
 
-	if filter != nil && filter.Action != nil {
+	if filter.Action != "" {
 		clauses = append(clauses, fmt.Sprintf("action = $%d", len(*args)+1))
 		*args = append(*args, filter.Action)
 	}
 
-	if filter != nil && *filter.WorkspaceID != 0 {
+	if filter.WorkspaceID != 0 {
 		clauses = append(clauses, fmt.Sprintf("workspaceid = $%d", len(*args)+1))
 		*args = append(*args, filter.WorkspaceID)
 	}
 
-	if filter != nil && *filter.WorkbenchID != 0 {
+	if filter.WorkbenchID != 0 {
 		clauses = append(clauses, fmt.Sprintf("workbenchid = $%d", len(*args)+1))
 		*args = append(*args, filter.WorkbenchID)
 	}
 
-	if filter != nil && filter.FromTime != nil {
+	if !filter.FromTime.IsZero() {
 		clauses = append(clauses, fmt.Sprintf("createdat >= $%d", len(*args)+1))
 		*args = append(*args, filter.FromTime)
 	}
 
-	if filter != nil && filter.ToTime != nil {
+	if !filter.ToTime.IsZero() {
 		clauses = append(clauses, fmt.Sprintf("createdat <= $%d", len(*args)+1))
 		*args = append(*args, filter.ToTime)
 	}
