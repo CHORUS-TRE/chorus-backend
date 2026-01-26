@@ -37,15 +37,16 @@ func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *choru
 			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("filter", req.Filter),
 		)
-	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceList,
-			audit.WithDescription("Listed workspaces."),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
-			audit.WithDetail("filter", req.Filter),
-			audit.WithDetail("result_count", len(res.Result.Workspaces)),
-		)
 	}
+	//  else {
+	// 	audit.Record(ctx, c.auditWriter,
+	// 		model.AuditActionWorkspaceList,
+	// 		audit.WithDescription("Listed workspaces."),
+	// 		audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+	// 		audit.WithDetail("filter", req.Filter),
+	// 		audit.WithDetail("result_count", len(res.Result.Workspaces)),
+	// 	)
+	// }
 
 	return res, err
 }
@@ -83,15 +84,16 @@ func (c workspaceControllerAudit) GetWorkspace(ctx context.Context, req *chorus.
 			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.Id),
 		)
-	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceRead,
-			audit.WithDescription(fmt.Sprintf("Retrieved workspace with ID %d.", req.Id)),
-			audit.WithWorkspaceID(req.Id),
-			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDetail("workspace_name", res.Result.Workspace.Name),
-		)
 	}
+	//  else {
+	// 	audit.Record(ctx, c.auditWriter,
+	// 		model.AuditActionWorkspaceRead,
+	// 		audit.WithDescription(fmt.Sprintf("Retrieved workspace with ID %d.", req.Id)),
+	// 		audit.WithWorkspaceID(req.Id),
+	// 		audit.WithDetail("workspace_id", req.Id),
+	// 		audit.WithDetail("workspace_name", res.Result.Workspace.Name),
+	// 	)
+	// }
 
 	return res, err
 }
