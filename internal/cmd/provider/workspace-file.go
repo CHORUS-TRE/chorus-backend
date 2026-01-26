@@ -19,6 +19,9 @@ func ProvideWorkspaceFileController() chorus.WorkspaceFileServiceServer {
 	workspaceFileControllerOnce.Do(func() {
 		workspaceFileController = v1.NewWorkspaceFileController(ProvideWorkspaceFileService())
 		workspaceFileController = ctrl_mw.WorkspaceFileAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceFileController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			workspaceFileController = ctrl_mw.NewWorkspaceFileAuditMiddleware(ProvideAuditWriter())(workspaceFileController)
+		}
 	})
 	return workspaceFileController
 }
