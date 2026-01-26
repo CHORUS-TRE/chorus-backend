@@ -153,7 +153,7 @@ func (s *AuditStorage) Count(ctx context.Context, filter *model.AuditFilter) (in
 	var count int64
 	err := s.db.GetContext(ctx, &count, query, args...)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("unable to count audit entries: %w", err)
 	}
 
 	return count, nil
