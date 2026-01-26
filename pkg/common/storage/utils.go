@@ -135,11 +135,6 @@ func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}
 
 	var clauses []string
 
-	if filter.TenantID != 0 {
-		clauses = append(clauses, fmt.Sprintf("tenantid = $%d", len(*args)+1))
-		*args = append(*args, filter.TenantID)
-	}
-
 	if filter.UserID != 0 {
 		clauses = append(clauses, fmt.Sprintf("userid = $%d", len(*args)+1))
 		*args = append(*args, filter.UserID)

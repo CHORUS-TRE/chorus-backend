@@ -53,7 +53,6 @@ func (d AuditDetails) Value() (driver.Value, error) {
 
 // AuditFilter for querying audit entries
 type AuditFilter struct {
-	TenantID    uint64
 	UserID      uint64
 	Action      AuditAction
 	WorkspaceID uint64
