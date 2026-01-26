@@ -22,6 +22,9 @@ func ProvideStewardController() chorus.StewardServiceServer {
 	stewardControllerOnce.Do(func() {
 		stewardController = v1.NewStewardController(ProvideStewardService())
 		stewardController = ctrl_mw.StewardAuthorizing(logger.SecLog, ProvideAuthorizer())(stewardController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			stewardController = ctrl_mw.NewStewardAuditMiddleware(ProvideAuditWriter())(stewardController)
+		}
 	})
 	return stewardController
 }
