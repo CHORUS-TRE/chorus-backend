@@ -20,7 +20,7 @@ type Option func(entry *model.AuditEntry)
 func NewEntry(ctx context.Context, action model.AuditAction, opts ...Option) *model.AuditEntry {
 	entry := &model.AuditEntry{
 		Action:    action,
-		Details:   map[string]any{},
+		Details:   model.AuditDetails{},
 		CreatedAt: time.Now().UTC(),
 	}
 
