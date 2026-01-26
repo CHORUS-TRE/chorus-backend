@@ -2,12 +2,15 @@ package audit
 
 import (
 	"context"
+	"runtime/debug"
 	"time"
 
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/correlation"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )
 
@@ -15,12 +18,11 @@ import (
 type Option func(entry *model.AuditEntry)
 
 // NewEntry creates an AuditEntry with common fields extracted from context
-func NewEntry(ctx context.Context, action model.AuditAction, resourceType model.AuditResourceType, resourceID uint64, opts ...Option) *model.AuditEntry {
+func NewEntry(ctx context.Context, action model.AuditAction, opts ...Option) *model.AuditEntry {
 	entry := &model.AuditEntry{
-		Action:       action,
-		ResourceType: resourceType,
-		ResourceID:   resourceID,
-		CreatedAt:    time.Now().UTC(),
+		Action:    action,
+		Details:   model.AuditDetails{},
+		CreatedAt: time.Now().UTC(),
 	}
 
 	// Auto-extract from context
@@ -42,30 +44,46 @@ func NewEntry(ctx context.Context, action model.AuditAction, resourceType model.
 	return entry
 }
 
-// Record is a convenience function that creates an entry and writes it
-func Record(ctx context.Context, writer service.AuditWriter, action model.AuditAction, resourceType model.AuditResourceType, resourceID uint64, opts ...Option) error {
-	entry := NewEntry(ctx, action, resourceType, resourceID, opts...)
-	return writer.Record(ctx, entry)
+// Record is a convenience function that creates an entry and writes it asynchronously
+func Record(ctx context.Context, writer service.AuditWriter, action model.AuditAction, opts ...Option) {
+	baseCtx := context.WithoutCancel(ctx)
+
+	// Create the audit entry synchronously
+	entry := NewEntry(baseCtx, action, opts...)
+
+	// Write the audit entry asynchronously
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.TechLog.Error(baseCtx, "panic while recording audit entry",
+					zap.Any("recover", r),
+					zap.ByteString("stack", debug.Stack()),
+					zap.Any("entry", entry),
+				)
+			}
+		}()
+
+		_, err := writer.Record(baseCtx, entry)
+		if err != nil {
+			logger.TechLog.Error(baseCtx, "failed to record audit entry",
+				zap.Error(err),
+				zap.Any("entry", entry),
+			)
+		}
+	}()
 }
 
-// WithMethod sets the gRPC method name
-func WithMethod(method string) Option {
+// WithWorkspaceID sets the workspace ID
+func WithWorkspaceID(workspaceID uint64) Option {
 	return func(entry *model.AuditEntry) {
-		entry.Method = method
+		entry.WorkspaceID = workspaceID
 	}
 }
 
-// WithStatusCode sets the gRPC status code
-func WithStatusCode(code codes.Code) Option {
+// WithWorkbenchID sets the workbench ID
+func WithWorkbenchID(workbenchID uint64) Option {
 	return func(entry *model.AuditEntry) {
-		entry.StatusCode = int(code)
-	}
-}
-
-// WithErrorMessage sets the error message
-func WithErrorMessage(errMsg string) Option {
-	return func(entry *model.AuditEntry) {
-		entry.ErrorMessage = errMsg
+		entry.WorkbenchID = workbenchID
 	}
 }
 
@@ -76,9 +94,24 @@ func WithDescription(desc string) Option {
 	}
 }
 
-// WithDetails sets the details map
-func WithDetails(details map[string]any) Option {
+// WithDetail adds a key-value pair to the Details map
+func WithDetail(key string, value any) Option {
 	return func(entry *model.AuditEntry) {
-		entry.Details = details
+		entry.Details[key] = value
 	}
+}
+
+// WithMethod sets the gRPC method name in entry details map
+func WithGRPCMethod(method string) Option {
+	return WithDetail("grpc_method", method)
+}
+
+// WithStatusCode sets the gRPC status code in entry details map
+func WithGRPCStatusCode(code codes.Code) Option {
+	return WithDetail("grpc_status_code", int(code))
+}
+
+// WithErrorMessage sets the error message in entry details map
+func WithErrorMessage(errMsg string) Option {
+	return WithDetail("error_message", errMsg)
 }

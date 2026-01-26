@@ -26,52 +26,52 @@ func Logging(logger *logger.ContextLogger) func(service.AuditStore) service.Audi
 	}
 }
 
-func (c auditStorageLogging) Record(ctx context.Context, entry *model.AuditEntry) error {
+func (c auditStorageLogging) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.Record(ctx, entry)
+	createdEntry, err := c.next.Record(ctx, entry)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return createdEntry, nil
 }
 
-func (c auditStorageLogging) RecordBatch(ctx context.Context, entries []*model.AuditEntry) error {
+func (c auditStorageLogging) BulkRecord(ctx context.Context, entries []*model.AuditEntry) ([]*model.AuditEntry, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.RecordBatch(ctx, entries)
+	createdEntries, err := c.next.BulkRecord(ctx, entries)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return createdEntries, nil
 }
 
-func (c auditStorageLogging) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+func (c auditStorageLogging) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, paginationRes, err := c.next.List(ctx, pagination, filter)
+	res, paginationRes, err := c.next.List(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -87,12 +87,12 @@ func (c auditStorageLogging) List(ctx context.Context, pagination *common_model.
 	return res, paginationRes, nil
 }
 
-func (c auditStorageLogging) Count(ctx context.Context, filter *model.AuditFilter) (int64, error) {
+func (c auditStorageLogging) Count(ctx context.Context, tenantID uint64, filter *model.AuditFilter) (int64, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	count, err := c.next.Count(ctx, filter)
+	count, err := c.next.Count(ctx, tenantID, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
