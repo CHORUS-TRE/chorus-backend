@@ -45,12 +45,12 @@ func (c auditServiceLogging) Record(ctx context.Context, entry *model.AuditEntry
 	return createdEntry, nil
 }
 
-func (c auditServiceLogging) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+func (c auditServiceLogging) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	entries, paginationRes, err := c.next.List(ctx, pagination, filter)
+	entries, paginationRes, err := c.next.List(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

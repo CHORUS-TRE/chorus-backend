@@ -18,13 +18,13 @@ type AuditWriter interface {
 }
 
 type AuditReader interface {
-	List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
+	List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
 }
 
 type AuditStore interface {
 	Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error)
 	BulkRecord(ctx context.Context, entries []*model.AuditEntry) ([]*model.AuditEntry, error)
-	List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
+	List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
 	Count(ctx context.Context, filter *model.AuditFilter) (int64, error)
 }
 
@@ -47,8 +47,8 @@ func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) (*mo
 	return createdEntry, nil
 }
 
-func (s *auditService) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
-	entries, paginationRes, err := s.store.List(ctx, pagination, filter)
+func (s *auditService) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+	entries, paginationRes, err := s.store.List(ctx, tenantID, pagination, filter)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to list audit entries: %w", err)
 	}
@@ -67,6 +67,6 @@ func (n *noOpAuditer) Record(ctx context.Context, entry *model.AuditEntry) (*mod
 	return nil, nil
 }
 
-func (n *noOpAuditer) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+func (n *noOpAuditer) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	return []*model.AuditEntry{}, &common_model.PaginationResult{}, nil
 }

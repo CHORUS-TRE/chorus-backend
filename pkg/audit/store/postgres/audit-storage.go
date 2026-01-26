@@ -94,7 +94,7 @@ func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEnt
 	return createdEntries, nil
 }
 
-func (s *AuditStorage) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+func (s *AuditStorage) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	args := []interface{}{}
 
 	filterClause := common_storage.BuildAuditFilterClause(filter, &args)
