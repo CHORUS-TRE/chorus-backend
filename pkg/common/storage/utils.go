@@ -53,6 +53,10 @@ func SortTypeToString(sortType string, model common.Sortable) string {
 
 // BuildPaginationClause returns the SQL clause string for ORDER BY, LIMIT and OFFSET and the effective pagination object
 func BuildPaginationClause(pagination *common.Pagination, model common.Sortable) (string, *common.Pagination) {
+	if pagination == nil {
+		return "", nil
+	}
+
 	var clause string
 
 	// Check if pagination is empty
