@@ -25,32 +25,32 @@ func Logging(logger *logger.ContextLogger) func(service.Auditer) service.Auditer
 	}
 }
 
-func (c auditServiceLogging) Record(ctx context.Context, entry *model.AuditEntry) error {
+func (c auditServiceLogging) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	err := c.next.Record(ctx, entry)
+	createdEntry, err := c.next.Record(ctx, entry)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, "request completed",
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return createdEntry, nil
 }
 
-func (c auditServiceLogging) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+func (c auditServiceLogging) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	entries, paginationRes, err := c.next.List(ctx, pagination, filter)
+	entries, paginationRes, err := c.next.List(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

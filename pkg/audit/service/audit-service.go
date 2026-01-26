@@ -14,18 +14,18 @@ type Auditer interface {
 }
 
 type AuditWriter interface {
-	Record(ctx context.Context, entry *model.AuditEntry) error
+	Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error)
 }
 
 type AuditReader interface {
-	List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
+	List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
 }
 
 type AuditStore interface {
-	Record(ctx context.Context, entry *model.AuditEntry) error
-	RecordBatch(ctx context.Context, entries []*model.AuditEntry) error
-	List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
-	Count(ctx context.Context, filter *model.AuditFilter) (int64, error)
+	Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error)
+	BulkRecord(ctx context.Context, entries []*model.AuditEntry) ([]*model.AuditEntry, error)
+	List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error)
+	Count(ctx context.Context, tenantID uint64, filter *model.AuditFilter) (int64, error)
 }
 
 type auditService struct {
@@ -38,12 +38,22 @@ func NewAuditService(store AuditStore) *auditService {
 	}
 }
 
-func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) error {
-	return fmt.Errorf("Not implemented")
+func (s *auditService) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
+	createdEntry, err := s.store.Record(ctx, entry)
+	if err != nil {
+		return nil, fmt.Errorf("unable to record audit entry: %w", err)
+	}
+
+	return createdEntry, nil
 }
 
-func (s *auditService) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
-	return nil, nil, fmt.Errorf("Not implemented")
+func (s *auditService) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+	entries, paginationRes, err := s.store.List(ctx, tenantID, pagination, filter)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to list audit entries: %w", err)
+	}
+
+	return entries, paginationRes, nil
 }
 
 // noOpAuditer is a no-operation implementation of the Auditer interface when audit logging is disabled
@@ -53,10 +63,10 @@ func NewNoOpAuditer() Auditer {
 	return &noOpAuditer{}
 }
 
-func (n *noOpAuditer) Record(ctx context.Context, entry *model.AuditEntry) error {
-	return nil
+func (n *noOpAuditer) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
+	return nil, nil
 }
 
-func (n *noOpAuditer) List(ctx context.Context, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
+func (n *noOpAuditer) List(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter *model.AuditFilter) ([]*model.AuditEntry, *common_model.PaginationResult, error) {
 	return []*model.AuditEntry{}, &common_model.PaginationResult{}, nil
 }
