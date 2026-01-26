@@ -12,33 +12,33 @@ import (
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service/middleware"
 )
 
-var workspaceFileOnce sync.Once
-var workspaceFile service.WorkspaceFiler
+var workspaceFileControllerOnce sync.Once
+var workspaceFileController chorus.WorkspaceFileServiceServer
 
-func ProvideWorkspaceFile() service.WorkspaceFiler {
-	workspaceFileOnce.Do(func() {
+func ProvideWorkspaceFileController() chorus.WorkspaceFileServiceServer {
+	workspaceFileControllerOnce.Do(func() {
+		workspaceFileController = v1.NewWorkspaceFileController(ProvideWorkspaceFileService())
+		workspaceFileController = ctrl_mw.WorkspaceFileAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceFileController)
+	})
+	return workspaceFileController
+}
+
+var workspaceFileServiceOnce sync.Once
+var workspaceFileService service.WorkspaceFiler
+
+func ProvideWorkspaceFileService() service.WorkspaceFiler {
+	workspaceFileServiceOnce.Do(func() {
 		var err error
-		workspaceFile, err = service.NewWorkspaceFileService(
+		workspaceFileService, err = service.NewWorkspaceFileService(
 			ProvideFileStores(),
 			ProvideConfig().Services.WorkspaceFileService.Stores,
 		)
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create workspace file service: "+err.Error())
 		}
-		workspaceFile = service_mw.Logging(logger.BizLog)(workspaceFile)
-		workspaceFile = service_mw.Validation(ProvideValidator())(workspaceFile)
-		workspaceFile = service_mw.WorkspaceCaching(logger.TechLog)(workspaceFile)
+		workspaceFileService = service_mw.Logging(logger.BizLog)(workspaceFileService)
+		workspaceFileService = service_mw.Validation(ProvideValidator())(workspaceFileService)
+		workspaceFileService = service_mw.WorkspaceCaching(logger.TechLog)(workspaceFileService)
 	})
-	return workspaceFile
-}
-
-var workspaceFileControllerOnce sync.Once
-var workspaceFileController chorus.WorkspaceFileServiceServer
-
-func ProvideWorkspaceFileController() chorus.WorkspaceFileServiceServer {
-	workspaceFileControllerOnce.Do(func() {
-		workspaceFileController = v1.NewWorkspaceFileController(ProvideWorkspaceFile())
-		workspaceFileController = ctrl_mw.WorkspaceFileAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceFileController)
-	})
-	return workspaceFileController
+	return workspaceFileService
 }

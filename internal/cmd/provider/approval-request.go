@@ -26,7 +26,7 @@ func ProvideApprovalRequestService() service.ApprovalRequester {
 
 		approvalRequestService = service.NewApprovalRequestService(
 			ProvideApprovalRequestStore(),
-			ProvideWorkspaceFile(),
+			ProvideWorkspaceFileService(),
 			ProvideApprovalRequestStagingFileStore(cfg.Services.ApprovalRequestService.StagingFileStoreName),
 			ProvideNotificationStore(),
 		)
