@@ -1,11 +1,11 @@
 -- +migrate Up
 
 -- +migrate StatementBegin
-ALTER TABLE public.audit DROP COLUMN resourcetype;
-ALTER TABLE public.audit DROP COLUMN resourceid;
-ALTER TABLE public.audit DROP COLUMN method;
-ALTER TABLE public.audit DROP COLUMN statuscode;
-ALTER TABLE public.audit DROP COLUMN errormessage;
+ALTER TABLE public.audit DROP COLUMN IF EXISTS resourcetype;
+ALTER TABLE public.audit DROP COLUMN IF EXISTS resourceid;
+ALTER TABLE public.audit DROP COLUMN IF EXISTS method;
+ALTER TABLE public.audit DROP COLUMN IF EXISTS statuscode;
+ALTER TABLE public.audit DROP COLUMN IF EXISTS errormessage;
 -- +migrate StatementEnd
 
 -- +migrate StatementBegin
