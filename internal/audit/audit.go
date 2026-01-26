@@ -46,14 +46,16 @@ func NewEntry(ctx context.Context, action model.AuditAction, opts ...Option) *mo
 
 // Record is a convenience function that creates an entry and writes it asynchronously
 func Record(ctx context.Context, writer service.AuditWriter, action model.AuditAction, opts ...Option) {
+	baseCtx := context.WithoutCancel(ctx)
+
 	// Create the audit entry synchronously
-	entry := NewEntry(ctx, action, opts...)
+	entry := NewEntry(baseCtx, action, opts...)
 
 	// Write the audit entry asynchronously
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				logger.TechLog.Error(ctx, "panic while recording audit entry",
+				logger.TechLog.Error(baseCtx, "panic while recording audit entry",
 					zap.Any("recover", r),
 					zap.ByteString("stack", debug.Stack()),
 					zap.Any("entry", entry),
@@ -61,9 +63,9 @@ func Record(ctx context.Context, writer service.AuditWriter, action model.AuditA
 			}
 		}()
 
-		_, err := writer.Record(context.Background(), entry)
+		_, err := writer.Record(baseCtx, entry)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "failed to record audit entry",
+			logger.TechLog.Error(baseCtx, "failed to record audit entry",
 				zap.Error(err),
 				zap.Any("entry", entry),
 			)
