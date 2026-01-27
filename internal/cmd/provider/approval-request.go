@@ -43,6 +43,9 @@ func ProvideApprovalRequestController() chorus.ApprovalRequestServiceServer {
 	approvalRequestControllerOnce.Do(func() {
 		approvalRequestController = v1.NewApprovalRequestController(ProvideApprovalRequestService())
 		approvalRequestController = ctrl_mw.ApprovalRequestAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(approvalRequestController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			approvalRequestController = ctrl_mw.NewApprovalRequestAuditMiddleware(ProvideAuditWriter())(approvalRequestController)
+		}
 	})
 	return approvalRequestController
 }
