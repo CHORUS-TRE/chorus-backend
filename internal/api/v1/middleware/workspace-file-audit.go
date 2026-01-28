@@ -44,7 +44,6 @@ func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req 
 			model.AuditActionFileRead,
 			audit.WithDescription(fmt.Sprintf("Retrieved file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -70,7 +69,6 @@ func (c workspaceFileControllerAudit) ListWorkspaceFiles(ctx context.Context, re
 			model.AuditActionFileList,
 			audit.WithDescription(fmt.Sprintf("Listed %d files in workspace %d at %s.", len(res.Result.Files), req.WorkspaceId, req.Path)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 			audit.WithDetail("result_count", len(res.Result.Files)),
@@ -97,7 +95,6 @@ func (c workspaceFileControllerAudit) CreateWorkspaceFile(ctx context.Context, r
 			model.AuditActionFileCreate,
 			audit.WithDescription(fmt.Sprintf("Uploaded file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.File.Path),
 		)
@@ -124,7 +121,6 @@ func (c workspaceFileControllerAudit) UpdateWorkspaceFile(ctx context.Context, r
 			model.AuditActionFileUpdate,
 			audit.WithDescription(fmt.Sprintf("Updated file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("old_path", req.OldPath),
 			audit.WithDetail("new_path", req.File.Path),
@@ -151,7 +147,6 @@ func (c workspaceFileControllerAudit) DeleteWorkspaceFile(ctx context.Context, r
 			model.AuditActionFileDelete,
 			audit.WithDescription(fmt.Sprintf("Deleted file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -177,7 +172,6 @@ func (c workspaceFileControllerAudit) InitiateWorkspaceFileUpload(ctx context.Co
 			model.AuditActionFileUploadInitiate,
 			audit.WithDescription(fmt.Sprintf("Initiated upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -208,7 +202,6 @@ func (c workspaceFileControllerAudit) CompleteWorkspaceFileUpload(ctx context.Co
 			model.AuditActionFileUploadComplete,
 			audit.WithDescription(fmt.Sprintf("Completed upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -234,7 +227,6 @@ func (c workspaceFileControllerAudit) AbortWorkspaceFileUpload(ctx context.Conte
 			model.AuditActionFileUploadAbort,
 			audit.WithDescription(fmt.Sprintf("Aborted upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
