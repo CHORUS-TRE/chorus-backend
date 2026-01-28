@@ -15,12 +15,26 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/store/postgres"
 )
 
-var workspaceOnce sync.Once
-var workspace service.Workspaceer
+var workspaceControllerOnce sync.Once
+var workspaceController chorus.WorkspaceServiceServer
 
-func ProvideWorkspace() service.Workspaceer {
-	workspaceOnce.Do(func() {
-		workspace = service.NewWorkspaceService(
+func ProvideWorkspaceController() chorus.WorkspaceServiceServer {
+	workspaceControllerOnce.Do(func() {
+		workspaceController = v1.NewWorkspaceController(ProvideWorkspaceService())
+		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			workspaceController = ctrl_mw.NewWorkspaceAuditMiddleware(ProvideAuditWriter())(workspaceController)
+		}
+	})
+	return workspaceController
+}
+
+var workspaceServiceOnce sync.Once
+var workspaceService service.Workspaceer
+
+func ProvideWorkspaceService() service.Workspaceer {
+	workspaceServiceOnce.Do(func() {
+		workspaceService = service.NewWorkspaceService(
 			ProvideConfig(),
 			ProvideWorkspaceStore(),
 			ProvideK8sClient(),
@@ -28,22 +42,11 @@ func ProvideWorkspace() service.Workspaceer {
 			ProvideUser(),
 			ProvideNotificationStore(),
 		)
-		workspace = service_mw.Logging(logger.BizLog)(workspace)
-		workspace = service_mw.Validation(ProvideValidator())(workspace)
-		workspace = service_mw.WorkspaceCaching(logger.TechLog)(workspace)
+		workspaceService = service_mw.Logging(logger.BizLog)(workspaceService)
+		workspaceService = service_mw.Validation(ProvideValidator())(workspaceService)
+		workspaceService = service_mw.WorkspaceCaching(logger.TechLog)(workspaceService)
 	})
-	return workspace
-}
-
-var workspaceControllerOnce sync.Once
-var workspaceController chorus.WorkspaceServiceServer
-
-func ProvideWorkspaceController() chorus.WorkspaceServiceServer {
-	workspaceControllerOnce.Do(func() {
-		workspaceController = v1.NewWorkspaceController(ProvideWorkspace())
-		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceController)
-	})
-	return workspaceController
+	return workspaceService
 }
 
 var workspaceStoreOnce sync.Once
