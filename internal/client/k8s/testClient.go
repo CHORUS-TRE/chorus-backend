@@ -36,6 +36,10 @@ func (c *testClient) CreateAppInstance(namespace, workbenchName string, app AppI
 	return nil
 }
 
+func (c *testClient) UpdateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
+	return nil
+}
+
 func (c *testClient) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
 	return nil
 }
