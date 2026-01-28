@@ -210,6 +210,11 @@ config:
           secret_access_key: "" # set in secret
           bucket_name: ""
           use_ssl: false
+      disk:
+        type: disk
+        disk_config:
+          enabled: true
+          base_path: /var/lib/chorus/disk/.diskfilestore
 
   services:
     index_service:
@@ -289,6 +294,8 @@ config:
     #       client_name: s3
     #       store_prefix: /workspace-archive
     #       workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+    approval_request_service:
+      staging_file_store_name: disk
 
   clients:
     docker_client:

@@ -249,6 +249,11 @@ type (
 	}
 
 	Services struct {
+		AuditService struct {
+			Enabled       bool   `yaml:"enabled"`
+			DatastoreName string `yaml:"datastore_name"`
+		} `yaml:"audit_service"`
+
 		MailerService struct {
 			SMTP struct {
 				User             string    `yaml:"user"`
@@ -306,6 +311,10 @@ type (
 		WorkspaceFileService struct {
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
+
+		ApprovalRequestService struct {
+			StagingFileStoreName string `yaml:"staging_file_store_name"`
+		} `yaml:"approval_request_service"`
 
 		Steward struct {
 			InitTenant struct {

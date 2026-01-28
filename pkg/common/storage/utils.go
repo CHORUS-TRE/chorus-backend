@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
+	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -52,6 +53,10 @@ func SortTypeToString(sortType string, model common.Sortable) string {
 
 // BuildPaginationClause returns the SQL clause string for ORDER BY, LIMIT and OFFSET and the effective pagination object
 func BuildPaginationClause(pagination *common.Pagination, model common.Sortable) (string, *common.Pagination) {
+	if pagination == nil {
+		return "", nil
+	}
+
 	var clause string
 
 	// Check if pagination is empty
@@ -91,7 +96,7 @@ func BuildPaginationClause(pagination *common.Pagination, model common.Sortable)
 	}
 }
 
-func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) string {
+func BuildUserFilterClause(filter *user_service.UserFilter, args *[]interface{}) string {
 	var clauses []string
 
 	if filter != nil && len(filter.IDsIn) > 0 {
@@ -122,6 +127,46 @@ func BuildUserFilterClause(filter *service.UserFilter, args *[]interface{}) stri
 	if filter != nil && filter.Search != nil && *filter.Search != "" {
 		clauses = append(clauses, fmt.Sprintf("(LOWER(firstname) LIKE LOWER($%d) OR LOWER(lastname) LIKE LOWER($%d) OR LOWER(username) LIKE LOWER($%d))", len(*args)+1, len(*args)+1, len(*args)+1))
 		*args = append(*args, "%"+*filter.Search+"%")
+	}
+
+	return strings.Join(clauses, " AND ")
+}
+
+func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}) string {
+	if filter == nil {
+		return ""
+	}
+
+	var clauses []string
+
+	if filter.UserID != 0 {
+		clauses = append(clauses, fmt.Sprintf("userid = $%d", len(*args)+1))
+		*args = append(*args, filter.UserID)
+	}
+
+	if filter.Action != "" {
+		clauses = append(clauses, fmt.Sprintf("action = $%d", len(*args)+1))
+		*args = append(*args, filter.Action)
+	}
+
+	if filter.WorkspaceID != 0 {
+		clauses = append(clauses, fmt.Sprintf("workspaceid = $%d", len(*args)+1))
+		*args = append(*args, filter.WorkspaceID)
+	}
+
+	if filter.WorkbenchID != 0 {
+		clauses = append(clauses, fmt.Sprintf("workbenchid = $%d", len(*args)+1))
+		*args = append(*args, filter.WorkbenchID)
+	}
+
+	if !filter.FromTime.IsZero() {
+		clauses = append(clauses, fmt.Sprintf("createdat >= $%d", len(*args)+1))
+		*args = append(*args, filter.FromTime)
+	}
+
+	if !filter.ToTime.IsZero() {
+		clauses = append(clauses, fmt.Sprintf("createdat <= $%d", len(*args)+1))
+		*args = append(*args, filter.ToTime)
 	}
 
 	return strings.Join(clauses, " AND ")

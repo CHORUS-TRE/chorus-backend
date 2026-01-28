@@ -229,10 +229,11 @@ func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenant
 
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
+		UserID:   userID,
 		Message:  fmt.Sprintf("You have been assigned the role %v in workspace %v", role.Role, role.Context["workspace"]),
 		Content: notification_model.NotificationContent{
 			Type: "SystemNotification",
-			SystemNotification: notification_model.SystemNotification{
+			SystemNotification: &notification_model.SystemNotification{
 				RefreshJWTRequired: true,
 			},
 		},

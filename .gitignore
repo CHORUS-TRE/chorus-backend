@@ -33,5 +33,13 @@ junit.xml
 
 docker/.miniovolume
 docker/.postgresvolume
+docker/.diskfilestore
 
 local-doc/**/*
+
+# sonar local setup
+sonar-local-project.properties
+
+# claude & copilot files
+CLAUDE.md
+.github/chatmodes/*

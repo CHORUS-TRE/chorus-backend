@@ -33,6 +33,10 @@ func ProvideMainDB(opts ...Option) *Database {
 	return ProvideDB("chorus", opts...)
 }
 
+func ProvideAuditDB(opts ...Option) *Database {
+	return ProvideDB("audit", opts...)
+}
+
 var dbsOnce sync.Once
 var dbs map[string]map[string]*Database
 
@@ -71,6 +75,7 @@ func ProvideDB(datastoreID string, opts ...Option) *Database {
 		cfg := ProvideConfig().Storage.Datastores[datastoreID]
 		switch cfg.Type {
 		case POSTGRES:
+			logger.TechLog.Info(ctx, fmt.Sprintf("providing Postgres DB for storage '%v'", datastoreID))
 			m[o.clientName] = providePostgresDB(ctx, cfg, o)
 		default:
 			logger.TechLog.Fatal(ctx, fmt.Sprintf("invalid storage type. Must be 'postgres', got: '%v'", cfg.Type))

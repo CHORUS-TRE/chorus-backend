@@ -131,18 +131,27 @@ func notificationFromBusiness(r *model.Notification) (*chorus.Notification, erro
 		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
 
-	// Convert notification content
 	var content *chorus.NotificationContent
 	if r.Content.Type != "" {
 		content = &chorus.NotificationContent{}
 		switch r.Content.Type {
 		case "SystemNotification":
-			content.Content = &chorus.NotificationContent_SystemNotification{
-				SystemNotification: &chorus.SystemNotification{
-					SystemNotificationContent: &chorus.SystemNotification_RefreshJWTRequired{
-						RefreshJWTRequired: r.Content.SystemNotification.RefreshJWTRequired,
+			if r.Content.SystemNotification != nil {
+				content.Content = &chorus.NotificationContent_SystemNotification{
+					SystemNotification: &chorus.SystemNotification{
+						SystemNotificationContent: &chorus.SystemNotification_RefreshJWTRequired{
+							RefreshJWTRequired: r.Content.SystemNotification.RefreshJWTRequired,
+						},
 					},
-				},
+				}
+			}
+		case "ApprovalRequestNotification":
+			if r.Content.ApprovalRequest != nil {
+				content.Content = &chorus.NotificationContent_ApprovalRequestNotification{
+					ApprovalRequestNotification: &chorus.ApprovalRequestNotification{
+						ApprovalRequestId: r.Content.ApprovalRequest.ApprovalRequestID,
+					},
+				}
 			}
 		}
 	}
@@ -150,6 +159,7 @@ func notificationFromBusiness(r *model.Notification) (*chorus.Notification, erro
 	return &chorus.Notification{
 		Id:        r.ID,
 		TenantId:  r.TenantID,
+		UserId:    r.UserID,
 		Message:   r.Message,
 		Content:   content,
 		CreatedAt: ca,

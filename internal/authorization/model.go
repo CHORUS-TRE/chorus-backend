@@ -84,6 +84,12 @@ const (
 
 	PermissionGetPlatformSettings PermissionName = "getPlatformSettings"
 	PermissionSetPlatformSettings PermissionName = "setPlatformSettings"
+
+	PermissionListRequests   PermissionName = "listRequests"
+	PermissionGetRequest     PermissionName = "getRequest"
+	PermissionCreateRequest  PermissionName = "createRequest"
+	PermissionApproveRequest PermissionName = "approveRequest"
+	PermissionDeleteRequest  PermissionName = "deleteRequest"
 )
 
 func (p PermissionName) String() string {
@@ -205,6 +211,17 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionGetPlatformSettings, nil
 	case string(PermissionSetPlatformSettings):
 		return PermissionSetPlatformSettings, nil
+
+	case string(PermissionListRequests):
+		return PermissionListRequests, nil
+	case string(PermissionGetRequest):
+		return PermissionGetRequest, nil
+	case string(PermissionCreateRequest):
+		return PermissionCreateRequest, nil
+	case string(PermissionApproveRequest):
+		return PermissionApproveRequest, nil
+	case string(PermissionDeleteRequest):
+		return PermissionDeleteRequest, nil
 	}
 
 	return "", fmt.Errorf("unknown permission type: %s", p)
@@ -242,6 +259,12 @@ func WithWorkspace(workspace any) NewContextOption {
 func WithWorkbench(workbench any) NewContextOption {
 	return func(c *Context) {
 		(*c)[RoleContextWorkbench] = fmt.Sprintf("%v", workbench)
+	}
+}
+
+func WithRequest(request any) NewContextOption {
+	return func(c *Context) {
+		(*c)[RoleContextRequest] = fmt.Sprintf("%v", request)
 	}
 }
 
@@ -420,6 +443,7 @@ type ContextDimension string
 const (
 	RoleContextWorkspace ContextDimension = "workspace"
 	RoleContextWorkbench ContextDimension = "workbench"
+	RoleContextRequest   ContextDimension = "request"
 	RoleContextUser      ContextDimension = "user"
 )
 
@@ -433,6 +457,8 @@ func ToRoleContext(r string) (ContextDimension, error) {
 		return RoleContextWorkspace, nil
 	case string(RoleContextWorkbench):
 		return RoleContextWorkbench, nil
+	case string(RoleContextRequest):
+		return RoleContextRequest, nil
 	case string(RoleContextUser):
 		return RoleContextUser, nil
 	}
