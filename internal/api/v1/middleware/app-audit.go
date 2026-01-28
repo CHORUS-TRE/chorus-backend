@@ -148,8 +148,8 @@ func (c appControllerAudit) BulkCreateApps(ctx context.Context, req *chorus.Bulk
 	} else {
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppBulkCreate,
-			audit.WithDescription(fmt.Sprintf("Bulk created %d apps.", len(res.Apps))),
-			audit.WithDetail("app_count", len(res.Apps)),
+			audit.WithDescription(fmt.Sprintf("Bulk created %d apps.", len(req.Apps))),
+			audit.WithDetail("app_count", len(req.Apps)),
 		)
 	}
 
