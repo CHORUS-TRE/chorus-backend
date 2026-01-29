@@ -52,6 +52,10 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 		}
 
+		if len(attrs) == 0 {
+			return &chorus.ListWorkspacesReply{Result: &chorus.ListWorkspacesResult{Workspaces: []*chorus.Workspace{}}}, nil
+		}
+
 		fmt.Println("attrs:", attrs)
 		claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 		if ok {
