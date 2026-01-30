@@ -199,11 +199,11 @@ config:
         archive:
           file_store_name: archive
           store_prefix: /workspace-archive
-          workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
-        scratch:
-          file_store_name: scratch
-          store_prefix: /workspace-scratch
-          workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+          workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+        # scratch:
+        #   file_store_name: scratch
+        #   store_prefix: /workspace-scratch
+        #   workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
     approval_request_service:
       staging_file_store_name: archive
 
