@@ -37,6 +37,9 @@ func ProvideAppController() chorus.AppServiceServer {
 	appControllerOnce.Do(func() {
 		appController = v1.NewAppController(ProvideAppService())
 		appController = ctrl_mw.AppAuthorizing(logger.SecLog, ProvideAuthorizer())(appController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			appController = ctrl_mw.NewAppAuditMiddleware(ProvideAuditWriter())(appController)
+		}
 	})
 	return appController
 }
