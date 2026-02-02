@@ -2,7 +2,7 @@
 
 -- +migrate StatementBegin
 UPDATE users
-    SET (status, username, updatedat) = ('deleted', username || '-' || gen_random_uuid()::text, NOW())
+    SET (source, status, username, updatedat) = ('internal', 'deleted', username || '-' || gen_random_uuid()::text, NOW())
     WHERE source = '';
 -- +migrate StatementEnd
 
