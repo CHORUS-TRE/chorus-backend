@@ -75,7 +75,20 @@ func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance) // TODO: add workbench/workspace authorization context
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	appInstance, err := c.resolver.GetAppInstance(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "unable to resolve app instance %v: %v", req.Id, err)
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance,
+		authorization.WithWorkbench(appInstance.WorkbenchID),
+		authorization.WithWorkspace(appInstance.WorkspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
