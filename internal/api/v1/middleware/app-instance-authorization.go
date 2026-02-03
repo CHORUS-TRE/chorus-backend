@@ -39,7 +39,7 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorizati
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances)
+	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances) // TODO: add workbench/workspace scoping for app instances listing
 	if err != nil {
 		return nil, err
 	}
