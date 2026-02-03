@@ -48,7 +48,20 @@ func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context
 }
 
 func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetAppInstance)
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	appInstance, err := c.resolver.GetAppInstance(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "unable to resolve app instance %v: %v", req.Id, err)
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionGetAppInstance,
+		authorization.WithWorkbench(appInstance.WorkbenchID),
+		authorization.WithWorkspace(appInstance.WorkspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
