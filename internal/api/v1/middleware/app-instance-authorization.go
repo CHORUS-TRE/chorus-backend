@@ -3,27 +3,37 @@ package middleware
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
 var _ chorus.AppInstanceServiceServer = (*appInstanceControllerAuthorization)(nil)
 
-type appInstanceControllerAuthorization struct {
-	Authorization
-	authorizer authorization.Authorizer
-	next       chorus.AppInstanceServiceServer
+type AppInstanceResolver interface {
+	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 }
 
-func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
+type appInstanceControllerAuthorization struct {
+	Authorization
+	resolver AppInstanceResolver
+	next     chorus.AppInstanceServiceServer
+}
+
+func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, resolver AppInstanceResolver) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 	return func(next chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 		return &appInstanceControllerAuthorization{
 			Authorization: Authorization{
 				logger:     logger,
 				authorizer: authorizer,
 			},
-			next: next,
+			resolver: resolver,
+			next:     next,
 		}
 	}
 }
