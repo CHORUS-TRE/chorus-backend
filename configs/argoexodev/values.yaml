@@ -199,11 +199,13 @@ config:
         archive:
           file_store_name: archive
           store_prefix: /workspace-archive
-          workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
-        scratch:
-          file_store_name: scratch
-          store_prefix: /workspace-scratch
-          workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+          workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+        # scratch:
+        #   file_store_name: scratch
+        #   store_prefix: /workspace-scratch
+        #   workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+    approval_request_service:
+      staging_file_store_name: archive
 
   clients:
     docker_client:
@@ -213,6 +215,8 @@ config:
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
       api_server: ""
       add_user_details: true
+      server_version: "6.3.2-4"
+      init_container_version: "0.0.2-4"
 
   log:
     loggers:

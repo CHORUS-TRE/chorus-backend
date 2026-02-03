@@ -18,6 +18,9 @@ import (
 // swagger:model chorusNotificationContent
 type ChorusNotificationContent struct {
 
+	// approval request notification
+	ApprovalRequestNotification *ChorusApprovalRequestNotification `json:"approvalRequestNotification,omitempty"`
+
 	// system notification
 	SystemNotification *ChorusSystemNotification `json:"systemNotification,omitempty"`
 }
@@ -26,6 +29,10 @@ type ChorusNotificationContent struct {
 func (m *ChorusNotificationContent) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateApprovalRequestNotification(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateSystemNotification(formats); err != nil {
 		res = append(res, err)
 	}
@@ -33,6 +40,25 @@ func (m *ChorusNotificationContent) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusNotificationContent) validateApprovalRequestNotification(formats strfmt.Registry) error {
+	if swag.IsZero(m.ApprovalRequestNotification) { // not required
+		return nil
+	}
+
+	if m.ApprovalRequestNotification != nil {
+		if err := m.ApprovalRequestNotification.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("approvalRequestNotification")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("approvalRequestNotification")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -59,6 +85,10 @@ func (m *ChorusNotificationContent) validateSystemNotification(formats strfmt.Re
 func (m *ChorusNotificationContent) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateApprovalRequestNotification(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateSystemNotification(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -66,6 +96,27 @@ func (m *ChorusNotificationContent) ContextValidate(ctx context.Context, formats
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusNotificationContent) contextValidateApprovalRequestNotification(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.ApprovalRequestNotification != nil {
+
+		if swag.IsZero(m.ApprovalRequestNotification) { // not required
+			return nil
+		}
+
+		if err := m.ApprovalRequestNotification.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("approvalRequestNotification")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("approvalRequestNotification")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

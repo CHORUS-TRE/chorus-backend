@@ -1,12 +1,7 @@
 package migration
 
 import (
-	"embed"
 	"fmt"
-	"io"
-	"io/fs"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -15,14 +10,14 @@ const (
 
 func getMigration(path string) (map[string]string, error) {
 
-	files, err := listMigrationFiles(MigrationEmbed, path)
+	files, err := listMigrationFiles(ChorusMigrationEmbed, path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to list %q migration files: %w", path, err)
 	}
 
 	res := map[string]string{}
 	for _, file := range files {
-		content, err := readFile(MigrationEmbed, filePath(path, file))
+		content, err := readFile(ChorusMigrationEmbed, filePath(path, file))
 		if err != nil {
 			return nil, fmt.Errorf("unable to read embedded file %q: %w", file, err)
 		}
@@ -31,55 +26,10 @@ func getMigration(path string) (map[string]string, error) {
 	return res, nil
 }
 
-func readFile(migrationFS embed.FS, file string) (string, error) {
-	r, err := migrationFS.Open(file)
-	if err != nil {
-		return "", err
-	}
-	defer r.Close()
-
-	contents, err := io.ReadAll(r)
-	if err != nil {
-		return "", err
-	}
-	return string(contents), nil
-}
-
-func filePath(storageType, fileName string) string {
-	return fmt.Sprintf("%s/%s", storageType, fileName)
-}
-
-func removeFileExtension(f string) string {
-	extension := filepath.Ext(f)
-	return strings.TrimSuffix(f, extension)
-}
-
-func listMigrationFiles(migrationFS embed.FS, path string) ([]string, error) {
-	files := []string{}
-
-	err := fs.WalkDir(migrationFS, path, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		info, err := d.Info()
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			files = append(files, info.Name())
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return files, nil
-}
-
 func GetMigration(storageType string) (map[string]string, string, error) {
 	switch storageType {
 	case POSTGRES:
-		migrations, err := getMigration("postgres")
+		migrations, err := getMigration("chorus/postgres")
 		if err != nil {
 			return nil, "", err
 		}

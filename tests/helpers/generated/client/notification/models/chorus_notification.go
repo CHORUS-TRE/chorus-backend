@@ -38,6 +38,9 @@ type ChorusNotification struct {
 
 	// tenant Id
 	TenantID string `json:"tenantId,omitempty"`
+
+	// user Id
+	UserID string `json:"userId,omitempty"`
 }
 
 // Validate validates this chorus notification

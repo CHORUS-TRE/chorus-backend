@@ -518,10 +518,11 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
+		UserID:   userID,
 		Message:  fmt.Sprintf("You have been assigned the role %v in workbench %v", role.Role, workbench.Name),
 		Content: notification_model.NotificationContent{
 			Type: "SystemNotification",
-			SystemNotification: notification_model.SystemNotification{
+			SystemNotification: &notification_model.SystemNotification{
 				RefreshJWTRequired: true,
 			},
 		},

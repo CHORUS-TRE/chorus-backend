@@ -27,6 +27,10 @@ func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, fi
 	return v.next.GetWorkspaceFile(ctx, workspaceID, filePath)
 }
 
+func (v validation) GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
+	return v.next.GetWorkspaceFileWithContent(ctx, workspaceID, filePath)
+}
+
 func (v validation) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	return v.next.ListWorkspaceFiles(ctx, workspaceID, filePath)
 }

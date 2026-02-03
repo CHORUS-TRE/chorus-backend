@@ -47,6 +47,10 @@ func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, r
 			return nil, err
 		}
 
+		if len(attrs) == 0 {
+			return &chorus.ListWorkbenchesReply{Result: &chorus.ListWorkbenchesResult{Workbenches: []*chorus.Workbench{}}}, nil
+		}
+
 		fmt.Println("attrs:", attrs)
 		claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 		if ok {
