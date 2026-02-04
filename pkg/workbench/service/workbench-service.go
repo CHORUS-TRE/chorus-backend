@@ -52,6 +52,10 @@ type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
 }
 
+type AppInstanceFilter struct {
+	WorkbenchIDsIn *[]uint64
+}
+
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
@@ -65,7 +69,7 @@ type Workbencher interface {
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
@@ -84,7 +88,7 @@ type WorkbenchStore interface {
 	DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workbenchIDsIn *[]uint64) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error

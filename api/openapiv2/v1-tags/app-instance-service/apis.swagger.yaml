@@ -61,6 +61,14 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.workbenchIdsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
       tags:
         - AppInstanceService
     post:
@@ -188,6 +196,14 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  chorusAppInstanceFilter:
+    type: object
+    properties:
+      workbenchIdsIn:
+        type: array
+        items:
+          type: string
+          format: uint64
   chorusCreateAppInstanceReply:
     type: object
     properties:

@@ -108,7 +108,12 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	res, paginationRes, err := c.workbencher.ListAppInstances(ctx, tenantID, &pagination)
+	filter := service.AppInstanceFilter{}
+	if req.Filter != nil {
+		filter.WorkbenchIDsIn = &req.Filter.WorkbenchIdsIn
+	}
+
+	res, paginationRes, err := c.workbencher.ListAppInstances(ctx, tenantID, &pagination, filter)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListAppInstances': %v", err.Error())
 	}
