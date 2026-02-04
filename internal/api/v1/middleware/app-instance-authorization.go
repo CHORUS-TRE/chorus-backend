@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,9 +41,47 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorizati
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances) // TODO: add workbench/workspace scoping for app instances listing
+	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.Filter != nil && len(req.Filter.WorkbenchIdsIn) > 0 {
+		for _, id := range req.Filter.WorkbenchIdsIn {
+			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(id))
+			if err != nil {
+				return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("not authorized to access workbench %d", id))
+			}
+		}
+	} else {
+		attrs, err := c.GetContextListForPermission(ctx, authorization.PermissionGetWorkbench)
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
+		}
+
+		if len(attrs) == 0 {
+			return &chorus.ListAppInstancesReply{Result: &chorus.ListAppInstancesResult{AppInstances: []*chorus.AppInstance{}}}, nil
+		}
+
+		for _, attr := range attrs {
+			if workbenchIDStr, ok := attr[authorization.RoleContextWorkbench]; ok {
+				if workbenchIDStr == "" {
+					continue
+				}
+				if workbenchIDStr == "*" {
+					req.Filter = nil
+					return c.next.ListAppInstances(ctx, req)
+				}
+				if req.Filter == nil {
+					req.Filter = &chorus.AppInstanceFilter{}
+				}
+				workbenchID, err := strconv.ParseUint(workbenchIDStr, 10, 64)
+				if err != nil {
+					return nil, status.Error(codes.Internal, fmt.Sprintf("unable to parse workbench ID from context: %v", err.Error()))
+				}
+				req.Filter.WorkbenchIdsIn = append(req.Filter.WorkbenchIdsIn, workbenchID)
+			}
+		}
 	}
 
 	return c.next.ListAppInstances(ctx, req)
