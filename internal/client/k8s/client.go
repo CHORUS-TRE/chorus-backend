@@ -379,7 +379,7 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 		job := &batchv1.Job{
 			ObjectMeta: v1.ObjectMeta{
 				GenerateName: "prepull-",
-				Namespace:    "default",
+				Namespace:    "backend",
 			},
 			Spec: batchv1.JobSpec{
 				TTLSecondsAfterFinished: ptr.To(int32(60)),
