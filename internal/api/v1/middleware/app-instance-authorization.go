@@ -41,7 +41,7 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorizati
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances)
+	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances) // TODO: check if context should be provided here
 	if err != nil {
 		return nil, err
 	}
