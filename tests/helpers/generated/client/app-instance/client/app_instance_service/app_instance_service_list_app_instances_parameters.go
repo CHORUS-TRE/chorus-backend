@@ -62,6 +62,9 @@ AppInstanceServiceListAppInstancesParams contains all the parameters to send to 
 */
 type AppInstanceServiceListAppInstancesParams struct {
 
+	// FilterWorkbenchIdsIn.
+	FilterWorkbenchIdsIn []string
+
 	/* PaginationLimit.
 
 	   Optionally limit the number of results (between 1 and 500)
@@ -143,6 +146,17 @@ func (o *AppInstanceServiceListAppInstancesParams) SetHTTPClient(client *http.Cl
 	o.HTTPClient = client
 }
 
+// WithFilterWorkbenchIdsIn adds the filterWorkbenchIdsIn to the app instance service list app instances params
+func (o *AppInstanceServiceListAppInstancesParams) WithFilterWorkbenchIdsIn(filterWorkbenchIdsIn []string) *AppInstanceServiceListAppInstancesParams {
+	o.SetFilterWorkbenchIdsIn(filterWorkbenchIdsIn)
+	return o
+}
+
+// SetFilterWorkbenchIdsIn adds the filterWorkbenchIdsIn to the app instance service list app instances params
+func (o *AppInstanceServiceListAppInstancesParams) SetFilterWorkbenchIdsIn(filterWorkbenchIdsIn []string) {
+	o.FilterWorkbenchIdsIn = filterWorkbenchIdsIn
+}
+
 // WithPaginationLimit adds the paginationLimit to the app instance service list app instances params
 func (o *AppInstanceServiceListAppInstancesParams) WithPaginationLimit(paginationLimit *int64) *AppInstanceServiceListAppInstancesParams {
 	o.SetPaginationLimit(paginationLimit)
@@ -205,6 +219,17 @@ func (o *AppInstanceServiceListAppInstancesParams) WriteToRequest(r runtime.Clie
 		return err
 	}
 	var res []error
+
+	if o.FilterWorkbenchIdsIn != nil {
+
+		// binding items for filter.workbenchIdsIn
+		joinedFilterWorkbenchIdsIn := o.bindParamFilterWorkbenchIdsIn(reg)
+
+		// query array param filter.workbenchIdsIn
+		if err := r.SetQueryParam("filter.workbenchIdsIn", joinedFilterWorkbenchIdsIn...); err != nil {
+			return err
+		}
+	}
 
 	if o.PaginationLimit != nil {
 
@@ -289,6 +314,23 @@ func (o *AppInstanceServiceListAppInstancesParams) WriteToRequest(r runtime.Clie
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
+}
+
+// bindParamAppInstanceServiceListAppInstances binds the parameter filter.workbenchIdsIn
+func (o *AppInstanceServiceListAppInstancesParams) bindParamFilterWorkbenchIdsIn(formats strfmt.Registry) []string {
+	filterWorkbenchIdsInIR := o.FilterWorkbenchIdsIn
+
+	var filterWorkbenchIdsInIC []string
+	for _, filterWorkbenchIdsInIIR := range filterWorkbenchIdsInIR { // explode []string
+
+		filterWorkbenchIdsInIIV := filterWorkbenchIdsInIIR // string as string
+		filterWorkbenchIdsInIC = append(filterWorkbenchIdsInIC, filterWorkbenchIdsInIIV)
+	}
+
+	// items.CollectionFormat: "multi"
+	filterWorkbenchIdsInIS := swag.JoinByFormat(filterWorkbenchIdsInIC, "multi")
+
+	return filterWorkbenchIdsInIS
 }
 
 // bindParamAppInstanceServiceListAppInstances binds the parameter pagination.query
