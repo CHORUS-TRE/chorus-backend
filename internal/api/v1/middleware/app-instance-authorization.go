@@ -18,7 +18,7 @@ import (
 var _ chorus.AppInstanceServiceServer = (*appInstanceControllerAuthorization)(nil)
 
 type AppInstanceResolver interface {
-	// TODO: create a specific method
+	// TODO: create a specific method to have longer term caching of app instance workbench and workspace ids
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
 }
 
