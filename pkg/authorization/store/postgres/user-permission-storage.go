@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -86,60 +87,60 @@ WHERE u.tenantid = $1
 }
 
 func (s *UserPermissionStorage) findUsersWithExactContext(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext authorization_model.Context) ([]uint64, error) {
-	contextDimensions := make([]string, 0, len(filterContext))
-	contextValues := make([]string, 0, len(filterContext))
+	args := []interface{}{tenantID, pq.Array(rolesToCheck)}
+
+	conditions := make([]string, 0, len(filterContext))
 	for dim, val := range filterContext {
-		contextDimensions = append(contextDimensions, string(dim))
-		contextValues = append(contextValues, val)
+		conditions = append(conditions, fmt.Sprintf(
+			"EXISTS (SELECT 1 FROM user_role_context urc WHERE urc.userroleid = ur.id AND urc.contextdimension = $%d AND urc.value = $%d)",
+			len(args)+1, len(args)+2,
+		))
+		args = append(args, string(dim), val)
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 SELECT DISTINCT u.id
 FROM users u
 JOIN user_role ur ON ur.userid = u.id
 JOIN role_definitions rd ON rd.id = ur.roleid
-JOIN user_role_context urc ON urc.userroleid = ur.id
 WHERE u.tenantid = $1
   AND u.status = 'active'
   AND rd.name = ANY($2)
-  AND urc.contextdimension = ANY($3)
-  AND urc.value = ANY($4)
-GROUP BY u.id, ur.id
-HAVING COUNT(DISTINCT urc.contextdimension) = $5
-`
+  AND %s
+`, strings.Join(conditions, " AND "))
+
 	var userIDs []uint64
-	err := s.db.SelectContext(ctx, &userIDs, query, tenantID, pq.Array(rolesToCheck), pq.Array(contextDimensions), pq.Array(contextValues), len(filterContext))
-	if err != nil {
+	if err := s.db.SelectContext(ctx, &userIDs, query, args...); err != nil {
 		return nil, fmt.Errorf("failed to find users with exact context: %w", err)
 	}
 	return userIDs, nil
 }
 
 func (s *UserPermissionStorage) findUsersWithContextMatch(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext authorization_model.Context) ([]uint64, error) {
-	contextDimensions := make([]string, 0, len(filterContext))
-	contextValues := make([]string, 0, len(filterContext))
+	args := []interface{}{tenantID, pq.Array(rolesToCheck)}
+
+	conditions := make([]string, 0, len(filterContext))
 	for dim, val := range filterContext {
-		contextDimensions = append(contextDimensions, string(dim))
-		contextValues = append(contextValues, val)
+		conditions = append(conditions, fmt.Sprintf(
+			"EXISTS (SELECT 1 FROM user_role_context urc WHERE urc.userroleid = ur.id AND urc.contextdimension = $%d AND (urc.value = $%d OR urc.value = '*'))",
+			len(args)+1, len(args)+2,
+		))
+		args = append(args, string(dim), val)
 	}
 
-	query := `
+	query := fmt.Sprintf(`
 SELECT DISTINCT u.id
 FROM users u
 JOIN user_role ur ON ur.userid = u.id
 JOIN role_definitions rd ON rd.id = ur.roleid
-JOIN user_role_context urc ON urc.userroleid = ur.id
 WHERE u.tenantid = $1
   AND u.status = 'active'
   AND rd.name = ANY($2)
-  AND urc.contextdimension = ANY($3)
-  AND (urc.value = ANY($4) OR urc.value = '*')
-GROUP BY u.id, ur.id
-HAVING COUNT(DISTINCT urc.contextdimension) = $5
-`
+  AND %s
+`, strings.Join(conditions, " AND "))
+
 	var userIDs []uint64
-	err := s.db.SelectContext(ctx, &userIDs, query, tenantID, pq.Array(rolesToCheck), pq.Array(contextDimensions), pq.Array(contextValues), len(filterContext))
-	if err != nil {
+	if err := s.db.SelectContext(ctx, &userIDs, query, args...); err != nil {
 		return nil, fmt.Errorf("failed to find users with context match: %w", err)
 	}
 	return userIDs, nil
