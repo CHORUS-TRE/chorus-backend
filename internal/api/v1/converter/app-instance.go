@@ -60,8 +60,8 @@ func AppInstanceFromBusiness(appInstance *model.AppInstance) (*chorus.AppInstanc
 		WorkbenchId: appInstance.WorkbenchID,
 
 		Status:    appInstance.Status.String(),
-		K8SStatus: appInstance.K8sStatus.String(),
 		K8SState:  appInstance.K8sState.String(),
+		K8SStatus: appInstance.K8sStatus.String(),
 
 		InitialResolutionWidth:  appInstance.InitialResolutionWidth,
 		InitialResolutionHeight: appInstance.InitialResolutionHeight,
