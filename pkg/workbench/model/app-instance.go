@@ -119,7 +119,7 @@ func (s K8sAppInstanceStatus) ToAppInstanceStatus() AppInstanceStatus {
 	case K8sAppInstanceStatusRunning:
 		return AppInstanceActive
 	case K8sAppInstanceStatusComplete:
-		return AppInstanceInactive
+		return AppInstanceDeleted
 	case K8sAppInstanceStatusFailed:
 		return AppInstanceDeleted
 	case K8sAppInstanceStatusProgressing:
@@ -127,7 +127,7 @@ func (s K8sAppInstanceStatus) ToAppInstanceStatus() AppInstanceStatus {
 	case K8sAppInstanceStatusStopping:
 		return AppInstanceUnknown
 	case K8sAppInstanceStatusStopped:
-		return AppInstanceInactive
+		return AppInstanceDeleted
 	case K8sAppInstanceStatusKilling:
 		return AppInstanceUnknown
 	case K8sAppInstanceStatusKilled:
