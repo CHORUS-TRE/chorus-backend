@@ -106,22 +106,34 @@ const (
 	K8sAppInstanceStatusComplete    K8sAppInstanceStatus = "Complete"
 	K8sAppInstanceStatusProgressing K8sAppInstanceStatus = "Progressing"
 	K8sAppInstanceStatusFailed      K8sAppInstanceStatus = "Failed"
+	K8sAppInstanceStatusStopping    K8sAppInstanceStatus = "Stopping"
+	K8sAppInstanceStatusStopped     K8sAppInstanceStatus = "Stopped"
+	K8sAppInstanceStatusKilling     K8sAppInstanceStatus = "Killing"
+	K8sAppInstanceStatusKilled      K8sAppInstanceStatus = "Killed"
 )
 
 func (s K8sAppInstanceStatus) ToAppInstanceStatus() AppInstanceStatus {
 	switch s {
 	case K8sAppInstanceStatusUnknown:
-		return AppInstanceInactive
+		return AppInstanceUnknown
 	case K8sAppInstanceStatusRunning:
 		return AppInstanceActive
 	case K8sAppInstanceStatusComplete:
-		return AppInstanceDeleted
+		return AppInstanceInactive
 	case K8sAppInstanceStatusFailed:
 		return AppInstanceDeleted
 	case K8sAppInstanceStatusProgressing:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusStopping:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusStopped:
 		return AppInstanceInactive
+	case K8sAppInstanceStatusKilling:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusKilled:
+		return AppInstanceDeleted
 	default:
-		return AppInstanceInactive
+		return AppInstanceUnknown
 	}
 }
 
@@ -136,6 +148,7 @@ const (
 	AppInstanceActive   AppInstanceStatus = "active"
 	AppInstanceInactive AppInstanceStatus = "inactive"
 	AppInstanceDeleted  AppInstanceStatus = "deleted"
+	AppInstanceUnknown  AppInstanceStatus = "unknown"
 )
 
 func (s AppInstanceStatus) String() string {
@@ -150,6 +163,8 @@ func ToAppInstanceStatus(status string) (AppInstanceStatus, error) {
 		return AppInstanceInactive, nil
 	case AppInstanceDeleted.String():
 		return AppInstanceDeleted, nil
+	case AppInstanceUnknown.String():
+		return AppInstanceUnknown, nil
 	default:
 		return "", errors.New("unexpected AppInstanceStatus: " + status)
 	}
