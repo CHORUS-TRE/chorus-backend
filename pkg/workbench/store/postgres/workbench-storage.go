@@ -359,7 +359,7 @@ func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint6
 
 	var newAppInstance model.AppInstance
 	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceUnknown.String(), model.K8sAppInstanceStateRunning.String(), model.K8sAppInstanceStatusUnknown.String(), appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceUnknown, model.K8sAppInstanceStateRunning, model.K8sAppInstanceStatusUnknown, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
 	)
 	if err != nil {
 		return nil, err
@@ -402,7 +402,7 @@ func (s *WorkbenchStorage) DeleteAppInstance(ctx context.Context, tenantID uint6
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
-	rows, err := s.db.ExecContext(ctx, query, tenantID, appInstanceID, model.AppInstanceDeleted.String(), model.K8sAppInstanceStateStopped.String())
+	rows, err := s.db.ExecContext(ctx, query, tenantID, appInstanceID, model.AppInstanceDeleted, model.K8sAppInstanceStateStopped)
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
 	}
