@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 )
 
@@ -444,25 +443,6 @@ func RoleIn(role RoleName, roles []RoleName) bool {
 		}
 	}
 	return false
-}
-
-func GetWorkspaceRolesAssignableByAdmin(cfg config.Config) []RoleName {
-	roles := []RoleName{
-		RoleWorkspaceGuest,
-		RoleWorkspaceMember,
-		RoleWorkspaceMaintainer,
-		RoleWorkspaceAdmin,
-	}
-	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
-		roles = append(roles, RoleWorkspaceDataManager)
-	}
-	return roles
-}
-
-func GetWorkspaceRolesAssignableByDataManager() []RoleName {
-	return []RoleName{
-		RoleWorkspaceDataManager,
-	}
 }
 
 type ContextDimension string
