@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	gatekeeper_model "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/model"
 	gatekeeper_service "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/service"
 	"go.uber.org/zap"
@@ -26,12 +26,12 @@ func ProvideGatekeeper() gatekeeper_service.AuthorizationServiceInterface {
 }
 
 var authorizerOnce sync.Once
-var authorizer authorization.Authorizer
+var authorizer authorization_service.Authorizer
 
-func ProvideAuthorizer() authorization.Authorizer {
+func ProvideAuthorizer() authorization_service.Authorizer {
 	authorizerOnce.Do(func() {
 		var err error
-		authorizer, err = authorization.NewAuthorizer(ProvideGatekeeper())
+		authorizer, err = authorization_service.NewAuthorizer(ProvideGatekeeper())
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create authorizer", zap.Error(err))
 		}

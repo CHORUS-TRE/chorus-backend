@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 )
 
 // User maps an entry in the 'user' database table.

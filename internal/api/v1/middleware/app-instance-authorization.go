@@ -9,9 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
@@ -28,7 +30,7 @@ type appInstanceControllerAuthorization struct {
 	next     chorus.AppInstanceServiceServer
 }
 
-func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, resolver AppInstanceResolver) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
+func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, resolver AppInstanceResolver) func(chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 	return func(next chorus.AppInstanceServiceServer) chorus.AppInstanceServiceServer {
 		return &appInstanceControllerAuthorization{
 			Authorization: Authorization{

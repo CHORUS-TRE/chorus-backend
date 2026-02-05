@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	choruserrors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
@@ -28,6 +27,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/model"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	userService "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"

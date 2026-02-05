@@ -6,10 +6,11 @@ import (
 	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,7 +23,7 @@ type workspaceControllerAuthorization struct {
 	next chorus.WorkspaceServiceServer
 }
 
-func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
+func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 	return func(next chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 		return &workspaceControllerAuthorization{
 			Authorization: Authorization{

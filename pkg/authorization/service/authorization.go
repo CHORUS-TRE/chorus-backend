@@ -3,21 +3,22 @@ package authorization
 import (
 	"fmt"
 
+	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	gatekeeper_model "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/model"
 	gatekeeper_service "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/service"
 )
 
 type Authorizer interface {
-	IsUserAllowed(user []Role, permission Permission) (bool, error)
-	ExplainIsUserAllowed(user []Role, permission Permission) string
-	GetUserPermissions(user []Role) ([]Permission, error)
-	GetContextListForPermission(user []Role, permissionName PermissionName) ([]Context, error)
+	IsUserAllowed(user []model.Role, permission model.Permission) (bool, error)
+	ExplainIsUserAllowed(user []model.Role, permission model.Permission) string
+	GetUserPermissions(user []model.Role) ([]model.Permission, error)
+	GetContextListForPermission(user []model.Role, permissionName model.PermissionName) ([]model.Context, error)
 }
 
 type auth struct {
 	gatekeeper    gatekeeper_service.AuthorizationServiceInterface
-	permissionMap map[PermissionName]gatekeeper_model.Permission
-	roleMap       map[RoleName]gatekeeper_model.Role
+	permissionMap map[model.PermissionName]gatekeeper_model.Permission
+	roleMap       map[model.RoleName]gatekeeper_model.Role
 }
 
 func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface) (Authorizer, error) {
@@ -26,9 +27,9 @@ func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface) 
 		return nil, fmt.Errorf("authorization schema is nil")
 	}
 
-	permissionMap := make(map[PermissionName]gatekeeper_model.Permission)
+	permissionMap := make(map[model.PermissionName]gatekeeper_model.Permission)
 	for _, gkp := range schema.Permissions {
-		p, err := ToPermissionName(gkp.Name)
+		p, err := model.ToPermissionName(gkp.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert gatekeeper permission %s: %w", gkp.Name, err)
 		}
@@ -36,9 +37,9 @@ func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface) 
 		permissionMap[p] = gkp
 	}
 
-	roleMap := make(map[RoleName]gatekeeper_model.Role)
+	roleMap := make(map[model.RoleName]gatekeeper_model.Role)
 	for _, gkr := range schema.Roles {
-		r, err := ToRoleName(gkr.Name)
+		r, err := model.ToRoleName(gkr.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert gatekeeper role %s: %w", gkr.Name, err)
 		}
@@ -52,7 +53,7 @@ func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface) 
 	}, nil
 }
 
-func (a *auth) IsUserAllowed(user []Role, permission Permission) (bool, error) {
+func (a *auth) IsUserAllowed(user []model.Role, permission model.Permission) (bool, error) {
 	roles, err := a.userToGatekeeperRoles(user)
 	if err != nil {
 		return false, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
@@ -79,7 +80,7 @@ func (a *auth) IsUserAllowed(user []Role, permission Permission) (bool, error) {
 	return allowed, nil
 }
 
-func (a *auth) ExplainIsUserAllowed(user []Role, permission Permission) string {
+func (a *auth) ExplainIsUserAllowed(user []model.Role, permission model.Permission) string {
 	roles, err := a.userToGatekeeperRoles(user)
 	if err != nil {
 		return fmt.Sprintf("failed to convert user roles to gatekeeper roles: %v", err)
@@ -99,7 +100,7 @@ func (a *auth) ExplainIsUserAllowed(user []Role, permission Permission) string {
 	return a.gatekeeper.ExplainIsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
 }
 
-func (a *auth) userToGatekeeperRoles(user []Role) ([]*gatekeeper_model.Role, error) {
+func (a *auth) userToGatekeeperRoles(user []model.Role) ([]*gatekeeper_model.Role, error) {
 	roles := make([]*gatekeeper_model.Role, len(user))
 	for i, r := range user {
 		role, ok := a.roleMap[r.Name]
@@ -118,20 +119,20 @@ func (a *auth) userToGatekeeperRoles(user []Role) ([]*gatekeeper_model.Role, err
 	return roles, nil
 }
 
-func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
+func (a *auth) GetUserPermissions(user []model.Role) ([]model.Permission, error) {
 	roles, err := a.userToGatekeeperRoles(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
 	}
 
 	gkPermissions := a.gatekeeper.GetUserPermissions(gatekeeper_model.User{Roles: roles})
-	permissions := make([]Permission, len(gkPermissions))
+	permissions := make([]model.Permission, len(gkPermissions))
 	for i, p := range gkPermissions {
 		cm := make(map[string]string)
 		for k, v := range p.Context {
 			cm[string(k)] = v
 		}
-		p, err := toPermission(p.Name, cm)
+		p, err := model.ToPermission(p.Name, cm)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert gatekeeper permission %s: %w", p.Name, err)
 		}
@@ -141,7 +142,7 @@ func (a *auth) GetUserPermissions(user []Role) ([]Permission, error) {
 	return permissions, nil
 }
 
-func (a *auth) GetContextListForPermission(user []Role, permissionName PermissionName) ([]Context, error) {
+func (a *auth) GetContextListForPermission(user []model.Role, permissionName model.PermissionName) ([]model.Context, error) {
 	roles, err := a.userToGatekeeperRoles(user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
@@ -154,11 +155,11 @@ func (a *auth) GetContextListForPermission(user []Role, permissionName Permissio
 
 	contextList := a.gatekeeper.GetContextListForPermission(gatekeeper_model.User{Roles: roles}, string(permissionName))
 
-	result := make([]Context, len(contextList))
+	result := make([]model.Context, len(contextList))
 	for i, c := range contextList {
-		cm := make(map[ContextDimension]string)
+		cm := make(map[model.ContextDimension]string)
 		for k, v := range c {
-			contextDim, err := ToRoleContext(string(k))
+			contextDim, err := model.ToRoleContext(string(k))
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert context dimension %s: %w", k, err)
 			}

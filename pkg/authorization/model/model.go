@@ -1,4 +1,4 @@
-package authorization
+package model
 
 import (
 	"context"
@@ -227,7 +227,7 @@ func ToPermissionName(p string) (PermissionName, error) {
 	return "", fmt.Errorf("unknown permission type: %s", p)
 }
 
-func toPermission(p string, c map[string]string) (Permission, error) {
+func ToPermission(p string, c map[string]string) (Permission, error) {
 	permissionName, err := ToPermissionName(p)
 	if err != nil {
 		return Permission{}, err

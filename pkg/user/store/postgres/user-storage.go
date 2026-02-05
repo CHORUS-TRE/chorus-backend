@@ -8,9 +8,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"

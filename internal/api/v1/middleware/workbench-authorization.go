@@ -6,10 +6,11 @@ import (
 	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.WorkbenchServiceServer = (*workbenchControllerAuthorization)(nil)
@@ -19,7 +20,7 @@ type workbenchControllerAuthorization struct {
 	next chorus.WorkbenchServiceServer
 }
 
-func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
+func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
 	return func(next chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
 		return &workbenchControllerAuthorization{
 			Authorization: Authorization{

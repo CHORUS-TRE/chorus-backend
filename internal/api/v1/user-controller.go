@@ -9,11 +9,11 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )

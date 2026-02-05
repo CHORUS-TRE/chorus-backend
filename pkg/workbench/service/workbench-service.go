@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -23,6 +22,7 @@ import (
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	user "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/client/user_service"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/models"
