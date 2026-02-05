@@ -217,10 +217,12 @@ func (s *WorkbenchService) SetClientWatchers() {
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
 		for _, app := range k8sWorkbench.Apps {
 			k8sStatus := model.K8sAppInstanceStatus(app.K8sStatus)
+			k8sState := model.K8sAppInstanceState(app.K8sState)
 			appInstance := &model.AppInstance{
 				ID:        app.ID,
 				Status:    k8sStatus.ToAppInstanceStatus(),
 				K8sStatus: k8sStatus,
+				K8sState:  k8sState,
 			}
 			appInstancesToUpdate = append(appInstancesToUpdate, appInstance)
 		}
@@ -239,6 +241,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 			logger.TechLog.Error(ctx, "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
 			return err
 		}
+		logger.TechLog.Debug(ctx, "updated app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstances", appInstancesToUpdate))
 
 		// Check if operator has reconciled before modifying spec
 		isReconciled := k8sWorkbench.ObservedGeneration == k8sWorkbench.CurrentGeneration
