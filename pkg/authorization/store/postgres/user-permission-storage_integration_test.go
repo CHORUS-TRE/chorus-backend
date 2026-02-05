@@ -24,7 +24,7 @@ func testRolesGrantingPermissions() map[authorization_model.PermissionName][]aut
 			authorization_model.RoleAuthenticated,
 		},
 		authorization_model.PermissionApproveRequest: {
-			authorization_model.RoleWorkspacePI,
+			authorization_model.RoleWorkspaceDataManager,
 			authorization_model.RoleWorkspaceAdmin,
 			authorization_model.RoleSuperAdmin,
 		},
@@ -221,7 +221,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_ViaRolesFilter(t *testing
 
 	fixtures := setupTestFixtures(t, db)
 
-	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["WorkspacePI"], "workspace", "100")
+	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["WorkspaceDataManager"], "workspace", "100")
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "100")
 	assignRole(t, db, &fixtures, fixtures.userIDs["charlie"], fixtures.roleIDs["SuperAdmin"])
 
@@ -232,7 +232,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_ViaRolesFilter(t *testing
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "100",
 		},
-		ViaRoles: []authorization_model.RoleName{authorization_model.RoleWorkspacePI},
+		ViaRoles: []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager},
 	})
 	require.NoError(t, err)
 	require.ElementsMatch(t, []uint64{fixtures.userIDs["alice"]}, userIDs)

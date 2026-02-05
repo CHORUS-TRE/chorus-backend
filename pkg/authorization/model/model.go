@@ -338,7 +338,7 @@ const (
 	RoleWorkspaceGuest          RoleName = "WorkspaceGuest"
 	RoleWorkspaceMember         RoleName = "WorkspaceMember"
 	RoleWorkspaceMaintainer     RoleName = "WorkspaceMaintainer"
-	RoleWorkspacePI             RoleName = "WorkspacePI"
+	RoleWorkspaceDataManager    RoleName = "WorkspaceDataManager"
 	RoleWorkspaceAdmin          RoleName = "WorkspaceAdmin"
 	RoleWorkbenchViewer         RoleName = "WorkbenchViewer"
 	RoleWorkbenchMember         RoleName = "WorkbenchMember"
@@ -347,6 +347,7 @@ const (
 	RolePlatformSettingsManager RoleName = "PlatformSettingsManager"
 	RolePlateformUserManager    RoleName = "PlateformUserManager"
 	RoleAppStoreAdmin           RoleName = "AppStoreAdmin"
+	RoleDataManager             RoleName = "DataManager"
 	RoleSuperAdmin              RoleName = "SuperAdmin"
 )
 
@@ -366,8 +367,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleWorkspaceMember, nil
 	case string(RoleWorkspaceMaintainer):
 		return RoleWorkspaceMaintainer, nil
-	case string(RoleWorkspacePI):
-		return RoleWorkspacePI, nil
+	case string(RoleWorkspaceDataManager):
+		return RoleWorkspaceDataManager, nil
 	case string(RoleWorkspaceAdmin):
 		return RoleWorkspaceAdmin, nil
 	case string(RoleWorkbenchViewer):
@@ -384,6 +385,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RolePlateformUserManager, nil
 	case string(RoleAppStoreAdmin):
 		return RoleAppStoreAdmin, nil
+	case string(RoleDataManager):
+		return RoleDataManager, nil
 	case string(RoleSuperAdmin):
 		return RoleSuperAdmin, nil
 	}
@@ -398,7 +401,7 @@ func GetAllRoles() []RoleName {
 		RoleWorkspaceGuest,
 		RoleWorkspaceMember,
 		RoleWorkspaceMaintainer,
-		RoleWorkspacePI,
+		RoleWorkspaceDataManager,
 		RoleWorkspaceAdmin,
 		RoleWorkbenchViewer,
 		RoleWorkbenchMember,
@@ -407,6 +410,7 @@ func GetAllRoles() []RoleName {
 		RolePlatformSettingsManager,
 		RolePlateformUserManager,
 		RoleAppStoreAdmin,
+		RoleDataManager,
 		RoleSuperAdmin,
 	}
 }
@@ -416,7 +420,7 @@ func GetWorkspaceRoles() []RoleName {
 		RoleWorkspaceGuest,
 		RoleWorkspaceMember,
 		RoleWorkspaceMaintainer,
-		RoleWorkspacePI,
+		RoleWorkspaceDataManager,
 		RoleWorkspaceAdmin,
 	}
 }
@@ -436,6 +440,21 @@ func RoleIn(role RoleName, roles []RoleName) bool {
 		}
 	}
 	return false
+}
+
+func GetWorkspaceRolesAssignableByAdmin() []RoleName {
+	return []RoleName{
+		RoleWorkspaceGuest,
+		RoleWorkspaceMember,
+		RoleWorkspaceMaintainer,
+		RoleWorkspaceAdmin,
+	}
+}
+
+func GetWorkspaceRolesAssignableByDataManager() []RoleName {
+	return []RoleName{
+		RoleWorkspaceDataManager,
+	}
 }
 
 type ContextDimension string

@@ -306,6 +306,8 @@ type (
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
 			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
+			CreatorIsAdmin         bool          `yaml:"creator_is_admin"`
+			CreatorIsDataManager   bool          `yaml:"creator_is_data_manager"`
 		} `yaml:"workspace_service"`
 
 		WorkspaceFileService struct {
