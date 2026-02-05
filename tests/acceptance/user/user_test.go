@@ -903,9 +903,6 @@ func setupBaseTables() {
 	q := `
 	INSERT INTO tenants (id, name) VALUES (88888, 'test tenant');
 
-
-	INSERT INTO role_definitions (id, name) VALUES (101, 'SuperAdmin');
-	INSERT INTO role_definitions (id, name) VALUES (102, 'Authenticated');
 	`
 	helpers.Populate(q)
 }
@@ -921,13 +918,10 @@ func setupTables() {
 	INSERT INTO users (id,tenantid, firstname, lastname, username, password, status, createdat, updatedat)
 	VALUES (90001,88888, 'jane', 'doe', 'jadoe', '$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42', 'disabled', NOW(), NOW());
 
-	INSERT INTO role_definitions (id, name) VALUES (101, 'SuperAdmin');
-	INSERT INTO role_definitions (id, name) VALUES (102, 'Authenticated');
-
-	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, 101);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, 102);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90001, 101);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92004, 90001, 102);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, (SELECT id FROM role_definitions WHERE name='Authenticated'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, (SELECT id FROM role_definitions WHERE name='SuperAdmin'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90001, (SELECT id FROM role_definitions WHERE name='Authenticated'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(92004, 90001, (SELECT id FROM role_definitions WHERE name='SuperAdmin'));
 	`
 	helpers.Populate(q)
 }
@@ -942,12 +936,9 @@ func setupTablesWithTotpUser() {
 	VALUES (90000, 88888, 'hello', 'moto', 'hmoto', '$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO', 'active',
 			NOW(), NOW(), 'ohKtu9PFHMquP5Zemcfb4XFQ8TuYnA5Gk1txooQINWL2AbhonyGW0H66zmX8YdUEDEZPYGjOCDPBOF9W');
 
-	INSERT INTO role_definitions (id, name) VALUES (101, 'SuperAdmin');
-	INSERT INTO role_definitions (id, name) VALUES (102, 'Authenticated');
-
-	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, 101);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, 101);
-	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90000, 102);
+	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, (SELECT id FROM role_definitions WHERE name='Authenticated'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, (SELECT id FROM role_definitions WHERE name='Authenticated'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(92003, 90000, (SELECT id FROM role_definitions WHERE name='SuperAdmin'));
 
 	INSERT INTO totp_recovery_codes (id, userid, tenantid, code)
 	VALUES (88888, 90000, 88888, '0Uu+C4s1i+mrS7pqmI2SHJe+Hcg3l4K/ylusXoIv25RE6qEUyRY='),
