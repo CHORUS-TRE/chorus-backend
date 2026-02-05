@@ -213,6 +213,8 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 
 	// Construct Workbench
 	workbench := Workbench{
+		CurrentGeneration:       wb.ObjectMeta.Generation,
+		ObservedGeneration:      wb.Status.ObservedGeneration,
 		Namespace:               wb.Namespace,
 		TenantID:                tenantID,
 		Name:                    wb.Name,

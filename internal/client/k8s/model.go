@@ -22,6 +22,8 @@ var workbenchUsernameRegex = regexp.MustCompile("[^a-z0-9_]")
 // ----------------------------------------------------------------
 
 type Workbench struct {
+	CurrentGeneration       int64
+	ObservedGeneration      int64
 	Namespace               string
 	TenantID                uint64
 	Username                string
