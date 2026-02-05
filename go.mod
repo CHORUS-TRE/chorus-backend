@@ -6,9 +6,10 @@ module github.com/CHORUS-TRE/chorus-backend
 go 1.24.3
 
 require (
-	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20260205145514-1a55923d2615
+	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20260205164034-68c7d9521479
 	github.com/coocood/freecache v1.2.4
 	github.com/evanphx/json-patch v5.9.11+incompatible
+	github.com/fergusstrange/embedded-postgres v1.33.0
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/go-openapi/errors v0.22.1
 	github.com/go-openapi/runtime v0.28.0
@@ -58,7 +59,6 @@ require (
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/fergusstrange/embedded-postgres v1.33.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect

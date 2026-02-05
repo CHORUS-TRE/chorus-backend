@@ -38,16 +38,17 @@ const (
 	PermissionDeleteWorkbench        PermissionName = "deleteWorkbench"
 	PermissionManageUsersInWorkbench PermissionName = "manageUsersInWorkbench"
 
-	PermissionListWorkspaces             PermissionName = "listWorkspaces"
-	PermissionCreateWorkspace            PermissionName = "createWorkspace"
-	PermissionUpdateWorkspace            PermissionName = "updateWorkspace"
-	PermissionGetWorkspace               PermissionName = "getWorkspace"
-	PermissionDeleteWorkspace            PermissionName = "deleteWorkspace"
-	PermissionManageUsersInWorkspace     PermissionName = "manageUsersInWorkspace"
-	PermissionListFilesInWorkspace       PermissionName = "listFilesInWorkspace"
-	PermissionUploadFilesToWorkspace     PermissionName = "uploadFilesToWorkspace"
-	PermissionDownloadFilesFromWorkspace PermissionName = "downloadFilesFromWorkspace"
-	PermissionModifyFilesInWorkspace     PermissionName = "modifyFilesInWorkspace"
+	PermissionListWorkspaces                 PermissionName = "listWorkspaces"
+	PermissionCreateWorkspace                PermissionName = "createWorkspace"
+	PermissionUpdateWorkspace                PermissionName = "updateWorkspace"
+	PermissionGetWorkspace                   PermissionName = "getWorkspace"
+	PermissionDeleteWorkspace                PermissionName = "deleteWorkspace"
+	PermissionManageUsersInWorkspace         PermissionName = "manageUsersInWorkspace"
+	PermissionManageUsersDataRoleInWorkspace PermissionName = "manageUsersDataRoleInWorkspace"
+	PermissionListFilesInWorkspace           PermissionName = "listFilesInWorkspace"
+	PermissionUploadFilesToWorkspace         PermissionName = "uploadFilesToWorkspace"
+	PermissionDownloadFilesFromWorkspace     PermissionName = "downloadFilesFromWorkspace"
+	PermissionModifyFilesInWorkspace         PermissionName = "modifyFilesInWorkspace"
 
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
@@ -137,6 +138,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionDeleteWorkspace, nil
 	case string(PermissionManageUsersInWorkspace):
 		return PermissionManageUsersInWorkspace, nil
+	case string(PermissionManageUsersDataRoleInWorkspace):
+		return PermissionManageUsersDataRoleInWorkspace, nil
 	case string(PermissionListFilesInWorkspace):
 		return PermissionListFilesInWorkspace, nil
 	case string(PermissionUploadFilesToWorkspace):

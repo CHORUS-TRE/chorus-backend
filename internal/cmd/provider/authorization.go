@@ -2,9 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	authorization_store_middleware "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/middleware"
 	authorization_store "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/postgres"
@@ -22,6 +24,27 @@ func ProvideGatekeeper() gatekeeper_service.AuthorizationServiceInterface {
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to get default gatekeeper model schema", zap.Error(err))
 		}
+
+		cfg := ProvideConfig()
+		if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
+			var permissionManagerUserDataRole *gatekeeper_model.Permission
+			for i, perm := range schema.Permissions {
+				if perm.Name == model.PermissionManageUsersDataRoleInWorkspace.String() {
+					permissionManagerUserDataRole = &schema.Permissions[i]
+					break
+				}
+			}
+			if permissionManagerUserDataRole == nil {
+				logger.TechLog.Fatal(context.Background(), fmt.Sprintf("permission %s not found in schema", model.PermissionManageUsersDataRoleInWorkspace.String()))
+			}
+			for i, role := range schema.Roles {
+				if role.Name == model.RoleWorkspaceAdmin.String() {
+					schema.Roles[i].Permissions = append(schema.Roles[i].Permissions, *permissionManagerUserDataRole)
+					break
+				}
+			}
+		}
+
 		gatekeeper, err = gatekeeper_service.NewAuthorizationService(&schema)
 	})
 	return gatekeeper

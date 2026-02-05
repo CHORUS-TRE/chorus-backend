@@ -153,24 +153,16 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
-	if err != nil {
-		return nil, err
-	}
-
-	canAssign := false
-	if authorization.RoleIn(roleName, authorization.GetWorkspaceRolesAssignableByAdmin(c.cfg)) {
-		canAssign = true
-	}
-	if authorization.RoleIn(roleName, authorization.GetWorkspaceRolesAssignableByDataManager()) {
-		hasDataManagerRole := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(req.Id)) == nil
-		if hasDataManagerRole {
-			canAssign = true
+	if roleName == authorization.RoleWorkspaceDataManager {
+		err = c.IsAuthorized(ctx, authorization.PermissionManageUsersDataRoleInWorkspace, authorization.WithWorkspace(req.Id))
+		if err != nil {
+			return nil, err
 		}
-	}
-
-	if !canAssign {
-		return nil, fmt.Errorf("user is not authorized to assign role %q in workspace", roleName)
+	} else {
+		err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.next.ManageUserRoleInWorkspace(ctx, req)
