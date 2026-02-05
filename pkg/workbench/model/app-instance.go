@@ -57,8 +57,7 @@ func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
 		AppImage:    utils.ToString(a.AppDockerImageName),
 		AppTag:      utils.ToString(a.AppDockerImageTag),
 
-		K8sState:  a.K8sState.String(),
-		K8sStatus: a.K8sStatus.String(),
+		K8sState: a.K8sState.String(),
 
 		KioskConfigURL:      utils.ToString(a.AppKioskConfigURL),
 		KioskConfigJWTURL:   utils.ToString(a.AppKioskConfigJWTURL),
