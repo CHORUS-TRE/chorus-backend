@@ -97,27 +97,18 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 	switch approvalRequest.Type {
 	case approval_request_model.ApprovalRequestTypeDataExtraction:
 		workspaceID := approvalRequest.GetSourceWorkspaceID()
-		if workspaceID == 0 {
-			return nil, status.Error(codes.Internal, "unable to determine source workspace for approval request")
-		}
-
 		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
 		if err != nil {
 			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
 		}
 	case approval_request_model.ApprovalRequestTypeDataTransfer:
 		workspaceID := approvalRequest.GetSourceWorkspaceID()
-		if workspaceID == 0 {
-			return nil, status.Error(codes.Internal, "unable to determine source workspace for approval request")
-		}
-
 		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
 		if err != nil {
 			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
 		}
 
 		targetWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
-
 		err = c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(targetWorkspaceID))
 		if err != nil {
 			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
