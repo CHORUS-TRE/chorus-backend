@@ -22,8 +22,8 @@ type WorkbenchServer struct {
 	UserID                  int    `json:"userid,omitempty"`
 }
 type Image struct {
-	Registry   string `json:"registry"`
-	Repository string `json:"repository"`
+	Registry   string `json:"registry,omitempty"`
+	Repository string `json:"repository,omitempty"`
 	Tag        string `json:"tag,omitempty"`
 }
 type KioskConfig struct {
@@ -36,9 +36,8 @@ type InitContainerConfig struct {
 }
 type WorkbenchApp struct {
 	Name        string                       `json:"name"`
-	Version     string                       `json:"version,omitempty"`
 	State       WorkbenchAppState            `json:"state,omitempty"`
-	Image       *Image                       `json:"image,omitempty"`
+	Image       Image                        `json:"image"`
 	ShmSize     *resource.Quantity           `json:"shmSize,omitempty"`
 	Resources   *corev1.ResourceRequirements `json:"resources,omitempty"`
 	KioskConfig *KioskConfig                 `json:"kioskConfig,omitempty"`
@@ -54,11 +53,15 @@ type WorkbenchSpec struct {
 type WorkbenchStatusAppStatus string
 
 const (
-	WorkbenchStatusAppStatusUnknown     WorkbenchStatusAppStatus = "Unknown"
-	WorkbenchStatusAppStatusRunning     WorkbenchStatusAppStatus = "Running"
-	WorkbenchStatusAppStatusComplete    WorkbenchStatusAppStatus = "Complete"
-	WorkbenchStatusAppStatusProgressing WorkbenchStatusAppStatus = "Progressing"
-	WorkbenchStatusAppStatusFailed      WorkbenchStatusAppStatus = "Failed"
+	WorkbenchStatusAppStatusUnknown     WorkbenchStatusAppStatus = "Unknown"     // non-existing app
+	WorkbenchStatusAppStatusRunning     WorkbenchStatusAppStatus = "Running"     // running app
+	WorkbenchStatusAppStatusComplete    WorkbenchStatusAppStatus = "Complete"    // terminated app
+	WorkbenchStatusAppStatusProgressing WorkbenchStatusAppStatus = "Progressing" // app is pending
+	WorkbenchStatusAppStatusFailed      WorkbenchStatusAppStatus = "Failed"      // failed app
+	WorkbenchStatusAppStatusStopping    WorkbenchStatusAppStatus = "Stopping"    // app being stopped (pod terminating)
+	WorkbenchStatusAppStatusStopped     WorkbenchStatusAppStatus = "Stopped"     // stopped app
+	WorkbenchStatusAppStatusKilling     WorkbenchStatusAppStatus = "Killing"     // app being force killed
+	WorkbenchStatusAppStatusKilled      WorkbenchStatusAppStatus = "Killed"      // force killed app
 )
 
 type WorkbenchStatusServerStatus string
@@ -98,6 +101,7 @@ type WorkbenchStatusServer struct {
 type WorkbenchStatusApp struct {
 	Revision int                      `json:"revision"`
 	Status   WorkbenchStatusAppStatus `json:"status"`
+	Message  string                   `json:"message,omitempty"`
 }
 
 type WorkbenchStatus struct {

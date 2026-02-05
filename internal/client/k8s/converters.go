@@ -79,22 +79,18 @@ func (c *client) appInstanceToK8sWorkbenchApp(app AppInstance) WorkbenchApp {
 		Name: fmt.Sprintf("%s-%v", app.SanitizedAppName(), app.ID),
 	}
 
-	if app.AppTag != "" {
-		w.Version = app.AppTag
-	}
-
 	if app.K8sState != "" {
 		w.State = WorkbenchAppState(app.K8sState)
 	}
 
 	if app.AppRegistry == "" {
-		w.Image = &Image{
+		w.Image = Image{
 			Registry:   c.cfg.Clients.K8sClient.DefaultRegistry,
 			Repository: c.cfg.Clients.K8sClient.DefaultRepository + "/" + app.AppImage,
 			Tag:        app.AppTag,
 		}
 	} else {
-		w.Image = &Image{
+		w.Image = Image{
 			Registry:   app.AppRegistry,
 			Repository: app.AppImage,
 		}
@@ -247,7 +243,7 @@ func (c *client) k8sWorkbenchAppToAppInstance(w WorkbenchApp) (AppInstance, erro
 		AppName: w.Name,
 	}
 
-	if w.Image != nil {
+	if w.Image.Registry != "" && w.Image.Repository != "" && w.Image.Tag != "" {
 		app.AppRegistry = w.Image.Registry
 		app.AppImage = w.Image.Repository
 		app.AppTag = w.Image.Tag
