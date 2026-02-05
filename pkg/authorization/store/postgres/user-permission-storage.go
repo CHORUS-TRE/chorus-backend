@@ -25,13 +25,6 @@ func NewUserPermissionStorage(db *sqlx.DB, rolesGrantingPermissions map[authoriz
 	}
 }
 
-type userPermissionRow struct {
-	UserID           uint64  `db:"userid"`
-	RoleName         string  `db:"rolename"`
-	ContextDimension *string `db:"contextdimension"`
-	ContextValue     *string `db:"contextvalue"`
-}
-
 func (s *UserPermissionStorage) FindUsersWithPermission(ctx context.Context, tenantID uint64, filter authorization_model.FindUsersWithPermissionFilter) ([]uint64, error) {
 	rolesGranting, ok := s.rolesGrantingPermissions[filter.PermissionName]
 	if !ok || len(rolesGranting) == 0 {
@@ -58,121 +51,96 @@ func (s *UserPermissionStorage) FindUsersWithPermission(ctx context.Context, ten
 		}
 	}
 
-	var args []interface{}
-	args = append(args, tenantID)
-	args = append(args, pq.Array(rolesToCheck))
+	if len(filter.Context) == 0 {
+		return s.findUsersWithRoles(ctx, tenantID, rolesToCheck)
+	}
 
+	if filter.PreferExactContextMatch {
+		userIDs, err := s.findUsersWithExactContext(ctx, tenantID, rolesToCheck, filter.Context)
+		if err != nil {
+			return nil, err
+		}
+		if len(userIDs) > 0 {
+			return userIDs, nil
+		}
+	}
+
+	return s.findUsersWithContextMatch(ctx, tenantID, rolesToCheck, filter.Context)
+}
+
+func (s *UserPermissionStorage) findUsersWithRoles(ctx context.Context, tenantID uint64, rolesToCheck []string) ([]uint64, error) {
 	query := `
-SELECT 
-    u.id AS userid,
-    rd.name AS rolename,
-    urc.contextdimension,
-    urc.value AS contextvalue
+SELECT DISTINCT u.id
 FROM users u
 JOIN user_role ur ON ur.userid = u.id
 JOIN role_definitions rd ON rd.id = ur.roleid
-LEFT JOIN user_role_context urc ON urc.userroleid = ur.id
 WHERE u.tenantid = $1
   AND u.status = 'active'
   AND rd.name = ANY($2)
 `
-	var rows []userPermissionRow
-	if err := s.db.SelectContext(ctx, &rows, query, args...); err != nil {
-		return nil, fmt.Errorf("failed to find users with permission: %w", err)
+	var userIDs []uint64
+	if err := s.db.SelectContext(ctx, &userIDs, query, tenantID, pq.Array(rolesToCheck)); err != nil {
+		return nil, fmt.Errorf("failed to find users with roles: %w", err)
 	}
-
-	type userRoleInfo struct {
-		RoleName string
-		Context  map[string]string
-	}
-
-	userRoles := make(map[uint64][]userRoleInfo)
-	tempRoleCtx := make(map[uint64]map[string]map[string]string)
-
-	for _, row := range rows {
-		if _, ok := tempRoleCtx[row.UserID]; !ok {
-			tempRoleCtx[row.UserID] = make(map[string]map[string]string)
-		}
-		if _, ok := tempRoleCtx[row.UserID][row.RoleName]; !ok {
-			tempRoleCtx[row.UserID][row.RoleName] = make(map[string]string)
-		}
-		if row.ContextDimension != nil && row.ContextValue != nil {
-			tempRoleCtx[row.UserID][row.RoleName][*row.ContextDimension] = *row.ContextValue
-		}
-	}
-
-	for userID, roleMap := range tempRoleCtx {
-		for roleName, ctxMap := range roleMap {
-			userRoles[userID] = append(userRoles[userID], userRoleInfo{
-				RoleName: roleName,
-				Context:  ctxMap,
-			})
-		}
-	}
-
-	var exactMatchUsers []uint64
-	var wildcardMatchUsers []uint64
-
-	for userID, roles := range userRoles {
-		hasExactMatch := false
-		hasWildcardMatch := false
-
-		for _, role := range roles {
-			matchType := s.matchContext(filter.Context, role.Context)
-			if matchType == "exact" {
-				hasExactMatch = true
-			} else if matchType == "wildcard" {
-				hasWildcardMatch = true
-			}
-		}
-
-		if hasExactMatch {
-			exactMatchUsers = append(exactMatchUsers, userID)
-		} else if hasWildcardMatch {
-			wildcardMatchUsers = append(wildcardMatchUsers, userID)
-		}
-	}
-
-	if filter.PreferExactContextMatch && len(exactMatchUsers) > 0 {
-		return exactMatchUsers, nil
-	}
-
-	result := append(exactMatchUsers, wildcardMatchUsers...)
-	return s.uniqueUserIDs(result), nil
+	return userIDs, nil
 }
 
-func (s *UserPermissionStorage) matchContext(requiredCtx authorization_model.Context, roleCtx map[string]string) string {
-	if len(requiredCtx) == 0 {
-		return "exact"
+func (s *UserPermissionStorage) findUsersWithExactContext(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext authorization_model.Context) ([]uint64, error) {
+	contextDimensions := make([]string, 0, len(filterContext))
+	contextValues := make([]string, 0, len(filterContext))
+	for dim, val := range filterContext {
+		contextDimensions = append(contextDimensions, string(dim))
+		contextValues = append(contextValues, val)
 	}
 
-	hasWildcard := false
-	for dim, requiredVal := range requiredCtx {
-		roleVal, ok := roleCtx[string(dim)]
-		if !ok {
-			return "none"
-		}
-		if roleVal == "*" {
-			hasWildcard = true
-		} else if roleVal != requiredVal {
-			return "none"
-		}
+	query := `
+SELECT DISTINCT u.id
+FROM users u
+JOIN user_role ur ON ur.userid = u.id
+JOIN role_definitions rd ON rd.id = ur.roleid
+JOIN user_role_context urc ON urc.userroleid = ur.id
+WHERE u.tenantid = $1
+  AND u.status = 'active'
+  AND rd.name = ANY($2)
+  AND urc.contextdimension = ANY($3)
+  AND urc.value = ANY($4)
+GROUP BY u.id, ur.id
+HAVING COUNT(DISTINCT urc.contextdimension) = $5
+`
+	var userIDs []uint64
+	err := s.db.SelectContext(ctx, &userIDs, query, tenantID, pq.Array(rolesToCheck), pq.Array(contextDimensions), pq.Array(contextValues), len(filterContext))
+	if err != nil {
+		return nil, fmt.Errorf("failed to find users with exact context: %w", err)
 	}
-
-	if hasWildcard {
-		return "wildcard"
-	}
-	return "exact"
+	return userIDs, nil
 }
 
-func (s *UserPermissionStorage) uniqueUserIDs(ids []uint64) []uint64 {
-	seen := make(map[uint64]bool)
-	result := make([]uint64, 0, len(ids))
-	for _, id := range ids {
-		if !seen[id] {
-			seen[id] = true
-			result = append(result, id)
-		}
+func (s *UserPermissionStorage) findUsersWithContextMatch(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext authorization_model.Context) ([]uint64, error) {
+	contextDimensions := make([]string, 0, len(filterContext))
+	contextValues := make([]string, 0, len(filterContext))
+	for dim, val := range filterContext {
+		contextDimensions = append(contextDimensions, string(dim))
+		contextValues = append(contextValues, val)
 	}
-	return result
+
+	query := `
+SELECT DISTINCT u.id
+FROM users u
+JOIN user_role ur ON ur.userid = u.id
+JOIN role_definitions rd ON rd.id = ur.roleid
+JOIN user_role_context urc ON urc.userroleid = ur.id
+WHERE u.tenantid = $1
+  AND u.status = 'active'
+  AND rd.name = ANY($2)
+  AND urc.contextdimension = ANY($3)
+  AND (urc.value = ANY($4) OR urc.value = '*')
+GROUP BY u.id, ur.id
+HAVING COUNT(DISTINCT urc.contextdimension) = $5
+`
+	var userIDs []uint64
+	err := s.db.SelectContext(ctx, &userIDs, query, tenantID, pq.Array(rolesToCheck), pq.Array(contextDimensions), pq.Array(contextValues), len(filterContext))
+	if err != nil {
+		return nil, fmt.Errorf("failed to find users with context match: %w", err)
+	}
+	return userIDs, nil
 }

@@ -6,6 +6,8 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
+	authorization_store_middleware "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/middleware"
+	authorization_store "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/postgres"
 	gatekeeper_model "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/model"
 	gatekeeper_service "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/service"
 	"go.uber.org/zap"
@@ -25,13 +27,28 @@ func ProvideGatekeeper() gatekeeper_service.AuthorizationServiceInterface {
 	return gatekeeper
 }
 
+var userPermissionStoreOnce sync.Once
+var userPermissionStore authorization_service.UserPermissionStore
+
+func ProvideUserPermissionStore() authorization_service.UserPermissionStore {
+	userPermissionStoreOnce.Do(func() {
+		authStructures, err := authorization_service.ExtractAuthoizationStructures(ProvideGatekeeper())
+		if err != nil {
+			logger.TechLog.Fatal(context.Background(), "failed to extract authorization structures from gatekeeper", zap.Error(err))
+		}
+		store := authorization_store.NewUserPermissionStorage(ProvideMainDB().GetSqlxDB(), authStructures.RolesGrantingPermission)
+		userPermissionStore = authorization_store_middleware.UserPermissionLogging(logger.TechLog)(store)
+	})
+	return userPermissionStore
+}
+
 var authorizerOnce sync.Once
 var authorizer authorization_service.Authorizer
 
 func ProvideAuthorizer() authorization_service.Authorizer {
 	authorizerOnce.Do(func() {
 		var err error
-		authorizer, err = authorization_service.NewAuthorizer(ProvideGatekeeper())
+		authorizer, err = authorization_service.NewAuthorizer(ProvideGatekeeper(), ProvideUserPermissionStore())
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create authorizer", zap.Error(err))
 		}
