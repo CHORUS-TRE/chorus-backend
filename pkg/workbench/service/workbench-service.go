@@ -246,11 +246,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 		// Check if operator has reconciled before modifying spec
 		isReconciled := k8sWorkbench.ObservedGeneration == k8sWorkbench.CurrentGeneration
 		if !isReconciled {
-			logger.TechLog.Debug(ctx, "skipping spec updates - operator has not reconciled",
-				zap.String("namespace", k8sWorkbench.Namespace),
-				zap.String("workbenchName", k8sWorkbench.Name),
-				zap.Int64("currentGeneration", k8sWorkbench.CurrentGeneration),
-				zap.Int64("observedGeneration", k8sWorkbench.ObservedGeneration))
+			logger.TechLog.Debug(ctx, "skipping spec updates - operator has not reconciled", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Int64("currentGeneration", k8sWorkbench.CurrentGeneration), zap.Int64("observedGeneration", k8sWorkbench.ObservedGeneration))
 			return nil
 		}
 
@@ -261,25 +257,16 @@ func (s *WorkbenchService) SetClientWatchers() {
 			switch k8sStatus {
 			case model.K8sAppInstanceStatusComplete:
 				// Update spec state to Stopped when app completes
-				logger.TechLog.Info(ctx, "app instance completed, updating state to Stopped",
-					zap.Uint64("appInstanceID", app.ID),
-					zap.String("namespace", k8sWorkbench.Namespace),
-					zap.String("workbenchName", k8sWorkbench.Name))
+				logger.TechLog.Info(ctx, "app instance completed, updating state to Stopped", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
 				err = s.updateAppInstanceStateFromWatcher(ctx, k8sWorkbench.TenantID, app.ID, model.K8sAppInstanceStateStopped)
 				if err != nil {
-					logger.TechLog.Error(ctx, "unable to update app instance state to Stopped",
-						zap.Uint64("appInstanceID", app.ID),
-						zap.Error(err))
+					logger.TechLog.Error(ctx, "unable to update app instance state to Stopped", zap.Uint64("appInstanceID", app.ID), zap.Error(err))
 					return err
 				}
 
 			case model.K8sAppInstanceStatusFailed:
 				// Log warning, keep state as Running (timeout logic to be added later)
-				logger.TechLog.Warn(ctx, "app instance failed but keeping desired state Running",
-					zap.Uint64("appInstanceID", app.ID),
-					zap.String("namespace", k8sWorkbench.Namespace),
-					zap.String("workbenchName", k8sWorkbench.Name),
-					zap.String("k8sStatus", string(k8sStatus)))
+				logger.TechLog.Warn(ctx, "app instance failed but keeping desired state Running", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.String("k8sStatus", string(k8sStatus)))
 			}
 		}
 
