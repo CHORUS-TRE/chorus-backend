@@ -392,9 +392,10 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 						RestartPolicy: corev1.RestartPolicyNever,
 						Containers: []corev1.Container{
 							{
-								Name:    "puller",
-								Image:   image,
-								Command: []string{"bash", "-c", "exit"},
+								Name:            "puller",
+								Image:           image,
+								Command:         []string{"/bin/sh", "-c", "exit 0"},
+								ImagePullPolicy: corev1.PullIfNotPresent,
 							},
 						},
 						ImagePullSecrets: []corev1.LocalObjectReference{
