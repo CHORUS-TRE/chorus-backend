@@ -27,17 +27,19 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 	}
 
 	protoRequest := &chorus.ApprovalRequest{
-		Id:          request.ID,
-		TenantId:    request.TenantID,
-		RequesterId: request.RequesterID,
-		Type:        ApprovalRequestTypeFromBusiness(request.Type),
-		Status:      ApprovalRequestStatusFromBusiness(request.Status),
-		Title:       request.Title,
-		Description: request.Description,
-		ApproverIds: request.ApproverIDs,
-		CreatedAt:   ca,
-		UpdatedAt:   ua,
-		ApprovedAt:  aa,
+		Id:              request.ID,
+		TenantId:        request.TenantID,
+		RequesterId:     request.RequesterID,
+		Type:            ApprovalRequestTypeFromBusiness(request.Type),
+		Status:          ApprovalRequestStatusFromBusiness(request.Status),
+		Title:           request.Title,
+		Description:     request.Description,
+		ApproverIds:     request.ApproverIDs,
+		CreatedAt:       ca,
+		UpdatedAt:       ua,
+		ApprovedAt:      aa,
+		AutoApproved:    request.AutoApproved,
+		ApprovalMessage: request.ApprovalMessage,
 	}
 
 	if request.ApprovedByID != nil {

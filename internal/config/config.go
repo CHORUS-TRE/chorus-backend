@@ -314,8 +314,13 @@ type (
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
 
+		AuthorizationService struct {
+			WorkspaceAdminCanAssignDataManager bool `yaml:"workspace_admin_can_assign_data_manager"`
+		} `yaml:"authorization_service"`
+
 		ApprovalRequestService struct {
-			StagingFileStoreName string `yaml:"staging_file_store_name"`
+			StagingFileStoreName       string `yaml:"staging_file_store_name"`
+			RequireDataManagerApproval bool   `yaml:"require_data_manager_approval"`
 		} `yaml:"approval_request_service"`
 
 		Steward struct {

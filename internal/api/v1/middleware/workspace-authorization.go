@@ -159,7 +159,7 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 	}
 
 	canAssign := false
-	if authorization.RoleIn(roleName, authorization.GetWorkspaceRolesAssignableByAdmin()) {
+	if authorization.RoleIn(roleName, authorization.GetWorkspaceRolesAssignableByAdmin(c.cfg)) {
 		canAssign = true
 	}
 	if authorization.RoleIn(roleName, authorization.GetWorkspaceRolesAssignableByDataManager()) {

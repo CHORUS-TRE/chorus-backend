@@ -102,6 +102,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workspace_service.kill_fixed_check_interval", time.Hour)
 	v.SetDefault("services.workspace_service.creator_is_admin", true)
 	v.SetDefault("services.workspace_service.creator_is_data_manager", true)
+	v.SetDefault("services.authorization_service.workspace_admin_can_assign_data_manager", true)
+	v.SetDefault("services.approval_request_service.require_data_manager_approval", false)
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
