@@ -290,7 +290,7 @@ func (s *WorkbenchStorage) DeleteWorkbenchesInWorkspace(ctx context.Context, ten
 
 func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstatus, k8sstate, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -318,7 +318,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 
 	// Get app instances query
 	query := `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstatus, k8sstate, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
 		WHERE tenantid = $1 AND deletedat IS NULL
 	`
@@ -352,14 +352,14 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.
 func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceQuery = `
-		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, k8sstatus, k8sstate, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat)
+		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstatus, k8sstate, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
 	`
 
 	var newAppInstance model.AppInstance
 	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceActive.String(), model.K8sAppInstanceStatusUnknown.String(), model.K8sAppInstanceStateRunning.String(), appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceActive.String(), model.K8sAppInstanceStateRunning.String(), model.K8sAppInstanceStatusUnknown.String(), appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
 	)
 	if err != nil {
 		return nil, err
