@@ -116,8 +116,7 @@ func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *m
 		AppImage:    app.DockerImageName,
 		AppTag:      app.DockerImageTag,
 
-		K8sState:  appInstance.K8sState.String(),
-		K8sStatus: appInstance.K8sStatus.String(),
+		K8sState: appInstance.K8sState.String(),
 
 		KioskConfigURL:      app.KioskConfigURL,
 		KioskConfigJWTURL:   app.KioskConfigJWTURL,
