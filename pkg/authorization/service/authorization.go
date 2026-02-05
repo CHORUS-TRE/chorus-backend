@@ -14,48 +14,81 @@ type UserRoleStore interface {
 	GetRoles(ctx context.Context) ([]*user_model.Role, error)
 }
 
+type UserPermissionStore interface {
+	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter) ([]uint64, error)
+}
+
 type Authorizer interface {
 	IsUserAllowed(user []model.Role, permission model.Permission) (bool, error)
 	ExplainIsUserAllowed(user []model.Role, permission model.Permission) string
 	GetUserPermissions(user []model.Role) ([]model.Permission, error)
 	GetContextListForPermission(user []model.Role, permissionName model.PermissionName) ([]model.Context, error)
+	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter) ([]uint64, error)
+	GetRolesGrantingPermission(permissionName model.PermissionName) []model.RoleName
+}
+
+type authStructures struct {
+	PermissionMap           map[model.PermissionName]gatekeeper_model.Permission
+	RoleMap                 map[model.RoleName]gatekeeper_model.Role
+	RolesGrantingPermission map[model.PermissionName][]model.RoleName
 }
 
 type auth struct {
-	gatekeeper    gatekeeper_service.AuthorizationServiceInterface
-	permissionMap map[model.PermissionName]gatekeeper_model.Permission
-	roleMap       map[model.RoleName]gatekeeper_model.Role
+	gatekeeper          gatekeeper_service.AuthorizationServiceInterface
+	userPermissionStore UserPermissionStore
+	authStructures
 }
 
-func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface) (Authorizer, error) {
+func ExtractAuthoizationStructures(gatekeeper gatekeeper_service.AuthorizationServiceInterface) (authStructures, error) {
 	schema := gatekeeper.GetAuthorizationSchema()
 	if schema == nil {
-		return nil, fmt.Errorf("authorization schema is nil")
+		return authStructures{}, fmt.Errorf("authorization schema is nil")
 	}
 
 	permissionMap := make(map[model.PermissionName]gatekeeper_model.Permission)
 	for _, gkp := range schema.Permissions {
 		p, err := model.ToPermissionName(gkp.Name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert gatekeeper permission %s: %w", gkp.Name, err)
+			return authStructures{}, fmt.Errorf("failed to convert gatekeeper permission %s: %w", gkp.Name, err)
 		}
 
 		permissionMap[p] = gkp
 	}
 
 	roleMap := make(map[model.RoleName]gatekeeper_model.Role)
+	rolesGrantingPermission := make(map[model.PermissionName][]model.RoleName)
 	for _, gkr := range schema.Roles {
 		r, err := model.ToRoleName(gkr.Name)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert gatekeeper role %s: %w", gkr.Name, err)
+			return authStructures{}, fmt.Errorf("failed to convert gatekeeper role %s: %w", gkr.Name, err)
 		}
 		roleMap[r] = *gkr
+
+		for _, perm := range gkr.Permissions {
+			permName, err := model.ToPermissionName(perm.Name)
+			if err != nil {
+				continue
+			}
+			rolesGrantingPermission[permName] = append(rolesGrantingPermission[permName], r)
+		}
 	}
 
+	return authStructures{
+		PermissionMap:           permissionMap,
+		RoleMap:                 roleMap,
+		RolesGrantingPermission: rolesGrantingPermission,
+	}, nil
+}
+
+func NewAuthorizer(gatekeeper gatekeeper_service.AuthorizationServiceInterface, userPermissionStore UserPermissionStore) (Authorizer, error) {
+	authStructures, err := ExtractAuthoizationStructures(gatekeeper)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract authorization structures: %w", err)
+	}
 	return &auth{
-		gatekeeper:    gatekeeper,
-		permissionMap: permissionMap,
-		roleMap:       roleMap,
+		gatekeeper:          gatekeeper,
+		userPermissionStore: userPermissionStore,
+		authStructures:      authStructures,
 	}, nil
 }
 
@@ -65,7 +98,7 @@ func (a *auth) IsUserAllowed(user []model.Role, permission model.Permission) (bo
 		return false, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
 	}
 
-	p, ok := a.permissionMap[permission.Name]
+	p, ok := a.PermissionMap[permission.Name]
 	if !ok {
 		return false, fmt.Errorf("unknown permission: %s", permission)
 	}
@@ -92,7 +125,7 @@ func (a *auth) ExplainIsUserAllowed(user []model.Role, permission model.Permissi
 		return fmt.Sprintf("failed to convert user roles to gatekeeper roles: %v", err)
 	}
 
-	p, ok := a.permissionMap[permission.Name]
+	p, ok := a.PermissionMap[permission.Name]
 	if !ok {
 		return fmt.Sprintf("unknown permission: %s", permission)
 	}
@@ -109,7 +142,7 @@ func (a *auth) ExplainIsUserAllowed(user []model.Role, permission model.Permissi
 func (a *auth) userToGatekeeperRoles(user []model.Role) ([]*gatekeeper_model.Role, error) {
 	roles := make([]*gatekeeper_model.Role, len(user))
 	for i, r := range user {
-		role, ok := a.roleMap[r.Name]
+		role, ok := a.RoleMap[r.Name]
 		if !ok {
 			return nil, fmt.Errorf("unknown role: %s", r)
 		}
@@ -154,7 +187,7 @@ func (a *auth) GetContextListForPermission(user []model.Role, permissionName mod
 		return nil, fmt.Errorf("failed to convert user roles to gatekeeper roles: %w", err)
 	}
 
-	_, ok := a.permissionMap[permissionName]
+	_, ok := a.PermissionMap[permissionName]
 	if !ok {
 		return nil, fmt.Errorf("unknown permission: %s", permissionName)
 	}
@@ -175,4 +208,12 @@ func (a *auth) GetContextListForPermission(user []model.Role, permissionName mod
 	}
 
 	return result, nil
+}
+
+func (a *auth) FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter) ([]uint64, error) {
+	return a.userPermissionStore.FindUsersWithPermission(ctx, tenantID, filter)
+}
+
+func (a *auth) GetRolesGrantingPermission(permissionName model.PermissionName) []model.RoleName {
+	return a.RolesGrantingPermission[permissionName]
 }

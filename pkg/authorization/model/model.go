@@ -465,3 +465,10 @@ func ToRoleContext(r string) (ContextDimension, error) {
 
 	return "", fmt.Errorf("unknown role context type: %s", r)
 }
+
+type FindUsersWithPermissionFilter struct {
+	PermissionName          PermissionName
+	Context                 Context
+	ViaRoles                []RoleName
+	PreferExactContextMatch bool
+}
