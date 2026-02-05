@@ -1,12 +1,18 @@
 package authorization
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	gatekeeper_model "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/model"
 	gatekeeper_service "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/service"
 )
+
+type UserRoleStore interface {
+	GetRoles(ctx context.Context) ([]*user_model.Role, error)
+}
 
 type Authorizer interface {
 	IsUserAllowed(user []model.Role, permission model.Permission) (bool, error)
