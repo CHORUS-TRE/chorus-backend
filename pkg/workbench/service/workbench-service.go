@@ -174,17 +174,23 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 
 func (s *WorkbenchService) SetClientWatchers() {
 	watcher := func(k8sWorkbench k8s.Workbench) error {
-		logger.TechLog.Debug(context.Background(), "new/update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps))
+		ctx := context.Background()
+		logger.TechLog.Debug(ctx, "new/update workbench",
+			zap.String("namespace", k8sWorkbench.Namespace),
+			zap.String("workbenchName", k8sWorkbench.Name),
+			zap.Int64("currentGeneration", k8sWorkbench.CurrentGeneration),
+			zap.Int64("observedGeneration", k8sWorkbench.ObservedGeneration),
+			zap.Any("apps", k8sWorkbench.Apps))
 
 		workbenchID, err := model.GetIDFromClusterName(k8sWorkbench.Name)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to get workbench ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to get workbench ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
 			return fmt.Errorf("unable to get workbench ID from cluster name %s: %w", k8sWorkbench.Name, err)
 		}
 
 		workspaceID, err := workspace_model.GetIDFromClusterName(k8sWorkbench.Namespace)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to get namespace ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to get namespace ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
 			return fmt.Errorf("unable to get namespace ID from cluster name %s: %w", k8sWorkbench.Namespace, err)
 		}
 
@@ -207,43 +213,70 @@ func (s *WorkbenchService) SetClientWatchers() {
 			workbench.Status = model.WorkbenchDeleted
 		}
 
+		// ALWAYS update DB status from K8s (regardless of generation)
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
-		appInstanceIDsToDelete := []uint64{}
 		for _, app := range k8sWorkbench.Apps {
 			k8sStatus := model.K8sAppInstanceStatus(app.K8sStatus)
 			appInstance := &model.AppInstance{
-				ID: app.ID,
-
+				ID:        app.ID,
 				Status:    k8sStatus.ToAppInstanceStatus(),
-				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
+				K8sStatus: k8sStatus,
 			}
-
 			appInstancesToUpdate = append(appInstancesToUpdate, appInstance)
-			if appInstance.K8sStatus == model.K8sAppInstanceStatusComplete {
-				appInstanceIDsToDelete = append(appInstanceIDsToDelete, appInstance.ID)
-			}
 		}
 
-		logger.TechLog.Debug(context.Background(), "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
-		_, err = s.store.UpdateWorkbench(context.Background(), k8sWorkbench.TenantID, workbench)
+		logger.TechLog.Debug(ctx, "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
+		_, err = s.store.UpdateWorkbench(ctx, k8sWorkbench.TenantID, workbench)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
 			return err
 		}
 
-		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstances", appInstancesToUpdate))
+		logger.TechLog.Debug(ctx, "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstances", appInstancesToUpdate))
 
-		err = s.store.UpdateAppInstances(context.Background(), k8sWorkbench.TenantID, appInstancesToUpdate)
+		err = s.store.UpdateAppInstances(ctx, k8sWorkbench.TenantID, appInstancesToUpdate)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
 			return err
 		}
 
-		if len(appInstanceIDsToDelete) != 0 {
-			err = s.store.DeleteAppInstances(context.Background(), k8sWorkbench.TenantID, appInstanceIDsToDelete)
-			if err != nil {
-				logger.TechLog.Error(context.Background(), "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
-				return err
+		// Check if operator has reconciled before modifying spec
+		isReconciled := k8sWorkbench.ObservedGeneration == k8sWorkbench.CurrentGeneration
+		if !isReconciled {
+			logger.TechLog.Debug(ctx, "skipping spec updates - operator has not reconciled",
+				zap.String("namespace", k8sWorkbench.Namespace),
+				zap.String("workbenchName", k8sWorkbench.Name),
+				zap.Int64("currentGeneration", k8sWorkbench.CurrentGeneration),
+				zap.Int64("observedGeneration", k8sWorkbench.ObservedGeneration))
+			return nil
+		}
+
+		// Process apps that need spec updates based on their status
+		for _, app := range k8sWorkbench.Apps {
+			k8sStatus := model.K8sAppInstanceStatus(app.K8sStatus)
+
+			switch k8sStatus {
+			case model.K8sAppInstanceStatusComplete:
+				// Update spec state to Stopped when app completes
+				logger.TechLog.Info(ctx, "app instance completed, updating state to Stopped",
+					zap.Uint64("appInstanceID", app.ID),
+					zap.String("namespace", k8sWorkbench.Namespace),
+					zap.String("workbenchName", k8sWorkbench.Name))
+				err = s.updateAppInstanceStateFromWatcher(ctx, k8sWorkbench.TenantID, app.ID, model.K8sAppInstanceStateStopped)
+				if err != nil {
+					logger.TechLog.Error(ctx, "unable to update app instance state to Stopped",
+						zap.Uint64("appInstanceID", app.ID),
+						zap.Error(err))
+					return err
+				}
+
+			case model.K8sAppInstanceStatusFailed:
+				// Log warning, keep state as Running (timeout logic to be added later)
+				logger.TechLog.Warn(ctx, "app instance failed but keeping desired state Running",
+					zap.Uint64("appInstanceID", app.ID),
+					zap.String("namespace", k8sWorkbench.Namespace),
+					zap.String("workbenchName", k8sWorkbench.Name),
+					zap.String("k8sStatus", string(k8sStatus)))
 			}
 		}
 
@@ -252,6 +285,33 @@ func (s *WorkbenchService) SetClientWatchers() {
 
 	s.client.RegisterOnNewWorkbenchHandler(watcher)
 	s.client.RegisterOnUpdateWorkbenchHandler(watcher)
+}
+
+// updateAppInstanceStateFromWatcher updates an app instance's K8s state in both DB and K8s spec.
+// This is called from the watcher when the operator reports a status change that requires a spec update.
+func (s *WorkbenchService) updateAppInstanceStateFromWatcher(ctx context.Context, tenantID, appInstanceID uint64, newState model.K8sAppInstanceState) error {
+	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
+	if err != nil {
+		return fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+	}
+
+	// Update state in DB
+	appInstance.K8sState = newState
+	_, err = s.store.UpdateAppInstance(ctx, tenantID, appInstance)
+	if err != nil {
+		return fmt.Errorf("unable to update appInstance state %v: %w", appInstanceID, err)
+	}
+
+	// Update K8s spec
+	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
+	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
+
+	clientApp, err := s.getK8sAppInstance(ctx, appInstance)
+	if err != nil {
+		return fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
+	}
+
+	return s.client.UpdateAppInstance(wsName, wbName, clientApp)
 }
 
 func (s *WorkbenchService) updateAllWorkbenches(ctx context.Context) {
