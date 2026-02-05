@@ -77,6 +77,10 @@ func (a AppInstance) UID() string {
 
 func (a AppInstance) SanitizedAppName() string {
 	name := strings.ToLower(a.AppName)
+
+	// Strip existing ID suffix if present
+	name = strings.TrimSuffix(name, fmt.Sprintf("-%d", a.ID))
+
 	name = appInstanceNameRegex.ReplaceAllString(name, "-")
 	if len(name) > maxAppInstanceNameLen {
 		name = name[:maxAppInstanceNameLen]
