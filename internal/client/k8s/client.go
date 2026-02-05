@@ -30,8 +30,10 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-const PREPULL_NAMESPACE = "backend"
-const PREPULL_JOB_TTL_SECONDS = 60
+const (
+	PREPULL_NAMESPACE       = "backend"
+	PREPULL_JOB_TTL_SECONDS = 60
+)
 
 var _ = K8sClienter(&client{})
 
