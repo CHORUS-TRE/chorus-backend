@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -48,17 +49,13 @@ type UserPermissionFinder interface {
 	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter authorization_model.FindUsersWithPermissionFilter) ([]uint64, error)
 }
 
-type ApprovalRequestConfig struct {
-	RequireDataManagerApproval bool
-}
-
 type ApprovalRequestService struct {
 	store                ApprovalRequestStore
 	workspaceFileStore   workspace_file_service.WorkspaceFiler
 	stagingFileStore     filestore.FileStore
 	notificationStore    NotificationStore
 	userPermissionFinder UserPermissionFinder
-	config               ApprovalRequestConfig
+	cfg                  config.Config
 }
 
 func NewApprovalRequestService(
@@ -67,7 +64,7 @@ func NewApprovalRequestService(
 	stagingFileStore filestore.FileStore,
 	notificationStore NotificationStore,
 	userPermissionFinder UserPermissionFinder,
-	config ApprovalRequestConfig,
+	cfg config.Config,
 ) *ApprovalRequestService {
 	return &ApprovalRequestService{
 		store:                store,
@@ -75,7 +72,7 @@ func NewApprovalRequestService(
 		stagingFileStore:     stagingFileStore,
 		notificationStore:    notificationStore,
 		userPermissionFinder: userPermissionFinder,
-		config:               config,
+		cfg:                  cfg,
 	}
 }
 
@@ -164,7 +161,7 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 		PreferExactContextMatch: true,
 	}
 
-	if s.config.RequireDataManagerApproval {
+	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
 		filter.ViaRoles = []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager}
 	}
 
@@ -182,7 +179,7 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 	}
 
 	if len(approvers) == 0 {
-		if s.config.RequireDataManagerApproval {
+		if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
 			return nil, false, fmt.Errorf("no workspace data manager found for this workspace; please assign a data manager before creating approval requests")
 		}
 		return nil, false, fmt.Errorf("no users with approval permission found for this workspace")
@@ -276,7 +273,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 		Context:                 downloadWorkspaceContext,
 		PreferExactContextMatch: true,
 	}
-	if s.config.RequireDataManagerApproval {
+	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
 		filterDownload.ViaRoles = []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager}
 	}
 
@@ -323,7 +320,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 	}
 
 	if len(approvers) == 0 {
-		if len(downloadApprovers) == 0 && s.config.RequireDataManagerApproval {
+		if len(downloadApprovers) == 0 && s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
 			return nil, false, fmt.Errorf("no workspace data manager found for this workspace; please assign a data manager before creating approval requests")
 		}
 		return nil, false, fmt.Errorf("no users with approval permission found for this workspace")

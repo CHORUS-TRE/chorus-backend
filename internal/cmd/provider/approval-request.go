@@ -22,19 +22,13 @@ var approvalRequestService service.ApprovalRequester
 
 func ProvideApprovalRequestService() service.ApprovalRequester {
 	approvalRequestServiceOnce.Do(func() {
-		cfg := ProvideConfig()
-
-		approvalRequestConfig := service.ApprovalRequestConfig{
-			RequireDataManagerApproval: cfg.Services.ApprovalRequestService.RequireDataManagerApproval,
-		}
-
 		approvalRequestService = service.NewApprovalRequestService(
 			ProvideApprovalRequestStore(),
 			ProvideWorkspaceFile(),
 			ProvideApprovalRequestStagingFileStore(cfg.Services.ApprovalRequestService.StagingFileStoreName),
 			ProvideNotificationStore(),
 			ProvideAuthorizer(),
-			approvalRequestConfig,
+			ProvideConfig(),
 		)
 		approvalRequestService = service_mw.Logging(logger.BizLog)(approvalRequestService)
 		approvalRequestService = service_mw.Validation(ProvideValidator())(approvalRequestService)
