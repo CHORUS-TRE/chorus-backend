@@ -303,10 +303,16 @@ func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, 
 	return &appInstance, nil
 }
 
-func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
-	countQuery := `SELECT COUNT(*) FROM app_instances WHERE tenantid = $1 AND deletedat IS NULL;`
+func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workbenchIDsIn *[]uint64) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+	args := []interface{}{tenantID}
+
+	countQuery := `SELECT COUNT(*) FROM app_instances WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL`
+	if workbenchIDsIn != nil {
+		countQuery += " AND workbenchid = ANY($2)"
+		args = append(args, common_storage.Uint64ToPqInt64(*workbenchIDsIn))
+	}
 	var totalCount int64
-	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID); err != nil {
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
 		return nil, nil, err
 	}
 
@@ -316,6 +322,9 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 		FROM app_instances
 		WHERE tenantid = $1 AND deletedat IS NULL
 	`
+	if workbenchIDsIn != nil {
+		query += " AND workbenchid = ANY($2) "
+	}
 
 	// Add pagination
 	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.AppInstance{})
@@ -333,7 +342,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 	}
 
 	var appInstances []*model.AppInstance
-	if err := s.db.SelectContext(ctx, &appInstances, query, tenantID); err != nil {
+	if err := s.db.SelectContext(ctx, &appInstances, query, args...); err != nil {
 		return nil, nil, err
 	}
 

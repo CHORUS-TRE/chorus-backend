@@ -166,10 +166,10 @@ func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench 
 	return newWorkbench, nil
 }
 
-func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination, filter)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
