@@ -40,6 +40,6 @@ local-doc/**/*
 # sonar local setup
 sonar-local-project.properties
 
-# claude & copilot files
+# Chatmodes
 CLAUDE.md
 .github/chatmodes/*
