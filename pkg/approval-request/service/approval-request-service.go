@@ -8,11 +8,13 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	workspace_file_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
+	"go.uber.org/zap"
 )
 
 var _ ApprovalRequester = (*ApprovalRequestService)(nil)
@@ -135,7 +137,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 
 	if !canAutoApprove {
 		for _, approverID := range approvers {
-			_ = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+			err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 				TenantID: request.TenantID,
 				UserID:   approverID,
 				Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
@@ -146,6 +148,9 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 					},
 				},
 			}, []uint64{approverID})
+			if err != nil {
+				logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", approverID))
+			}
 		}
 	}
 
@@ -247,7 +252,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		}
 	} else {
 		for _, approverID := range approvers {
-			_ = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+			err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 				TenantID: request.TenantID,
 				UserID:   approverID,
 				Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
@@ -258,6 +263,9 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 					},
 				},
 			}, []uint64{approverID})
+			if err != nil {
+				logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", approverID))
+			}
 		}
 	}
 
