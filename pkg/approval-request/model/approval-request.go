@@ -17,8 +17,10 @@ type ApprovalRequest struct {
 
 	Details ApprovalRequestDetails
 
-	ApproverIDs  []uint64
-	ApprovedByID *uint64
+	ApproverIDs     []uint64
+	ApprovedByID    *uint64
+	AutoApproved    bool
+	ApprovalMessage string
 
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
@@ -64,6 +66,16 @@ func (r *ApprovalRequest) CanBeApprovedBy(userID uint64) bool {
 		}
 	}
 	return false
+}
+
+func (r *ApprovalRequest) GetSourceWorkspaceID() uint64 {
+	if r.Details.DataExtractionDetails != nil {
+		return r.Details.DataExtractionDetails.SourceWorkspaceID
+	}
+	if r.Details.DataTransferDetails != nil {
+		return r.Details.DataTransferDetails.SourceWorkspaceID
+	}
+	return 0
 }
 
 func GetApprovalRequestStoragePath(requestID uint64) string {

@@ -6,10 +6,10 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"

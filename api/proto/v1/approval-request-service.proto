@@ -57,7 +57,6 @@ message CreateDataExtractionRequestRequest {
     string title = 2;
     string description = 3;
     repeated string filePaths = 4;
-    repeated uint64 approverIds = 5;
 }
 message CreateDataExtractionRequestReply {
     CreateDataExtractionRequestResult result = 1;
@@ -72,7 +71,6 @@ message CreateDataTransferRequestRequest {
     string title = 3;
     string description = 4;
     repeated string filePaths = 5;
-    repeated uint64 approverIds = 6;
 }
 message CreateDataTransferRequestReply {
     CreateDataTransferRequestResult result = 1;

@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.UserServiceServer = (*userControllerAuthorization)(nil)
@@ -15,7 +16,7 @@ type userControllerAuthorization struct {
 	next chorus.UserServiceServer
 }
 
-func UserAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.UserServiceServer) chorus.UserServiceServer {
+func UserAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer) func(chorus.UserServiceServer) chorus.UserServiceServer {
 	return func(next chorus.UserServiceServer) chorus.UserServiceServer {
 		return &userControllerAuthorization{
 			Authorization: Authorization{

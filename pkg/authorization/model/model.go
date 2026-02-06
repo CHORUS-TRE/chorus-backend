@@ -1,4 +1,4 @@
-package authorization
+package model
 
 import (
 	"context"
@@ -37,16 +37,17 @@ const (
 	PermissionDeleteWorkbench        PermissionName = "deleteWorkbench"
 	PermissionManageUsersInWorkbench PermissionName = "manageUsersInWorkbench"
 
-	PermissionListWorkspaces             PermissionName = "listWorkspaces"
-	PermissionCreateWorkspace            PermissionName = "createWorkspace"
-	PermissionUpdateWorkspace            PermissionName = "updateWorkspace"
-	PermissionGetWorkspace               PermissionName = "getWorkspace"
-	PermissionDeleteWorkspace            PermissionName = "deleteWorkspace"
-	PermissionManageUsersInWorkspace     PermissionName = "manageUsersInWorkspace"
-	PermissionListFilesInWorkspace       PermissionName = "listFilesInWorkspace"
-	PermissionUploadFilesToWorkspace     PermissionName = "uploadFilesToWorkspace"
-	PermissionDownloadFilesFromWorkspace PermissionName = "downloadFilesFromWorkspace"
-	PermissionModifyFilesInWorkspace     PermissionName = "modifyFilesInWorkspace"
+	PermissionListWorkspaces                 PermissionName = "listWorkspaces"
+	PermissionCreateWorkspace                PermissionName = "createWorkspace"
+	PermissionUpdateWorkspace                PermissionName = "updateWorkspace"
+	PermissionGetWorkspace                   PermissionName = "getWorkspace"
+	PermissionDeleteWorkspace                PermissionName = "deleteWorkspace"
+	PermissionManageUsersInWorkspace         PermissionName = "manageUsersInWorkspace"
+	PermissionManageUsersDataRoleInWorkspace PermissionName = "manageUsersDataRoleInWorkspace"
+	PermissionListFilesInWorkspace           PermissionName = "listFilesInWorkspace"
+	PermissionUploadFilesToWorkspace         PermissionName = "uploadFilesToWorkspace"
+	PermissionDownloadFilesFromWorkspace     PermissionName = "downloadFilesFromWorkspace"
+	PermissionModifyFilesInWorkspace         PermissionName = "modifyFilesInWorkspace"
 
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
@@ -136,6 +137,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionDeleteWorkspace, nil
 	case string(PermissionManageUsersInWorkspace):
 		return PermissionManageUsersInWorkspace, nil
+	case string(PermissionManageUsersDataRoleInWorkspace):
+		return PermissionManageUsersDataRoleInWorkspace, nil
 	case string(PermissionListFilesInWorkspace):
 		return PermissionListFilesInWorkspace, nil
 	case string(PermissionUploadFilesToWorkspace):
@@ -227,7 +230,7 @@ func ToPermissionName(p string) (PermissionName, error) {
 	return "", fmt.Errorf("unknown permission type: %s", p)
 }
 
-func toPermission(p string, c map[string]string) (Permission, error) {
+func ToPermission(p string, c map[string]string) (Permission, error) {
 	permissionName, err := ToPermissionName(p)
 	if err != nil {
 		return Permission{}, err
@@ -338,7 +341,7 @@ const (
 	RoleWorkspaceGuest          RoleName = "WorkspaceGuest"
 	RoleWorkspaceMember         RoleName = "WorkspaceMember"
 	RoleWorkspaceMaintainer     RoleName = "WorkspaceMaintainer"
-	RoleWorkspacePI             RoleName = "WorkspacePI"
+	RoleWorkspaceDataManager    RoleName = "WorkspaceDataManager"
 	RoleWorkspaceAdmin          RoleName = "WorkspaceAdmin"
 	RoleWorkbenchViewer         RoleName = "WorkbenchViewer"
 	RoleWorkbenchMember         RoleName = "WorkbenchMember"
@@ -347,6 +350,7 @@ const (
 	RolePlatformSettingsManager RoleName = "PlatformSettingsManager"
 	RolePlateformUserManager    RoleName = "PlateformUserManager"
 	RoleAppStoreAdmin           RoleName = "AppStoreAdmin"
+	RoleDataManager             RoleName = "DataManager"
 	RoleSuperAdmin              RoleName = "SuperAdmin"
 )
 
@@ -366,8 +370,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleWorkspaceMember, nil
 	case string(RoleWorkspaceMaintainer):
 		return RoleWorkspaceMaintainer, nil
-	case string(RoleWorkspacePI):
-		return RoleWorkspacePI, nil
+	case string(RoleWorkspaceDataManager):
+		return RoleWorkspaceDataManager, nil
 	case string(RoleWorkspaceAdmin):
 		return RoleWorkspaceAdmin, nil
 	case string(RoleWorkbenchViewer):
@@ -384,6 +388,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RolePlateformUserManager, nil
 	case string(RoleAppStoreAdmin):
 		return RoleAppStoreAdmin, nil
+	case string(RoleDataManager):
+		return RoleDataManager, nil
 	case string(RoleSuperAdmin):
 		return RoleSuperAdmin, nil
 	}
@@ -398,7 +404,7 @@ func GetAllRoles() []RoleName {
 		RoleWorkspaceGuest,
 		RoleWorkspaceMember,
 		RoleWorkspaceMaintainer,
-		RoleWorkspacePI,
+		RoleWorkspaceDataManager,
 		RoleWorkspaceAdmin,
 		RoleWorkbenchViewer,
 		RoleWorkbenchMember,
@@ -407,6 +413,7 @@ func GetAllRoles() []RoleName {
 		RolePlatformSettingsManager,
 		RolePlateformUserManager,
 		RoleAppStoreAdmin,
+		RoleDataManager,
 		RoleSuperAdmin,
 	}
 }
@@ -416,7 +423,7 @@ func GetWorkspaceRoles() []RoleName {
 		RoleWorkspaceGuest,
 		RoleWorkspaceMember,
 		RoleWorkspaceMaintainer,
-		RoleWorkspacePI,
+		RoleWorkspaceDataManager,
 		RoleWorkspaceAdmin,
 	}
 }
@@ -464,4 +471,11 @@ func ToRoleContext(r string) (ContextDimension, error) {
 	}
 
 	return "", fmt.Errorf("unknown role context type: %s", r)
+}
+
+type FindUsersWithPermissionFilter struct {
+	PermissionName          PermissionName
+	Context                 Context
+	ViaRoles                []RoleName
+	PreferExactContextMatch bool
 }

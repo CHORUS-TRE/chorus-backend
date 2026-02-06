@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	_ "github.com/lib/pq"
 )
