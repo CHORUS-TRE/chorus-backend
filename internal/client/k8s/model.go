@@ -56,8 +56,9 @@ type AppInstance struct {
 	AppImage    string
 	AppTag      string
 
-	K8sState  string
-	K8sStatus string
+	K8sState   string
+	K8sStatus  string
+	K8sMessage string
 
 	ShmSize             string
 	KioskConfigURL      string

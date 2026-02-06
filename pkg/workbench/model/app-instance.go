@@ -18,9 +18,10 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
-	Status    AppInstanceStatus
-	K8sStatus K8sAppInstanceStatus
-	K8sState  K8sAppInstanceState
+	Status     AppInstanceStatus
+	K8sStatus  K8sAppInstanceStatus
+	K8sMessage K8sAppInstanceMessage
+	K8sState   K8sAppInstanceState
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -95,6 +96,12 @@ func (s K8sAppInstanceState) ToAppInstanceStatus() AppInstanceStatus {
 }
 
 func (s K8sAppInstanceState) String() string {
+	return string(s)
+}
+
+type K8sAppInstanceMessage string
+
+func (s K8sAppInstanceMessage) String() string {
 	return string(s)
 }
 

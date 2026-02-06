@@ -193,6 +193,7 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		}
 
 		appInstance.K8sStatus = string(app.Status)
+		appInstance.K8sMessage = string(app.Message)
 	}
 
 	for _, app := range appsMap {
