@@ -22,6 +22,8 @@ var workbenchUsernameRegex = regexp.MustCompile("[^a-z0-9_]")
 // ----------------------------------------------------------------
 
 type Workbench struct {
+	CurrentGeneration       int64
+	ObservedGeneration      int64
 	Namespace               string
 	TenantID                uint64
 	Username                string
@@ -31,6 +33,7 @@ type Workbench struct {
 	InitialResolutionHeight uint32
 	Status                  string
 	ServerPodStatus         string
+	ServerPodMessage        string
 	Apps                    []AppInstance
 }
 
@@ -54,8 +57,9 @@ type AppInstance struct {
 	AppImage    string
 	AppTag      string
 
-	K8sState  string
-	K8sStatus string
+	K8sState   string
+	K8sStatus  string
+	K8sMessage string
 
 	ShmSize             string
 	KioskConfigURL      string
@@ -75,6 +79,10 @@ func (a AppInstance) UID() string {
 
 func (a AppInstance) SanitizedAppName() string {
 	name := strings.ToLower(a.AppName)
+
+	// Strip existing ID suffix if present
+	name = strings.TrimSuffix(name, fmt.Sprintf("-%d", a.ID))
+
 	name = appInstanceNameRegex.ReplaceAllString(name, "-")
 	if len(name) > maxAppInstanceNameLen {
 		name = name[:maxAppInstanceNameLen]

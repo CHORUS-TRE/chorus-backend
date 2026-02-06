@@ -577,6 +577,8 @@ definitions:
         type: string
       serverPodStatus:
         type: string
+      serverPodMessage:
+        type: string
       k8sStatus:
         type: string
       initialResolutionWidth:

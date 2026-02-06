@@ -49,6 +49,7 @@ type K8sClienter interface {
 
 	// AppInstance operations
 	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
+	UpdateAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 
 	// Utility operations
@@ -264,6 +265,37 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
 	if err != nil {
 		return fmt.Errorf("error applying patch create appInstance (%s): %w", string(patchBytes), err)
+	}
+
+	return nil
+}
+
+func (c *client) UpdateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
+	app := c.appInstanceToK8sWorkbenchApp(appInstance)
+
+	gvr, err := c.getGroupVersionFromKind("Workbench")
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	patch := []map[string]interface{}{
+		{
+			"op":    "replace",
+			"path":  "/spec/apps/" + appInstance.UID(),
+			"value": app,
+		},
+	}
+
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return fmt.Errorf("error marshalling patch: %w", err)
+	}
+
+	logger.TechLog.Debug(context.Background(), "update app instance patchBytes", zap.String("patchBytes", string(patchBytes)))
+
+	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("error applying patch update appInstance (%s): %w", string(patchBytes), err)
 	}
 
 	return nil

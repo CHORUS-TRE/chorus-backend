@@ -39,6 +39,9 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 		return fmt.Errorf("unable to delete appInstance %v: %w", appInstanceID, err)
 	}
 
+	// Set appInstance state to Stopped
+	appInstance.K8sState = model.K8sAppInstanceStateStopped
+
 	wsName := s.getWorkspaceName(appInstance.WorkspaceID)
 	wbName := s.getWorkbenchName(appInstance.WorkbenchID)
 
@@ -47,7 +50,7 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 		return fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
 	}
 
-	err = s.client.DeleteAppInstance(wsName, wbName, clientApp)
+	err = s.client.UpdateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
 		return fmt.Errorf("unable to delete app instance %v: %w", appInstance.ID, err)
 	}
@@ -112,6 +115,8 @@ func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *m
 		AppRegistry: app.DockerImageRegistry,
 		AppImage:    app.DockerImageName,
 		AppTag:      app.DockerImageTag,
+
+		K8sState: appInstance.K8sState.String(),
 
 		KioskConfigURL:      app.KioskConfigURL,
 		KioskConfigJWTURL:   app.KioskConfigJWTURL,

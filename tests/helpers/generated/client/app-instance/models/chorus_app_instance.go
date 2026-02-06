@@ -35,6 +35,9 @@ type ChorusAppInstance struct {
 	// initial resolution width
 	InitialResolutionWidth int64 `json:"initialResolutionWidth,omitempty"`
 
+	// k8s message
+	K8sMessage string `json:"k8sMessage,omitempty"`
+
 	// k8s state
 	K8sState string `json:"k8sState,omitempty"`
 

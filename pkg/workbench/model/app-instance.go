@@ -3,6 +3,9 @@ package model
 import (
 	"errors"
 	"time"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 )
 
 // AppInstance maps an entry in the 'app_instances' database table.
@@ -15,9 +18,10 @@ type AppInstance struct {
 	WorkspaceID uint64
 	WorkbenchID uint64
 
-	Status    AppInstanceStatus
-	K8sStatus K8sAppInstanceStatus
-	K8sState  K8sAppInstanceState
+	Status     AppInstanceStatus
+	K8sStatus  K8sAppInstanceStatus
+	K8sMessage K8sAppInstanceMessage
+	K8sState   K8sAppInstanceState
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -45,6 +49,31 @@ type AppInstance struct {
 	DeletedAt *time.Time
 }
 
+func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
+	return k8s.AppInstance{
+		ID:      a.ID,
+		AppName: utils.ToString(a.AppName),
+
+		AppRegistry: utils.ToString(a.AppDockerImageRegistry),
+		AppImage:    utils.ToString(a.AppDockerImageName),
+		AppTag:      utils.ToString(a.AppDockerImageTag),
+
+		K8sState: a.K8sState.String(),
+
+		KioskConfigURL:      utils.ToString(a.AppKioskConfigURL),
+		KioskConfigJWTURL:   utils.ToString(a.AppKioskConfigJWTURL),
+		KioskConfigJWTToken: a.KioskConfigJWTToken,
+
+		ShmSize:             utils.ToString(a.AppShmSize),
+		MaxCPU:              utils.ToString(a.AppMaxCPU),
+		MinCPU:              utils.ToString(a.AppMinCPU),
+		MaxMemory:           utils.ToString(a.AppMaxMemory),
+		MinMemory:           utils.ToString(a.AppMinMemory),
+		MaxEphemeralStorage: utils.ToString(a.AppMaxEphemeralStorage),
+		MinEphemeralStorage: utils.ToString(a.AppMinEphemeralStorage),
+	}
+}
+
 type K8sAppInstanceState string
 
 const (
@@ -70,6 +99,12 @@ func (s K8sAppInstanceState) String() string {
 	return string(s)
 }
 
+type K8sAppInstanceMessage string
+
+func (s K8sAppInstanceMessage) String() string {
+	return string(s)
+}
+
 type K8sAppInstanceStatus string
 
 const (
@@ -78,7 +113,36 @@ const (
 	K8sAppInstanceStatusComplete    K8sAppInstanceStatus = "Complete"
 	K8sAppInstanceStatusProgressing K8sAppInstanceStatus = "Progressing"
 	K8sAppInstanceStatusFailed      K8sAppInstanceStatus = "Failed"
+	K8sAppInstanceStatusStopping    K8sAppInstanceStatus = "Stopping"
+	K8sAppInstanceStatusStopped     K8sAppInstanceStatus = "Stopped"
+	K8sAppInstanceStatusKilling     K8sAppInstanceStatus = "Killing"
+	K8sAppInstanceStatusKilled      K8sAppInstanceStatus = "Killed"
 )
+
+func (s K8sAppInstanceStatus) ToAppInstanceStatus() AppInstanceStatus {
+	switch s {
+	case K8sAppInstanceStatusUnknown:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusRunning:
+		return AppInstanceActive
+	case K8sAppInstanceStatusComplete:
+		return AppInstanceDeleted
+	case K8sAppInstanceStatusFailed:
+		return AppInstanceDeleted
+	case K8sAppInstanceStatusProgressing:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusStopping:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusStopped:
+		return AppInstanceDeleted
+	case K8sAppInstanceStatusKilling:
+		return AppInstanceUnknown
+	case K8sAppInstanceStatusKilled:
+		return AppInstanceDeleted
+	default:
+		return AppInstanceUnknown
+	}
+}
 
 func (s K8sAppInstanceStatus) String() string {
 	return string(s)
@@ -91,6 +155,7 @@ const (
 	AppInstanceActive   AppInstanceStatus = "active"
 	AppInstanceInactive AppInstanceStatus = "inactive"
 	AppInstanceDeleted  AppInstanceStatus = "deleted"
+	AppInstanceUnknown  AppInstanceStatus = "unknown"
 )
 
 func (s AppInstanceStatus) String() string {
@@ -105,6 +170,8 @@ func ToAppInstanceStatus(status string) (AppInstanceStatus, error) {
 		return AppInstanceInactive, nil
 	case AppInstanceDeleted.String():
 		return AppInstanceDeleted, nil
+	case AppInstanceUnknown.String():
+		return AppInstanceUnknown, nil
 	default:
 		return "", errors.New("unexpected AppInstanceStatus: " + status)
 	}
