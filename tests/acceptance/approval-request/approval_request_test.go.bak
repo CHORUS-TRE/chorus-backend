@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/openapi"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"

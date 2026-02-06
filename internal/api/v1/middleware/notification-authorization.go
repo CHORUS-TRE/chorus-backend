@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -16,7 +17,7 @@ type notificationControllerAuthorization struct {
 	next chorus.NotificationServiceServer
 }
 
-func NotificationAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.NotificationServiceServer) chorus.NotificationServiceServer {
+func NotificationAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer) func(chorus.NotificationServiceServer) chorus.NotificationServiceServer {
 	return func(next chorus.NotificationServiceServer) chorus.NotificationServiceServer {
 		return &notificationControllerAuthorization{
 			Authorization: Authorization{

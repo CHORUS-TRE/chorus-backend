@@ -6,8 +6,9 @@ import (
 	empty "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.StewardServiceServer = (*stewardControllerAuthorization)(nil)
@@ -17,7 +18,7 @@ type stewardControllerAuthorization struct {
 	next chorus.StewardServiceServer
 }
 
-func StewardAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer) func(chorus.StewardServiceServer) chorus.StewardServiceServer {
+func StewardAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer) func(chorus.StewardServiceServer) chorus.StewardServiceServer {
 	return func(next chorus.StewardServiceServer) chorus.StewardServiceServer {
 		return &stewardControllerAuthorization{
 			Authorization: Authorization{

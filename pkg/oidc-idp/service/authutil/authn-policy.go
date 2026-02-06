@@ -12,10 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Policy(cfg config.Config, userService Userer, authorizer authorization.Authorizer) goidc.AuthnPolicy {
+func Policy(cfg config.Config, userService Userer, authorizer authorization_service.Authorizer) goidc.AuthnPolicy {
 	authenticator := authenticator{cfg: cfg, userService: userService, authorizer: authorizer}
 	return goidc.NewPolicy(
 		"main",
@@ -85,7 +86,7 @@ type Userer interface {
 }
 
 type authenticator struct {
-	authorizer  authorization.Authorizer
+	authorizer  authorization_service.Authorizer
 	cfg         config.Config
 	userService Userer
 }

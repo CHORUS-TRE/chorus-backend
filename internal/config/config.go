@@ -306,14 +306,21 @@ type (
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
 			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
+			CreatorIsAdmin         bool          `yaml:"creator_is_admin"`
+			CreatorIsDataManager   bool          `yaml:"creator_is_data_manager"`
 		} `yaml:"workspace_service"`
 
 		WorkspaceFileService struct {
 			Stores map[string]WorkspaceFileStore `yaml:"stores"`
 		} `yaml:"workspace_file_service"`
 
+		AuthorizationService struct {
+			WorkspaceAdminCanAssignDataManager bool `yaml:"workspace_admin_can_assign_data_manager"`
+		} `yaml:"authorization_service"`
+
 		ApprovalRequestService struct {
-			StagingFileStoreName string `yaml:"staging_file_store_name"`
+			StagingFileStoreName       string `yaml:"staging_file_store_name"`
+			RequireDataManagerApproval bool   `yaml:"require_data_manager_approval"`
 		} `yaml:"approval_request_service"`
 
 		Steward struct {

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	tenant_model "github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"

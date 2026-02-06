@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.WorkspaceFileServiceServer = (*workspaceFileControllerAuthorization)(nil)
@@ -16,7 +17,7 @@ type workspaceFileControllerAuthorization struct {
 	next chorus.WorkspaceFileServiceServer
 }
 
-func WorkspaceFileAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceFileServiceServer) chorus.WorkspaceFileServiceServer {
+func WorkspaceFileAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceFileServiceServer) chorus.WorkspaceFileServiceServer {
 	return func(next chorus.WorkspaceFileServiceServer) chorus.WorkspaceFileServiceServer {
 		return &workspaceFileControllerAuthorization{
 			Authorization: Authorization{

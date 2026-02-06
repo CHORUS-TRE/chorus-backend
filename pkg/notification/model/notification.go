@@ -21,8 +21,8 @@ var NotificationSortTypeToString = map[string]string{
 }
 
 type NotificationContent struct {
-	Type               string                      `json:"type,omitempty"`
-	SystemNotification *SystemNotification         `json:"system_notification,omitempty"`
+	Type               string                       `json:"type,omitempty"`
+	SystemNotification *SystemNotification          `json:"system_notification,omitempty"`
 	ApprovalRequest    *ApprovalRequestNotification `json:"approval_request,omitempty"`
 }
 

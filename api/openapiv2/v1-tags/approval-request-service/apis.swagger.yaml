@@ -259,6 +259,10 @@ definitions:
       approvedAt:
         type: string
         format: date-time
+      autoApproved:
+        type: boolean
+      approvalMessage:
+        type: string
   chorusApprovalRequestFile:
     type: object
     properties:
@@ -330,11 +334,6 @@ definitions:
         type: array
         items:
           type: string
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
   chorusCreateDataExtractionRequestResult:
     type: object
     properties:
@@ -362,11 +361,6 @@ definitions:
         type: array
         items:
           type: string
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
   chorusCreateDataTransferRequestResult:
     type: object
     properties:
