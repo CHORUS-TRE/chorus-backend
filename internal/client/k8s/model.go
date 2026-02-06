@@ -33,6 +33,7 @@ type Workbench struct {
 	InitialResolutionHeight uint32
 	Status                  string
 	ServerPodStatus         string
+	ServerPodMessage        string
 	Apps                    []AppInstance
 }
 

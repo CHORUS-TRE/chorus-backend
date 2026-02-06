@@ -207,12 +207,15 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		return Workbench{}, fmt.Errorf("error parsing tenant ID: %w", err)
 	}
 
-	// Get server pod status
+	// Get server pod info
 	var serverPodStatus string
+	var serverPodMessage string
 	if wb.Status.ServerDeployment.ServerPod != nil {
 		serverPodStatus = string(wb.Status.ServerDeployment.ServerPod.Status)
+		serverPodMessage = string(wb.Status.ServerDeployment.ServerPod.Message)
 	} else {
 		serverPodStatus = string(WorkbenchServerContainerStatusUnknown)
+		serverPodMessage = ""
 	}
 
 	// Construct Workbench
@@ -228,6 +231,7 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
 		Status:                  string(wb.Status.ServerDeployment.Status),
 		ServerPodStatus:         serverPodStatus,
+		ServerPodMessage:        serverPodMessage,
 		Apps:                    apps,
 	}
 

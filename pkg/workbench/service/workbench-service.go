@@ -204,6 +204,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 			InitialResolutionWidth:  k8sWorkbench.InitialResolutionWidth,
 			InitialResolutionHeight: k8sWorkbench.InitialResolutionHeight,
 			ServerPodStatus:         model.WorkbenchServerPodStatus(k8sWorkbench.ServerPodStatus),
+			ServerPodMessage:        model.WorbenchServerPodMessage(k8sWorkbench.ServerPodMessage),
 			K8sStatus:               model.K8sWorkbenchStatus(k8sWorkbench.Status),
 		}
 
@@ -237,10 +238,11 @@ func (s *WorkbenchService) SetClientWatchers() {
 				// App completed - update status and set K8sState to Stopped
 				logger.TechLog.Info(ctx, "app instance completed", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
 				appInstancesToUpdate = append(appInstancesToUpdate, &model.AppInstance{
-					ID:        app.ID,
-					Status:    k8sStatus.ToAppInstanceStatus(),
-					K8sStatus: k8sStatus,
-					K8sState:  model.K8sAppInstanceStateStopped,
+					ID:         app.ID,
+					Status:     k8sStatus.ToAppInstanceStatus(),
+					K8sStatus:  k8sStatus,
+					K8sMessage: model.K8sAppInstanceMessage(app.K8sMessage),
+					K8sState:   model.K8sAppInstanceStateStopped,
 				})
 				// Queue for K8s spec update
 				updatedApp := app
@@ -256,19 +258,21 @@ func (s *WorkbenchService) SetClientWatchers() {
 				// App failed - update status but keep K8sState as Running
 				logger.TechLog.Warn(ctx, "app instance failed, keeping desired state Running", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
 				appInstancesToUpdate = append(appInstancesToUpdate, &model.AppInstance{
-					ID:        app.ID,
-					Status:    k8sStatus.ToAppInstanceStatus(),
-					K8sStatus: k8sStatus,
-					K8sState:  model.K8sAppInstanceStateRunning,
+					ID:         app.ID,
+					Status:     k8sStatus.ToAppInstanceStatus(),
+					K8sStatus:  k8sStatus,
+					K8sMessage: model.K8sAppInstanceMessage(app.K8sMessage),
+					K8sState:   model.K8sAppInstanceStateRunning,
 				})
 
 			default:
 				// Other statuses (Running, Progressing, Unknown) - update status, keep K8sState as Running
 				appInstancesToUpdate = append(appInstancesToUpdate, &model.AppInstance{
-					ID:        app.ID,
-					Status:    k8sStatus.ToAppInstanceStatus(),
-					K8sStatus: k8sStatus,
-					K8sState:  model.K8sAppInstanceStateRunning,
+					ID:         app.ID,
+					Status:     k8sStatus.ToAppInstanceStatus(),
+					K8sStatus:  k8sStatus,
+					K8sMessage: model.K8sAppInstanceMessage(app.K8sMessage),
+					K8sState:   model.K8sAppInstanceStateRunning,
 				})
 			}
 		}
