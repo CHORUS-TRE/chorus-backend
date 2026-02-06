@@ -28,7 +28,7 @@ func NewWorkbenchStorage(db *sqlx.DB) *WorkbenchStorage {
 
 func (s *WorkbenchStorage) GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*model.Workbench, error) {
 	const query = `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, serverpodmessage, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 		FROM workbenches
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -56,7 +56,7 @@ func (s *WorkbenchStorage) ListWorkbenches(ctx context.Context, tenantID uint64,
 
 	// Get workbenches query
 	query := `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, serverpodmessage, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 		FROM workbenches
 		WHERE tenantid = $1 AND status != 'deleted' AND deletedat IS NULL
 	`
@@ -118,6 +118,7 @@ func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbe
 			ai.workbenchid,
 			ai.status,
 			ai.k8sstatus,
+			ai.k8smessage,
 			ai.k8sstate,
 			ai.initialresolutionwidth,
 			ai.initialresolutionheight,
@@ -160,7 +161,7 @@ func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbe
 
 func (s *WorkbenchStorage) ListAllWorkbenches(ctx context.Context) ([]*model.Workbench, error) {
 	const query = `
-		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
+		SELECT id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, serverpodmessage, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat
 		FROM workbenches
 		WHERE deletedat IS NULL;
 	`
@@ -204,14 +205,14 @@ func (s *WorkbenchStorage) SaveBatchProxyHit(ctx context.Context, proxyHitCountM
 // CreateWorkbench saves the provided workbench object in the database 'workbenches' table.
 func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchQuery = `
-		INSERT INTO workbenches (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, serverpodstatus, k8sstatus, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) 
-		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+		INSERT INTO workbenches (tenantid, userid, workspaceid, name, shortname, description, initialresolutionwidth, initialresolutionheight, status, serverpodstatus, serverpodmessage, k8sstatus, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW()) 
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, serverpodmessage, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	var newWorkbench model.Workbench
 	err := s.db.GetContext(ctx, &newWorkbench, workbenchQuery,
-		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.InitialResolutionWidth, workbench.InitialResolutionHeight, workbench.Status, workbench.ServerPodStatus, workbench.K8sStatus,
+		tenantID, workbench.UserID, workbench.WorkspaceID, workbench.Name, workbench.ShortName, workbench.Description, workbench.InitialResolutionWidth, workbench.InitialResolutionHeight, workbench.Status, workbench.ServerPodStatus, workbench.ServerPodMessage, workbench.K8sStatus,
 	)
 	if err != nil {
 		return nil, err
@@ -223,14 +224,14 @@ func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64,
 func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchUpdateQuery = `
 		UPDATE workbenches
-		SET status = $3, serverpodstatus = $4, k8sstatus = $5, description = $6, updatedat = NOW()
+		SET status = $3, serverpodstatus = $4, serverpodmessage = $5, k8sstatus = $6, description = $7, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
+		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, serverpodmessage, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	// Update workbench
 	var updatedWorkbench model.Workbench
-	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.ServerPodStatus, workbench.K8sStatus, workbench.Description)
+	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.ServerPodStatus, workbench.ServerPodMessage, workbench.K8sStatus, workbench.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +291,7 @@ func (s *WorkbenchStorage) DeleteWorkbenchesInWorkspace(ctx context.Context, ten
 
 func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -318,7 +319,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 
 	// Get app instances query
 	query := `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
+		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
 		FROM app_instances
 		WHERE tenantid = $1 AND deletedat IS NULL
 	`
@@ -352,14 +353,14 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.
 func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceQuery = `
-		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
+		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
 	`
 
 	var newAppInstance model.AppInstance
 	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceUnknown, model.K8sAppInstanceStateRunning, model.K8sAppInstanceStatusUnknown, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceUnknown, model.K8sAppInstanceStateRunning, model.K8sAppInstanceStatusUnknown, appInstance.K8sMessage, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.KioskConfigJWTToken,
 	)
 	if err != nil {
 		return nil, err
@@ -371,13 +372,13 @@ func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint6
 func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceUpdateQuery = `
 		UPDATE app_instances
-		SET status = $3, k8sstate = $4, k8sstatus = $5, updatedat = NOW()
+		SET status = $3, k8sstate = $4, k8sstatus = $5, k8smessage = $6, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat;
 	`
 
 	var updatedAppInstance model.AppInstance
-	err := s.db.GetContext(ctx, &updatedAppInstance, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus)
+	err := s.db.GetContext(ctx, &updatedAppInstance, appInstanceUpdateQuery, tenantID, appInstance.ID, appInstance.Status, appInstance.K8sState, appInstance.K8sStatus, appInstance.K8sMessage)
 	if err != nil {
 		return nil, err
 	}
