@@ -182,6 +182,8 @@ definitions:
         type: string
       k8sStatus:
         type: string
+      k8sMessage:
+        type: string
       k8sState:
         type: string
       initialResolutionWidth:

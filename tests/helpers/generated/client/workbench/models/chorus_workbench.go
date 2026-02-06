@@ -41,6 +41,9 @@ type ChorusWorkbench struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// server pod message
+	ServerPodMessage string `json:"serverPodMessage,omitempty"`
+
 	// server pod status
 	ServerPodStatus string `json:"serverPodStatus,omitempty"`
 

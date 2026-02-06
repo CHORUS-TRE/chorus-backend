@@ -15,11 +15,12 @@ message AppInstance {
     
     string status = 7;
     string k8sStatus = 8;
-    string k8sState = 9;
+    string k8sMessage = 9;
+    string k8sState = 10;
 
-    uint32 initialResolutionWidth = 10;
-    uint32 initialResolutionHeight = 11;
+    uint32 initialResolutionWidth = 11;
+    uint32 initialResolutionHeight = 12;
     
-    google.protobuf.Timestamp createdAt = 12;
-    google.protobuf.Timestamp updatedAt = 13;
+    google.protobuf.Timestamp createdAt = 13;
+    google.protobuf.Timestamp updatedAt = 14;
 }
