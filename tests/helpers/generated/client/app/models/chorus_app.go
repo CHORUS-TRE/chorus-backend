@@ -35,6 +35,9 @@ type ChorusApp struct {
 	// docker image tag
 	DockerImageTag string `json:"dockerImageTag,omitempty"`
 
+	// icon background color
+	IconBackgroundColor string `json:"iconBackgroundColor,omitempty"`
+
 	// icon URL
 	IconURL string `json:"iconURL,omitempty"`
 
