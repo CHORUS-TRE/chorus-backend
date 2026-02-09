@@ -1,0 +1,15 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+message AuthorizationRole {
+    string name = 1;
+    string description = 2;
+    repeated string context = 3;
+}
+
+message AuthorizationPermission {
+    string name = 1;
+    string description = 2;
+    repeated string context = 3;
+}

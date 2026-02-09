@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"sync"
 
+	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
@@ -77,4 +80,15 @@ func ProvideAuthorizer() authorization_service.Authorizer {
 		}
 	})
 	return authorizer
+}
+
+var authorizationControllerOnce sync.Once
+var authorizationController chorus.AuthorizationServiceServer
+
+func ProvideAuthorizationController() chorus.AuthorizationServiceServer {
+	authorizationControllerOnce.Do(func() {
+		authorizationController = v1.NewAuthorizationController(ProvideGatekeeper())
+		authorizationController = ctrl_mw.AuthorizationAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(authorizationController)
+	})
+	return authorizationController
 }

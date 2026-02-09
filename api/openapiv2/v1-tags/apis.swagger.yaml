@@ -11,6 +11,7 @@ tags:
   - name: AppService
   - name: ApprovalRequestService
   - name: AuthenticationService
+  - name: AuthorizationService
   - name: DevstoreService
   - name: HealthService
   - name: NotificationService
@@ -1161,6 +1162,76 @@ paths:
             $ref: '#/definitions/chorusRefreshTokenRequest'
       tags:
         - AuthenticationService
+  /api/rest/v1/authorization/permissions:
+    get:
+      summary: List permissions
+      description: This endpoint returns a list of all available permissions
+      operationId: AuthorizationService_ListPermissions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListPermissionsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - AuthorizationService
+      security: []
+  /api/rest/v1/authorization/roles:
+    get:
+      summary: List roles
+      description: This endpoint returns a list of all available roles
+      operationId: AuthorizationService_ListRoles
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListRolesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - AuthorizationService
+      security: []
   /api/rest/v1/devstore/global:
     get:
       summary: List all key/value entries in the global store
@@ -4137,6 +4208,28 @@ definitions:
     properties:
       token:
         type: string
+  chorusAuthorizationPermission:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      context:
+        type: array
+        items:
+          type: string
+  chorusAuthorizationRole:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      context:
+        type: array
+        items:
+          type: string
   chorusBulkCreateAppsReply:
     type: object
     properties:
@@ -4621,6 +4714,32 @@ definitions:
         type: object
         additionalProperties:
           type: string
+  chorusListPermissionsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListPermissionsResult'
+  chorusListPermissionsResult:
+    type: object
+    properties:
+      permissions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAuthorizationPermission'
+  chorusListRolesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListRolesResult'
+  chorusListRolesResult:
+    type: object
+    properties:
+      roles:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAuthorizationRole'
   chorusListUsersReply:
     type: object
     properties:
