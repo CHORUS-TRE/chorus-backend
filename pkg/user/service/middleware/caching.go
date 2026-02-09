@@ -77,7 +77,14 @@ func (c *Caching) GetUser(ctx context.Context, req service.GetUserReq) (reply *m
 	entry := c.cache.NewEntry(cache.WithInterface(req))
 	reply = &model.User{}
 
-	if ok := entry.Get(ctx, &reply); !ok {
+	if !req.SkipCache {
+		if ok := entry.Get(ctx, &reply); !ok {
+			reply, err = c.next.GetUser(ctx, req)
+			if err == nil {
+				entry.Set(ctx, defaultCacheExpiration, reply)
+			}
+		}
+	} else {
 		reply, err = c.next.GetUser(ctx, req)
 		if err == nil {
 			entry.Set(ctx, defaultCacheExpiration, reply)
