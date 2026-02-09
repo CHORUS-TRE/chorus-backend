@@ -215,7 +215,7 @@ config:
         - profile
         - email
         - roles
-      jwks: "{}"
+      jwks: "{}" # replaced in secret
       clients: [] # replaced in secret
 
   clients:
