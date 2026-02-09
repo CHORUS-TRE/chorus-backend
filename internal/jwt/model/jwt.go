@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 
@@ -101,6 +102,14 @@ func ExtractIssuedAt(ctx context.Context) (int64, error) {
 		return 0, errors.New("malformed jwt-token")
 	}
 	return claims.StandardClaims.IssuedAt, nil
+}
+
+func ExtractIssuedSince(ctx context.Context) (time.Duration, error) {
+	claims, ok := ctx.Value(JWTClaimsContextKey).(*JWTClaims)
+	if !ok {
+		return 0, errors.New("malformed jwt-token")
+	}
+	return time.Since(time.Unix(claims.StandardClaims.IssuedAt, 0)), nil
 }
 
 func (c *JWTClaims) Valid() error {

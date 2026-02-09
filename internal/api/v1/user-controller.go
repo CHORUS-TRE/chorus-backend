@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,9 +44,16 @@ func (c UserController) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequ
 		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
 	}
 
+	skipCache := false
+	issuedSince, err := jwt_model.ExtractIssuedSince(ctx)
+	if err == nil && issuedSince < 60*time.Second {
+		skipCache = true
+	}
+
 	user, err := c.user.GetUser(ctx, service.GetUserReq{
-		TenantID: tenantID,
-		ID:       userID,
+		TenantID:  tenantID,
+		ID:        userID,
+		SkipCache: skipCache,
 	})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetUser': %v", err.Error())
