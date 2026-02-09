@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	gatekeeper_model "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/model"
 	gatekeeper_service "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/service"
+	"go.uber.org/zap"
 )
 
 type UserRoleStore interface {
@@ -113,7 +115,7 @@ func (a *auth) IsUserAllowed(user []model.Role, permission model.Permission) (bo
 
 	if !allowed {
 		explanation := a.gatekeeper.ExplainIsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
-		fmt.Println("explanation:", explanation)
+		logger.TechLog.Info(context.Background(), "authorization failed", zap.String("permission", string(permission.Name)), zap.String("explanation", explanation))
 	}
 
 	return allowed, nil

@@ -7,7 +7,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
@@ -57,24 +56,12 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 			return &chorus.ListWorkspacesReply{Result: &chorus.ListWorkspacesResult{Workspaces: []*chorus.Workspace{}}}, nil
 		}
 
-		fmt.Println("attrs:", attrs)
-		claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
-		if ok {
-			aRoles, err := claimRolesToAuthRoles(claims)
-			var permission []authorization.Permission
-			if err == nil {
-				permission, _ = c.authorizer.GetUserPermissions(aRoles)
-				fmt.Println("permissions:", permission)
-			}
-		}
-
 		for _, attr := range attrs {
 			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
 				if workspaceIDStr == "" {
 					continue
 				}
 				if workspaceIDStr == "*" {
-					fmt.Println("wildcard found, returning all workspaces")
 					req.Filter = nil
 					return c.next.ListWorkspaces(ctx, req)
 				}
@@ -86,7 +73,6 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 					logger.TechLog.Error(ctx, fmt.Sprintf("unable to parse workspace ID from context: %v", err.Error()))
 					return nil, status.Error(codes.Internal, fmt.Sprintf("unable to parse workspace ID from context: %v", err.Error()))
 				}
-				fmt.Println("adding workspace ID to filter:", workspaceID)
 				req.Filter.WorkspaceIdsIn = append(req.Filter.WorkspaceIdsIn, workspaceID)
 			}
 		}
