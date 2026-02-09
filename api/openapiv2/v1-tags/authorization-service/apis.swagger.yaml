@@ -1,0 +1,119 @@
+swagger: "2.0"
+info:
+  title: chorus authorization service
+  version: "1.0"
+  contact:
+    name: chorus authorization service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: AuthorizationService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/authorization/permissions:
+    get:
+      summary: List permissions
+      description: This endpoint returns a list of all available permissions
+      operationId: AuthorizationService_ListPermissions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListPermissionsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - AuthorizationService
+      security: []
+  /api/rest/v1/authorization/roles:
+    get:
+      summary: List roles
+      description: This endpoint returns a list of all available roles
+      operationId: AuthorizationService_ListRoles
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListRolesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - AuthorizationService
+      security: []
+definitions:
+  chorusAuthorizationPermission:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      context:
+        type: array
+        items:
+          type: string
+  chorusAuthorizationRole:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      context:
+        type: array
+        items:
+          type: string
+  chorusListPermissionsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListPermissionsResult'
+  chorusListPermissionsResult:
+    type: object
+    properties:
+      permissions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAuthorizationPermission'
+  chorusListRolesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListRolesResult'
+  chorusListRolesResult:
+    type: object
+    properties:
+      roles:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAuthorizationRole'
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
