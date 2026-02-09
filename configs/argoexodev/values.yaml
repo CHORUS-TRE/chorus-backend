@@ -206,6 +206,17 @@ config:
         #   workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
     approval_request_service:
       staging_file_store_name: archive
+    openid_connect_provider:
+      enabled: true
+      issuer_url: "https://backend.exodev.chorus-tre.ch/openid-connect"
+      frontend_interactions_url: "https://backend.exodev.chorus-tre.ch/auth-ui"
+      scopes: 
+        - openid
+        - profile
+        - email
+        - roles
+      jwks: "{}" # replaced in secret
+      clients: [] # replaced in secret
 
   clients:
     docker_client:
