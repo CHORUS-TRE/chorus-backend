@@ -561,6 +561,51 @@ paths:
             $ref: '#/definitions/ApprovalRequestServiceApproveApprovalRequestBody'
       tags:
         - ApprovalRequestService
+  /api/rest/v1/approval-requests/{id}/files/{path}:
+    get:
+      summary: Download a file from an approved data extraction request
+      description: This endpoint downloads a file from an approved data extraction request. Only the creator of the request can download files.
+      operationId: ApprovalRequestService_DownloadApprovalRequestFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDownloadApprovalRequestFileReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - ApprovalRequestService
   /api/rest/v1/apps:
     get:
       summary: List apps
@@ -4348,6 +4393,19 @@ definitions:
         $ref: '#/definitions/chorusDeleteWorkspaceResult'
   chorusDeleteWorkspaceResult:
     type: object
+  chorusDownloadApprovalRequestFileReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDownloadApprovalRequestFileResult'
+  chorusDownloadApprovalRequestFileResult:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusApprovalRequestFile'
+      content:
+        type: string
+        format: byte
   chorusEnableTotpReply:
     type: object
     properties:

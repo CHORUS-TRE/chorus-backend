@@ -33,6 +33,7 @@ type ApprovalRequester interface {
 	CreateDataTransferRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error)
 	ApproveApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64, approve bool) (*model.ApprovalRequest, error)
 	DeleteApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64) error
+	DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error)
 }
 
 type ApprovalRequestStore interface {
@@ -465,4 +466,43 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 	}
 
 	return nil
+}
+
+func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {
+	request, err := s.store.GetApprovalRequest(ctx, tenantID, requestID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to get request: %w", err)
+	}
+
+	if request.Type != model.ApprovalRequestTypeDataExtraction {
+		return nil, nil, fmt.Errorf("download is only available for data extraction requests")
+	}
+
+	if request.Status != model.ApprovalRequestStatusApproved {
+		return nil, nil, fmt.Errorf("request is not approved")
+	}
+
+	details := request.Details.DataExtractionDetails
+	if details == nil {
+		return nil, nil, fmt.Errorf("invalid request details")
+	}
+
+	var requestFile *model.ApprovalRequestFile
+	for i := range details.Files {
+		if details.Files[i].SourcePath == filePath {
+			requestFile = &details.Files[i]
+			break
+		}
+	}
+
+	if requestFile == nil {
+		return nil, nil, fmt.Errorf("file not found in request")
+	}
+
+	file, err := s.stagingFileStore.GetFile(ctx, requestFile.DestinationPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to get file from staging storage: %w", err)
+	}
+
+	return requestFile, file.Content, nil
 }

@@ -99,6 +99,18 @@ message DeleteApprovalRequestReply {
 }
 message DeleteApprovalRequestResult {}
 
+message DownloadApprovalRequestFileRequest {
+    uint64 id = 1;
+    string path = 2;
+}
+message DownloadApprovalRequestFileReply {
+    DownloadApprovalRequestFileResult result = 1;
+}
+message DownloadApprovalRequestFileResult {
+    ApprovalRequestFile file = 1;
+    bytes content = 2;
+}
+
 
 service ApprovalRequestService {
     rpc GetApprovalRequest(GetApprovalRequestRequest) returns (GetApprovalRequestReply) {
@@ -166,6 +178,17 @@ service ApprovalRequestService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Delete an approval request";
             description: "This endpoint deletes an approval request. Only pending requests can be deleted.";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc DownloadApprovalRequestFile(DownloadApprovalRequestFileRequest) returns (DownloadApprovalRequestFileReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/approval-requests/{id}/files/{path=**}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Download a file from an approved data extraction request";
+            description: "This endpoint downloads a file from an approved data extraction request. Only the creator of the request can download files.";
             tags: "ApprovalRequestService";
         };
     };

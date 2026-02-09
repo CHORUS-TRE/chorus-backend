@@ -71,13 +71,20 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 func FilesFromBusiness(files []model.ApprovalRequestFile) []*chorus.ApprovalRequestFile {
 	var result []*chorus.ApprovalRequestFile
 	for _, f := range files {
-		result = append(result, &chorus.ApprovalRequestFile{
-			SourcePath:      f.SourcePath,
-			DestinationPath: f.DestinationPath,
-			Size:            f.Size,
-		})
+		result = append(result, FileFromBusiness(&f))
 	}
 	return result
+}
+
+func FileFromBusiness(f *model.ApprovalRequestFile) *chorus.ApprovalRequestFile {
+	if f == nil {
+		return nil
+	}
+	return &chorus.ApprovalRequestFile{
+		SourcePath:      f.SourcePath,
+		DestinationPath: f.DestinationPath,
+		Size:            f.Size,
+	}
 }
 
 func FilesToBusiness(files []*chorus.ApprovalRequestFile) []model.ApprovalRequestFile {

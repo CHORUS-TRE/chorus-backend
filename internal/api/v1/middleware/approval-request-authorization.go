@@ -128,3 +128,34 @@ func (c approvalRequestControllerAuthorization) DeleteApprovalRequest(ctx contex
 
 	return c.next.DeleteApprovalRequest(ctx, req)
 }
+
+func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx context.Context, req *chorus.DownloadApprovalRequestFileRequest) (*chorus.DownloadApprovalRequestFileReply, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+	}
+
+	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "approval request not found")
+	}
+
+	if approvalRequest.Type != approval_request_model.ApprovalRequestTypeDataExtraction {
+		return nil, status.Error(codes.PermissionDenied, "only data extraction requests have downloadable files")
+	}
+
+	if approvalRequest.RequesterID != userID {
+		workspaceID := approvalRequest.GetSourceWorkspaceID()
+		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+		if err != nil {
+			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		}
+	}
+
+	return c.next.DownloadApprovalRequestFile(ctx, req)
+}
