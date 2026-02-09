@@ -89,3 +89,13 @@ func (v validation) DeleteApprovalRequest(ctx context.Context, tenantID, request
 	}
 	return v.next.DeleteApprovalRequest(ctx, tenantID, requestID, userID)
 }
+
+func (v validation) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {
+	if requestID == 0 {
+		return nil, nil, &service.InvalidParametersErr{}
+	}
+	if filePath == "" {
+		return nil, nil, &service.InvalidParametersErr{}
+	}
+	return v.next.DownloadApprovalRequestFile(ctx, tenantID, requestID, filePath)
+}

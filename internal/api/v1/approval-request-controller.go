@@ -241,3 +241,26 @@ func (c ApprovalRequestController) DeleteApprovalRequest(ctx context.Context, re
 
 	return &chorus.DeleteApprovalRequestReply{Result: &chorus.DeleteApprovalRequestResult{}}, nil
 }
+
+func (c ApprovalRequestController) DownloadApprovalRequestFile(ctx context.Context, req *chorus.DownloadApprovalRequestFileRequest) (*chorus.DownloadApprovalRequestFileReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	file, content, err := c.approvalRequest.DownloadApprovalRequestFile(ctx, tenantID, req.Id, req.Path)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DownloadApprovalRequestFile': %v", err.Error())
+	}
+
+	return &chorus.DownloadApprovalRequestFileReply{
+		Result: &chorus.DownloadApprovalRequestFileResult{
+			File:    converter.FileFromBusiness(file),
+			Content: content,
+		},
+	}, nil
+}

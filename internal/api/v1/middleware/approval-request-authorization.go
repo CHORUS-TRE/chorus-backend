@@ -128,3 +128,42 @@ func (c approvalRequestControllerAuthorization) DeleteApprovalRequest(ctx contex
 
 	return c.next.DeleteApprovalRequest(ctx, req)
 }
+
+func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx context.Context, req *chorus.DownloadApprovalRequestFileRequest) (*chorus.DownloadApprovalRequestFileReply, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+	}
+
+	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "approval request not found")
+	}
+
+	if approvalRequest.Type != approval_request_model.ApprovalRequestTypeDataExtraction {
+		return nil, status.Error(codes.PermissionDenied, "only data extraction requests have downloadable files")
+	}
+
+	workspaceID := approvalRequest.GetSourceWorkspaceID()
+	err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+	isPotentialApprover := err == nil
+
+	if !isPotentialApprover && approvalRequest.RequesterID != userID {
+		return nil, status.Error(codes.PermissionDenied, "user does not have permission to download files for this request")
+	}
+
+	// potential approvers should be able to download files even if the request is not yet approved, so that they can
+	// review the files before approving. However, non-approvers should not be able to download files for unapproved requests.
+	if approvalRequest.Status != approval_request_model.ApprovalRequestStatusApproved {
+		if !isPotentialApprover {
+			return nil, status.Error(codes.PermissionDenied, "request is not approved")
+		}
+	}
+
+	return c.next.DownloadApprovalRequestFile(ctx, req)
+}
