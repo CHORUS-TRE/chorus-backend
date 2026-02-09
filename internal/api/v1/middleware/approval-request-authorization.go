@@ -149,11 +149,19 @@ func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx 
 		return nil, status.Error(codes.PermissionDenied, "only data extraction requests have downloadable files")
 	}
 
-	if approvalRequest.RequesterID != userID {
-		workspaceID := approvalRequest.GetSourceWorkspaceID()
-		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
-		if err != nil {
-			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+	workspaceID := approvalRequest.GetSourceWorkspaceID()
+	err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+	isPotentialApprover := err == nil
+
+	if !isPotentialApprover && approvalRequest.RequesterID != userID {
+		return nil, status.Error(codes.PermissionDenied, "user does not have permission to download files for this request")
+	}
+
+	// potential approvers should be able to download files even if the request is not yet approved, so that they can
+	// review the files before approving. However, non-approvers should not be able to download files for unapproved requests.
+	if approvalRequest.Status != approval_request_model.ApprovalRequestStatusApproved {
+		if !isPotentialApprover {
+			return nil, status.Error(codes.PermissionDenied, "request is not approved")
 		}
 	}
 

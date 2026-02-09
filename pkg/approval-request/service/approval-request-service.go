@@ -478,10 +478,6 @@ func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context
 		return nil, nil, fmt.Errorf("download is only available for data extraction requests")
 	}
 
-	if request.Status != model.ApprovalRequestStatusApproved {
-		return nil, nil, fmt.Errorf("request is not approved")
-	}
-
 	details := request.Details.DataExtractionDetails
 	if details == nil {
 		return nil, nil, fmt.Errorf("invalid request details")
