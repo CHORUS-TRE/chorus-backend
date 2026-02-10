@@ -617,7 +617,7 @@ func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
 			continue
 		}
 		msg := strings.ToLower(err.Error())
-		if strings.Contains(msg, "connection reset by peer") || strings.Contains(msg, "broken pipe") || strings.Contains(msg, "unexpected eof") || strings.Contains(msg, "read: connection timed out") {
+		if strings.Contains(msg, "connection reset by peer") || strings.Contains(msg, "broken pipe") || strings.Contains(msg, "unexpected eof") || strings.Contains(msg, "read: connection timed out") || strings.Contains(msg, "connect: operation not permitted") {
 			lastErr = err
 			logger.TechLog.Warn(context.Background(), "transient network error, retrying", zap.Error(err), zap.Int("attempt", i+1))
 			continue
