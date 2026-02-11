@@ -697,7 +697,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		lockStart := time.Now()
 		s.proxyRWMutex.Lock()
 		delete(s.proxyCache, proxyID)
-		logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
+		logger.TechLog.Info(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
 		s.proxyRWMutex.Unlock()
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
