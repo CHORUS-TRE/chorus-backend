@@ -34,6 +34,8 @@ import (
 
 var _ Workbencher = (*WorkbenchService)(nil)
 
+var streamPathRegex = regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
+
 var (
 	workbenchProxyRequest = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "workbench_service_proxy_request",
@@ -676,8 +678,6 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
-	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
-
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 	reverseProxy.FlushInterval = -1
 	tr := s.getRoundtripper()
@@ -695,7 +695,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Director = func(req *http.Request) {
 		originalDirector(req)
 
-		req.URL.Path = reg.ReplaceAllString(req.URL.Path, "")
+		req.URL.Path = streamPathRegex.ReplaceAllString(req.URL.Path, "")
 	}
 
 	reverseProxy.ModifyResponse = func(resp *http.Response) error {
