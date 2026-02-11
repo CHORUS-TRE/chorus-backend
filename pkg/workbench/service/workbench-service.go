@@ -658,6 +658,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	s.proxyRWMutex.Lock()
 	defer s.proxyRWMutex.Unlock()
 
+	if p, exists := s.proxyCache[proxyID]; exists {
+		return p, nil
+	}
+
 	var xpraUrl string
 	var port uint16
 	var stopChan chan struct{}
