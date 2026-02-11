@@ -694,6 +694,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
 		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+
 		s.proxyRWMutex.Lock()
 		if p, exists := s.proxyCache[proxyID]; exists {
 			delete(s.proxyCache, proxyID)
@@ -702,6 +703,12 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 			}
 		}
 		s.proxyRWMutex.Unlock()
+
+		// Clear proxyID cache
+		if wbID, err := model.GetIDFromClusterName(proxyID.workbench); err == nil {
+			s.proxyIDCache.Delete(wbID)
+		}
+
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
 
