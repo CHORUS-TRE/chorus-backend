@@ -660,22 +660,17 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 	s.proxyRWMutex.RUnlock()
 
-	logger.TechLog.Debug(context.Background(), "proxy cache miss, acquiring write lock",
-		zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+	logger.TechLog.Debug(context.Background(), "proxy cache miss, acquiring write lock", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
 
 	lockStart := time.Now()
 	s.proxyRWMutex.Lock()
 	defer s.proxyRWMutex.Unlock()
 
 	lockWait := time.Since(lockStart)
-	if lockWait > 100*time.Millisecond {
-		logger.TechLog.Warn(context.Background(), "proxy write lock contention",
-			zap.Duration("wait", lockWait), zap.String("workbench", proxyID.workbench))
-	}
+	logger.TechLog.Debug(context.Background(), "write lock acquired", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace), zap.Duration("wait", lockWait))
 
 	if p, exists := s.proxyCache[proxyID]; exists {
-		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock",
-			zap.String("workbench", proxyID.workbench), zap.Duration("lockWait", lockWait))
+		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock", zap.String("workbench", proxyID.workbench), zap.Duration("lockWait", lockWait))
 		return p, nil
 	}
 
@@ -705,17 +700,12 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	tr := s.getRoundtripper()
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
-		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy",
-			zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
 
 		s.proxyRWMutex.Lock()
-		if p, exists := s.proxyCache[proxyID]; exists {
+		if _, exists := s.proxyCache[proxyID]; exists {
 			delete(s.proxyCache, proxyID)
-			if p.forwardStopChan != nil {
-				close(p.forwardStopChan)
-			}
-			logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed",
-				zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
+			logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
 		}
 		s.proxyRWMutex.Unlock()
 
