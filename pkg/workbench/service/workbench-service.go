@@ -660,11 +660,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	s.proxyRWMutex.Lock()
 	defer s.proxyRWMutex.Unlock()
 
-	lockWait := time.Since(lockStart)
-	logger.TechLog.Debug(context.Background(), "write lock acquired", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace), zap.Duration("wait", lockWait))
+	logger.TechLog.Debug(context.Background(), "write lock acquired", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
 
 	if p, exists := s.proxyCache[proxyID]; exists {
-		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock", zap.String("workbench", proxyID.workbench), zap.Duration("lockWait", lockWait))
+		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock", zap.String("workbench", proxyID.workbench), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
 		return p, nil
 	}
 
@@ -695,9 +694,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
 		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		lockStart := time.Now()
 		s.proxyRWMutex.Lock()
 		delete(s.proxyCache, proxyID)
-		logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
+		logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
 		s.proxyRWMutex.Unlock()
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
