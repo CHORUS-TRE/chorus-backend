@@ -679,6 +679,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
+	reverseProxy.FlushInterval = -1
 	tr := s.getRoundtripper()
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
