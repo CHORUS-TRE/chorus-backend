@@ -606,7 +606,6 @@ type retryRT struct {
 }
 
 func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
-
 	var lastErr error
 	for i := 0; i < r.cfg.Services.WorkbenchService.RoundTripper.MaxTransientRetry; i++ {
 		resp, err := r.rt.RoundTrip(req)
