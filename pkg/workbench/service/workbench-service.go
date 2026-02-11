@@ -608,10 +608,60 @@ type retryRT struct {
 func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	var lastErr error
 	for i := 0; i < r.cfg.Services.WorkbenchService.RoundTripper.MaxTransientRetry; i++ {
+		var scheme string
+		if req.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+		proto := req.Proto
+		method := req.Method
+		remoteAddr := req.RemoteAddr
+		userAgent := req.UserAgent()
+		uri := strings.Join([]string{scheme, "://", req.Host, req.RequestURI}, "")
+
+		ctx := req.Context()
+
+		logger.TechLog.Debug(ctx, "request started",
+			zap.String("http-scheme", scheme),
+			zap.String("http-proto", proto),
+			zap.String("http-method", method),
+			zap.String("remote-addr", remoteAddr),
+			zap.String("user-agent", userAgent),
+			zap.String("uri", uri),
+			zap.Int("attempt", i+1),
+		)
+
+		t1 := time.Now()
+
 		resp, err := r.rt.RoundTrip(req)
 		if err == nil {
+			logger.TechLog.Debug(ctx, "request completed",
+				zap.String("http-scheme", scheme),
+				zap.String("http-proto", proto),
+				zap.String("http-method", method),
+				zap.String("remote-addr", remoteAddr),
+				zap.String("user-agent", userAgent),
+				zap.String("uri", uri),
+				zap.Int("attempt", i+1),
+				zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(t1).Nanoseconds())/1000000.0),
+			)
+
 			return resp, nil
 		}
+
+		logger.TechLog.Debug(ctx, "request completed",
+			zap.String("http-scheme", scheme),
+			zap.String("http-proto", proto),
+			zap.String("http-method", method),
+			zap.String("remote-addr", remoteAddr),
+			zap.String("user-agent", userAgent),
+			zap.String("uri", uri),
+			zap.Int("attempt", i+1),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(t1).Nanoseconds())/1000000.0),
+		)
+
 		// retry on common transient network errors
 		if ne, ok := err.(net.Error); ok && ne.Temporary() {
 			lastErr = err
