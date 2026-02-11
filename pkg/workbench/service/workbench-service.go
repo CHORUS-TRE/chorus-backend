@@ -696,12 +696,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
 		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
-
 		s.proxyRWMutex.Lock()
 		delete(s.proxyCache, proxyID)
 		logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
 		s.proxyRWMutex.Unlock()
-
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
 
