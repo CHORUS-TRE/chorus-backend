@@ -660,10 +660,22 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 	s.proxyRWMutex.RUnlock()
 
+	logger.TechLog.Debug(context.Background(), "proxy cache miss, acquiring write lock",
+		zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+
+	lockStart := time.Now()
 	s.proxyRWMutex.Lock()
 	defer s.proxyRWMutex.Unlock()
 
+	lockWait := time.Since(lockStart)
+	if lockWait > 100*time.Millisecond {
+		logger.TechLog.Warn(context.Background(), "proxy write lock contention",
+			zap.Duration("wait", lockWait), zap.String("workbench", proxyID.workbench))
+	}
+
 	if p, exists := s.proxyCache[proxyID]; exists {
+		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock",
+			zap.String("workbench", proxyID.workbench), zap.Duration("lockWait", lockWait))
 		return p, nil
 	}
 
@@ -693,7 +705,8 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	tr := s.getRoundtripper()
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
-		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy",
+			zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
 
 		s.proxyRWMutex.Lock()
 		if p, exists := s.proxyCache[proxyID]; exists {
@@ -701,6 +714,8 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 			if p.forwardStopChan != nil {
 				close(p.forwardStopChan)
 			}
+			logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed",
+				zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
 		}
 		s.proxyRWMutex.Unlock()
 
@@ -733,6 +748,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 
 	s.proxyCache[proxyID] = proxy
 
+	logger.TechLog.Info(context.Background(), "new proxy created",
+		zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace),
+		zap.Uint16("forwardPort", port), zap.Int("cacheSize", len(s.proxyCache)))
+
 	return proxy, nil
 }
 
@@ -741,6 +760,8 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 	if cached, ok := s.proxyIDCache.Load(workbenchID); ok {
 		pid = cached.(proxyID)
 	} else {
+		logger.TechLog.Debug(ctx, "proxyID cache miss, querying database",
+			zap.Uint64("workbenchID", workbenchID), zap.Uint64("tenantID", tenantID))
 		workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 		if err != nil {
 			return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
