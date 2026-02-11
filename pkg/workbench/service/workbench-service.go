@@ -34,6 +34,8 @@ import (
 
 var _ Workbencher = (*WorkbenchService)(nil)
 
+var streamPathRegex = regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
+
 var (
 	workbenchProxyRequest = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "workbench_service_proxy_request",
@@ -652,8 +654,18 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 	s.proxyRWMutex.RUnlock()
 
+	logger.TechLog.Debug(context.Background(), "proxy cache miss, acquiring write lock", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+
+	lockStart := time.Now()
 	s.proxyRWMutex.Lock()
 	defer s.proxyRWMutex.Unlock()
+
+	logger.TechLog.Debug(context.Background(), "write lock acquired", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
+
+	if p, exists := s.proxyCache[proxyID]; exists {
+		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock", zap.String("workbench", proxyID.workbench), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
+		return p, nil
+	}
 
 	var xpraUrl string
 	var port uint16
@@ -676,15 +688,16 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
-	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
-
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
+	reverseProxy.FlushInterval = -1
 	tr := s.getRoundtripper()
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
-		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		lockStart := time.Now()
 		s.proxyRWMutex.Lock()
 		delete(s.proxyCache, proxyID)
+		logger.TechLog.Info(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
 		s.proxyRWMutex.Unlock()
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
@@ -694,7 +707,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Director = func(req *http.Request) {
 		originalDirector(req)
 
-		req.URL.Path = reg.ReplaceAllString(req.URL.Path, "")
+		req.URL.Path = streamPathRegex.ReplaceAllString(req.URL.Path, "")
 	}
 
 	reverseProxy.ModifyResponse = func(resp *http.Response) error {
@@ -709,6 +722,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 
 	s.proxyCache[proxyID] = proxy
+
+	logger.TechLog.Info(context.Background(), "new proxy created",
+		zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace),
+		zap.Uint16("forwardPort", port), zap.Int("cacheSize", len(s.proxyCache)))
 
 	return proxy, nil
 }
