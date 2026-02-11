@@ -690,7 +690,12 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
 		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
 		s.proxyRWMutex.Lock()
-		delete(s.proxyCache, proxyID)
+		if p, exists := s.proxyCache[proxyID]; exists {
+			delete(s.proxyCache, proxyID)
+			if p.forwardStopChan != nil {
+				close(p.forwardStopChan)
+			}
+		}
 		s.proxyRWMutex.Unlock()
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
