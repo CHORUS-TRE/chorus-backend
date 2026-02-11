@@ -120,6 +120,7 @@ type WorkbenchService struct {
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
+	proxyIDCache     sync.Map // map[uint64]proxyID — caches workbenchID to proxyID mapping
 	proxyHitMutex    sync.Mutex
 	proxyHitCountMap map[uint64]uint64
 	proxyHitDateMap  map[uint64]time.Time
@@ -715,21 +716,24 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 }
 
 func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
-	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
-	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+	var pid proxyID
+	if cached, ok := s.proxyIDCache.Load(workbenchID); ok {
+		pid = cached.(proxyID)
+	} else {
+		workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
+		if err != nil {
+			return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		}
+		pid = proxyID{
+			namespace: workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID),
+			workbench: model.GetWorkbenchClusterName(workbenchID),
+		}
+		s.proxyIDCache.Store(workbenchID, pid)
 	}
 
-	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)
-
-	proxyID := proxyID{
-		namespace: namespace,
-		workbench: workbenchName,
-	}
-
-	proxy, err := s.getProxy(proxyID)
+	proxy, err := s.getProxy(pid)
 	if err != nil {
-		return fmt.Errorf("unable to get proxy %v: %w", proxyID, err)
+		return fmt.Errorf("unable to get proxy %v: %w", pid, err)
 	}
 
 	go s.addWorkbenchHit(workbenchID)
