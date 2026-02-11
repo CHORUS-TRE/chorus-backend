@@ -120,7 +120,6 @@ type WorkbenchService struct {
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
-	proxyIDCache     sync.Map // map[uint64]proxyID — caches workbenchID to proxyID mapping
 	proxyHitMutex    sync.Mutex
 	proxyHitCountMap map[uint64]uint64
 	proxyHitDateMap  map[uint64]time.Time
@@ -607,10 +606,6 @@ type retryRT struct {
 }
 
 func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Do not retry WebSocket upgrade requests — the connection state cannot be replayed.
-	if strings.EqualFold(req.Header.Get("Connection"), "Upgrade") {
-		return r.rt.RoundTrip(req)
-	}
 
 	var lastErr error
 	for i := 0; i < r.cfg.Services.WorkbenchService.RoundTripper.MaxTransientRetry; i++ {
@@ -703,16 +698,9 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
 
 		s.proxyRWMutex.Lock()
-		if _, exists := s.proxyCache[proxyID]; exists {
-			delete(s.proxyCache, proxyID)
-			logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
-		}
+		delete(s.proxyCache, proxyID)
+		logger.TechLog.Warn(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)))
 		s.proxyRWMutex.Unlock()
-
-		// Clear proxyID cache
-		if wbID, err := model.GetIDFromClusterName(proxyID.workbench); err == nil {
-			s.proxyIDCache.Delete(wbID)
-		}
 
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
@@ -746,26 +734,21 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 }
 
 func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
-	var pid proxyID
-	if cached, ok := s.proxyIDCache.Load(workbenchID); ok {
-		pid = cached.(proxyID)
-	} else {
-		logger.TechLog.Debug(ctx, "proxyID cache miss, querying database",
-			zap.Uint64("workbenchID", workbenchID), zap.Uint64("tenantID", tenantID))
-		workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
-		if err != nil {
-			return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
-		}
-		pid = proxyID{
-			namespace: workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID),
-			workbench: model.GetWorkbenchClusterName(workbenchID),
-		}
-		s.proxyIDCache.Store(workbenchID, pid)
+	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
-	proxy, err := s.getProxy(pid)
+	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)
+
+	proxyID := proxyID{
+		namespace: namespace,
+		workbench: workbenchName,
+	}
+
+	proxy, err := s.getProxy(proxyID)
 	if err != nil {
-		return fmt.Errorf("unable to get proxy %v: %w", pid, err)
+		return fmt.Errorf("unable to get proxy %v: %w", proxyID, err)
 	}
 
 	go s.addWorkbenchHit(workbenchID)
