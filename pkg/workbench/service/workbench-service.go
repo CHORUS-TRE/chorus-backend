@@ -607,6 +607,11 @@ type retryRT struct {
 }
 
 func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Do not retry WebSocket upgrade requests — the connection state cannot be replayed.
+	if strings.EqualFold(req.Header.Get("Connection"), "Upgrade") {
+		return r.rt.RoundTrip(req)
+	}
+
 	var lastErr error
 	for i := 0; i < r.cfg.Services.WorkbenchService.RoundTripper.MaxTransientRetry; i++ {
 		resp, err := r.rt.RoundTrip(req)
