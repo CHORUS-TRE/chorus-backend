@@ -1,0 +1,32 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message AuditEntry {
+    uint64 id = 1;
+
+    uint64 tenantId = 2;
+    uint64 userId = 3;
+    uint64 correlationId = 4;
+    string action = 5;
+
+    uint64 workspaceId = 6;
+    uint64 workbenchId = 7;
+    string description = 8;
+    string details= 9;
+
+    google.protobuf.Timestamp createdAt = 10;
+}
+
+message AuditFilter {
+    uint64 userId = 1;
+    uint64 workspaceId = 2;
+    uint64 workbenchId = 3;
+
+    string action = 4;
+
+    google.protobuf.Timestamp fromTime = 5;
+    google.protobuf.Timestamp toTime = 6;
+}
