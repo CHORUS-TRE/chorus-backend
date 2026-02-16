@@ -66,13 +66,14 @@ const (
 	AuditActionFileUploadAbort    AuditAction = "AbortFileUpload"
 
 	// Approval Request
-	AuditActionApprovalRequestCreate            AuditAction = "CreateApprovalRequest"
-	AuditActionApprovalRequestRead              AuditAction = "ReadApprovalRequest"
-	AuditActionApprovalRequestList              AuditAction = "ListApprovalRequest"
-	AuditActionApprovalRequestApprove           AuditAction = "ApproveApprovalRequest"
-	AuditActionApprovalRequestDelete            AuditAction = "DeleteApprovalRequest"
-	AuditActionDataExtractionRequestCreate      AuditAction = "CreateDataExtractionRequest"
-	AuditActionDataTransferRequestCreate        AuditAction = "CreateDataTransferRequest"
+	AuditActionApprovalRequestCreate       AuditAction = "CreateApprovalRequest"
+	AuditActionApprovalRequestRead         AuditAction = "ReadApprovalRequest"
+	AuditActionApprovalRequestList         AuditAction = "ListApprovalRequest"
+	AuditActionApprovalRequestApprove      AuditAction = "ApproveApprovalRequest"
+	AuditActionApprovalRequestDelete       AuditAction = "DeleteApprovalRequest"
+	AuditActionDataExtractionRequestCreate AuditAction = "CreateDataExtractionRequest"
+	AuditActionDataTransferRequestCreate   AuditAction = "CreateDataTransferRequest"
+	AuditActionApprovalRequestFileDownload AuditAction = "DownloadApprovalRequestFile"
 
 	// Admin
 	AuditActionTenantInitialize AuditAction = "InitializeTenant"

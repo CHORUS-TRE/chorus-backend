@@ -81,7 +81,7 @@ func (c approvalRequestControllerAudit) CreateDataExtractionRequest(ctx context.
 			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
-			audit.WithDetail("approver_ids", req.ApproverIds),
+			audit.WithDetail("title", req.Title),
 		)
 	} else {
 		audit.Record(ctx, c.auditWriter,
@@ -91,7 +91,7 @@ func (c approvalRequestControllerAudit) CreateDataExtractionRequest(ctx context.
 			audit.WithDetail("approval_request_id", res.Result.ApprovalRequest.Id),
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
-			audit.WithDetail("approver_ids", req.ApproverIds),
+			audit.WithDetail("title", req.Title),
 		)
 	}
 
@@ -109,7 +109,7 @@ func (c approvalRequestControllerAudit) CreateDataTransferRequest(ctx context.Co
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("destination_workspace_id", req.DestinationWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
-			audit.WithDetail("approver_ids", req.ApproverIds),
+			audit.WithDetail("title", req.Title),
 		)
 	} else {
 		audit.Record(ctx, c.auditWriter,
@@ -120,7 +120,7 @@ func (c approvalRequestControllerAudit) CreateDataTransferRequest(ctx context.Co
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("destination_workspace_id", req.DestinationWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
-			audit.WithDetail("approver_ids", req.ApproverIds),
+			audit.WithDetail("title", req.Title),
 		)
 		// Record again for destination workspace
 		audit.Record(ctx, c.auditWriter,
@@ -131,7 +131,7 @@ func (c approvalRequestControllerAudit) CreateDataTransferRequest(ctx context.Co
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("destination_workspace_id", req.DestinationWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
-			audit.WithDetail("approver_ids", req.ApproverIds),
+			audit.WithDetail("title", req.Title),
 		)
 	}
 
@@ -178,6 +178,29 @@ func (c approvalRequestControllerAudit) DeleteApprovalRequest(ctx context.Contex
 			model.AuditActionApprovalRequestDelete,
 			audit.WithDescription(fmt.Sprintf("Deleted approval request with ID %d.", req.Id)),
 			audit.WithDetail("approval_request_id", req.Id),
+		)
+	}
+
+	return res, err
+}
+
+func (c approvalRequestControllerAudit) DownloadApprovalRequestFile(ctx context.Context, req *chorus.DownloadApprovalRequestFileRequest) (*chorus.DownloadApprovalRequestFileReply, error) {
+	res, err := c.next.DownloadApprovalRequestFile(ctx, req)
+	if err != nil {
+		audit.Record(ctx, c.auditWriter,
+			model.AuditActionApprovalRequestFileDownload,
+			audit.WithDescription(fmt.Sprintf("Failed to download file from approval request %d.", req.Id)),
+			audit.WithErrorMessage(err.Error()),
+			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithDetail("approval_request_id", req.Id),
+			audit.WithDetail("file_path", req.Path),
+		)
+	} else {
+		audit.Record(ctx, c.auditWriter,
+			model.AuditActionApprovalRequestFileDownload,
+			audit.WithDescription(fmt.Sprintf("Downloaded file from approval request %d.", req.Id)),
+			audit.WithDetail("approval_request_id", req.Id),
+			audit.WithDetail("file_path", req.Path),
 		)
 	}
 
