@@ -139,7 +139,9 @@ definitions:
       description:
         type: string
       details:
-        type: string
+        type: object
+        additionalProperties:
+          type: string
       createdAt:
         type: string
         format: date-time

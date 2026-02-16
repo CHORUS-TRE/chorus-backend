@@ -33,7 +33,7 @@ type ChorusAuditEntry struct {
 	Description string `json:"description,omitempty"`
 
 	// details
-	Details string `json:"details,omitempty"`
+	Details map[string]string `json:"details,omitempty"`
 
 	// id
 	ID string `json:"id,omitempty"`
