@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"

@@ -14,15 +14,14 @@ import (
 	"sync"
 	"time"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -34,6 +33,8 @@ import (
 )
 
 var _ Workbencher = (*WorkbenchService)(nil)
+
+var streamPathRegex = regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
 
 var (
 	workbenchProxyRequest = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -52,6 +53,10 @@ type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
 }
 
+type AppInstanceFilter struct {
+	WorkbenchIDsIn *[]uint64
+}
+
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
 	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
@@ -65,7 +70,7 @@ type Workbencher interface {
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
@@ -84,7 +89,7 @@ type WorkbenchStore interface {
 	DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
 
 	GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workbenchIDsIn *[]uint64) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) error
@@ -171,20 +176,29 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 
 func (s *WorkbenchService) SetClientWatchers() {
 	watcher := func(k8sWorkbench k8s.Workbench) error {
-		logger.TechLog.Debug(context.Background(), "new/update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps))
+		ctx := context.Background()
+		logger.TechLog.Debug(ctx, "watcher received a workbench update", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Int64("currentGeneration", k8sWorkbench.CurrentGeneration), zap.Int64("observedGeneration", k8sWorkbench.ObservedGeneration))
 
+		// Skip updates if operator has not reconciled yet
+		if k8sWorkbench.ObservedGeneration != k8sWorkbench.CurrentGeneration {
+			logger.TechLog.Debug(ctx, "skipping updates - operator has not reconciled", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Int64("currentGeneration", k8sWorkbench.CurrentGeneration), zap.Int64("observedGeneration", k8sWorkbench.ObservedGeneration))
+			return nil
+		}
+
+		// Get workbench ID and workspace ID from cluster names
 		workbenchID, err := model.GetIDFromClusterName(k8sWorkbench.Name)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to get workbench ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to get workbench ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
 			return fmt.Errorf("unable to get workbench ID from cluster name %s: %w", k8sWorkbench.Name, err)
 		}
 
 		workspaceID, err := workspace_model.GetIDFromClusterName(k8sWorkbench.Namespace)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to get namespace ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to get namespace ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
 			return fmt.Errorf("unable to get namespace ID from cluster name %s: %w", k8sWorkbench.Namespace, err)
 		}
 
+		// Build workbench model from received K8s workbench
 		workbench := &model.Workbench{
 			ID:                      workbenchID,
 			TenantID:                k8sWorkbench.TenantID,
@@ -192,6 +206,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 			InitialResolutionWidth:  k8sWorkbench.InitialResolutionWidth,
 			InitialResolutionHeight: k8sWorkbench.InitialResolutionHeight,
 			ServerPodStatus:         model.WorkbenchServerPodStatus(k8sWorkbench.ServerPodStatus),
+			ServerPodMessage:        model.WorbenchServerPodMessage(k8sWorkbench.ServerPodMessage),
 			K8sStatus:               model.K8sWorkbenchStatus(k8sWorkbench.Status),
 		}
 
@@ -204,43 +219,89 @@ func (s *WorkbenchService) SetClientWatchers() {
 			workbench.Status = model.WorkbenchDeleted
 		}
 
+		// Update workbench in DB
+		logger.TechLog.Debug(ctx, "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
+		_, err = s.store.UpdateWorkbench(ctx, k8sWorkbench.TenantID, workbench)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
+			return err
+		}
+
+		// Build app instances to update with correct status and K8sState
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
-		appInstanceIDsToDelete := []uint64{}
+		appInstancesToDelete := make([]uint64, 0)
+		appsNeedingK8sUpdate := make([]k8s.AppInstance, 0)
+
 		for _, app := range k8sWorkbench.Apps {
-			k8sState := model.K8sAppInstanceState(app.K8sState)
-			appInstance := &model.AppInstance{
-				ID: app.ID,
+			k8sStatus := model.K8sAppInstanceStatus(app.K8sStatus)
 
-				Status:    k8sState.ToAppInstanceStatus(),
-				K8sState:  k8sState, // TODO: THE STATE SHOULD COME FROM DATABASE
-				K8sStatus: model.K8sAppInstanceStatus(app.K8sStatus),
+			switch k8sStatus {
+			case model.K8sAppInstanceStatusComplete:
+				// App completed - update status and set K8sState to Stopped
+				logger.TechLog.Info(ctx, "app instance completed", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
+				appInstancesToUpdate = append(appInstancesToUpdate, &model.AppInstance{
+					ID:         app.ID,
+					Status:     k8sStatus.ToAppInstanceStatus(),
+					K8sStatus:  k8sStatus,
+					K8sMessage: model.K8sAppInstanceMessage(app.K8sMessage),
+					K8sState:   model.K8sAppInstanceStateStopped,
+				})
+				// Queue for K8s spec update
+				updatedApp := app
+				updatedApp.K8sState = string(model.K8sAppInstanceStateStopped)
+				appsNeedingK8sUpdate = append(appsNeedingK8sUpdate, updatedApp)
+
+			case model.K8sAppInstanceStatusStopped:
+				// App stopped - delete from DB
+				logger.TechLog.Info(ctx, "app instance stopped", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
+				appInstancesToDelete = append(appInstancesToDelete, app.ID)
+
+			case model.K8sAppInstanceStatusFailed:
+				// App failed - update status but keep K8sState as Running
+				logger.TechLog.Warn(ctx, "app instance failed, keeping desired state Running", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
+				appInstancesToUpdate = append(appInstancesToUpdate, &model.AppInstance{
+					ID:         app.ID,
+					Status:     k8sStatus.ToAppInstanceStatus(),
+					K8sStatus:  k8sStatus,
+					K8sMessage: model.K8sAppInstanceMessage(app.K8sMessage),
+					K8sState:   model.K8sAppInstanceStateRunning,
+				})
+
+			default:
+				// Other statuses (Running, Progressing, Unknown) - update status, keep K8sState as Running
+				appInstancesToUpdate = append(appInstancesToUpdate, &model.AppInstance{
+					ID:         app.ID,
+					Status:     k8sStatus.ToAppInstanceStatus(),
+					K8sStatus:  k8sStatus,
+					K8sMessage: model.K8sAppInstanceMessage(app.K8sMessage),
+					K8sState:   model.K8sAppInstanceStateRunning,
+				})
 			}
-
-			appInstancesToUpdate = append(appInstancesToUpdate, appInstance)
-			if appInstance.K8sStatus == model.K8sAppInstanceStatusComplete {
-				appInstanceIDsToDelete = append(appInstanceIDsToDelete, appInstance.ID)
-			}
 		}
 
-		logger.TechLog.Debug(context.Background(), "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
-		_, err = s.store.UpdateWorkbench(context.Background(), k8sWorkbench.TenantID, workbench)
-		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
-			return err
-		}
-
-		logger.TechLog.Debug(context.Background(), "updating app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstances", appInstancesToUpdate))
-
-		err = s.store.UpdateAppInstances(context.Background(), k8sWorkbench.TenantID, appInstancesToUpdate)
-		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
-			return err
-		}
-
-		if len(appInstanceIDsToDelete) != 0 {
-			err = s.store.DeleteAppInstances(context.Background(), k8sWorkbench.TenantID, appInstanceIDsToDelete)
+		// Update K8s spec for apps that need state changes
+		for _, clientApp := range appsNeedingK8sUpdate {
+			err = s.client.UpdateAppInstance(k8sWorkbench.Namespace, k8sWorkbench.Name, clientApp)
 			if err != nil {
-				logger.TechLog.Error(context.Background(), "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("apps", k8sWorkbench.Apps), zap.Error(err))
+				logger.TechLog.Error(ctx, "unable to update app instance in K8s", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Uint64("appInstanceID", clientApp.ID), zap.Error(err))
+				return err
+			}
+		}
+
+		// Update app instances in store
+		if len(appInstancesToUpdate) > 0 {
+			err = s.store.UpdateAppInstances(ctx, k8sWorkbench.TenantID, appInstancesToUpdate)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to update app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstanceIDs", appInstancesToUpdate), zap.Error(err))
+				return err
+			}
+		}
+
+		// Delete stopped app instances from store
+		if len(appInstancesToDelete) > 0 {
+			err = s.store.DeleteAppInstances(ctx, k8sWorkbench.TenantID, appInstancesToDelete)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstanceIDs", appInstancesToDelete), zap.Error(err))
 				return err
 			}
 		}
@@ -308,33 +369,15 @@ func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, wo
 func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.Workbench) error {
 	switch workbench.Status {
 	case model.WorkbenchActive:
-
 		apps, err := s.store.ListWorkbenchAppInstances(ctx, workbench.ID)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to list app instances", zap.Error(err), zap.Uint64("workbenchID", workbench.ID))
 			return err
 		}
+
 		clientApps := []k8s.AppInstance{}
 		for _, app := range apps {
-			clientApps = append(clientApps, k8s.AppInstance{
-				ID:      app.ID,
-				AppName: utils.ToString(app.AppName),
-
-				AppRegistry: utils.ToString(app.AppDockerImageRegistry),
-				AppImage:    utils.ToString(app.AppDockerImageName),
-				AppTag:      utils.ToString(app.AppDockerImageTag),
-
-				// K8sState: string(app.K8sState), // TODO: ADD THIS FIELD AND USE IT IN K8S CLIENT
-
-				ShmSize:             utils.ToString(app.AppShmSize),
-				KioskConfigURL:      utils.ToString(app.AppKioskConfigURL),
-				MaxCPU:              utils.ToString(app.AppMaxCPU),
-				MinCPU:              utils.ToString(app.AppMinCPU),
-				MaxMemory:           utils.ToString(app.AppMaxMemory),
-				MinMemory:           utils.ToString(app.AppMinMemory),
-				MaxEphemeralStorage: utils.ToString(app.AppMaxEphemeralStorage),
-				MinEphemeralStorage: utils.ToString(app.AppMinEphemeralStorage),
-			})
+			clientApps = append(clientApps, app.ToK8sAppInstance())
 		}
 
 		user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: workbench.TenantID, ID: workbench.UserID})
@@ -565,10 +608,60 @@ type retryRT struct {
 func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	var lastErr error
 	for i := 0; i < r.cfg.Services.WorkbenchService.RoundTripper.MaxTransientRetry; i++ {
+		var scheme string
+		if req.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+		proto := req.Proto
+		method := req.Method
+		remoteAddr := req.RemoteAddr
+		userAgent := req.UserAgent()
+		uri := strings.Join([]string{scheme, "://", req.Host, req.RequestURI}, "")
+
+		ctx := req.Context()
+
+		logger.TechLog.Debug(ctx, "request started",
+			zap.String("http-scheme", scheme),
+			zap.String("http-proto", proto),
+			zap.String("http-method", method),
+			zap.String("remote-addr", remoteAddr),
+			zap.String("user-agent", userAgent),
+			zap.String("uri", uri),
+			zap.Int("attempt", i+1),
+		)
+
+		t1 := time.Now()
+
 		resp, err := r.rt.RoundTrip(req)
 		if err == nil {
+			logger.TechLog.Debug(ctx, "request completed",
+				zap.String("http-scheme", scheme),
+				zap.String("http-proto", proto),
+				zap.String("http-method", method),
+				zap.String("remote-addr", remoteAddr),
+				zap.String("user-agent", userAgent),
+				zap.String("uri", uri),
+				zap.Int("attempt", i+1),
+				zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(t1).Nanoseconds())/1000000.0),
+			)
+
 			return resp, nil
 		}
+
+		logger.TechLog.Debug(ctx, "request completed",
+			zap.String("http-scheme", scheme),
+			zap.String("http-proto", proto),
+			zap.String("http-method", method),
+			zap.String("remote-addr", remoteAddr),
+			zap.String("user-agent", userAgent),
+			zap.String("uri", uri),
+			zap.Int("attempt", i+1),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(t1).Nanoseconds())/1000000.0),
+		)
+
 		// retry on common transient network errors
 		if ne, ok := err.(net.Error); ok && ne.Temporary() {
 			lastErr = err
@@ -576,7 +669,7 @@ func (r retryRT) RoundTrip(req *http.Request) (*http.Response, error) {
 			continue
 		}
 		msg := strings.ToLower(err.Error())
-		if strings.Contains(msg, "connection reset by peer") || strings.Contains(msg, "broken pipe") || strings.Contains(msg, "unexpected eof") || strings.Contains(msg, "read: connection timed out") {
+		if strings.Contains(msg, "connection reset by peer") || strings.Contains(msg, "broken pipe") || strings.Contains(msg, "unexpected eof") || strings.Contains(msg, "read: connection timed out") || strings.Contains(msg, "connect: operation not permitted") {
 			lastErr = err
 			logger.TechLog.Warn(context.Background(), "transient network error, retrying", zap.Error(err), zap.Int("attempt", i+1))
 			continue
@@ -611,8 +704,18 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 	s.proxyRWMutex.RUnlock()
 
+	logger.TechLog.Debug(context.Background(), "proxy cache miss, acquiring write lock", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+
+	lockStart := time.Now()
 	s.proxyRWMutex.Lock()
 	defer s.proxyRWMutex.Unlock()
+
+	logger.TechLog.Debug(context.Background(), "write lock acquired", zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
+
+	if p, exists := s.proxyCache[proxyID]; exists {
+		logger.TechLog.Debug(context.Background(), "proxy created by another goroutine while waiting for lock", zap.String("workbench", proxyID.workbench), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
+		return p, nil
+	}
 
 	var xpraUrl string
 	var port uint16
@@ -635,15 +738,16 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
-	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/[0-9]+/stream`)
-
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
+	reverseProxy.FlushInterval = -1
 	tr := s.getRoundtripper()
 	reverseProxy.Transport = retryRT{rt: tr, cfg: s.cfg}
 	reverseProxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, e error) {
-		logger.TechLog.Error(context.Background(), "proxy error", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		logger.TechLog.Error(context.Background(), "proxy error, evicting proxy", zap.Error(e), zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace))
+		lockStart := time.Now()
 		s.proxyRWMutex.Lock()
 		delete(s.proxyCache, proxyID)
+		logger.TechLog.Info(context.Background(), "proxy evicted and port-forward closed", zap.String("workbench", proxyID.workbench), zap.Int("remainingProxies", len(s.proxyCache)), zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(lockStart).Nanoseconds())/1000000.0))
 		s.proxyRWMutex.Unlock()
 		http.Error(rw, "Proxy Error: "+e.Error(), http.StatusBadGateway)
 	}
@@ -653,7 +757,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	reverseProxy.Director = func(req *http.Request) {
 		originalDirector(req)
 
-		req.URL.Path = reg.ReplaceAllString(req.URL.Path, "")
+		req.URL.Path = streamPathRegex.ReplaceAllString(req.URL.Path, "")
 	}
 
 	reverseProxy.ModifyResponse = func(resp *http.Response) error {
@@ -668,6 +772,10 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	}
 
 	s.proxyCache[proxyID] = proxy
+
+	logger.TechLog.Info(context.Background(), "new proxy created",
+		zap.String("workbench", proxyID.workbench), zap.String("namespace", proxyID.namespace),
+		zap.Uint16("forwardPort", port), zap.Int("cacheSize", len(s.proxyCache)))
 
 	return proxy, nil
 }

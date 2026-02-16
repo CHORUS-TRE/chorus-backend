@@ -79,20 +79,18 @@ func (c *client) appInstanceToK8sWorkbenchApp(app AppInstance) WorkbenchApp {
 		Name: fmt.Sprintf("%s-%v", app.SanitizedAppName(), app.ID),
 	}
 
-	if app.AppTag != "" {
-		w.Version = app.AppTag
+	if app.K8sState != "" {
+		w.State = WorkbenchAppState(app.K8sState)
 	}
 
-	// TODO: ADD STATE FIELD IN APP
-
 	if app.AppRegistry == "" {
-		w.Image = &Image{
+		w.Image = Image{
 			Registry:   c.cfg.Clients.K8sClient.DefaultRegistry,
 			Repository: c.cfg.Clients.K8sClient.DefaultRepository + "/" + app.AppImage,
 			Tag:        app.AppTag,
 		}
 	} else {
-		w.Image = &Image{
+		w.Image = Image{
 			Registry:   app.AppRegistry,
 			Repository: app.AppImage,
 		}
@@ -187,11 +185,15 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 	for k, app := range wb.Status.Apps {
 		appInstance, exists := appsMap[k]
 		if !exists {
-			logger.TechLog.Warn(context.Background(), "workbench app in status not found in spec apps", zap.String("appUid", k), zap.String("workbenchName", wb.Name))
+			logger.TechLog.Warn(context.Background(), "workbench app found in status but not found in spec apps",
+				zap.String("appUid", k),
+				zap.String("workbenchName", wb.Name),
+				zap.String("statusValue", string(app.Status)))
 			continue
 		}
 
 		appInstance.K8sStatus = string(app.Status)
+		appInstance.K8sMessage = string(app.Message)
 	}
 
 	for _, app := range appsMap {
@@ -205,16 +207,21 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		return Workbench{}, fmt.Errorf("error parsing tenant ID: %w", err)
 	}
 
-	// Get server pod status
+	// Get server pod info
 	var serverPodStatus string
+	var serverPodMessage string
 	if wb.Status.ServerDeployment.ServerPod != nil {
 		serverPodStatus = string(wb.Status.ServerDeployment.ServerPod.Status)
+		serverPodMessage = string(wb.Status.ServerDeployment.ServerPod.Message)
 	} else {
 		serverPodStatus = string(WorkbenchServerContainerStatusUnknown)
+		serverPodMessage = ""
 	}
 
 	// Construct Workbench
 	workbench := Workbench{
+		CurrentGeneration:       wb.ObjectMeta.Generation,
+		ObservedGeneration:      wb.Status.ObservedGeneration,
 		Namespace:               wb.Namespace,
 		TenantID:                tenantID,
 		Name:                    wb.Name,
@@ -224,6 +231,7 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
 		Status:                  string(wb.Status.ServerDeployment.Status),
 		ServerPodStatus:         serverPodStatus,
+		ServerPodMessage:        serverPodMessage,
 		Apps:                    apps,
 	}
 
@@ -245,7 +253,7 @@ func (c *client) k8sWorkbenchAppToAppInstance(w WorkbenchApp) (AppInstance, erro
 		AppName: w.Name,
 	}
 
-	if w.Image != nil {
+	if w.Image.Registry != "" && w.Image.Repository != "" && w.Image.Tag != "" {
 		app.AppRegistry = w.Image.Registry
 		app.AppImage = w.Image.Repository
 		app.AppTag = w.Image.Tag

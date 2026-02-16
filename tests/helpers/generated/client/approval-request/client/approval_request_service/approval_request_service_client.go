@@ -62,6 +62,8 @@ type ClientService interface {
 
 	ApprovalRequestServiceDeleteApprovalRequest(params *ApprovalRequestServiceDeleteApprovalRequestParams, opts ...ClientOption) (*ApprovalRequestServiceDeleteApprovalRequestOK, error)
 
+	ApprovalRequestServiceDownloadApprovalRequestFile(params *ApprovalRequestServiceDownloadApprovalRequestFileParams, opts ...ClientOption) (*ApprovalRequestServiceDownloadApprovalRequestFileOK, error)
+
 	ApprovalRequestServiceGetApprovalRequest(params *ApprovalRequestServiceGetApprovalRequestParams, opts ...ClientOption) (*ApprovalRequestServiceGetApprovalRequestOK, error)
 
 	ApprovalRequestServiceListApprovalRequests(params *ApprovalRequestServiceListApprovalRequestsParams, opts ...ClientOption) (*ApprovalRequestServiceListApprovalRequestsOK, error)
@@ -222,6 +224,45 @@ func (a *Client) ApprovalRequestServiceDeleteApprovalRequest(params *ApprovalReq
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ApprovalRequestServiceDeleteApprovalRequestDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+ApprovalRequestServiceDownloadApprovalRequestFile downloads a file from an approved data extraction request
+
+This endpoint downloads a file from an approved data extraction request. Only the creator of the request can download files.
+*/
+func (a *Client) ApprovalRequestServiceDownloadApprovalRequestFile(params *ApprovalRequestServiceDownloadApprovalRequestFileParams, opts ...ClientOption) (*ApprovalRequestServiceDownloadApprovalRequestFileOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewApprovalRequestServiceDownloadApprovalRequestFileParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "ApprovalRequestService_DownloadApprovalRequestFile",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/approval-requests/{id}/files/{path}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ApprovalRequestServiceDownloadApprovalRequestFileReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ApprovalRequestServiceDownloadApprovalRequestFileOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ApprovalRequestServiceDownloadApprovalRequestFileDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

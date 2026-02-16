@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	choruserrors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
@@ -28,6 +27,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/model"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	userService "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
@@ -59,7 +59,7 @@ type AuthenticationStore interface {
 
 // AuthenticationService is the authentication service handler.
 type AuthenticationService struct {
-	cfg                 config.Config
+	modes               map[string]config.Mode
 	userer              Userer
 	signingKey          string        // signingKey is the secret key with which JWT-tokens are signed.
 	jwtExpirationTime   time.Duration // jwtExpirationTime is the number of minutes until a JWT-token expires.
@@ -106,10 +106,18 @@ func (e *Err2FARequired) Error() string {
 // NewAuthenticationService returns a fresh authentication service instance.
 func NewAuthenticationService(cfg config.Config, userer Userer, store AuthenticationStore, daemonEncryptionKey *crypto.Secret) (*AuthenticationService, error) {
 	oauthConfigs := make(map[string]*oauth2.Config)
+	modes := make(map[string]config.Mode)
 
 	// Initialize the OAuth2 configs for each OpenID mode
 	hasMainSource := false
-	for _, mode := range cfg.Services.AuthenticationService.Modes {
+	for modeName, mode := range cfg.Services.AuthenticationService.Modes {
+		if !mode.Enabled {
+			logger.TechLog.Info(context.Background(), "skipping disabled authentication mode", zap.String("name", modeName), zap.String("type", mode.Type))
+			continue
+		}
+
+		modes[modeName] = mode
+
 		if mode.MainSource {
 			if hasMainSource {
 				return nil, fmt.Errorf("only one authentication mode can be marked as main source")
@@ -143,7 +151,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 	}
 
 	return &AuthenticationService{
-		cfg:                 cfg,
+		modes:               modes,
 		userer:              userer,
 		signingKey:          cfg.Daemon.JWT.Secret.PlainText(),
 		jwtExpirationTime:   cfg.Daemon.JWT.ExpirationTime,
@@ -156,7 +164,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 
 func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationMode {
 	res := []model.AuthenticationMode{}
-	for _, mode := range a.cfg.Services.AuthenticationService.Modes {
+	for _, mode := range a.modes {
 		if mode.Type == "internal" {
 			res = append(res, model.AuthenticationMode{
 				Type: mode.Type,
@@ -471,7 +479,7 @@ func (a *AuthenticationService) GetShortLivedTokenForClient(ctx context.Context,
 }
 
 func (a *AuthenticationService) getAuthMode(id string) (*config.Mode, error) {
-	for _, m := range a.cfg.Services.AuthenticationService.Modes {
+	for _, m := range a.modes {
 		if m.Type == "internal" && id == "internal" {
 			return &m, nil
 		}

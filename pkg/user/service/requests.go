@@ -55,8 +55,9 @@ type UserFilter struct {
 }
 
 type GetUserReq struct {
-	TenantID uint64
-	ID       uint64
+	TenantID  uint64
+	ID        uint64
+	SkipCache bool
 }
 
 type UpdateUserPasswordReq struct {

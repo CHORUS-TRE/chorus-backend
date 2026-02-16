@@ -6,10 +6,10 @@ import (
 	"math/rand/v2"
 	"time"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -188,10 +188,21 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		return nil, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
 	}
 
-	r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
-	err = s.userer.CreateUserRoles(ctx, workspace.TenantID, workspace.UserID, []user_model.UserRole{{Role: r}})
-	if err != nil {
-		return nil, fmt.Errorf("unable to assign workspace admin role to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
+	var rolesToAssign []user_model.UserRole
+	if s.cfg.Services.WorkspaceService.CreatorIsAdmin {
+		r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
+		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
+	}
+	if s.cfg.Services.WorkspaceService.CreatorIsDataManager {
+		r := authorization_model.NewRole(authorization_model.RoleWorkspaceDataManager, authorization_model.WithWorkspace(newWorkspace.ID))
+		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
+	}
+
+	if len(rolesToAssign) > 0 {
+		err = s.userer.CreateUserRoles(ctx, workspace.TenantID, workspace.UserID, rolesToAssign)
+		if err != nil {
+			return nil, fmt.Errorf("unable to assign workspace roles to user %v for workspace %v: %w", workspace.UserID, newWorkspace.ID, err)
+		}
 	}
 
 	err = s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))

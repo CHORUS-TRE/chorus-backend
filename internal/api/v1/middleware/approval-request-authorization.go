@@ -3,20 +3,31 @@ package middleware
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	approval_request_model "github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.ApprovalRequestServiceServer = (*approvalRequestControllerAuthorization)(nil)
 
-type approvalRequestControllerAuthorization struct {
-	Authorization
-	next chorus.ApprovalRequestServiceServer
+type ApprovalRequestResolver interface {
+	GetApprovalRequest(ctx context.Context, tenantID uint64, requestID uint64) (*approval_request_model.ApprovalRequest, error)
 }
 
-func ApprovalRequestAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.ApprovalRequestServiceServer) chorus.ApprovalRequestServiceServer {
+type approvalRequestControllerAuthorization struct {
+	Authorization
+	resolver ApprovalRequestResolver
+	next     chorus.ApprovalRequestServiceServer
+}
+
+func ApprovalRequestAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher, resolver ApprovalRequestResolver) func(chorus.ApprovalRequestServiceServer) chorus.ApprovalRequestServiceServer {
 	return func(next chorus.ApprovalRequestServiceServer) chorus.ApprovalRequestServiceServer {
 		return &approvalRequestControllerAuthorization{
 			Authorization: Authorization{
@@ -25,7 +36,8 @@ func ApprovalRequestAuthorizing(logger *logger.ContextLogger, authorizer authori
 				cfg:        cfg,
 				refresher:  refresher,
 			},
-			next: next,
+			resolver: resolver,
+			next:     next,
 		}
 	}
 }
@@ -72,9 +84,37 @@ func (c approvalRequestControllerAuthorization) CreateDataTransferRequest(ctx co
 }
 
 func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx context.Context, req *chorus.ApproveApprovalRequestRequest) (*chorus.ApproveApprovalRequestReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionApproveRequest, authorization.WithRequest(req.Id))
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+	}
+
+	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "approval request not found")
+	}
+
+	switch approvalRequest.Type {
+	case approval_request_model.ApprovalRequestTypeDataExtraction:
+		workspaceID := approvalRequest.GetSourceWorkspaceID()
+		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+		if err != nil {
+			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		}
+	case approval_request_model.ApprovalRequestTypeDataTransfer:
+		workspaceID := approvalRequest.GetSourceWorkspaceID()
+		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+		if err != nil {
+			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		}
+
+		targetWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
+		err = c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(targetWorkspaceID))
+		if err != nil {
+			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		}
+	default:
+		return nil, status.Error(codes.Internal, "unable to determine source workspace for approval request")
 	}
 
 	return c.next.ApproveApprovalRequest(ctx, req)
@@ -87,4 +127,43 @@ func (c approvalRequestControllerAuthorization) DeleteApprovalRequest(ctx contex
 	}
 
 	return c.next.DeleteApprovalRequest(ctx, req)
+}
+
+func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx context.Context, req *chorus.DownloadApprovalRequestFileRequest) (*chorus.DownloadApprovalRequestFileReply, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+	}
+
+	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "approval request not found")
+	}
+
+	if approvalRequest.Type != approval_request_model.ApprovalRequestTypeDataExtraction {
+		return nil, status.Error(codes.PermissionDenied, "only data extraction requests have downloadable files")
+	}
+
+	workspaceID := approvalRequest.GetSourceWorkspaceID()
+	err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+	isPotentialApprover := err == nil
+
+	if !isPotentialApprover && approvalRequest.RequesterID != userID {
+		return nil, status.Error(codes.PermissionDenied, "user does not have permission to download files for this request")
+	}
+
+	// potential approvers should be able to download files even if the request is not yet approved, so that they can
+	// review the files before approving. However, non-approvers should not be able to download files for unapproved requests.
+	if approvalRequest.Status != approval_request_model.ApprovalRequestStatusApproved {
+		if !isPotentialApprover {
+			return nil, status.Error(codes.PermissionDenied, "request is not approved")
+		}
+	}
+
+	return c.next.DownloadApprovalRequestFile(ctx, req)
 }

@@ -19,6 +19,9 @@ import (
 // swagger:model chorusApprovalRequest
 type ChorusApprovalRequest struct {
 
+	// approval message
+	ApprovalMessage string `json:"approvalMessage,omitempty"`
+
 	// approved at
 	// Format: date-time
 	ApprovedAt strfmt.DateTime `json:"approvedAt,omitempty"`
@@ -28,6 +31,9 @@ type ChorusApprovalRequest struct {
 
 	// approver ids
 	ApproverIds []string `json:"approverIds"`
+
+	// auto approved
+	AutoApproved bool `json:"autoApproved,omitempty"`
 
 	// created at
 	// Format: date-time

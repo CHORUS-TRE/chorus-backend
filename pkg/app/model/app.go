@@ -32,6 +32,7 @@ type App struct {
 	KioskConfigJWTURL          string
 	KioskConfigJWTOIDCClientID string
 	IconURL                    string
+	IconBackgroundColor        string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

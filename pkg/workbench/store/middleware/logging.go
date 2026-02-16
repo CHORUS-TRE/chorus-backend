@@ -230,12 +230,12 @@ func (c workbenchStorageLogging) CreateWorkbench(ctx context.Context, tenantID u
 	return newWorkbench, nil
 }
 
-func (c workbenchStorageLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (c workbenchStorageLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workbenchIDsIn *[]uint64) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	c.logger.Debug(ctx, "request started")
 
 	now := time.Now()
 
-	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination)
+	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination, workbenchIDsIn)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

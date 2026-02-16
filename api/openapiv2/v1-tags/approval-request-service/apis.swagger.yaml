@@ -210,6 +210,33 @@ paths:
             $ref: '#/definitions/ApprovalRequestServiceApproveApprovalRequestBody'
       tags:
         - ApprovalRequestService
+  /api/rest/v1/approval-requests/{id}/files/{path}:
+    get:
+      summary: Download a file from an approved data extraction request
+      description: This endpoint downloads a file from an approved data extraction request. Only the creator of the request can download files.
+      operationId: ApprovalRequestService_DownloadApprovalRequestFile
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDownloadApprovalRequestFileReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: path
+          in: path
+          required: true
+          type: string
+          pattern: .+
+      tags:
+        - ApprovalRequestService
 definitions:
   ApprovalRequestServiceApproveApprovalRequestBody:
     type: object
@@ -259,6 +286,10 @@ definitions:
       approvedAt:
         type: string
         format: date-time
+      autoApproved:
+        type: boolean
+      approvalMessage:
+        type: string
   chorusApprovalRequestFile:
     type: object
     properties:
@@ -330,11 +361,6 @@ definitions:
         type: array
         items:
           type: string
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
   chorusCreateDataExtractionRequestResult:
     type: object
     properties:
@@ -362,11 +388,6 @@ definitions:
         type: array
         items:
           type: string
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
   chorusCreateDataTransferRequestResult:
     type: object
     properties:
@@ -404,6 +425,19 @@ definitions:
         $ref: '#/definitions/chorusDeleteApprovalRequestResult'
   chorusDeleteApprovalRequestResult:
     type: object
+  chorusDownloadApprovalRequestFileReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDownloadApprovalRequestFileResult'
+  chorusDownloadApprovalRequestFileResult:
+    type: object
+    properties:
+      file:
+        $ref: '#/definitions/chorusApprovalRequestFile'
+      content:
+        type: string
+        format: byte
   chorusGetApprovalRequestReply:
     type: object
     properties:

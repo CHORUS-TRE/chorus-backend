@@ -27,17 +27,19 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 	}
 
 	protoRequest := &chorus.ApprovalRequest{
-		Id:          request.ID,
-		TenantId:    request.TenantID,
-		RequesterId: request.RequesterID,
-		Type:        ApprovalRequestTypeFromBusiness(request.Type),
-		Status:      ApprovalRequestStatusFromBusiness(request.Status),
-		Title:       request.Title,
-		Description: request.Description,
-		ApproverIds: request.ApproverIDs,
-		CreatedAt:   ca,
-		UpdatedAt:   ua,
-		ApprovedAt:  aa,
+		Id:              request.ID,
+		TenantId:        request.TenantID,
+		RequesterId:     request.RequesterID,
+		Type:            ApprovalRequestTypeFromBusiness(request.Type),
+		Status:          ApprovalRequestStatusFromBusiness(request.Status),
+		Title:           request.Title,
+		Description:     request.Description,
+		ApproverIds:     request.ApproverIDs,
+		CreatedAt:       ca,
+		UpdatedAt:       ua,
+		ApprovedAt:      aa,
+		AutoApproved:    request.AutoApproved,
+		ApprovalMessage: request.ApprovalMessage,
 	}
 
 	if request.ApprovedByID != nil {
@@ -69,13 +71,20 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 func FilesFromBusiness(files []model.ApprovalRequestFile) []*chorus.ApprovalRequestFile {
 	var result []*chorus.ApprovalRequestFile
 	for _, f := range files {
-		result = append(result, &chorus.ApprovalRequestFile{
-			SourcePath:      f.SourcePath,
-			DestinationPath: f.DestinationPath,
-			Size:            f.Size,
-		})
+		result = append(result, FileFromBusiness(&f))
 	}
 	return result
+}
+
+func FileFromBusiness(f *model.ApprovalRequestFile) *chorus.ApprovalRequestFile {
+	if f == nil {
+		return nil
+	}
+	return &chorus.ApprovalRequestFile{
+		SourcePath:      f.SourcePath,
+		DestinationPath: f.DestinationPath,
+		Size:            f.Size,
+	}
 }
 
 func FilesToBusiness(files []*chorus.ApprovalRequestFile) []model.ApprovalRequestFile {

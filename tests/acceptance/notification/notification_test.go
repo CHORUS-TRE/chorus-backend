@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers"
 	notification "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/client/notification_service"
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/models"

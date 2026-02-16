@@ -6,10 +6,10 @@ import (
 	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.WorkbenchServiceServer = (*workbenchControllerAuthorization)(nil)
@@ -19,7 +19,7 @@ type workbenchControllerAuthorization struct {
 	next chorus.WorkbenchServiceServer
 }
 
-func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
+func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
 	return func(next chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
 		return &workbenchControllerAuthorization{
 			Authorization: Authorization{
@@ -51,24 +51,12 @@ func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, r
 			return &chorus.ListWorkbenchesReply{Result: &chorus.ListWorkbenchesResult{Workbenches: []*chorus.Workbench{}}}, nil
 		}
 
-		fmt.Println("attrs:", attrs)
-		claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
-		if ok {
-			aRoles, err := claimRolesToAuthRoles(claims)
-			var permission []authorization.Permission
-			if err == nil {
-				permission, _ = c.authorizer.GetUserPermissions(aRoles)
-				fmt.Println("permissions:", permission)
-			}
-		}
-
 		for _, attr := range attrs {
 			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
 				if workspaceIDStr == "" {
 					continue
 				}
 				if workspaceIDStr == "*" {
-					fmt.Println("wildcard found, returning all workbenches")
 					req.Filter = nil
 					return c.next.ListWorkbenches(ctx, req)
 				}
@@ -79,7 +67,6 @@ func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, r
 				if err != nil {
 					return nil, err
 				}
-				fmt.Println("adding workspace ID to filter:", workspaceID)
 				req.Filter.WorkspaceIdsIn = append(req.Filter.WorkspaceIdsIn, workspaceID)
 			}
 		}
