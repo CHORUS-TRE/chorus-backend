@@ -92,28 +92,6 @@ paths:
           format: date-time
       tags:
         - AuditService
-  /v1/rest/v1/audit/{id}:
-    get:
-      summary: Get an audit entry
-      description: This endpoint returns a single audit entry
-      operationId: AuditService_GetAuditEntry
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusGetAuditEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-      tags:
-        - AuditService
 definitions:
   chorusAuditEntry:
     type: object
@@ -165,16 +143,6 @@ definitions:
       toTime:
         type: string
         format: date-time
-  chorusGetAuditEntryReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusGetAuditEntryResult'
-  chorusGetAuditEntryResult:
-    type: object
-    properties:
-      entry:
-        $ref: '#/definitions/chorusAuditEntry'
   chorusListAuditEntriesReply:
     type: object
     properties:

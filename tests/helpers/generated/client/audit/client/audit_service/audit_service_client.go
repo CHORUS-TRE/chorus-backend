@@ -54,50 +54,9 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	AuditServiceGetAuditEntry(params *AuditServiceGetAuditEntryParams, opts ...ClientOption) (*AuditServiceGetAuditEntryOK, error)
-
 	AuditServiceListAuditEntries(params *AuditServiceListAuditEntriesParams, opts ...ClientOption) (*AuditServiceListAuditEntriesOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
-}
-
-/*
-AuditServiceGetAuditEntry gets an audit entry
-
-This endpoint returns a single audit entry
-*/
-func (a *Client) AuditServiceGetAuditEntry(params *AuditServiceGetAuditEntryParams, opts ...ClientOption) (*AuditServiceGetAuditEntryOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewAuditServiceGetAuditEntryParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "AuditService_GetAuditEntry",
-		Method:             "GET",
-		PathPattern:        "/v1/rest/v1/audit/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &AuditServiceGetAuditEntryReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*AuditServiceGetAuditEntryOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceGetAuditEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*

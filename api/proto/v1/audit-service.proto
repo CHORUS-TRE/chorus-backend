@@ -36,17 +36,6 @@ message ListAuditEntriesResult {
     repeated AuditEntry entries = 1;
 }
 
-// GetAuditEntry retrieves a single audit entry by its ID
-message GetAuditEntryRequest {
-    uint64 id = 1;
-}
-message GetAuditEntryReply {
-    GetAuditEntryResult result = 1;
-}
-message GetAuditEntryResult {
-    AuditEntry entry = 1;
-}
-
 service AuditService {
     rpc ListAuditEntries(ListAuditEntriesRequest) returns (ListAuditEntriesReply) {
         option (google.api.http) = {
@@ -55,16 +44,6 @@ service AuditService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List audit entries";
             description: "This endpoint returns a list of audit entries";
-            tags: "AuditService";
-        };
-    }
-    rpc GetAuditEntry(GetAuditEntryRequest) returns (GetAuditEntryReply) {
-        option (google.api.http) = {
-            get: "/v1/rest/v1/audit/{id}"
-        };
-        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "Get an audit entry";
-            description: "This endpoint returns a single audit entry";
             tags: "AuditService";
         };
     }
