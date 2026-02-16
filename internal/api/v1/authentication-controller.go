@@ -12,11 +12,12 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.AuthenticationServiceServer = (*AuthenticationController)(nil)
@@ -29,7 +30,7 @@ type AuthenticationController struct {
 }
 
 // NewAuthenticationController returns a fresh authentication service controller instance.
-func NewAuthenticationController(authenticator service.Authenticator, authorizer authorization.Authorizer, cfg config.Config) AuthenticationController {
+func NewAuthenticationController(authenticator service.Authenticator, authorizer authorization_service.Authorizer, cfg config.Config) AuthenticationController {
 	return AuthenticationController{
 		authenticator:             authenticator,
 		refreshTokenAuthorization: middleware.NewAuthorization(logger.SecLog, cfg, authorizer, authenticator),

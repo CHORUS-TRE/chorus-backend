@@ -30,6 +30,11 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+const (
+	PREPULL_NAMESPACE       = "backend"
+	PREPULL_JOB_TTL_SECONDS = 60
+)
+
 var _ = K8sClienter(&client{})
 
 type K8sClienter interface {
@@ -44,6 +49,7 @@ type K8sClienter interface {
 
 	// AppInstance operations
 	CreateAppInstance(namespace, workbenchName string, app AppInstance) error
+	UpdateAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 	DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error
 
 	// Utility operations
@@ -264,6 +270,37 @@ func (c *client) CreateAppInstance(namespace, workbenchName string, appInstance 
 	return nil
 }
 
+func (c *client) UpdateAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
+	app := c.appInstanceToK8sWorkbenchApp(appInstance)
+
+	gvr, err := c.getGroupVersionFromKind("Workbench")
+	if err != nil {
+		return fmt.Errorf("failed to get gvr from kind - %s", err)
+	}
+
+	patch := []map[string]interface{}{
+		{
+			"op":    "replace",
+			"path":  "/spec/apps/" + appInstance.UID(),
+			"value": app,
+		},
+	}
+
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return fmt.Errorf("error marshalling patch: %w", err)
+	}
+
+	logger.TechLog.Debug(context.Background(), "update app instance patchBytes", zap.String("patchBytes", string(patchBytes)))
+
+	_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), workbenchName, types.JSONPatchType, patchBytes, v1.PatchOptions{})
+	if err != nil {
+		return fmt.Errorf("error applying patch update appInstance (%s): %w", string(patchBytes), err)
+	}
+
+	return nil
+}
+
 func (c *client) DeleteAppInstance(namespace, workbenchName string, appInstance AppInstance) error {
 
 	gvr, err := c.getGroupVersionFromKind("Workbench")
@@ -356,7 +393,7 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 }
 
 func (c *client) PrePullImageOnAllNodes(image string) {
-	err := c.syncImagePullSecret("default")
+	err := c.syncImagePullSecret(PREPULL_NAMESPACE)
 	if err != nil {
 		logger.TechLog.Error(context.Background(), "failed to sync image pull secret",
 			zap.String("image", image),
@@ -379,19 +416,20 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 		job := &batchv1.Job{
 			ObjectMeta: v1.ObjectMeta{
 				GenerateName: "prepull-",
-				Namespace:    "default",
+				Namespace:    PREPULL_NAMESPACE,
 			},
 			Spec: batchv1.JobSpec{
-				TTLSecondsAfterFinished: ptr.To(int32(60)),
+				TTLSecondsAfterFinished: ptr.To(int32(PREPULL_JOB_TTL_SECONDS)),
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						NodeName:      node.Name,
 						RestartPolicy: corev1.RestartPolicyNever,
 						Containers: []corev1.Container{
 							{
-								Name:    "puller",
-								Image:   image,
-								Command: []string{"bash", "-c", "exit"},
+								Name:            "puller",
+								Image:           image,
+								Command:         []string{"/bin/sh", "-c", "exit 0"},
+								ImagePullPolicy: corev1.PullIfNotPresent,
 							},
 						},
 						ImagePullSecrets: []corev1.LocalObjectReference{
@@ -406,7 +444,7 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 			Status:   batchv1.JobStatus{},
 		}
 
-		_, err := c.k8sClient.BatchV1().Jobs("default").Create(context.Background(), job, v1.CreateOptions{})
+		_, err := c.k8sClient.BatchV1().Jobs(PREPULL_NAMESPACE).Create(context.Background(), job, v1.CreateOptions{})
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "failed to create job for pre-pulling image",
 				zap.String("image", image),

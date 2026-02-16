@@ -26,6 +26,10 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 
 message ListAppInstancesRequest {
     PaginationQuery pagination = 1;
+    optional AppInstanceFilter filter = 2;
+}
+message AppInstanceFilter {
+    repeated uint64 workbench_ids_in = 1;
 }
 message ListAppInstancesReply {
     ListAppInstancesResult result = 1;

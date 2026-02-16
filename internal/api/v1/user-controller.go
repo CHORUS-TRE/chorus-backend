@@ -3,17 +3,18 @@ package v1
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
@@ -43,9 +44,16 @@ func (c UserController) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequ
 		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
 	}
 
+	skipCache := false
+	issuedSince, err := jwt_model.ExtractIssuedSince(ctx)
+	if err == nil && issuedSince < 60*time.Second {
+		skipCache = true
+	}
+
 	user, err := c.user.GetUser(ctx, service.GetUserReq{
-		TenantID: tenantID,
-		ID:       userID,
+		TenantID:  tenantID,
+		ID:        userID,
+		SkipCache: skipCache,
 	})
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetUser': %v", err.Error())

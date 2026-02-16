@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	oidcidp_service "github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service"
 	jwt_go "github.com/golang-jwt/jwt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -20,7 +20,7 @@ import (
 
 // InitServer initializes a HTTP-server and returns an empty request multiplexer
 // for a GRPC gateway and a configuration object.
-func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, authorizer authorization.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory, oidcidpService oidcidp_service.OIDCProviderService) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
+func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, authorizer authorization_service.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory, oidcidpService oidcidp_service.OIDCProviderService) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),

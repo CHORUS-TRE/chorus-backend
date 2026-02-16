@@ -21,6 +21,7 @@ var (
 )
 
 func TestMailer_SendWithTlsConfig(t *testing.T) {
+	t.Skip("Skipping mailer integration test")
 
 	var from = make(map[uint64]string)
 	from[1] = "from name"

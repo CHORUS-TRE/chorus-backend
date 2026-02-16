@@ -118,13 +118,9 @@ func setupTables() {
 	INSERT INTO users (id, tenantid, firstname, lastname, username, password, status)
 	VALUES (97882, 88888, 'jane', 'doe', 'jadoe', '$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42', 'inactive');
 
-	INSERT INTO role_definitions (id, name) VALUES (98881, 'SuperAdmin');
-	INSERT INTO role_definitions (id, name) VALUES (98882, 'Public');
-	INSERT INTO role_definitions (id, name) VALUES (98883, 'Authenticated');
-
-	INSERT INTO user_role (id, userid, roleid) VALUES(99881, 97881, 98881);
-	INSERT INTO user_role (id, userid, roleid) VALUES(99882, 97881, 98882);
-	INSERT INTO user_role (id, userid, roleid) VALUES(99883, 97882, 98883);
+	INSERT INTO user_role (id, userid, roleid) VALUES(99881, 97881, (SELECT id FROM role_definitions WHERE name='SuperAdmin'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(99882, 97881, (SELECT id FROM role_definitions WHERE name='Public'));
+	INSERT INTO user_role (id, userid, roleid) VALUES(99883, 97882, (SELECT id FROM role_definitions WHERE name='Authenticated'));
 	`
 	helpers.Populate(q)
 

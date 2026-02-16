@@ -159,6 +159,7 @@ func registerGRPCServices(server *google_grpc.Server) {
 	chorus.RegisterWorkbenchServiceServer(server, provider.ProvideWorkbenchController())
 	chorus.RegisterDevstoreServiceServer(server, provider.ProvideDevstoreController())
 	chorus.RegisterApprovalRequestServiceServer(server, provider.ProvideApprovalRequestController())
+	chorus.RegisterAuthorizationServiceServer(server, provider.ProvideAuthorizationController())
 
 	// Setup a standard health check service to allow a client to poll the
 	// status.
@@ -204,5 +205,8 @@ func registerHTTPEndpoints(ctx context.Context, mux *runtime.ServeMux, grpcHostP
 	}
 	if err := chorus.RegisterApprovalRequestServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 		logger.TechLog.Fatal(ctx, "failed to register http approval request service handler", logger.WithErrorField(err))
+	}
+	if err := chorus.RegisterAuthorizationServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
+		logger.TechLog.Fatal(ctx, "failed to register http authorization service handler", logger.WithErrorField(err))
 	}
 }

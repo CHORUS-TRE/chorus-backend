@@ -47,6 +47,7 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 		KioskConfigJWTURL:          app.KioskConfigJWTURL,
 		KioskConfigJWTOIDCClientID: app.KioskConfigJWTOIDCClientID,
 		IconURL:                    app.IconURL,
+		IconBackgroundColor:        app.IconBackgroundColor,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
@@ -89,6 +90,7 @@ func AppFromBusiness(app *model.App) (*chorus.App, error) {
 		MaxEphemeralStorage:        app.MaxEphemeralStorage,
 		MinEphemeralStorage:        app.MinEphemeralStorage,
 		IconURL:                    app.IconURL,
+		IconBackgroundColor:        app.IconBackgroundColor,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

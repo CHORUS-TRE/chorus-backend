@@ -13,13 +13,14 @@ type Workbench struct {
 	UserID      uint64
 	WorkspaceID uint64
 
-	Name            string
-	ShortName       string
-	Description     string
-	Status          WorkbenchStatus
-	ServerPodStatus WorkbenchServerPodStatus
-	K8sStatus       K8sWorkbenchStatus
-	AccessedAt      time.Time
+	Name             string
+	ShortName        string
+	Description      string
+	Status           WorkbenchStatus
+	ServerPodStatus  WorkbenchServerPodStatus
+	ServerPodMessage WorbenchServerPodMessage
+	K8sStatus        K8sWorkbenchStatus
+	AccessedAt       time.Time
 
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
@@ -56,6 +57,12 @@ const (
 )
 
 func (s WorkbenchStatus) String() string {
+	return string(s)
+}
+
+type WorbenchServerPodMessage string
+
+func (s WorbenchServerPodMessage) String() string {
 	return string(s)
 }
 

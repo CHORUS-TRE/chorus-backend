@@ -6,10 +6,10 @@ import (
 	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,7 +22,7 @@ type workspaceControllerAuthorization struct {
 	next chorus.WorkspaceServiceServer
 }
 
-func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
+func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 	return func(next chorus.WorkspaceServiceServer) chorus.WorkspaceServiceServer {
 		return &workspaceControllerAuthorization{
 			Authorization: Authorization{
@@ -52,15 +52,8 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 		}
 
-		fmt.Println("attrs:", attrs)
-		claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
-		if ok {
-			aRoles, err := claimRolesToAuthRoles(claims)
-			var permission []authorization.Permission
-			if err == nil {
-				permission, _ = c.authorizer.GetUserPermissions(aRoles)
-				fmt.Println("permissions:", permission)
-			}
+		if len(attrs) == 0 {
+			return &chorus.ListWorkspacesReply{Result: &chorus.ListWorkspacesResult{Workspaces: []*chorus.Workspace{}}}, nil
 		}
 
 		for _, attr := range attrs {
@@ -69,7 +62,6 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 					continue
 				}
 				if workspaceIDStr == "*" {
-					fmt.Println("wildcard found, returning all workspaces")
 					req.Filter = nil
 					return c.next.ListWorkspaces(ctx, req)
 				}
@@ -81,7 +73,6 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 					logger.TechLog.Error(ctx, fmt.Sprintf("unable to parse workspace ID from context: %v", err.Error()))
 					return nil, status.Error(codes.Internal, fmt.Sprintf("unable to parse workspace ID from context: %v", err.Error()))
 				}
-				fmt.Println("adding workspace ID to filter:", workspaceID)
 				req.Filter.WorkspaceIdsIn = append(req.Filter.WorkspaceIdsIn, workspaceID)
 			}
 		}
@@ -145,12 +136,19 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 	}
 
 	if !authorization.RoleIn(roleName, authorization.GetWorkspaceRoles()) {
-		return nil, fmt.Errorf("user is not authorized to manage role %q in workspace", roleName)
+		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
-	if err != nil {
-		return nil, err
+	if roleName == authorization.RoleWorkspaceDataManager {
+		err = c.IsAuthorized(ctx, authorization.PermissionManageUsersDataRoleInWorkspace, authorization.WithWorkspace(req.Id))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.next.ManageUserRoleInWorkspace(ctx, req)

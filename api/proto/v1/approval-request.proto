@@ -56,4 +56,7 @@ message ApprovalRequest {
     google.protobuf.Timestamp createdAt = 12;
     google.protobuf.Timestamp updatedAt = 13;
     optional google.protobuf.Timestamp approvedAt = 14;
+
+    bool autoApproved = 15;
+    string approvalMessage = 16;
 }

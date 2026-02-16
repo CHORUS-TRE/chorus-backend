@@ -145,3 +145,25 @@ func (c approvalRequestServiceLogging) DeleteApprovalRequest(ctx context.Context
 	)
 	return nil
 }
+
+func (c approvalRequestServiceLogging) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {
+	now := time.Now()
+
+	file, content, err := c.next.DownloadApprovalRequestFile(ctx, tenantID, requestID, filePath)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("request_id", requestID),
+			zap.String("file_path", filePath),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, fmt.Errorf("unable to download approval request file: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("request_id", requestID),
+		zap.String("file_path", filePath),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return file, content, nil
+}

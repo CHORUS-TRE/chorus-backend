@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -23,13 +24,13 @@ type Refresher interface {
 
 type Authorization struct {
 	logger     *logger.ContextLogger
-	authorizer authorization.Authorizer
+	authorizer authorization_service.Authorizer
 	refresher  Refresher
 	cfg        config.Config
 	// authorizedRoles []string
 }
 
-func NewAuthorization(logger *logger.ContextLogger, cfg config.Config, authorizer authorization.Authorizer, refresher Refresher) Authorization {
+func NewAuthorization(logger *logger.ContextLogger, cfg config.Config, authorizer authorization_service.Authorizer, refresher Refresher) Authorization {
 	return Authorization{
 		logger:     logger,
 		authorizer: authorizer,

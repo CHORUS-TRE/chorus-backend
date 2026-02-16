@@ -17,9 +17,6 @@ import (
 // swagger:model chorusCreateDataExtractionRequestRequest
 type ChorusCreateDataExtractionRequestRequest struct {
 
-	// approver ids
-	ApproverIds []string `json:"approverIds"`
-
 	// description
 	Description string `json:"description,omitempty"`
 

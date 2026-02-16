@@ -62,11 +62,11 @@ func (v validation) CreateWorkbench(ctx context.Context, workbench *model.Workbe
 	return v.next.CreateWorkbench(ctx, workbench)
 }
 
-func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, err
 	}
-	return v.next.ListAppInstances(ctx, tenantID, pagination)
+	return v.next.ListAppInstances(ctx, tenantID, pagination, filter)
 }
 
 func (v validation) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {

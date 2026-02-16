@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/authorization"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/authutil"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"github.com/luikyv/go-oidc/pkg/provider"
@@ -19,7 +19,7 @@ type OIDCProviderService interface {
 type oidcProviderService struct {
 	cfg                  config.Config
 	op                   *provider.Provider
-	authorizer           authorization.Authorizer
+	authorizer           authorization_service.Authorizer
 	authnSessionManager  goidc.AuthnSessionManager
 	logoutSessionManager goidc.LogoutSessionManager
 	clientManager        goidc.ClientManager
@@ -27,7 +27,7 @@ type oidcProviderService struct {
 	userService          authutil.Userer
 }
 
-func NewOIDCProviderService(cfg config.Config, authorizer authorization.Authorizer, authnSessionManager goidc.AuthnSessionManager, clientManager goidc.ClientManager, logoutSessionManager goidc.LogoutSessionManager, grantSessionManager goidc.GrantSessionManager, userService authutil.Userer) (OIDCProviderService, error) {
+func NewOIDCProviderService(cfg config.Config, authorizer authorization_service.Authorizer, authnSessionManager goidc.AuthnSessionManager, clientManager goidc.ClientManager, logoutSessionManager goidc.LogoutSessionManager, grantSessionManager goidc.GrantSessionManager, userService authutil.Userer) (OIDCProviderService, error) {
 	s := &oidcProviderService{
 		cfg:                  cfg,
 		authorizer:           authorizer,
