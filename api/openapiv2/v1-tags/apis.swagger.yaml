@@ -4309,15 +4309,13 @@ definitions:
       id:
         type: string
         format: uint64
-      tenantId:
-        type: string
-        format: uint64
       userId:
         type: string
         format: uint64
+      username:
+        type: string
       correlationId:
         type: string
-        format: uint64
       action:
         type: string
       workspaceId:

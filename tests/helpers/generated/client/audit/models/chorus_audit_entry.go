@@ -38,11 +38,11 @@ type ChorusAuditEntry struct {
 	// id
 	ID string `json:"id,omitempty"`
 
-	// tenant Id
-	TenantID string `json:"tenantId,omitempty"`
-
 	// user Id
 	UserID string `json:"userId,omitempty"`
+
+	// username
+	Username string `json:"username,omitempty"`
 
 	// workbench Id
 	WorkbenchID string `json:"workbenchId,omitempty"`
