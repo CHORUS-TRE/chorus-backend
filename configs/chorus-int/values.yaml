@@ -73,6 +73,21 @@ config:
           enabled: false
           certificate_file: ""
           key_file: ""
+      audit:
+        type: postgres
+        migration_table_name: tt_migrations
+        host: chorus-int-audit-db-postgresql
+        port: 5432
+        username: backend-audit
+        password: ""  # set in secret
+        database: audit
+        max_connections: 10
+        max_lifetime: 10s
+        debug_mode: true
+        ssl:
+          enabled: false
+          certificate_file: ""
+          key_file: ""
     file_stores:
       archive:
         type: minio
