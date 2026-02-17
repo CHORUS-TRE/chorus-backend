@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -34,8 +33,7 @@ func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req 
 			model.AuditActionFileRead,
 			audit.WithDescription(fmt.Sprintf("Failed to get file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -59,8 +57,7 @@ func (c workspaceFileControllerAudit) ListWorkspaceFiles(ctx context.Context, re
 			model.AuditActionFileList,
 			audit.WithDescription(fmt.Sprintf("Failed to list workspace %d files at %s.", req.WorkspaceId, req.Path)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -85,8 +82,7 @@ func (c workspaceFileControllerAudit) CreateWorkspaceFile(ctx context.Context, r
 			model.AuditActionFileCreate,
 			audit.WithDescription(fmt.Sprintf("Failed to upload file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.File.Path),
 		)
@@ -110,8 +106,7 @@ func (c workspaceFileControllerAudit) UpdateWorkspaceFile(ctx context.Context, r
 			model.AuditActionFileUpdate,
 			audit.WithDescription(fmt.Sprintf("Failed to update file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("old_path", req.OldPath),
 			audit.WithDetail("new_path", req.File.Path),
@@ -137,8 +132,7 @@ func (c workspaceFileControllerAudit) DeleteWorkspaceFile(ctx context.Context, r
 			model.AuditActionFileDelete,
 			audit.WithDescription(fmt.Sprintf("Failed to delete file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -162,8 +156,7 @@ func (c workspaceFileControllerAudit) InitiateWorkspaceFileUpload(ctx context.Co
 			model.AuditActionFileUploadInitiate,
 			audit.WithDescription(fmt.Sprintf("Failed to initiate upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -192,8 +185,7 @@ func (c workspaceFileControllerAudit) CompleteWorkspaceFileUpload(ctx context.Co
 			model.AuditActionFileUploadComplete,
 			audit.WithDescription(fmt.Sprintf("Failed to complete upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)
@@ -217,8 +209,7 @@ func (c workspaceFileControllerAudit) AbortWorkspaceFileUpload(ctx context.Conte
 			model.AuditActionFileUploadAbort,
 			audit.WithDescription(fmt.Sprintf("Failed to abort upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.WorkspaceId),
 			audit.WithDetail("path", req.Path),
 		)

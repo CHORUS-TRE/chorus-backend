@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	empty "google.golang.org/protobuf/types/known/emptypb"
@@ -34,8 +33,7 @@ func (c stewardControllerAudit) InitializeTenant(ctx context.Context, req *choru
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionTenantInitialize,
 			audit.WithDescription(fmt.Sprintf("Failed to initialize tenant %d.", req.TenantId)),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("tenant_id", req.TenantId),
 		)
 	} else {

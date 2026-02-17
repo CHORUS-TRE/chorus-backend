@@ -5,7 +5,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -57,8 +56,7 @@ func (a authenticationControllerAudit) AuthenticateOauth(ctx context.Context, re
 		audit.Record(ctx, a.auditWriter,
 			model.AuditActionUserLoginFailed,
 			audit.WithDescription("Failed to initiate OAuth authentication."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("oauth_provider_id", req.Id),
 		)
 	}
@@ -88,8 +86,7 @@ func (a authenticationControllerAudit) Logout(ctx context.Context, req *chorus.L
 		audit.Record(ctx, a.auditWriter,
 			model.AuditActionUserLogout,
 			audit.WithDescription("Failed to logout user."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	} else {
 		audit.Record(ctx, a.auditWriter,

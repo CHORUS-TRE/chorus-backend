@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -33,15 +32,13 @@ func (c userControllerAudit) GetUserMe(ctx context.Context, req *chorus.GetUserM
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserRead,
 			audit.WithDescription("Failed to get current user."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	}
 	//  else {
 	// 	audit.Record(ctx, c.auditWriter,
 	// 		model.AuditActionUserRead,
 	// 		audit.WithDescription("Retrieved current user."),
-	// 		audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 	// 		audit.WithDetail("user_id", res.Result.Me.Id),
 	// 		audit.WithDetail("username", res.Result.Me.Username),
 	// 	)
@@ -56,8 +53,7 @@ func (c userControllerAudit) GetUser(ctx context.Context, req *chorus.GetUserReq
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserRead,
 			audit.WithDescription("Failed to get user."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("user_id", req.Id),
 		)
 	}
@@ -65,7 +61,6 @@ func (c userControllerAudit) GetUser(ctx context.Context, req *chorus.GetUserReq
 	// 	audit.Record(ctx, c.auditWriter,
 	// 		model.AuditActionUserRead,
 	// 		audit.WithDescription(fmt.Sprintf("Retrieved user with ID %d.", req.Id)),
-	// 		audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 	// 		audit.WithDetail("user_id", req.Id),
 	// 		audit.WithDetail("username", res.Result.User.Username),
 	// 	)
@@ -80,8 +75,7 @@ func (c userControllerAudit) ListUsers(ctx context.Context, req *chorus.ListUser
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserList,
 			audit.WithDescription("Failed to list users."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("filter", req.Filter),
 		)
 	}
@@ -89,7 +83,6 @@ func (c userControllerAudit) ListUsers(ctx context.Context, req *chorus.ListUser
 	// 	audit.Record(ctx, c.auditWriter,
 	// 		model.AuditActionUserList,
 	// 		audit.WithDescription("Listed users."),
-	// 		audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 	// 		audit.WithDetail("filter", req.Filter),
 	// 		audit.WithDetail("result_count", len(res.Result.Users)),
 	// 	)
@@ -104,8 +97,7 @@ func (c userControllerAudit) CreateUser(ctx context.Context, req *chorus.User) (
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserCreate,
 			audit.WithDescription("Failed to create user."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("username", req.Username),
 		)
 	} else {
@@ -126,8 +118,7 @@ func (c userControllerAudit) UpdateUser(ctx context.Context, req *chorus.User) (
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserUpdate,
 			audit.WithDescription("Failed to update user."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("user_id", req.Id),
 		)
 	} else {
@@ -148,8 +139,7 @@ func (c userControllerAudit) UpdatePassword(ctx context.Context, req *chorus.Upd
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserPasswordChange,
 			audit.WithDescription("Failed to change password."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	} else {
 		audit.Record(ctx, c.auditWriter,
@@ -167,8 +157,7 @@ func (c userControllerAudit) DeleteUser(ctx context.Context, req *chorus.DeleteU
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserDelete,
 			audit.WithDescription("Failed to delete user."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("user_id", req.Id),
 		)
 	} else {
@@ -188,8 +177,7 @@ func (c userControllerAudit) CreateUserRole(ctx context.Context, req *chorus.Cre
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserRoleAssign,
 			audit.WithDescription(fmt.Sprintf("Failed to assign role %s to user %d.", req.Role.Name, req.UserId)),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("user_id", req.UserId),
 			audit.WithDetail("role_name", req.Role.Name),
 		)
@@ -211,8 +199,7 @@ func (c userControllerAudit) DeleteUserRole(ctx context.Context, req *chorus.Del
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserRoleRevoke,
 			audit.WithDescription(fmt.Sprintf("Failed to revoke role %d from user %d.", req.RoleId, req.UserId)),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("user_id", req.UserId),
 			audit.WithDetail("role_id", req.RoleId),
 		)
@@ -234,8 +221,7 @@ func (c userControllerAudit) EnableTotp(ctx context.Context, req *chorus.EnableT
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserTotpEnable,
 			audit.WithDescription("Failed to enable TOTP."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	} else {
 		audit.Record(ctx, c.auditWriter,
@@ -253,8 +239,7 @@ func (c userControllerAudit) ResetTotp(ctx context.Context, req *chorus.ResetTot
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserTotpReset,
 			audit.WithDescription("Failed to reset TOTP."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	} else {
 		audit.Record(ctx, c.auditWriter,
@@ -272,8 +257,7 @@ func (c userControllerAudit) ResetPassword(ctx context.Context, req *chorus.Rese
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionUserPasswordReset,
 			audit.WithDescription(fmt.Sprintf("Failed to reset password for user %d.", req.Id)),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("user_id", req.Id),
 		)
 	} else {

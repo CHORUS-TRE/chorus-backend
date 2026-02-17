@@ -2,12 +2,12 @@ package audit
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
 
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/correlation"
@@ -197,67 +197,16 @@ func TestWithDetail_MultipleDetails(t *testing.T) {
 	assert.Equal(t, true, entry.Details["key3"])
 }
 
-func TestWithGRPCMethod(t *testing.T) {
+func TestWithError(t *testing.T) {
 	entry := &model.AuditEntry{
 		Details: model.AuditDetails{},
 	}
-	method := "/chorus.UserService/CreateUser"
-	opt := WithGRPCMethod(method)
+	err := fmt.Errorf("failed to create user: database connection lost")
+	opt := WithError(err)
 	opt(entry)
 
-	assert.Equal(t, method, entry.Details["grpc_method"])
-}
-
-func TestWithGRPCStatusCode(t *testing.T) {
-	tests := []struct {
-		name     string
-		code     codes.Code
-		expected int
-	}{
-		{
-			name:     "OK status",
-			code:     codes.OK,
-			expected: 0,
-		},
-		{
-			name:     "NotFound status",
-			code:     codes.NotFound,
-			expected: 5,
-		},
-		{
-			name:     "PermissionDenied status",
-			code:     codes.PermissionDenied,
-			expected: 7,
-		},
-		{
-			name:     "Internal status",
-			code:     codes.Internal,
-			expected: 13,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			entry := &model.AuditEntry{
-				Details: model.AuditDetails{},
-			}
-			opt := WithGRPCStatusCode(tt.code)
-			opt(entry)
-
-			assert.Equal(t, tt.expected, entry.Details["grpc_status_code"])
-		})
-	}
-}
-
-func TestWithErrorMessage(t *testing.T) {
-	entry := &model.AuditEntry{
-		Details: model.AuditDetails{},
-	}
-	errMsg := "failed to create user: database connection lost"
-	opt := WithErrorMessage(errMsg)
-	opt(entry)
-
-	assert.Equal(t, errMsg, entry.Details["error_message"])
+	assert.Equal(t, "failed to create user: database connection lost", entry.Details["error_message"])
+	assert.Equal(t, int(13), entry.Details["grpc_status_code"]) // codes.Unknown for non-gRPC errors
 }
 
 func TestMultipleOptions(t *testing.T) {
@@ -273,8 +222,7 @@ func TestMultipleOptions(t *testing.T) {
 		WithWorkbenchID(200),
 		WithDetail("name", "Test Workbench"),
 		WithDetail("status", "active"),
-		WithGRPCMethod("/chorus.WorkbenchService/CreateWorkbench"),
-		WithGRPCStatusCode(codes.OK),
+		WithDetail("grpc_method", "/chorus.WorkbenchService/CreateWorkbench"),
 	)
 
 	assert.Equal(t, model.AuditActionWorkbenchCreate, entry.Action)
@@ -287,7 +235,6 @@ func TestMultipleOptions(t *testing.T) {
 	assert.Equal(t, "Test Workbench", entry.Details["name"])
 	assert.Equal(t, "active", entry.Details["status"])
 	assert.Equal(t, "/chorus.WorkbenchService/CreateWorkbench", entry.Details["grpc_method"])
-	assert.Equal(t, 0, entry.Details["grpc_status_code"])
 }
 
 func TestNewEntry_PreservesUsername(t *testing.T) {

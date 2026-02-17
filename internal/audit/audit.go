@@ -8,10 +8,10 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/correlation"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
 )
 
 // Option modifies an AuditEntry
@@ -101,17 +101,10 @@ func WithDetail(key string, value any) Option {
 	}
 }
 
-// WithMethod sets the gRPC method name in entry details map
-func WithGRPCMethod(method string) Option {
-	return WithDetail("grpc_method", method)
-}
-
-// WithStatusCode sets the gRPC status code in entry details map
-func WithGRPCStatusCode(code codes.Code) Option {
-	return WithDetail("grpc_status_code", int(code))
-}
-
-// WithErrorMessage sets the error message in entry details map
-func WithErrorMessage(errMsg string) Option {
-	return WithDetail("error_message", errMsg)
+// WithError sets error message and gRPC status code from an error
+func WithError(err error) Option {
+	return func(entry *model.AuditEntry) {
+		entry.Details["error_message"] = err.Error()
+		entry.Details["grpc_status_code"] = int(grpc.ErrorCode(err))
+	}
 }

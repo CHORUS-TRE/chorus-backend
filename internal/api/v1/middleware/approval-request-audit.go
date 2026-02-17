@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -33,8 +32,7 @@ func (c approvalRequestControllerAudit) GetApprovalRequest(ctx context.Context, 
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionApprovalRequestRead,
 			audit.WithDescription("Failed to get approval request."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("approval_request_id", req.Id),
 		)
 	}
@@ -55,8 +53,7 @@ func (c approvalRequestControllerAudit) ListApprovalRequests(ctx context.Context
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionApprovalRequestList,
 			audit.WithDescription("Failed to list approval requests."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("filter", req.Filter),
 		)
 	}
@@ -77,8 +74,7 @@ func (c approvalRequestControllerAudit) CreateDataExtractionRequest(ctx context.
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionDataExtractionRequestCreate,
 			audit.WithDescription("Failed to create data extraction request."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
 			audit.WithDetail("title", req.Title),
@@ -104,8 +100,7 @@ func (c approvalRequestControllerAudit) CreateDataTransferRequest(ctx context.Co
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionDataTransferRequestCreate,
 			audit.WithDescription("Failed to create data transfer request."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("source_workspace_id", req.SourceWorkspaceId),
 			audit.WithDetail("destination_workspace_id", req.DestinationWorkspaceId),
 			audit.WithDetail("file_paths", req.FilePaths),
@@ -144,8 +139,7 @@ func (c approvalRequestControllerAudit) ApproveApprovalRequest(ctx context.Conte
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionApprovalRequestApprove,
 			audit.WithDescription(fmt.Sprintf("Failed to %s approval request %d.", map[bool]string{true: "approve", false: "reject"}[req.Approve], req.Id)),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("approval_request_id", req.Id),
 			audit.WithDetail("approve", req.Approve),
 		)
@@ -169,8 +163,7 @@ func (c approvalRequestControllerAudit) DeleteApprovalRequest(ctx context.Contex
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionApprovalRequestDelete,
 			audit.WithDescription("Failed to delete approval request."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("approval_request_id", req.Id),
 		)
 	} else {
@@ -190,8 +183,7 @@ func (c approvalRequestControllerAudit) DownloadApprovalRequestFile(ctx context.
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionApprovalRequestFileDownload,
 			audit.WithDescription(fmt.Sprintf("Failed to download file from approval request %d.", req.Id)),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("approval_request_id", req.Id),
 			audit.WithDetail("file_path", req.Path),
 		)

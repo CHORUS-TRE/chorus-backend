@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -33,8 +32,7 @@ func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *choru
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionWorkspaceList,
 			audit.WithDescription("Failed to list workspaces."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("filter", req.Filter),
 		)
 	}
@@ -42,7 +40,6 @@ func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *choru
 	// 	audit.Record(ctx, c.auditWriter,
 	// 		model.AuditActionWorkspaceList,
 	// 		audit.WithDescription("Listed workspaces."),
-	// 		audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
 	// 		audit.WithDetail("filter", req.Filter),
 	// 		audit.WithDetail("result_count", len(res.Result.Workspaces)),
 	// 	)
@@ -57,8 +54,7 @@ func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chor
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionWorkspaceCreate,
 			audit.WithDescription("Failed to create workspace."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_name", req.Name),
 		)
 	} else {
@@ -81,8 +77,7 @@ func (c workspaceControllerAudit) GetWorkspace(ctx context.Context, req *chorus.
 			model.AuditActionWorkspaceRead,
 			audit.WithDescription("Failed to get workspace."),
 			audit.WithWorkspaceID(req.Id),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.Id),
 		)
 	}
@@ -106,8 +101,7 @@ func (c workspaceControllerAudit) UpdateWorkspace(ctx context.Context, req *chor
 			model.AuditActionWorkspaceUpdate,
 			audit.WithDescription("Failed to update workspace."),
 			audit.WithWorkspaceID(req.Id),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.Id),
 		)
 	} else {
@@ -130,8 +124,7 @@ func (c workspaceControllerAudit) DeleteWorkspace(ctx context.Context, req *chor
 			model.AuditActionWorkspaceDelete,
 			audit.WithDescription("Failed to delete workspace."),
 			audit.WithWorkspaceID(req.Id),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.Id),
 		)
 	} else {
@@ -153,8 +146,7 @@ func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context,
 			model.AuditActionWorkspaceMemberAdd,
 			audit.WithDescription(fmt.Sprintf("Failed to add user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role)),
 			audit.WithWorkspaceID(req.Id),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.Id),
 			audit.WithDetail("user_id", req.UserId),
 			audit.WithDetail("role", req.Role),
@@ -180,8 +172,7 @@ func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, r
 			model.AuditActionWorkspaceMemberRemove,
 			audit.WithDescription(fmt.Sprintf("Failed to remove user %d from workspace %d.", req.UserId, req.Id)),
 			audit.WithWorkspaceID(req.Id),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workspace_id", req.Id),
 			audit.WithDetail("user_id", req.UserId),
 		)

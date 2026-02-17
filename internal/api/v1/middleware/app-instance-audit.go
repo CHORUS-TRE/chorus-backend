@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -33,8 +32,7 @@ func (c appInstanceControllerAudit) GetAppInstance(ctx context.Context, req *cho
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppInstanceRead,
 			audit.WithDescription("Failed to get app instance."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_instance_id", req.Id),
 		)
 	}
@@ -55,8 +53,7 @@ func (c appInstanceControllerAudit) ListAppInstances(ctx context.Context, req *c
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppInstanceList,
 			audit.WithDescription("Failed to list app instances."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	}
 	//  else {
@@ -78,8 +75,7 @@ func (c appInstanceControllerAudit) CreateAppInstance(ctx context.Context, req *
 			audit.WithDescription("Failed to create app instance."),
 			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithWorkbenchID(req.WorkbenchId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("workbench_id", req.WorkbenchId),
 		)
 	} else {
@@ -104,8 +100,7 @@ func (c appInstanceControllerAudit) UpdateAppInstance(ctx context.Context, req *
 			audit.WithDescription("Failed to update app instance."),
 			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithWorkbenchID(req.WorkbenchId),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_instance_id", req.Id),
 		)
 	} else {
@@ -127,8 +122,7 @@ func (c appInstanceControllerAudit) DeleteAppInstance(ctx context.Context, req *
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppInstanceDelete,
 			audit.WithDescription("Failed to delete app instance."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_instance_id", req.Id),
 		)
 	} else {

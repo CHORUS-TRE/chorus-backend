@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -33,8 +32,7 @@ func (c appControllerAudit) GetApp(ctx context.Context, req *chorus.GetAppReques
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppRead,
 			audit.WithDescription("Failed to get app."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_id", req.Id),
 		)
 	}
@@ -55,8 +53,7 @@ func (c appControllerAudit) ListApps(ctx context.Context, req *chorus.ListAppsRe
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppList,
 			audit.WithDescription("Failed to list apps."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 		)
 	}
 	//  else {
@@ -76,8 +73,7 @@ func (c appControllerAudit) CreateApp(ctx context.Context, req *chorus.App) (*ch
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppCreate,
 			audit.WithDescription("Failed to create app."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_name", req.Name),
 		)
 	} else {
@@ -98,8 +94,7 @@ func (c appControllerAudit) UpdateApp(ctx context.Context, req *chorus.App) (*ch
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppUpdate,
 			audit.WithDescription("Failed to update app."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_id", req.Id),
 		)
 	} else {
@@ -120,8 +115,7 @@ func (c appControllerAudit) DeleteApp(ctx context.Context, req *chorus.DeleteApp
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppDelete,
 			audit.WithDescription("Failed to delete app."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_id", req.Id),
 		)
 	} else {
@@ -141,8 +135,7 @@ func (c appControllerAudit) BulkCreateApps(ctx context.Context, req *chorus.Bulk
 		audit.Record(ctx, c.auditWriter,
 			model.AuditActionAppBulkCreate,
 			audit.WithDescription("Failed to bulk create apps."),
-			audit.WithErrorMessage(err.Error()),
-			audit.WithGRPCStatusCode(grpc.ErrorCode(err)),
+			audit.WithError(err),
 			audit.WithDetail("app_count", len(req.Apps)),
 		)
 	} else {
