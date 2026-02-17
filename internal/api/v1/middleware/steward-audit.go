@@ -29,20 +29,23 @@ func NewStewardAuditMiddleware(auditWriter service.AuditWriter) func(chorus.Stew
 
 func (c stewardControllerAudit) InitializeTenant(ctx context.Context, req *chorus.InitializeTenantRequest) (*empty.Empty, error) {
 	res, err := c.next.InitializeTenant(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("tenant_id", req.TenantId),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionTenantInitialize,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to initialize tenant %d.", req.TenantId)),
 			audit.WithError(err),
-			audit.WithDetail("tenant_id", req.TenantId),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionTenantInitialize,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Initialized tenant %d.", req.TenantId)),
-			audit.WithDetail("tenant_id", req.TenantId),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionTenantInitialize, opts...)
 
 	return res, err
 }

@@ -28,163 +28,176 @@ func NewWorkspaceAuditMiddleware(auditWriter service.AuditWriter) func(chorus.Wo
 
 func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
 	res, err := c.next.ListWorkspaces(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("filter", req.Filter),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceList,
+		opts = append(opts,
 			audit.WithDescription("Failed to list workspaces."),
 			audit.WithError(err),
-			audit.WithDetail("filter", req.Filter),
 		)
 	}
 	//  else {
-	// 	audit.Record(ctx, c.auditWriter,
-	// 		model.AuditActionWorkspaceList,
-	// 		audit.WithDescription("Listed workspaces."),
-	// 		audit.WithDetail("filter", req.Filter),
-	// 		audit.WithDetail("result_count", len(res.Result.Workspaces)),
-	// 	)
+	// 		opts = append(opts,
+	// 			audit.WithDescription("Listed workspaces."),
+	// 			audit.WithDetail("result_count", len(res.Result.Workspaces)),
+	// 		)
 	// }
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList, opts...)
 
 	return res, err
 }
 
 func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	res, err := c.next.CreateWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("workspace_name", req.Name),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceCreate,
+		opts = append(opts,
 			audit.WithDescription("Failed to create workspace."),
 			audit.WithError(err),
-			audit.WithDetail("workspace_name", req.Name),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceCreate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Created workspace with ID %d.", res.Result.Workspace.Id)),
 			audit.WithWorkspaceID(res.Result.Workspace.Id),
 			audit.WithDetail("workspace_id", res.Result.Workspace.Id),
-			audit.WithDetail("workspace_name", req.Name),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceCreate, opts...)
 
 	return res, err
 }
 
 func (c workspaceControllerAudit) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
 	res, err := c.next.GetWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithDetail("workspace_id", req.Id),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceRead,
+		opts = append(opts,
 			audit.WithDescription("Failed to get workspace."),
-			audit.WithWorkspaceID(req.Id),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.Id),
 		)
 	}
 	//  else {
-	// 	audit.Record(ctx, c.auditWriter,
-	// 		model.AuditActionWorkspaceRead,
-	// 		audit.WithDescription(fmt.Sprintf("Retrieved workspace with ID %d.", req.Id)),
-	// 		audit.WithWorkspaceID(req.Id),
-	// 		audit.WithDetail("workspace_id", req.Id),
-	// 		audit.WithDetail("workspace_name", res.Result.Workspace.Name),
-	// 	)
+	// 		opts = append(opts,
+	// 			audit.WithDescription(fmt.Sprintf("Retrieved workspace with ID %d.", req.Id)),
+	// 			audit.WithDetail("workspace_name", res.Result.Workspace.Name),
+	// 		)
 	// }
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceRead, opts...)
 
 	return res, err
 }
 
 func (c workspaceControllerAudit) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {
 	res, err := c.next.UpdateWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithDetail("workspace_id", req.Id),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceUpdate,
+		opts = append(opts,
 			audit.WithDescription("Failed to update workspace."),
-			audit.WithWorkspaceID(req.Id),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.Id),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceUpdate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Updated workspace with ID %d.", req.Id)),
-			audit.WithWorkspaceID(req.Id),
-			audit.WithDetail("workspace_id", req.Id),
 			audit.WithDetail("workspace_name", req.Name),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceUpdate, opts...)
 
 	return res, err
 }
 
 func (c workspaceControllerAudit) DeleteWorkspace(ctx context.Context, req *chorus.DeleteWorkspaceRequest) (*chorus.DeleteWorkspaceReply, error) {
 	res, err := c.next.DeleteWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithDetail("workspace_id", req.Id),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceDelete,
+		opts = append(opts,
 			audit.WithDescription("Failed to delete workspace."),
-			audit.WithWorkspaceID(req.Id),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.Id),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceDelete,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Deleted workspace with ID %d.", req.Id)),
-			audit.WithWorkspaceID(req.Id),
-			audit.WithDetail("workspace_id", req.Id),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceDelete, opts...)
 
 	return res, err
 }
 
 func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
 	res, err := c.next.ManageUserRoleInWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithDetail("workspace_id", req.Id),
+		audit.WithDetail("user_id", req.UserId),
+		audit.WithDetail("role", req.Role),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceMemberAdd,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to add user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role)),
-			audit.WithWorkspaceID(req.Id),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDetail("user_id", req.UserId),
-			audit.WithDetail("role", req.Role),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceMemberAdd,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Added user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role)),
-			audit.WithWorkspaceID(req.Id),
-			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDetail("user_id", req.UserId),
-			audit.WithDetail("role", req.Role),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceMemberAdd, opts...)
 
 	return res, err
 }
 
 func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
 	res, err := c.next.RemoveUserFromWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithDetail("workspace_id", req.Id),
+		audit.WithDetail("user_id", req.UserId),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceMemberRemove,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to remove user %d from workspace %d.", req.UserId, req.Id)),
-			audit.WithWorkspaceID(req.Id),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDetail("user_id", req.UserId),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionWorkspaceMemberRemove,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Removed user %d from workspace %d.", req.UserId, req.Id)),
-			audit.WithWorkspaceID(req.Id),
-			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDetail("user_id", req.UserId),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceMemberRemove, opts...)
 
 	return res, err
 }

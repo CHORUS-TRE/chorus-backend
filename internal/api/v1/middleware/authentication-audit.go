@@ -32,14 +32,20 @@ func (a authenticationControllerAudit) GetAuthenticationModes(ctx context.Contex
 
 func (a authenticationControllerAudit) Authenticate(ctx context.Context, req *chorus.Credentials) (*chorus.AuthenticationReply, error) {
 	res, err := a.next.Authenticate(ctx, req)
+
+	var opts []audit.Option
+
 	if err != nil {
 		// No audit on failure
 	} else {
-		audit.Record(ctx, a.auditWriter,
-			model.AuditActionUserLogin,
+		opts = append(opts,
 			audit.WithDescription("User authenticated successfully."),
 			audit.WithDetail("username", req.Username),
 		)
+	}
+
+	if len(opts) > 0 {
+		audit.Record(ctx, a.auditWriter, model.AuditActionUserLogin, opts...)
 	}
 
 	return res, err
@@ -52,29 +58,39 @@ func (a authenticationControllerAudit) RefreshToken(ctx context.Context, req *ch
 
 func (a authenticationControllerAudit) AuthenticateOauth(ctx context.Context, req *chorus.AuthenticateOauthRequest) (*chorus.AuthenticateOauthReply, error) {
 	res, err := a.next.AuthenticateOauth(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("oauth_provider_id", req.Id),
+	}
+
 	if err != nil {
-		audit.Record(ctx, a.auditWriter,
-			model.AuditActionUserLoginFailed,
+		opts = append(opts,
 			audit.WithDescription("Failed to initiate OAuth authentication."),
 			audit.WithError(err),
-			audit.WithDetail("oauth_provider_id", req.Id),
 		)
+		audit.Record(ctx, a.auditWriter, model.AuditActionUserLoginFailed, opts...)
 	}
-	// No audit here - the actual login happens in the redirect
+	// No audit on success - the actual login happens in the redirect
 
 	return res, err
 }
 
 func (a authenticationControllerAudit) AuthenticateOauthRedirect(ctx context.Context, req *chorus.AuthenticateOauthRedirectRequest) (*chorus.AuthenticateOauthRedirectReply, error) {
 	res, err := a.next.AuthenticateOauthRedirect(ctx, req)
+
+	var opts []audit.Option
+
 	if err != nil {
 		// No audit on failure
 	} else {
-		audit.Record(ctx, a.auditWriter,
-			model.AuditActionUserLogin,
+		opts = append(opts,
 			audit.WithDescription("User authenticated successfully via OAuth."),
 			audit.WithDetail("oauth_provider_id", req.Id),
 		)
+	}
+
+	if len(opts) > 0 {
+		audit.Record(ctx, a.auditWriter, model.AuditActionUserLogin, opts...)
 	}
 
 	return res, err
@@ -82,18 +98,21 @@ func (a authenticationControllerAudit) AuthenticateOauthRedirect(ctx context.Con
 
 func (a authenticationControllerAudit) Logout(ctx context.Context, req *chorus.LogoutRequest) (*chorus.LogoutReply, error) {
 	res, err := a.next.Logout(ctx, req)
+
+	var opts []audit.Option
+
 	if err != nil {
-		audit.Record(ctx, a.auditWriter,
-			model.AuditActionUserLogout,
+		opts = append(opts,
 			audit.WithDescription("Failed to logout user."),
 			audit.WithError(err),
 		)
 	} else {
-		audit.Record(ctx, a.auditWriter,
-			model.AuditActionUserLogout,
+		opts = append(opts,
 			audit.WithDescription("User logged out successfully."),
 		)
 	}
+
+	audit.Record(ctx, a.auditWriter, model.AuditActionUserLogout, opts...)
 
 	return res, err
 }

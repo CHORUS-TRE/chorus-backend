@@ -28,147 +28,152 @@ func NewWorkspaceFileAuditMiddleware(auditWriter service.AuditWriter) func(choru
 
 func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
 	res, err := c.next.GetWorkspaceFile(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileRead,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to get file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileRead,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Retrieved file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileRead, opts...)
 
 	return res, err
 }
 
 func (c workspaceFileControllerAudit) ListWorkspaceFiles(ctx context.Context, req *chorus.ListWorkspaceFilesRequest) (*chorus.ListWorkspaceFilesReply, error) {
 	res, err := c.next.ListWorkspaceFiles(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileList,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to list workspace %d files at %s.", req.WorkspaceId, req.Path)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileList,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Listed %d files in workspace %d at %s.", len(res.Result.Files), req.WorkspaceId, req.Path)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 			audit.WithDetail("result_count", len(res.Result.Files)),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileList, opts...)
 
 	return res, err
 }
 
 func (c workspaceFileControllerAudit) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
 	res, err := c.next.CreateWorkspaceFile(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.File.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileCreate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to upload file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.File.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileCreate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Uploaded file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.File.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileCreate, opts...)
 
 	return res, err
 }
 
 func (c workspaceFileControllerAudit) UpdateWorkspaceFile(ctx context.Context, req *chorus.UpdateWorkspaceFileRequest) (*chorus.UpdateWorkspaceFileReply, error) {
 	res, err := c.next.UpdateWorkspaceFile(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("old_path", req.OldPath),
+		audit.WithDetail("new_path", req.File.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUpdate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to update file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("old_path", req.OldPath),
-			audit.WithDetail("new_path", req.File.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUpdate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Updated file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("old_path", req.OldPath),
-			audit.WithDetail("new_path", req.File.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileUpdate, opts...)
 
 	return res, err
 }
 
 func (c workspaceFileControllerAudit) DeleteWorkspaceFile(ctx context.Context, req *chorus.DeleteWorkspaceFileRequest) (*chorus.DeleteWorkspaceFileReply, error) {
 	res, err := c.next.DeleteWorkspaceFile(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileDelete,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to delete file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileDelete,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Deleted file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileDelete, opts...)
 
 	return res, err
 }
 
 func (c workspaceFileControllerAudit) InitiateWorkspaceFileUpload(ctx context.Context, req *chorus.InitiateWorkspaceFileUploadRequest) (*chorus.InitiateWorkspaceFileUploadReply, error) {
 	res, err := c.next.InitiateWorkspaceFileUpload(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUploadInitiate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to initiate upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUploadInitiate,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Initiated upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileUploadInitiate, opts...)
 
 	return res, err
 }
@@ -180,48 +185,50 @@ func (c workspaceFileControllerAudit) UploadWorkspaceFilePart(ctx context.Contex
 
 func (c workspaceFileControllerAudit) CompleteWorkspaceFileUpload(ctx context.Context, req *chorus.CompleteWorkspaceFileUploadRequest) (*chorus.CompleteWorkspaceFileUploadReply, error) {
 	res, err := c.next.CompleteWorkspaceFileUpload(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUploadComplete,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to complete upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUploadComplete,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Completed upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileUploadComplete, opts...)
 
 	return res, err
 }
 
 func (c workspaceFileControllerAudit) AbortWorkspaceFileUpload(ctx context.Context, req *chorus.AbortWorkspaceFileUploadRequest) (*chorus.AbortWorkspaceFileUploadReply, error) {
 	res, err := c.next.AbortWorkspaceFileUpload(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.WorkspaceId),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
+		audit.WithDetail("path", req.Path),
+	}
+
 	if err != nil {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUploadAbort,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to abort upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithError(err),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	} else {
-		audit.Record(ctx, c.auditWriter,
-			model.AuditActionFileUploadAbort,
+		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Aborted upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
-			audit.WithWorkspaceID(req.WorkspaceId),
-			audit.WithDetail("workspace_id", req.WorkspaceId),
-			audit.WithDetail("path", req.Path),
 		)
 	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionFileUploadAbort, opts...)
 
 	return res, err
 }
