@@ -39,7 +39,7 @@ message ListAuditEntriesResult {
 service AuditService {
     rpc ListAuditEntries(ListAuditEntriesRequest) returns (ListAuditEntriesReply) {
         option (google.api.http) = {
-            get: "/v1/rest/v1/audit"
+            get: "/api/rest/v1/audit"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List audit entries";

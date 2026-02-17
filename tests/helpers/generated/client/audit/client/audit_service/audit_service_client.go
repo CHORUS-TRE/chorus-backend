@@ -72,7 +72,7 @@ func (a *Client) AuditServiceListAuditEntries(params *AuditServiceListAuditEntri
 	op := &runtime.ClientOperation{
 		ID:                 "AuditService_ListAuditEntries",
 		Method:             "GET",
-		PathPattern:        "/v1/rest/v1/audit",
+		PathPattern:        "/api/rest/v1/audit",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

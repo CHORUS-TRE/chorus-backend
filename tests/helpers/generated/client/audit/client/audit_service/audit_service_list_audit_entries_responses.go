@@ -88,12 +88,12 @@ func (o *AuditServiceListAuditEntriesOK) Code() int {
 
 func (o *AuditServiceListAuditEntriesOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /v1/rest/v1/audit][%d] auditServiceListAuditEntriesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/audit][%d] auditServiceListAuditEntriesOK %s", 200, payload)
 }
 
 func (o *AuditServiceListAuditEntriesOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /v1/rest/v1/audit][%d] auditServiceListAuditEntriesOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/audit][%d] auditServiceListAuditEntriesOK %s", 200, payload)
 }
 
 func (o *AuditServiceListAuditEntriesOK) GetPayload() *models.ChorusListAuditEntriesReply {
@@ -162,12 +162,12 @@ func (o *AuditServiceListAuditEntriesDefault) Code() int {
 
 func (o *AuditServiceListAuditEntriesDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /v1/rest/v1/audit][%d] AuditService_ListAuditEntries default %s", o._statusCode, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/audit][%d] AuditService_ListAuditEntries default %s", o._statusCode, payload)
 }
 
 func (o *AuditServiceListAuditEntriesDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /v1/rest/v1/audit][%d] AuditService_ListAuditEntries default %s", o._statusCode, payload)
+	return fmt.Sprintf("[GET /api/rest/v1/audit][%d] AuditService_ListAuditEntries default %s", o._statusCode, payload)
 }
 
 func (o *AuditServiceListAuditEntriesDefault) GetPayload() *models.RPCStatus {
