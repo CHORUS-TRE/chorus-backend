@@ -36,7 +36,7 @@ func (a authenticationControllerAudit) Authenticate(ctx context.Context, req *ch
 	var opts []audit.Option
 
 	if err != nil {
-		// No audit on failure
+		// No audit on failure to prevent DDOS, infra level logs for this
 	} else {
 		opts = append(opts,
 			audit.WithDescription("User authenticated successfully."),
