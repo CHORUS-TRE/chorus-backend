@@ -24,7 +24,7 @@ func ProvideApprovalRequestService() service.ApprovalRequester {
 	approvalRequestServiceOnce.Do(func() {
 		approvalRequestService = service.NewApprovalRequestService(
 			ProvideApprovalRequestStore(),
-			ProvideWorkspaceFile(),
+			ProvideWorkspaceFileService(),
 			ProvideApprovalRequestStagingFileStore(cfg.Services.ApprovalRequestService.StagingFileStoreName),
 			ProvideNotificationStore(),
 			ProvideAuthorizer(),
@@ -43,6 +43,9 @@ func ProvideApprovalRequestController() chorus.ApprovalRequestServiceServer {
 	approvalRequestControllerOnce.Do(func() {
 		approvalRequestController = v1.NewApprovalRequestController(ProvideApprovalRequestService())
 		approvalRequestController = ctrl_mw.ApprovalRequestAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator(), ProvideApprovalRequestStore())(approvalRequestController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			approvalRequestController = ctrl_mw.NewApprovalRequestAuditMiddleware(ProvideAuditWriter())(approvalRequestController)
+		}
 	})
 	return approvalRequestController
 }

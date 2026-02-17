@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	grpc_mw "github.com/CHORUS-TRE/chorus-backend/internal/protocol/grpc/middleware"
@@ -34,11 +36,14 @@ func ProvideAuthenticator() service.Authenticator {
 }
 
 var authenticationControllerOnce sync.Once
-var authenticationController v1.AuthenticationController
+var authenticationController chorus.AuthenticationServiceServer
 
-func ProvideAuthenticationController() v1.AuthenticationController {
+func ProvideAuthenticationController() chorus.AuthenticationServiceServer {
 	authenticationControllerOnce.Do(func() {
 		authenticationController = v1.NewAuthenticationController(ProvideAuthenticator(), ProvideAuthorizer(), ProvideConfig())
+		if ProvideConfig().Services.AuditService.Enabled {
+			authenticationController = ctrl_mw.NewAuthenticationAuditMiddleware(ProvideAuditWriter())(authenticationController)
+		}
 	})
 	return authenticationController
 }

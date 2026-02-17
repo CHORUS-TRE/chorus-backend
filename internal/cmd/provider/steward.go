@@ -22,7 +22,9 @@ func ProvideStewardController() chorus.StewardServiceServer {
 	stewardControllerOnce.Do(func() {
 		stewardController = v1.NewStewardController(ProvideStewardService())
 		stewardController = ctrl_mw.StewardAuthorizing(logger.SecLog, ProvideAuthorizer())(stewardController)
-
+		if ProvideConfig().Services.AuditService.Enabled {
+			stewardController = ctrl_mw.NewStewardAuditMiddleware(ProvideAuditWriter())(stewardController)
+		}
 	})
 	return stewardController
 }
@@ -37,7 +39,7 @@ func ProvideStewardService() service.Stewarder {
 			ProvideConfig(),
 			ProvideTenanter(),
 			ProvideUser(),
-			ProvideWorkspace(),
+			ProvideWorkspaceService(),
 		)
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create steward service", zap.Error(err))
