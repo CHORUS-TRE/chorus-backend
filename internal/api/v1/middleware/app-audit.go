@@ -29,23 +29,19 @@ func NewAppAuditMiddleware(auditWriter service.AuditWriter) func(chorus.AppServi
 func (c appControllerAudit) GetApp(ctx context.Context, req *chorus.GetAppRequest) (*chorus.GetAppReply, error) {
 	res, err := c.next.GetApp(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("app_id", req.Id),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionAppRead,
+			audit.WithDetail("app_id", req.Id),
 			audit.WithDescription("Failed to get app."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionAppRead,
+	// 			audit.WithDetail("app_id", req.Id),
 	// 			audit.WithDescription(fmt.Sprintf("Retrieved app with ID %d.", req.Id)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionAppRead, opts...)
 
 	return res, err
 }

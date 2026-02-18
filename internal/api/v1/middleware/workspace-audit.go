@@ -75,25 +75,22 @@ func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chor
 func (c workspaceControllerAudit) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
 	res, err := c.next.GetWorkspace(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithWorkspaceID(req.Id),
-		audit.WithDetail("workspace_id", req.Id),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceRead,
+			audit.WithWorkspaceID(req.Id),
+			audit.WithDetail("workspace_id", req.Id),
 			audit.WithDescription("Failed to get workspace."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceRead,
+	// 			audit.WithWorkspaceID(req.Id),
+	// 			audit.WithDetail("workspace_id", req.Id),
 	// 			audit.WithDescription(fmt.Sprintf("Retrieved workspace with ID %d.", req.Id)),
 	// 			audit.WithDetail("workspace_name", res.Result.Workspace.Name),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceRead, opts...)
 
 	return res, err
 }
