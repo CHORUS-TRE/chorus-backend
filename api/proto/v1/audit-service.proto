@@ -1,0 +1,50 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "audit.proto";
+import "common.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus audit service";
+        version: "1.0";
+        contact: {
+            name: "chorus audit service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+// ListAuditEntries lists audit entries based on the provided filter
+message ListAuditEntriesRequest {
+    PaginationQuery pagination = 1;
+    optional AuditFilter filter = 2;
+}
+message ListAuditEntriesReply {
+    ListAuditEntriesResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListAuditEntriesResult {
+    repeated AuditEntry entries = 1;
+}
+
+service AuditService {
+    rpc ListAuditEntries(ListAuditEntriesRequest) returns (ListAuditEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List audit entries";
+            description: "This endpoint returns a list of audit entries";
+            tags: "AuditService";
+        };
+    }
+} 
