@@ -53,22 +53,18 @@ func (c appControllerAudit) GetApp(ctx context.Context, req *chorus.GetAppReques
 func (c appControllerAudit) ListApps(ctx context.Context, req *chorus.ListAppsRequest) (*chorus.ListAppsReply, error) {
 	res, err := c.next.ListApps(ctx, req)
 
-	var opts []audit.Option
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionAppList,
 			audit.WithDescription("Failed to list apps."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionAppList,
 	// 			audit.WithDescription("Listed apps."),
 	// 			audit.WithDetail("result_count", len(res.Result.Apps)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionAppList, opts...)
 
 	return res, err
 }

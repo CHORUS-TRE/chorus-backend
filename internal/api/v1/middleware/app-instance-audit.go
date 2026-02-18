@@ -53,22 +53,18 @@ func (c appInstanceControllerAudit) GetAppInstance(ctx context.Context, req *cho
 func (c appInstanceControllerAudit) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
 	res, err := c.next.ListAppInstances(ctx, req)
 
-	var opts []audit.Option
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceList,
 			audit.WithDescription("Failed to list app instances."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceList,
 	// 			audit.WithDescription("Listed app instances."),
 	// 			audit.WithDetail("result_count", len(res.Result.AppInstances)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceList, opts...)
 
 	return res, err
 }

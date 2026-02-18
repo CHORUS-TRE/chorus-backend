@@ -29,24 +29,20 @@ func NewWorkspaceAuditMiddleware(auditWriter service.AuditWriter) func(chorus.Wo
 func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
 	res, err := c.next.ListWorkspaces(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("filter", req.Filter),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList,
+			audit.WithDetail("filter", req.Filter),
 			audit.WithDescription("Failed to list workspaces."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList,
+	// 			audit.WithDetail("filter", req.Filter),
 	// 			audit.WithDescription("Listed workspaces."),
 	// 			audit.WithDetail("result_count", len(res.Result.Workspaces)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList, opts...)
 
 	return res, err
 }
