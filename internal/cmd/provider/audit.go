@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
@@ -11,6 +13,16 @@ import (
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/audit/store/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/store/postgres"
 )
+
+var auditControllerOnce sync.Once
+var auditController chorus.AuditServiceServer
+
+func ProvideAuditController() chorus.AuditServiceServer {
+	auditControllerOnce.Do(func() {
+		auditController = v1.NewAuditController(ProvideAuditService())
+	})
+	return auditController
+}
 
 var auditServiceOnce sync.Once
 var auditService service.Auditer

@@ -148,6 +148,9 @@ func registerGRPCServices(server *google_grpc.Server) {
 	if cfg.Services.AuthenticationService.Enabled {
 		chorus.RegisterAuthenticationServiceServer(server, provider.ProvideAuthenticationController())
 	}
+	if cfg.Services.AuditService.Enabled {
+		chorus.RegisterAuditServiceServer(server, provider.ProvideAuditController())
+	}
 	chorus.RegisterUserServiceServer(server, provider.ProvideUserController())
 	chorus.RegisterStewardServiceServer(server, provider.ProvideStewardController())
 	chorus.RegisterNotificationServiceServer(server, provider.ProvideNotificationController())
@@ -171,6 +174,11 @@ func registerHTTPEndpoints(ctx context.Context, mux *runtime.ServeMux, grpcHostP
 	if cfg.Services.AuthenticationService.Enabled {
 		if err := chorus.RegisterAuthenticationServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 			logger.TechLog.Fatal(ctx, "failed to register http authentication handler", logger.WithErrorField(err))
+		}
+	}
+	if cfg.Services.AuditService.Enabled {
+		if err := chorus.RegisterAuditServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
+			logger.TechLog.Fatal(ctx, "failed to register http audit handler", logger.WithErrorField(err))
 		}
 	}
 	if err := chorus.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {

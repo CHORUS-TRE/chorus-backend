@@ -54,9 +54,9 @@ func (d AuditDetails) Value() (driver.Value, error) {
 // AuditFilter for querying audit entries
 type AuditFilter struct {
 	UserID      uint64
-	Action      AuditAction
 	WorkspaceID uint64
 	WorkbenchID uint64
+	Action      AuditAction
 	FromTime    time.Time
 	ToTime      time.Time
 }
