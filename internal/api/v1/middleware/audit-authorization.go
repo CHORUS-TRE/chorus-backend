@@ -29,7 +29,7 @@ func AuditAuthorizing(logger *logger.ContextLogger, authorizer authorization_ser
 }
 
 func (c auditControllerAuthorization) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
-	if req.Filter != nil {
+	if req.Filter != nil && (req.Filter.WorkspaceId != 0 || req.Filter.WorkbenchId != 0 || req.Filter.UserId != 0) {
 		if req.Filter.WorkspaceId != 0 {
 			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Filter.WorkspaceId))
 			if err != nil {
