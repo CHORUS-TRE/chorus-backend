@@ -29,23 +29,19 @@ func NewUserAuditMiddleware(auditWriter service.AuditWriter) func(chorus.UserSer
 func (c userControllerAudit) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
 	res, err := c.next.GetUserMe(ctx, req)
 
-	var opts []audit.Option
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionUserRead,
 			audit.WithDescription("Failed to get current user."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionUserRead,
 	// 			audit.WithDescription("Retrieved current user."),
 	// 			audit.WithDetail("user_id", res.Result.Me.Id),
 	// 			audit.WithDetail("username", res.Result.Me.Username),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionUserRead, opts...)
 
 	return res, err
 }
@@ -53,24 +49,20 @@ func (c userControllerAudit) GetUserMe(ctx context.Context, req *chorus.GetUserM
 func (c userControllerAudit) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
 	res, err := c.next.GetUser(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("user_id", req.Id),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionUserRead,
+			audit.WithDetail("user_id", req.Id),
 			audit.WithDescription("Failed to get user."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionUserRead,
+	// 			audit.WithDetail("user_id", req.Id),
 	// 			audit.WithDescription(fmt.Sprintf("Retrieved user with ID %d.", req.Id)),
 	// 			audit.WithDetail("username", res.Result.User.Username),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionUserRead, opts...)
 
 	return res, err
 }

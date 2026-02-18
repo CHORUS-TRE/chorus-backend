@@ -29,23 +29,19 @@ func NewApprovalRequestAuditMiddleware(auditWriter service.AuditWriter) func(cho
 func (c approvalRequestControllerAudit) GetApprovalRequest(ctx context.Context, req *chorus.GetApprovalRequestRequest) (*chorus.GetApprovalRequestReply, error) {
 	res, err := c.next.GetApprovalRequest(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("approval_request_id", req.Id),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestRead,
+			audit.WithDetail("approval_request_id", req.Id),
 			audit.WithDescription("Failed to get approval request."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestRead,
+	// 			audit.WithDetail("approval_request_id", req.Id),
 	// 			audit.WithDescription(fmt.Sprintf("Retrieved approval request with ID %d.", req.Id)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestRead, opts...)
 
 	return res, err
 }

@@ -76,26 +76,24 @@ func (c workbenchControllerAudit) CreateWorkbench(ctx context.Context, req *chor
 func (c workbenchControllerAudit) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
 	res, err := c.next.GetWorkbench(ctx, req)
 
-	opts := []audit.Option{
-		// TODO: audit.WithWorkspaceID(req.WorkspaceId),
-		audit.WithWorkbenchID(req.Id),
-		audit.WithDetail("workbench_id", req.Id),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchRead,
+			// TODO: audit.WithWorkspaceID(req.WorkspaceId),
+			audit.WithWorkbenchID(req.Id),
+			audit.WithDetail("workbench_id", req.Id),
 			audit.WithDescription("Failed to get workbench."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchRead,
+	// 			// TODO: audit.WithWorkspaceID(req.WorkspaceId),
+	// 			audit.WithWorkbenchID(req.Id),
+	// 			audit.WithDetail("workbench_id", req.Id),
 	// 			audit.WithDescription(fmt.Sprintf("Retrieved workbench with ID %d.", req.Id)),
 	// 			audit.WithDetail("workbench_name", res.Result.Workbench.Name),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchRead, opts...)
 
 	return res, err
 }

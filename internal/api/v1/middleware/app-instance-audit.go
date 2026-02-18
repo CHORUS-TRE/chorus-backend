@@ -29,23 +29,19 @@ func NewAppInstanceAuditMiddleware(auditWriter service.AuditWriter) func(chorus.
 func (c appInstanceControllerAudit) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
 	res, err := c.next.GetAppInstance(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("app_instance_id", req.Id),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceRead,
+			audit.WithDetail("app_instance_id", req.Id),
 			audit.WithDescription("Failed to get app instance."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceRead,
+	// 			audit.WithDetail("app_instance_id", req.Id),
 	// 			audit.WithDescription(fmt.Sprintf("Retrieved app instance with ID %d.", req.Id)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceRead, opts...)
 
 	return res, err
 }
