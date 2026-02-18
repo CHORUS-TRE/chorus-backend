@@ -32,17 +32,17 @@ func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.Path),
+		audit.WithDetail("path", "/"+req.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to get file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to get file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Retrieved file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Retrieved file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 		)
 	}
 
@@ -57,17 +57,17 @@ func (c workspaceFileControllerAudit) ListWorkspaceFiles(ctx context.Context, re
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.Path),
+		audit.WithDetail("path", "/"+req.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to list workspace %d files at %s.", req.WorkspaceId, req.Path)),
+			audit.WithDescription(fmt.Sprintf("Failed to list workspace %d files at /%s.", req.WorkspaceId, req.Path)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Listed %d files in workspace %d at %s.", len(res.Result.Files), req.WorkspaceId, req.Path)),
+			audit.WithDescription(fmt.Sprintf("Listed %d files in workspace %d at /%s.", len(res.Result.Files), req.WorkspaceId, req.Path)),
 			audit.WithDetail("result_count", len(res.Result.Files)),
 		)
 	}
@@ -83,17 +83,17 @@ func (c workspaceFileControllerAudit) CreateWorkspaceFile(ctx context.Context, r
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.File.Path),
+		audit.WithDetail("path", "/"+req.File.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to upload file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to upload file /%s in workspace %d.", req.File.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Uploaded file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Uploaded file /%s in workspace %d.", req.File.Path, req.WorkspaceId)),
 		)
 	}
 
@@ -108,18 +108,18 @@ func (c workspaceFileControllerAudit) UpdateWorkspaceFile(ctx context.Context, r
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("old_path", req.OldPath),
-		audit.WithDetail("new_path", req.File.Path),
+		audit.WithDetail("old_path", "/"+req.OldPath),
+		audit.WithDetail("new_path", "/"+req.File.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to update file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to update file /%s in workspace %d.", req.File.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated file %s in workspace %d.", req.File.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Updated file /%s in workspace %d.", req.File.Path, req.WorkspaceId)),
 		)
 	}
 
@@ -134,17 +134,17 @@ func (c workspaceFileControllerAudit) DeleteWorkspaceFile(ctx context.Context, r
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.Path),
+		audit.WithDetail("path", "/"+req.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to delete file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to delete file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Deleted file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Deleted file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 		)
 	}
 
@@ -159,17 +159,17 @@ func (c workspaceFileControllerAudit) InitiateWorkspaceFileUpload(ctx context.Co
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.Path),
+		audit.WithDetail("path", "/"+req.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to initiate upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to initiate upload for file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Initiated upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Initiated upload for file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 		)
 	}
 
@@ -189,17 +189,17 @@ func (c workspaceFileControllerAudit) CompleteWorkspaceFileUpload(ctx context.Co
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.Path),
+		audit.WithDetail("path", "/"+req.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to complete upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to complete upload for file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Completed upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Completed upload for file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 		)
 	}
 
@@ -214,17 +214,17 @@ func (c workspaceFileControllerAudit) AbortWorkspaceFileUpload(ctx context.Conte
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", req.Path),
+		audit.WithDetail("path", "/"+req.Path),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to abort upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to abort upload for file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Aborted upload for file %s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Aborted upload for file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 		)
 	}
 

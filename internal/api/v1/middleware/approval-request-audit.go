@@ -53,24 +53,20 @@ func (c approvalRequestControllerAudit) GetApprovalRequest(ctx context.Context, 
 func (c approvalRequestControllerAudit) ListApprovalRequests(ctx context.Context, req *chorus.ListApprovalRequestsRequest) (*chorus.ListApprovalRequestsReply, error) {
 	res, err := c.next.ListApprovalRequests(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("filter", req.Filter),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestList,
+			audit.WithDetail("filter", req.Filter),
 			audit.WithDescription("Failed to list approval requests."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestList,
+	// 			audit.WithDetail("filter", req.Filter),
 	// 			audit.WithDescription("Listed approval requests."),
 	// 			audit.WithDetail("result_count", len(res.Result.ApprovalRequests)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestList, opts...)
 
 	return res, err
 }

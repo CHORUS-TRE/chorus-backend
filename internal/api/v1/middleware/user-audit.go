@@ -78,24 +78,20 @@ func (c userControllerAudit) GetUser(ctx context.Context, req *chorus.GetUserReq
 func (c userControllerAudit) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
 	res, err := c.next.ListUsers(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("filter", req.Filter),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionUserList,
+			audit.WithDetail("filter", req.Filter),
 			audit.WithDescription("Failed to list users."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionUserList,
+	// 			audit.WithDetail("filter", req.Filter),
 	// 			audit.WithDescription("Listed users."),
 	// 			audit.WithDetail("result_count", len(res.Result.Users)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionUserList, opts...)
 
 	return res, err
 }

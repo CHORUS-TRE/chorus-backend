@@ -29,24 +29,20 @@ func NewWorkbenchAuditMiddleware(auditWriter service.AuditWriter) func(chorus.Wo
 func (c workbenchControllerAudit) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
 	res, err := c.next.ListWorkbenches(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithDetail("filter", req.Filter),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchList,
+			audit.WithDetail("filter", req.Filter),
 			audit.WithDescription("Failed to list workbenches."),
 			audit.WithError(err),
 		)
 	}
 	//  else {
-	// 		opts = append(opts,
+	// 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchList,
+	// 			audit.WithDetail("filter", req.Filter),
 	// 			audit.WithDescription("Listed workbenches."),
 	// 			audit.WithDetail("result_count", len(res.Result.Workbenches)),
 	// 		)
 	// }
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchList, opts...)
 
 	return res, err
 }
