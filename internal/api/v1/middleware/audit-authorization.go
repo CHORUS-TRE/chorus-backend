@@ -48,6 +48,12 @@ func (c auditControllerAuthorization) ListAuditEntries(ctx context.Context, req 
 				return nil, err
 			}
 		}
+	} else {
+		// TODO: Add specific permission for listing all audit entries
+		err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.next.ListAuditEntries(ctx, req)
