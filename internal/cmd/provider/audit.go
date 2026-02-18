@@ -6,6 +6,7 @@ import (
 
 	v1 "github.com/CHORUS-TRE/chorus-backend/internal/api/v1"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
@@ -20,6 +21,10 @@ var auditController chorus.AuditServiceServer
 func ProvideAuditController() chorus.AuditServiceServer {
 	auditControllerOnce.Do(func() {
 		auditController = v1.NewAuditController(ProvideAuditService())
+		auditController = ctrl_mw.AuditAuthorizing(logger.SecLog, ProvideAuthorizer())(auditController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			auditController = ctrl_mw.NewAuditAuditMiddleware(ProvideAuditWriter())(auditController)
+		}
 	})
 	return auditController
 }
