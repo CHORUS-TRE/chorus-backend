@@ -32,9 +32,7 @@ func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.
 
 	if req.Filter != nil {
 		opts = append(opts,
-			audit.WithDetail("filter_workspace_id", req.Filter.WorkspaceId),
-			audit.WithDetail("filter_workbench_id", req.Filter.WorkbenchId),
-			audit.WithDetail("filter_user_id", req.Filter.UserId),
+			audit.WithDetail("filter", req.Filter),
 		)
 	}
 
