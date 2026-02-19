@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -55,9 +56,17 @@ var colorMap = map[string]string{
 }
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		line := scanner.Text()
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		line, err := reader.ReadString('\n')
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "reading standard input:", err)
+			break
+		}
+		line = strings.TrimRight(line, "\n")
 		var logObject map[string]interface{}
 		if err := json.Unmarshal([]byte(line), &logObject); err != nil {
 			fmt.Println(line)
@@ -119,9 +128,5 @@ func main() {
 
 		// Insert a blank line after each log entry for separation
 		fmt.Println("")
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 }
