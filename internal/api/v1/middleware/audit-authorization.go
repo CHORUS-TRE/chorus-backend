@@ -29,31 +29,9 @@ func AuditAuthorizing(logger *logger.ContextLogger, authorizer authorization_ser
 }
 
 func (c auditControllerAuthorization) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
-	if req.Filter != nil && (req.Filter.WorkspaceId != 0 || req.Filter.WorkbenchId != 0 || req.Filter.UserId != 0) {
-		if req.Filter.WorkspaceId != 0 {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Filter.WorkspaceId))
-			if err != nil {
-				return nil, err
-			}
-		}
-		if req.Filter.WorkbenchId != 0 {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(req.Filter.WorkbenchId))
-			if err != nil {
-				return nil, err
-			}
-		}
-		if req.Filter.UserId != 0 {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUser(req.Filter.UserId))
-			if err != nil {
-				return nil, err
-			}
-		}
-	} else {
-		// TODO: Add specific permission for listing all audit entries
-		err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
-		if err != nil {
-			return nil, err
-		}
+	err := c.IsAuthorized(ctx, authorization.PermissionAuditPlatform)
+	if err != nil {
+		return nil, err
 	}
 
 	return c.next.ListAuditEntries(ctx, req)
