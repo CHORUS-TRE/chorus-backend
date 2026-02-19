@@ -68,6 +68,8 @@ type ClientService interface {
 
 	UserServiceGetUserMe(params *UserServiceGetUserMeParams, opts ...ClientOption) (*UserServiceGetUserMeOK, error)
 
+	UserServiceListUserAudit(params *UserServiceListUserAuditParams, opts ...ClientOption) (*UserServiceListUserAuditOK, error)
+
 	UserServiceListUsers(params *UserServiceListUsersParams, opts ...ClientOption) (*UserServiceListUsersOK, error)
 
 	UserServiceResetPassword(params *UserServiceResetPasswordParams, opts ...ClientOption) (*UserServiceResetPasswordOK, error)
@@ -351,6 +353,45 @@ func (a *Client) UserServiceGetUserMe(params *UserServiceGetUserMeParams, opts .
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*UserServiceGetUserMeDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+UserServiceListUserAudit lists user audit entries
+
+This endpoint returns audit entries for a specific user
+*/
+func (a *Client) UserServiceListUserAudit(params *UserServiceListUserAuditParams, opts ...ClientOption) (*UserServiceListUserAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUserServiceListUserAuditParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "UserService_ListUserAudit",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/users/{id}/audit",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UserServiceListUserAuditReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UserServiceListUserAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UserServiceListUserAuditDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

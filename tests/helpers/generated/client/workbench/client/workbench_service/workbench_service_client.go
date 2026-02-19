@@ -66,6 +66,8 @@ type ClientService interface {
 
 	WorkbenchServiceGetWorkbench2(params *WorkbenchServiceGetWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceGetWorkbench2OK, error)
 
+	WorkbenchServiceListWorkbenchAudit(params *WorkbenchServiceListWorkbenchAuditParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchAuditOK, error)
+
 	WorkbenchServiceListWorkbenches(params *WorkbenchServiceListWorkbenchesParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchesOK, error)
 
 	WorkbenchServiceListWorkbenches2(params *WorkbenchServiceListWorkbenches2Params, opts ...ClientOption) (*WorkbenchServiceListWorkbenches2OK, error)
@@ -316,6 +318,45 @@ func (a *Client) WorkbenchServiceGetWorkbench2(params *WorkbenchServiceGetWorkbe
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkbenchServiceGetWorkbench2Default)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceListWorkbenchAudit lists workbench audit entries
+
+This endpoint returns audit entries for a specific workbench
+*/
+func (a *Client) WorkbenchServiceListWorkbenchAudit(params *WorkbenchServiceListWorkbenchAuditParams, opts ...ClientOption) (*WorkbenchServiceListWorkbenchAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceListWorkbenchAuditParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_ListWorkbenchAudit",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workbenches/{id}/audit",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceListWorkbenchAuditReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceListWorkbenchAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenchAuditDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
