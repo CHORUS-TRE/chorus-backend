@@ -36,6 +36,7 @@ const (
 	PermissionStreamWorkbench        PermissionName = "streamWorkbench"
 	PermissionDeleteWorkbench        PermissionName = "deleteWorkbench"
 	PermissionManageUsersInWorkbench PermissionName = "manageUsersInWorkbench"
+	PermissionAuditWorkbench         PermissionName = "auditWorkbench"
 
 	PermissionListWorkspaces                 PermissionName = "listWorkspaces"
 	PermissionCreateWorkspace                PermissionName = "createWorkspace"
@@ -48,6 +49,7 @@ const (
 	PermissionUploadFilesToWorkspace         PermissionName = "uploadFilesToWorkspace"
 	PermissionDownloadFilesFromWorkspace     PermissionName = "downloadFilesFromWorkspace"
 	PermissionModifyFilesInWorkspace         PermissionName = "modifyFilesInWorkspace"
+	PermissionAuditWorkspace                 PermissionName = "auditWorkspace"
 
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
@@ -82,9 +84,11 @@ const (
 	PermissionDeleteUser      PermissionName = "deleteUser"
 	PermissionResetPassword   PermissionName = "resetPassword"
 	PermissionManageUserRoles PermissionName = "manageUserRoles"
+	PermissionAuditUser       PermissionName = "auditUser"
 
 	PermissionGetPlatformSettings PermissionName = "getPlatformSettings"
 	PermissionSetPlatformSettings PermissionName = "setPlatformSettings"
+	PermissionAuditPlatform       PermissionName = "auditPlatform"
 
 	PermissionListRequests   PermissionName = "listRequests"
 	PermissionGetRequest     PermissionName = "getRequest"
@@ -124,6 +128,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionDeleteWorkbench, nil
 	case string(PermissionManageUsersInWorkbench):
 		return PermissionManageUsersInWorkbench, nil
+	case string(PermissionAuditWorkbench):
+		return PermissionAuditWorkbench, nil
 
 	case string(PermissionListWorkspaces):
 		return PermissionListWorkspaces, nil
@@ -147,6 +153,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionDownloadFilesFromWorkspace, nil
 	case string(PermissionModifyFilesInWorkspace):
 		return PermissionModifyFilesInWorkspace, nil
+	case string(PermissionAuditWorkspace):
+		return PermissionAuditWorkspace, nil
 
 	case string(PermissionListApps):
 		return PermissionListApps, nil
@@ -209,11 +217,15 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionResetPassword, nil
 	case string(PermissionManageUserRoles):
 		return PermissionManageUserRoles, nil
+	case string(PermissionAuditUser):
+		return PermissionAuditUser, nil
 
 	case string(PermissionGetPlatformSettings):
 		return PermissionGetPlatformSettings, nil
 	case string(PermissionSetPlatformSettings):
 		return PermissionSetPlatformSettings, nil
+	case string(PermissionAuditPlatform):
+		return PermissionAuditPlatform, nil
 
 	case string(PermissionListRequests):
 		return PermissionListRequests, nil
@@ -349,6 +361,7 @@ const (
 	RoleHealthchecker           RoleName = "Healthchecker"
 	RolePlatformSettingsManager RoleName = "PlatformSettingsManager"
 	RolePlateformUserManager    RoleName = "PlateformUserManager"
+	RolePlatformAuditor         RoleName = "PlatformAuditor"
 	RoleAppStoreAdmin           RoleName = "AppStoreAdmin"
 	RoleDataManager             RoleName = "DataManager"
 	RoleSuperAdmin              RoleName = "SuperAdmin"
@@ -386,6 +399,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RolePlatformSettingsManager, nil
 	case string(RolePlateformUserManager):
 		return RolePlateformUserManager, nil
+	case string(RolePlatformAuditor):
+		return RolePlatformAuditor, nil
 	case string(RoleAppStoreAdmin):
 		return RoleAppStoreAdmin, nil
 	case string(RoleDataManager):
@@ -412,6 +427,7 @@ func GetAllRoles() []RoleName {
 		RoleHealthchecker,
 		RolePlatformSettingsManager,
 		RolePlateformUserManager,
+		RolePlatformAuditor,
 		RoleAppStoreAdmin,
 		RoleDataManager,
 		RoleSuperAdmin,

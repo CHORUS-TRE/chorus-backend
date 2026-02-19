@@ -77,4 +77,7 @@ const (
 
 	// Admin
 	AuditActionTenantInitialize AuditAction = "InitializeTenant"
+
+	// Audit
+	AuditActionAuditList AuditAction = "ListAudit"
 )
