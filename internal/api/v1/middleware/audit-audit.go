@@ -47,7 +47,7 @@ func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.
 		)
 	}
 
-	audit.Record(ctx, c.auditWriter, model.AuditActionAuditList, opts...)
+	audit.Record(ctx, c.auditWriter, model.AuditActionPlatformAuditList, opts...)
 
 	return res, err
 }

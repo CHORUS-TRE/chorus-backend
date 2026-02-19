@@ -79,5 +79,8 @@ const (
 	AuditActionTenantInitialize AuditAction = "InitializeTenant"
 
 	// Audit
-	AuditActionAuditList AuditAction = "ListAudit"
+	AuditActionPlatformAuditList  AuditAction = "ListPlatformAudit"
+	AuditActionWorkspaceAuditList AuditAction = "ListWorkspaceAudit"
+	AuditActionWorkbenchAuditList AuditAction = "ListWorkbenchAudit"
+	AuditActionUserAuditList      AuditAction = "ListUserAudit"
 )
