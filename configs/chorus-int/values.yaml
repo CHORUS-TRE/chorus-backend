@@ -217,7 +217,7 @@ config:
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
       api_server: ""
       add_user_details: true
-      server_version: "6.3.2-4"
+      server_version: "6.4.3-1"
 
   log:
     loggers:
