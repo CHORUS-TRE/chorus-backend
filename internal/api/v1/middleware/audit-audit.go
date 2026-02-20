@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
@@ -25,29 +26,63 @@ func NewAuditAuditMiddleware(auditWriter service.AuditWriter) func(chorus.AuditS
 	}
 }
 
-func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
-	res, err := c.next.ListAuditEntries(ctx, req)
-
-	opts := []audit.Option{}
-
-	if req.Filter != nil {
-		opts = append(opts,
-			audit.WithDetail("filter", req.Filter),
-		)
-	}
+func (c auditControllerAudit) ListPlatformAudit(ctx context.Context, req *chorus.ListPlatformAuditRequest) (*chorus.ListAuditReply, error) {
+	res, err := c.next.ListPlatformAudit(ctx, req)
 
 	if err != nil {
-		opts = append(opts,
-			audit.WithDescription("Failed to list audit entries."),
+		opts := []audit.Option{
+			audit.WithDescription("Failed to list platform audit entries."),
 			audit.WithError(err),
-		)
-	} else {
-		opts = append(opts,
-			audit.WithDescription("Listed audit entries."),
+		}
+		if req.Filter != nil {
+			opts = append(opts, audit.WithDetail("filter", req.Filter))
+		}
+		audit.Record(ctx, c.auditWriter, model.AuditActionPlatformAuditList, opts...)
+	}
+
+	return res, err
+}
+
+func (c auditControllerAudit) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
+	res, err := c.next.ListWorkspaceAudit(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceAuditList,
+			audit.WithWorkspaceID(req.Id),
+			audit.WithDetail("workspace_id", req.Id),
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for workspace %d.", req.Id)),
+			audit.WithError(err),
 		)
 	}
 
-	audit.Record(ctx, c.auditWriter, model.AuditActionAuditList, opts...)
+	return res, err
+}
+
+func (c auditControllerAudit) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
+	res, err := c.next.ListWorkbenchAudit(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchAuditList,
+			audit.WithWorkbenchID(req.Id),
+			audit.WithDetail("workbench_id", req.Id),
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for workbench %d.", req.Id)),
+			audit.WithError(err),
+		)
+	}
+
+	return res, err
+}
+
+func (c auditControllerAudit) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
+	res, err := c.next.ListUserAudit(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionUserAuditList,
+			audit.WithDetail("user_id", req.Id),
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for user %d.", req.Id)),
+			audit.WithError(err),
+		)
+	}
 
 	return res, err
 }

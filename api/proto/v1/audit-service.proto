@@ -23,28 +23,70 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 };
 
-// ListAuditEntries lists audit entries based on the provided filter
-message ListAuditEntriesRequest {
+// Platform audit entries listing
+message ListPlatformAuditRequest {
     PaginationQuery pagination = 1;
     optional AuditFilter filter = 2;
 }
-message ListAuditEntriesReply {
-    ListAuditEntriesResult result = 1;
+
+// Entity-specific audit entries listing (workspace, workbench, user)
+message ListEntityAuditRequest {
+    uint64 id = 1;
+    PaginationQuery pagination = 2;
+    optional AuditFilter filter = 3;
+}
+
+message ListAuditReply {
+    ListAuditResult result = 1;
     optional PaginationResult pagination = 2;
 }
-message ListAuditEntriesResult {
+message ListAuditResult {
     repeated AuditEntry entries = 1;
 }
 
+
 service AuditService {
-    rpc ListAuditEntries(ListAuditEntriesRequest) returns (ListAuditEntriesReply) {
+    rpc ListPlatformAudit(ListPlatformAuditRequest) returns (ListAuditReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/audit"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "List audit entries";
-            description: "This endpoint returns a list of audit entries";
+            summary: "List platform audit entries";
+            description: "This endpoint returns a list of platform audit entries";
             tags: "AuditService";
         };
     }
-} 
+
+    rpc ListWorkspaceAudit(ListEntityAuditRequest) returns (ListAuditReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/workspaces/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workspace audit entries";
+            description: "This endpoint returns audit entries for a specific workspace";
+            tags: "AuditService";
+        };
+    };
+
+    rpc ListWorkbenchAudit(ListEntityAuditRequest) returns (ListAuditReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/workbenches/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workbench audit entries";
+            description: "This endpoint returns audit entries for a specific workbench";
+            tags: "AuditService";
+        };
+    };
+
+    rpc ListUserAudit(ListEntityAuditRequest) returns (ListAuditReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/users/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List user audit entries";
+            description: "This endpoint returns audit entries for a specific user";
+            tags: "AuditService";
+        };
+    };
+}
