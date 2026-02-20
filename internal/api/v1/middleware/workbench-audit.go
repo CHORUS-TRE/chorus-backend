@@ -204,4 +204,3 @@ func (c workbenchControllerAudit) RemoveUserFromWorkbench(ctx context.Context, r
 
 	return res, err
 }
-

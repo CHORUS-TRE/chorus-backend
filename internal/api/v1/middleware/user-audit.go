@@ -292,4 +292,3 @@ func (c userControllerAudit) ResetPassword(ctx context.Context, req *chorus.Rese
 
 	return res, err
 }
-

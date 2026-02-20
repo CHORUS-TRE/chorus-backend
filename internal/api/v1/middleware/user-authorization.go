@@ -162,4 +162,3 @@ func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *cho
 
 	return c.next.ResetPassword(ctx, req)
 }
-

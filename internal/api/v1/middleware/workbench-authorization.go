@@ -147,4 +147,3 @@ func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Co
 
 	return c.next.RemoveUserFromWorkbench(ctx, req)
 }
-

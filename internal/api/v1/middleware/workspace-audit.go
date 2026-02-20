@@ -194,4 +194,3 @@ func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, r
 
 	return res, err
 }
-

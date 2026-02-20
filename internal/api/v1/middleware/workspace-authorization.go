@@ -162,4 +162,3 @@ func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Co
 
 	return c.next.RemoveUserFromWorkspace(ctx, req)
 }
-
