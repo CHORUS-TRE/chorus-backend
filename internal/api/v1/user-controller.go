@@ -12,10 +12,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
-	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
-	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -29,12 +26,11 @@ type UserController struct {
 	user          service.Userer
 	authenticator authentication_service.Authenticator
 	cfg           config.Config
-	auditReader   audit_service.AuditReader
 }
 
 // NewUserController returns a fresh admin service controller instance.
-func NewUserController(user service.Userer, cfg config.Config, authenticator authentication_service.Authenticator, auditReader audit_service.AuditReader) UserController {
-	return UserController{user: user, cfg: cfg, authenticator: authenticator, auditReader: auditReader}
+func NewUserController(user service.Userer, cfg config.Config, authenticator authentication_service.Authenticator) UserController {
+	return UserController{user: user, cfg: cfg, authenticator: authenticator}
 }
 
 func (c UserController) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
@@ -426,49 +422,6 @@ func (c UserController) ResetPassword(ctx context.Context, req *chorus.ResetPass
 	return &chorus.ResetPasswordReply{Result: &chorus.ResetPasswordResult{}}, nil
 }
 
-func (c UserController) ListUserAudit(ctx context.Context, req *chorus.ListUserAuditRequest) (*chorus.ListUserAuditReply, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	tenantID, err := jwt_model.ExtractTenantID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	}
-
-	pagination := converter.PaginationToBusiness(req.Pagination)
-
-	filter, err := converter.AuditFilterToBusiness(req.Filter)
-	if err != nil {
-		logger.TechLog.Error(ctx, fmt.Sprintf("invalid audit filter: %v", err.Error()))
-		return nil, status.Errorf(codes.InvalidArgument, "invalid filter: %v", err.Error())
-	}
-	if filter == nil {
-		filter = &audit_model.AuditFilter{}
-	}
-	filter.UserID = req.Id // Enforce filtering audit by requested user ID
-
-	res, paginationRes, err := c.auditReader.List(ctx, tenantID, &pagination, filter)
-	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListUserAudit': %v", err.Error())
-	}
-
-	var entries []*chorus.AuditEntry
-	for _, r := range res {
-		entry, err := converter.AuditEntryFromBusiness(r)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-		}
-		entries = append(entries, entry)
-	}
-
-	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
-
-	return &chorus.ListUserAuditReply{
-		Result:     &chorus.ListUserAuditResult{Entries: entries},
-		Pagination: paginationResult,
-	}, nil
-}
 
 // userToServiceRequest converts a chorus.User to a model.User.
 func userToServiceRequest(user *chorus.User) (*service.UserReq, error) {

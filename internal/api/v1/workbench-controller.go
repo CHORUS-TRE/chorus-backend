@@ -7,10 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
-	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
-	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
@@ -23,13 +20,12 @@ var _ chorus.WorkbenchServiceServer = (*WorkbenchController)(nil)
 
 // WorkbenchController is the workbench service controller handler.
 type WorkbenchController struct {
-	workbench   service.Workbencher
-	auditReader audit_service.AuditReader
+	workbench service.Workbencher
 }
 
 // NewWorkbenchController returns a fresh admin service controller instance.
-func NewWorkbenchController(workbench service.Workbencher, auditReader audit_service.AuditReader) WorkbenchController {
-	return WorkbenchController{workbench: workbench, auditReader: auditReader}
+func NewWorkbenchController(workbench service.Workbencher) WorkbenchController {
+	return WorkbenchController{workbench: workbench}
 }
 
 func (c WorkbenchController) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
@@ -220,46 +216,3 @@ func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *c
 	return &chorus.RemoveUserFromWorkbenchReply{Result: &chorus.RemoveUserFromWorkbenchResult{}}, nil
 }
 
-func (c WorkbenchController) ListWorkbenchAudit(ctx context.Context, req *chorus.ListWorkbenchAuditRequest) (*chorus.ListWorkbenchAuditReply, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	tenantID, err := jwt_model.ExtractTenantID(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
-	}
-
-	pagination := converter.PaginationToBusiness(req.Pagination)
-
-	filter, err := converter.AuditFilterToBusiness(req.Filter)
-	if err != nil {
-		logger.TechLog.Error(ctx, fmt.Sprintf("invalid audit filter: %v", err.Error()))
-		return nil, status.Errorf(codes.InvalidArgument, "invalid filter: %v", err.Error())
-	}
-	if filter == nil {
-		filter = &audit_model.AuditFilter{}
-	}
-	filter.WorkbenchID = req.Id // Enforce filtering audit by requested workbench ID
-
-	res, paginationRes, err := c.auditReader.List(ctx, tenantID, &pagination, filter)
-	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkbenchAudit': %v", err.Error())
-	}
-
-	var entries []*chorus.AuditEntry
-	for _, r := range res {
-		entry, err := converter.AuditEntryFromBusiness(r)
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
-		}
-		entries = append(entries, entry)
-	}
-
-	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
-
-	return &chorus.ListWorkbenchAuditReply{
-		Result:     &chorus.ListWorkbenchAuditResult{Entries: entries},
-		Pagination: paginationResult,
-	}, nil
-}
