@@ -41,7 +41,7 @@ var userController chorus.UserServiceServer
 
 func ProvideUserController() chorus.UserServiceServer {
 	userControllerOnce.Do(func() {
-		userController = v1.NewUserController(ProvideUser(), ProvideConfig(), ProvideAuthenticator())
+		userController = v1.NewUserController(ProvideUser(), ProvideConfig(), ProvideAuthenticator(), ProvideAuditService())
 		userController = ctrl_mw.UserAuthorizing(logger.SecLog, ProvideAuthorizer())(userController)
 		if ProvideConfig().Services.AuditService.Enabled {
 			userController = ctrl_mw.NewUserAuditMiddleware(ProvideAuditWriter())(userController)

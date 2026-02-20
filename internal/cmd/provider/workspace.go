@@ -20,7 +20,7 @@ var workspaceController chorus.WorkspaceServiceServer
 
 func ProvideWorkspaceController() chorus.WorkspaceServiceServer {
 	workspaceControllerOnce.Do(func() {
-		workspaceController = v1.NewWorkspaceController(ProvideWorkspaceService())
+		workspaceController = v1.NewWorkspaceController(ProvideWorkspaceService(), ProvideAuditService())
 		workspaceController = ctrl_mw.WorkspaceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workspaceController)
 		if ProvideConfig().Services.AuditService.Enabled {
 			workspaceController = ctrl_mw.NewWorkspaceAuditMiddleware(ProvideAuditWriter())(workspaceController)
