@@ -114,8 +114,10 @@ func (a *auth) IsUserAllowed(user []model.Role, permission model.Permission) (bo
 	allowed := a.gatekeeper.IsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
 
 	if !allowed {
-		explanation := a.gatekeeper.ExplainIsUserAllowed(gatekeeper_model.User{Roles: roles}, pInstance)
-		logger.TechLog.Info(context.Background(), "authorization failed", zap.String("permission", string(permission.Name)), zap.String("explanation", explanation))
+		logger.TechLog.Info(context.Background(), "no role grants the required permission",
+			zap.String("required_permission", string(permission.Name)),
+			zap.Any("roles_granting_permission", a.RolesGrantingPermission[permission.Name]),
+		)
 	}
 
 	return allowed, nil

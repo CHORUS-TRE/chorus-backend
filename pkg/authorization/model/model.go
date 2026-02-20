@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 )
@@ -487,6 +488,34 @@ func ToRoleContext(r string) (ContextDimension, error) {
 	}
 
 	return "", fmt.Errorf("unknown role context type: %s", r)
+}
+
+// UniquePermissionNames returns a sorted, deduplicated list of permission names from a slice of permissions.
+func UniquePermissionNames(permissions []Permission) []string {
+	seen := make(map[string]struct{}, len(permissions))
+	for _, p := range permissions {
+		seen[string(p.Name)] = struct{}{}
+	}
+	names := make([]string, 0, len(seen))
+	for name := range seen {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names
+}
+
+// UniqueRoleNames returns a sorted, deduplicated list of role names from a slice of JWT roles.
+func UniqueRoleNames(roles []jwt_model.Role) []string {
+	seen := make(map[string]struct{}, len(roles))
+	for _, r := range roles {
+		seen[r.Name] = struct{}{}
+	}
+	names := make([]string, 0, len(seen))
+	for name := range seen {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names
 }
 
 type FindUsersWithPermissionFilter struct {
