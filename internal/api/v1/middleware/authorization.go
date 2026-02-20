@@ -140,16 +140,17 @@ func (c Authorization) getSetCookieHeader(token string, expires string) metadata
 
 func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, p authorization.Permission) error {
 	aRoles, err := claimRolesToAuthRoles(claims)
-	var permission []authorization.Permission
+	var permissions []authorization.Permission
 	if err == nil {
-		permission, _ = c.authorizer.GetUserPermissions(aRoles)
+		permissions, _ = c.authorizer.GetUserPermissions(aRoles)
 	}
 
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
-		zap.Any("permission", permission),
-		zap.Any("roles", claims.Roles))
+		zap.String("required_permission", string(p.Name)),
+		zap.Strings("user_permissions", authorization.UniquePermissionNames(permissions)),
+		zap.Strings("user_roles", authorization.UniqueRoleNames(claims.Roles)))
 	return status.Errorf(codes.PermissionDenied, "required permission: %v", p)
 }
 
