@@ -60,8 +60,6 @@ type ClientService interface {
 
 	WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceOK, error)
 
-	WorkspaceServiceListWorkspaceAudit(params *WorkspaceServiceListWorkspaceAuditParams, opts ...ClientOption) (*WorkspaceServiceListWorkspaceAuditOK, error)
-
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
 	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
@@ -187,45 +185,6 @@ func (a *Client) WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspa
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceGetWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-WorkspaceServiceListWorkspaceAudit lists workspace audit entries
-
-This endpoint returns audit entries for a specific workspace
-*/
-func (a *Client) WorkspaceServiceListWorkspaceAudit(params *WorkspaceServiceListWorkspaceAuditParams, opts ...ClientOption) (*WorkspaceServiceListWorkspaceAuditOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewWorkspaceServiceListWorkspaceAuditParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "WorkspaceService_ListWorkspaceAudit",
-		Method:             "GET",
-		PathPattern:        "/api/rest/v1/workspaces/{id}/audit",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &WorkspaceServiceListWorkspaceAuditReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*WorkspaceServiceListWorkspaceAuditOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceListWorkspaceAuditDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

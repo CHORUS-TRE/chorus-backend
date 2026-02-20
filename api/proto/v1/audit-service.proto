@@ -36,6 +36,13 @@ message ListAuditEntriesResult {
     repeated AuditEntry entries = 1;
 }
 
+// ListEntityAuditRequest is shared by entity-scoped audit endpoints.
+message ListEntityAuditRequest {
+    uint64 id = 1;
+    PaginationQuery pagination = 2;
+    optional AuditFilter filter = 3;
+}
+
 service AuditService {
     rpc ListAuditEntries(ListAuditEntriesRequest) returns (ListAuditEntriesReply) {
         option (google.api.http) = {
@@ -47,4 +54,37 @@ service AuditService {
             tags: "AuditService";
         };
     }
-} 
+
+    rpc ListWorkspaceAudit(ListEntityAuditRequest) returns (ListAuditEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/workspaces/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workspace audit entries";
+            description: "This endpoint returns audit entries for a specific workspace";
+            tags: "AuditService";
+        };
+    };
+
+    rpc ListWorkbenchAudit(ListEntityAuditRequest) returns (ListAuditEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/workbenches/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workbench audit entries";
+            description: "This endpoint returns audit entries for a specific workbench";
+            tags: "AuditService";
+        };
+    };
+
+    rpc ListUserAudit(ListEntityAuditRequest) returns (ListAuditEntriesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/users/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List user audit entries";
+            description: "This endpoint returns audit entries for a specific user";
+            tags: "AuditService";
+        };
+    };
+}

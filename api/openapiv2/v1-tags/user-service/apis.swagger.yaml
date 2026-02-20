@@ -259,88 +259,6 @@ paths:
           format: uint64
       tags:
         - UserService
-  /api/rest/v1/users/{id}/audit:
-    get:
-      summary: List user audit entries
-      description: This endpoint returns audit entries for a specific user
-      operationId: UserService_ListUserAudit
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/chorusListUserAuditReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: pagination.offset
-          description: Optionally offset the number of results
-          in: query
-          required: false
-          type: integer
-          format: int64
-        - name: pagination.limit
-          description: Optionally limit the number of results (between 1 and 500)
-          in: query
-          required: false
-          type: integer
-          format: int64
-        - name: pagination.sort.order
-          in: query
-          required: false
-          type: string
-        - name: pagination.sort.type
-          in: query
-          required: false
-          type: string
-        - name: pagination.query
-          description: Optionally filter the results
-          in: query
-          required: false
-          type: array
-          items:
-            type: string
-          collectionFormat: multi
-          x-example:
-            - user_id=9999
-            - status=STATUS_CREATED,STATUS_CLOSED
-        - name: filter.userId
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: filter.workspaceId
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: filter.workbenchId
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: filter.action
-          in: query
-          required: false
-          type: string
-        - name: filter.fromTime
-          in: query
-          required: false
-          type: string
-          format: date-time
-        - name: filter.toTime
-          in: query
-          required: false
-          type: string
-          format: date-time
-      tags:
-        - UserService
   /api/rest/v1/users/{id}/password/reset:
     post:
       summary: Reset password
@@ -431,56 +349,6 @@ definitions:
   UserServiceResetPasswordBody:
     type: object
     title: Reset Password
-  chorusAuditEntry:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uint64
-      userId:
-        type: string
-        format: uint64
-      username:
-        type: string
-      correlationId:
-        type: string
-      action:
-        type: string
-      workspaceId:
-        type: string
-        format: uint64
-      workbenchId:
-        type: string
-        format: uint64
-      description:
-        type: string
-      details:
-        type: object
-        additionalProperties:
-          type: string
-      createdAt:
-        type: string
-        format: date-time
-  chorusAuditFilter:
-    type: object
-    properties:
-      userId:
-        type: string
-        format: uint64
-      workspaceId:
-        type: string
-        format: uint64
-      workbenchId:
-        type: string
-        format: uint64
-      action:
-        type: string
-      fromTime:
-        type: string
-        format: date-time
-      toTime:
-        type: string
-        format: date-time
   chorusCreateUserReply:
     type: object
     properties:
@@ -552,21 +420,6 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/chorusUser'
-  chorusListUserAuditReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusListUserAuditResult'
-      pagination:
-        $ref: '#/definitions/chorusPaginationResult'
-  chorusListUserAuditResult:
-    type: object
-    properties:
-      entries:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusAuditEntry'
   chorusListUsersReply:
     type: object
     properties:

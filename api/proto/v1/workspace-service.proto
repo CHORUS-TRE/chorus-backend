@@ -9,7 +9,6 @@ import "google/protobuf/empty.proto";
 import "common.proto";
 import "workspace.proto";
 import "user.proto";
-import "audit.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     info: {
@@ -96,20 +95,6 @@ message DeleteWorkspaceReply {
 }
 message DeleteWorkspaceResult {}
 
-message ListWorkspaceAuditRequest {
-    uint64 id = 1;
-    PaginationQuery pagination = 2;
-    optional AuditFilter filter = 3;
-}
-message ListWorkspaceAuditReply {
-    ListWorkspaceAuditResult result = 1;
-    optional PaginationResult pagination = 2;
-}
-message ListWorkspaceAuditResult {
-    repeated AuditEntry entries = 1;
-}
-
-
 service WorkspaceService {
     rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceReply) {
         option (google.api.http) = {
@@ -191,14 +176,4 @@ service WorkspaceService {
         };
     };
 
-    rpc ListWorkspaceAudit(ListWorkspaceAuditRequest) returns (ListWorkspaceAuditReply) {
-        option (google.api.http) = {
-            get: "/api/rest/v1/workspaces/{id}/audit"
-        };
-        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "List workspace audit entries";
-            description: "This endpoint returns audit entries for a specific workspace";
-            tags: "WorkspaceService";
-        };
-    };
 }

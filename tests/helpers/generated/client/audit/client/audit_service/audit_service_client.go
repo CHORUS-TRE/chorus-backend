@@ -56,6 +56,12 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	AuditServiceListAuditEntries(params *AuditServiceListAuditEntriesParams, opts ...ClientOption) (*AuditServiceListAuditEntriesOK, error)
 
+	AuditServiceListUserAudit(params *AuditServiceListUserAuditParams, opts ...ClientOption) (*AuditServiceListUserAuditOK, error)
+
+	AuditServiceListWorkbenchAudit(params *AuditServiceListWorkbenchAuditParams, opts ...ClientOption) (*AuditServiceListWorkbenchAuditOK, error)
+
+	AuditServiceListWorkspaceAudit(params *AuditServiceListWorkspaceAuditParams, opts ...ClientOption) (*AuditServiceListWorkspaceAuditOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -95,6 +101,123 @@ func (a *Client) AuditServiceListAuditEntries(params *AuditServiceListAuditEntri
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*AuditServiceListAuditEntriesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuditServiceListUserAudit lists user audit entries
+
+This endpoint returns audit entries for a specific user
+*/
+func (a *Client) AuditServiceListUserAudit(params *AuditServiceListUserAuditParams, opts ...ClientOption) (*AuditServiceListUserAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuditServiceListUserAuditParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuditService_ListUserAudit",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/audit/users/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuditServiceListUserAuditReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuditServiceListUserAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuditServiceListUserAuditDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuditServiceListWorkbenchAudit lists workbench audit entries
+
+This endpoint returns audit entries for a specific workbench
+*/
+func (a *Client) AuditServiceListWorkbenchAudit(params *AuditServiceListWorkbenchAuditParams, opts ...ClientOption) (*AuditServiceListWorkbenchAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuditServiceListWorkbenchAuditParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuditService_ListWorkbenchAudit",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/audit/workbenches/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuditServiceListWorkbenchAuditReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuditServiceListWorkbenchAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuditServiceListWorkbenchAuditDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+AuditServiceListWorkspaceAudit lists workspace audit entries
+
+This endpoint returns audit entries for a specific workspace
+*/
+func (a *Client) AuditServiceListWorkspaceAudit(params *AuditServiceListWorkspaceAuditParams, opts ...ClientOption) (*AuditServiceListWorkspaceAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuditServiceListWorkspaceAuditParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuditService_ListWorkspaceAudit",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/audit/workspaces/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuditServiceListWorkspaceAuditReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuditServiceListWorkspaceAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuditServiceListWorkspaceAuditDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
