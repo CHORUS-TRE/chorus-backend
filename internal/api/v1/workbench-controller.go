@@ -215,4 +215,3 @@ func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *c
 
 	return &chorus.RemoveUserFromWorkbenchReply{Result: &chorus.RemoveUserFromWorkbenchResult{}}, nil
 }
-

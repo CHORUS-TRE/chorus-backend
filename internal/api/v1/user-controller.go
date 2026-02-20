@@ -422,7 +422,6 @@ func (c UserController) ResetPassword(ctx context.Context, req *chorus.ResetPass
 	return &chorus.ResetPasswordReply{Result: &chorus.ResetPasswordResult{}}, nil
 }
 
-
 // userToServiceRequest converts a chorus.User to a model.User.
 func userToServiceRequest(user *chorus.User) (*service.UserReq, error) {
 	ca, err := converter.FromProtoTimestamp(user.CreatedAt)

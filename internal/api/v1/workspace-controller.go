@@ -251,4 +251,3 @@ func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *c
 	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{Workspace: tgWorkspace}}, nil
 
 }
-
