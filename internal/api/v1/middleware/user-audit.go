@@ -292,3 +292,26 @@ func (c userControllerAudit) ResetPassword(ctx context.Context, req *chorus.Rese
 
 	return res, err
 }
+
+func (c userControllerAudit) ListUserAudit(ctx context.Context, req *chorus.ListUserAuditRequest) (*chorus.ListUserAuditReply, error) {
+	res, err := c.next.ListUserAudit(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("user_id", req.Id),
+	}
+
+	if err != nil {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for user %d.", req.Id)),
+			audit.WithError(err),
+		)
+	} else {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Listed audit entries for user %d.", req.Id)),
+		)
+	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionUserAuditList, opts...)
+
+	return res, err
+}

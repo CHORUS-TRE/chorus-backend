@@ -162,3 +162,21 @@ func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *cho
 
 	return c.next.ResetPassword(ctx, req)
 }
+
+func (c userControllerAuthorization) ListUserAudit(ctx context.Context, req *chorus.ListUserAuditRequest) (*chorus.ListUserAuditReply, error) {
+	if req.Filter != nil && req.Filter.WorkspaceId != 0 {
+		// Workspace-scoped: caller must have audit permission for that specific workspace.
+		err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkspace, authorization.WithWorkspace(req.Filter.WorkspaceId))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// No workspace scope: platform-admin-level audit permission required.
+		err := c.IsAuthorized(ctx, authorization.PermissionAuditUser, authorization.WithUser(req.Id))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.next.ListUserAudit(ctx, req)
+}
