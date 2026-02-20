@@ -41,7 +41,7 @@ var workbenchController chorus.WorkbenchServiceServer
 
 func ProvideWorkbenchController() chorus.WorkbenchServiceServer {
 	workbenchControllerOnce.Do(func() {
-		workbenchController = v1.NewWorkbenchController(ProvideWorkbench(), ProvideAuditService())
+		workbenchController = v1.NewWorkbenchController(ProvideWorkbench())
 		workbenchController = ctrl_mw.WorkbenchAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideConfig(), ProvideAuthenticator())(workbenchController)
 		if ProvideConfig().Services.AuditService.Enabled {
 			workbenchController = ctrl_mw.NewWorkbenchAuditMiddleware(ProvideAuditWriter())(workbenchController)
