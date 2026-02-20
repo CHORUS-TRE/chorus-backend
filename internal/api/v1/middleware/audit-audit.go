@@ -29,26 +29,16 @@ func NewAuditAuditMiddleware(auditWriter service.AuditWriter) func(chorus.AuditS
 func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
 	res, err := c.next.ListAuditEntries(ctx, req)
 
-	opts := []audit.Option{}
-
-	if req.Filter != nil {
-		opts = append(opts,
-			audit.WithDetail("filter", req.Filter),
-		)
-	}
-
 	if err != nil {
-		opts = append(opts,
+		opts := []audit.Option{
 			audit.WithDescription("Failed to list audit entries."),
 			audit.WithError(err),
-		)
-	} else {
-		opts = append(opts,
-			audit.WithDescription("Listed audit entries."),
-		)
+		}
+		if req.Filter != nil {
+			opts = append(opts, audit.WithDetail("filter", req.Filter))
+		}
+		audit.Record(ctx, c.auditWriter, model.AuditActionPlatformAuditList, opts...)
 	}
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionPlatformAuditList, opts...)
 
 	return res, err
 }
