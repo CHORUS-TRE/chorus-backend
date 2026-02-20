@@ -24,7 +24,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListPlatformAuditReply'
+            $ref: '#/definitions/chorusListAuditReply'
         default:
           description: An unexpected error response.
           schema:
@@ -101,7 +101,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListPlatformAuditReply'
+            $ref: '#/definitions/chorusListAuditReply'
         default:
           description: An unexpected error response.
           schema:
@@ -183,7 +183,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListPlatformAuditReply'
+            $ref: '#/definitions/chorusListAuditReply'
         default:
           description: An unexpected error response.
           schema:
@@ -265,7 +265,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListPlatformAuditReply'
+            $ref: '#/definitions/chorusListAuditReply'
         default:
           description: An unexpected error response.
           schema:
@@ -389,14 +389,14 @@ definitions:
       toTime:
         type: string
         format: date-time
-  chorusListPlatformAuditReply:
+  chorusListAuditReply:
     type: object
     properties:
       result:
-        $ref: '#/definitions/chorusListPlatformAuditResult'
+        $ref: '#/definitions/chorusListAuditResult'
       pagination:
         $ref: '#/definitions/chorusPaginationResult'
-  chorusListPlatformAuditResult:
+  chorusListAuditResult:
     type: object
     properties:
       entries:

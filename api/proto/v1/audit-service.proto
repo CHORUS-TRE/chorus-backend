@@ -23,28 +23,30 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 };
 
-// ListPlatformAudit lists audit entries based on the provided filter
+// Platform audit entries listing
 message ListPlatformAuditRequest {
     PaginationQuery pagination = 1;
     optional AuditFilter filter = 2;
 }
-message ListPlatformAuditReply {
-    ListPlatformAuditResult result = 1;
-    optional PaginationResult pagination = 2;
-}
-message ListPlatformAuditResult {
-    repeated AuditEntry entries = 1;
-}
 
-// ListEntityAuditRequest is shared by entity-scoped audit endpoints.
+// Entity-specific audit entries listing (workspace, workbench, user)
 message ListEntityAuditRequest {
     uint64 id = 1;
     PaginationQuery pagination = 2;
     optional AuditFilter filter = 3;
 }
 
+message ListAuditReply {
+    ListAuditResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListAuditResult {
+    repeated AuditEntry entries = 1;
+}
+
+
 service AuditService {
-    rpc ListPlatformAudit(ListPlatformAuditRequest) returns (ListPlatformAuditReply) {
+    rpc ListPlatformAudit(ListPlatformAuditRequest) returns (ListAuditReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/audit"
         };
@@ -55,7 +57,7 @@ service AuditService {
         };
     }
 
-    rpc ListWorkspaceAudit(ListEntityAuditRequest) returns (ListPlatformAuditReply) {
+    rpc ListWorkspaceAudit(ListEntityAuditRequest) returns (ListAuditReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/audit/workspaces/{id}"
         };
@@ -66,7 +68,7 @@ service AuditService {
         };
     };
 
-    rpc ListWorkbenchAudit(ListEntityAuditRequest) returns (ListPlatformAuditReply) {
+    rpc ListWorkbenchAudit(ListEntityAuditRequest) returns (ListAuditReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/audit/workbenches/{id}"
         };
@@ -77,7 +79,7 @@ service AuditService {
         };
     };
 
-    rpc ListUserAudit(ListEntityAuditRequest) returns (ListPlatformAuditReply) {
+    rpc ListUserAudit(ListEntityAuditRequest) returns (ListAuditReply) {
         option (google.api.http) = {
             get: "/api/rest/v1/audit/users/{id}"
         };

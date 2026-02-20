@@ -53,7 +53,7 @@ AuditServiceListWorkspaceAuditOK describes a response with status code 200, with
 A successful response.
 */
 type AuditServiceListWorkspaceAuditOK struct {
-	Payload *models.ChorusListPlatformAuditReply
+	Payload *models.ChorusListAuditReply
 }
 
 // IsSuccess returns true when this audit service list workspace audit o k response has a 2xx status code
@@ -96,13 +96,13 @@ func (o *AuditServiceListWorkspaceAuditOK) String() string {
 	return fmt.Sprintf("[GET /api/rest/v1/audit/workspaces/{id}][%d] auditServiceListWorkspaceAuditOK %s", 200, payload)
 }
 
-func (o *AuditServiceListWorkspaceAuditOK) GetPayload() *models.ChorusListPlatformAuditReply {
+func (o *AuditServiceListWorkspaceAuditOK) GetPayload() *models.ChorusListAuditReply {
 	return o.Payload
 }
 
 func (o *AuditServiceListWorkspaceAuditOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ChorusListPlatformAuditReply)
+	o.Payload = new(models.ChorusListAuditReply)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
