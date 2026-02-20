@@ -873,14 +873,14 @@ paths:
         - AppService
   /api/rest/v1/audit:
     get:
-      summary: List audit entries
-      description: This endpoint returns a list of audit entries
-      operationId: AuditService_ListAuditEntries
+      summary: List platform audit entries
+      description: This endpoint returns a list of platform audit entries
+      operationId: AuditService_ListPlatformAudit
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListAuditEntriesReply'
+            $ref: '#/definitions/chorusListPlatformAuditReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -975,7 +975,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListAuditEntriesReply'
+            $ref: '#/definitions/chorusListPlatformAuditReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -1075,7 +1075,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListAuditEntriesReply'
+            $ref: '#/definitions/chorusListPlatformAuditReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -1175,7 +1175,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusListAuditEntriesReply'
+            $ref: '#/definitions/chorusListPlatformAuditReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -5150,21 +5150,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusApp'
-  chorusListAuditEntriesReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusListAuditEntriesResult'
-      pagination:
-        $ref: '#/definitions/chorusPaginationResult'
-  chorusListAuditEntriesResult:
-    type: object
-    properties:
-      entries:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/chorusAuditEntry'
   chorusListEntriesReply:
     type: object
     properties:
@@ -5190,6 +5175,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusAuthorizationPermission'
+  chorusListPlatformAuditReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListPlatformAuditResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListPlatformAuditResult:
+    type: object
+    properties:
+      entries:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAuditEntry'
   chorusListRolesReply:
     type: object
     properties:

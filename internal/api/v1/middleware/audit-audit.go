@@ -26,12 +26,12 @@ func NewAuditAuditMiddleware(auditWriter service.AuditWriter) func(chorus.AuditS
 	}
 }
 
-func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
-	res, err := c.next.ListAuditEntries(ctx, req)
+func (c auditControllerAudit) ListPlatformAudit(ctx context.Context, req *chorus.ListPlatformAuditRequest) (*chorus.ListPlatformAuditReply, error) {
+	res, err := c.next.ListPlatformAudit(ctx, req)
 
 	if err != nil {
 		opts := []audit.Option{
-			audit.WithDescription("Failed to list audit entries."),
+			audit.WithDescription("Failed to list platform audit entries."),
 			audit.WithError(err),
 		}
 		if req.Filter != nil {
@@ -43,7 +43,7 @@ func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.
 	return res, err
 }
 
-func (c auditControllerAudit) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAudit) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	res, err := c.next.ListWorkspaceAudit(ctx, req)
 
 	if err != nil {
@@ -58,7 +58,7 @@ func (c auditControllerAudit) ListWorkspaceAudit(ctx context.Context, req *choru
 	return res, err
 }
 
-func (c auditControllerAudit) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAudit) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	res, err := c.next.ListWorkbenchAudit(ctx, req)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func (c auditControllerAudit) ListWorkbenchAudit(ctx context.Context, req *choru
 	return res, err
 }
 
-func (c auditControllerAudit) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAudit) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	res, err := c.next.ListUserAudit(ctx, req)
 
 	if err != nil {

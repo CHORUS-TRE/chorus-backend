@@ -54,7 +54,7 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	AuditServiceListAuditEntries(params *AuditServiceListAuditEntriesParams, opts ...ClientOption) (*AuditServiceListAuditEntriesOK, error)
+	AuditServiceListPlatformAudit(params *AuditServiceListPlatformAuditParams, opts ...ClientOption) (*AuditServiceListPlatformAuditOK, error)
 
 	AuditServiceListUserAudit(params *AuditServiceListUserAuditParams, opts ...ClientOption) (*AuditServiceListUserAuditOK, error)
 
@@ -66,24 +66,24 @@ type ClientService interface {
 }
 
 /*
-AuditServiceListAuditEntries lists audit entries
+AuditServiceListPlatformAudit lists platform audit entries
 
-This endpoint returns a list of audit entries
+This endpoint returns a list of platform audit entries
 */
-func (a *Client) AuditServiceListAuditEntries(params *AuditServiceListAuditEntriesParams, opts ...ClientOption) (*AuditServiceListAuditEntriesOK, error) {
+func (a *Client) AuditServiceListPlatformAudit(params *AuditServiceListPlatformAuditParams, opts ...ClientOption) (*AuditServiceListPlatformAuditOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewAuditServiceListAuditEntriesParams()
+		params = NewAuditServiceListPlatformAuditParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "AuditService_ListAuditEntries",
+		ID:                 "AuditService_ListPlatformAudit",
 		Method:             "GET",
 		PathPattern:        "/api/rest/v1/audit",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &AuditServiceListAuditEntriesReader{formats: a.formats},
+		Reader:             &AuditServiceListPlatformAuditReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -95,12 +95,12 @@ func (a *Client) AuditServiceListAuditEntries(params *AuditServiceListAuditEntri
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*AuditServiceListAuditEntriesOK)
+	success, ok := result.(*AuditServiceListPlatformAuditOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceListAuditEntriesDefault)
+	unexpectedSuccess := result.(*AuditServiceListPlatformAuditDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

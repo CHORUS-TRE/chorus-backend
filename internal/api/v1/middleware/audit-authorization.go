@@ -28,16 +28,16 @@ func AuditAuthorizing(logger *logger.ContextLogger, authorizer authorization_ser
 	}
 }
 
-func (c auditControllerAuthorization) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAuthorization) ListPlatformAudit(ctx context.Context, req *chorus.ListPlatformAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionAuditPlatform)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.next.ListAuditEntries(ctx, req)
+	return c.next.ListPlatformAudit(ctx, req)
 }
 
-func (c auditControllerAuthorization) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAuthorization) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c auditControllerAuthorization) ListWorkspaceAudit(ctx context.Context, re
 	return c.next.ListWorkspaceAudit(ctx, req)
 }
 
-func (c auditControllerAuthorization) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAuthorization) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (c auditControllerAuthorization) ListWorkbenchAudit(ctx context.Context, re
 	return c.next.ListWorkbenchAudit(ctx, req)
 }
 
-func (c auditControllerAuthorization) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c auditControllerAuthorization) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	if req.Filter != nil && req.Filter.WorkspaceId != 0 {
 		// Workspace-scoped: caller must have audit permission for that specific workspace.
 		err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkspace, authorization.WithWorkspace(req.Filter.WorkspaceId))

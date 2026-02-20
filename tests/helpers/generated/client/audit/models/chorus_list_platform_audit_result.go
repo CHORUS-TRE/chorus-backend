@@ -14,17 +14,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusListAuditEntriesResult chorus list audit entries result
+// ChorusListPlatformAuditResult chorus list platform audit result
 //
-// swagger:model chorusListAuditEntriesResult
-type ChorusListAuditEntriesResult struct {
+// swagger:model chorusListPlatformAuditResult
+type ChorusListPlatformAuditResult struct {
 
 	// entries
 	Entries []*ChorusAuditEntry `json:"entries"`
 }
 
-// Validate validates this chorus list audit entries result
-func (m *ChorusListAuditEntriesResult) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus list platform audit result
+func (m *ChorusListPlatformAuditResult) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEntries(formats); err != nil {
@@ -37,7 +37,7 @@ func (m *ChorusListAuditEntriesResult) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusListAuditEntriesResult) validateEntries(formats strfmt.Registry) error {
+func (m *ChorusListPlatformAuditResult) validateEntries(formats strfmt.Registry) error {
 	if swag.IsZero(m.Entries) { // not required
 		return nil
 	}
@@ -63,8 +63,8 @@ func (m *ChorusListAuditEntriesResult) validateEntries(formats strfmt.Registry) 
 	return nil
 }
 
-// ContextValidate validate this chorus list audit entries result based on the context it is used
-func (m *ChorusListAuditEntriesResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus list platform audit result based on the context it is used
+func (m *ChorusListPlatformAuditResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateEntries(ctx, formats); err != nil {
@@ -77,7 +77,7 @@ func (m *ChorusListAuditEntriesResult) ContextValidate(ctx context.Context, form
 	return nil
 }
 
-func (m *ChorusListAuditEntriesResult) contextValidateEntries(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusListPlatformAuditResult) contextValidateEntries(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Entries); i++ {
 
@@ -103,7 +103,7 @@ func (m *ChorusListAuditEntriesResult) contextValidateEntries(ctx context.Contex
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusListAuditEntriesResult) MarshalBinary() ([]byte, error) {
+func (m *ChorusListPlatformAuditResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -111,8 +111,8 @@ func (m *ChorusListAuditEntriesResult) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusListAuditEntriesResult) UnmarshalBinary(b []byte) error {
-	var res ChorusListAuditEntriesResult
+func (m *ChorusListPlatformAuditResult) UnmarshalBinary(b []byte) error {
+	var res ChorusListPlatformAuditResult
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

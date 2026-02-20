@@ -28,7 +28,7 @@ func NewAuditController(auditService service.AuditReader) *AuditController {
 	}
 }
 
-func (c *AuditController) ListAuditEntries(ctx context.Context, req *chorus.ListAuditEntriesRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c *AuditController) ListPlatformAudit(ctx context.Context, req *chorus.ListPlatformAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	if req == nil {
 		logger.TechLog.Error(ctx, "empty request")
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -66,10 +66,10 @@ func (c *AuditController) ListAuditEntries(ctx context.Context, req *chorus.List
 
 	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
 
-	return &chorus.ListAuditEntriesReply{Result: &chorus.ListAuditEntriesResult{Entries: entries}, Pagination: paginationResult}, nil
+	return &chorus.ListPlatformAuditReply{Result: &chorus.ListPlatformAuditResult{Entries: entries}, Pagination: paginationResult}, nil
 }
 
-func (c *AuditController) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c *AuditController) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	if req == nil {
 		logger.TechLog.Error(ctx, "empty request")
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -109,10 +109,10 @@ func (c *AuditController) ListWorkspaceAudit(ctx context.Context, req *chorus.Li
 		entries = append(entries, entry)
 	}
 
-	return &chorus.ListAuditEntriesReply{Result: &chorus.ListAuditEntriesResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
+	return &chorus.ListPlatformAuditReply{Result: &chorus.ListPlatformAuditResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
 }
 
-func (c *AuditController) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c *AuditController) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	if req == nil {
 		logger.TechLog.Error(ctx, "empty request")
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -152,10 +152,10 @@ func (c *AuditController) ListWorkbenchAudit(ctx context.Context, req *chorus.Li
 		entries = append(entries, entry)
 	}
 
-	return &chorus.ListAuditEntriesReply{Result: &chorus.ListAuditEntriesResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
+	return &chorus.ListPlatformAuditReply{Result: &chorus.ListPlatformAuditResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
 }
 
-func (c *AuditController) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+func (c *AuditController) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListPlatformAuditReply, error) {
 	if req == nil {
 		logger.TechLog.Error(ctx, "empty request")
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -195,5 +195,5 @@ func (c *AuditController) ListUserAudit(ctx context.Context, req *chorus.ListEnt
 		entries = append(entries, entry)
 	}
 
-	return &chorus.ListAuditEntriesReply{Result: &chorus.ListAuditEntriesResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
+	return &chorus.ListPlatformAuditReply{Result: &chorus.ListPlatformAuditResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
 }
