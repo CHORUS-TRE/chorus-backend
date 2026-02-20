@@ -79,6 +79,7 @@ func (s *oidcProviderService) init() error {
 		provider.WithImplicitGrant(),
 		provider.WithAuthorizationCodeGrant(),
 		provider.WithRefreshTokenGrant(authutil.IssueRefreshToken, 600),
+		provider.WithClientCredentialsGrant(),
 		provider.WithClaims(authutil.Claims[0], authutil.Claims...),
 		provider.WithACRs(authutil.ACRs[0], authutil.ACRs...),
 		// provider.WithDCR(authutil.DCRFunc, authutil.ValidateInitialTokenFunc),
