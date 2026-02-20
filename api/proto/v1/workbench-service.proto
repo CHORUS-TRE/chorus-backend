@@ -96,6 +96,7 @@ message DeleteWorkbenchReply {
 }
 message DeleteWorkbenchResult {}
 
+
 service WorkbenchService {
     rpc GetWorkbench(GetWorkbenchRequest) returns (GetWorkbenchReply) {
         option (google.api.http) = {
@@ -200,5 +201,4 @@ service WorkbenchService {
             tags: "WorkbenchService";
         };
     };
-
 }

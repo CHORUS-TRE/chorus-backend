@@ -95,6 +95,7 @@ message DeleteWorkspaceReply {
 }
 message DeleteWorkspaceResult {}
 
+
 service WorkspaceService {
     rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceReply) {
         option (google.api.http) = {
@@ -175,5 +176,4 @@ service WorkspaceService {
             tags: "WorkspaceService";
         };
     };
-
 }

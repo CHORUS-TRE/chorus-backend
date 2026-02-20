@@ -150,6 +150,7 @@ message ResetPasswordReply {
 }
 message ResetPasswordResult {}
 
+
 service UserService {
     rpc UpdatePassword(UpdatePasswordRequest) returns (UpdatePasswordReply) {
         option (google.api.http) = {
@@ -291,5 +292,4 @@ service UserService {
             security: {}
         };
     };
-
 }
