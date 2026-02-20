@@ -9,6 +9,8 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
+	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
+	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
@@ -33,12 +35,13 @@ var _ chorus.WorkspaceServiceServer = (*WorkspaceController)(nil)
 
 // WorkspaceController is the workspace service controller handler.
 type WorkspaceController struct {
-	workspace service.Workspaceer
+	workspace   service.Workspaceer
+	auditReader audit_service.AuditReader
 }
 
 // NewWorkspaceController returns a fresh admin service controller instance.
-func NewWorkspaceController(workspace service.Workspaceer) WorkspaceController {
-	return WorkspaceController{workspace: workspace}
+func NewWorkspaceController(workspace service.Workspaceer, auditReader audit_service.AuditReader) WorkspaceController {
+	return WorkspaceController{workspace: workspace, auditReader: auditReader}
 }
 
 func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
@@ -250,4 +253,48 @@ func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *c
 
 	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{Workspace: tgWorkspace}}, nil
 
+}
+
+func (c WorkspaceController) ListWorkspaceAudit(ctx context.Context, req *chorus.ListWorkspaceAuditRequest) (*chorus.ListWorkspaceAuditReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	pagination := converter.PaginationToBusiness(req.Pagination)
+
+	filter, err := converter.AuditFilterToBusiness(req.Filter)
+	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("invalid audit filter: %v", err.Error()))
+		return nil, status.Errorf(codes.InvalidArgument, "invalid filter: %v", err.Error())
+	}
+	if filter == nil {
+		filter = &audit_model.AuditFilter{}
+	}
+	filter.WorkspaceID = req.Id // Enforce filtering audit by requested workspace ID
+
+	res, paginationRes, err := c.auditReader.List(ctx, tenantID, &pagination, filter)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaceAudit': %v", err.Error())
+	}
+
+	var entries []*chorus.AuditEntry
+	for _, r := range res {
+		entry, err := converter.AuditEntryFromBusiness(r)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		}
+		entries = append(entries, entry)
+	}
+
+	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
+
+	return &chorus.ListWorkspaceAuditReply{
+		Result:     &chorus.ListWorkspaceAuditResult{Entries: entries},
+		Pagination: paginationResult,
+	}, nil
 }

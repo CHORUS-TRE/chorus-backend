@@ -162,3 +162,12 @@ func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Co
 
 	return c.next.RemoveUserFromWorkspace(ctx, req)
 }
+
+func (c workspaceControllerAuthorization) ListWorkspaceAudit(ctx context.Context, req *chorus.ListWorkspaceAuditRequest) (*chorus.ListWorkspaceAuditReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkspace, authorization.WithWorkspace(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ListWorkspaceAudit(ctx, req)
+}
