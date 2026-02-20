@@ -195,26 +195,3 @@ func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, r
 	return res, err
 }
 
-func (c workspaceControllerAudit) ListWorkspaceAudit(ctx context.Context, req *chorus.ListWorkspaceAuditRequest) (*chorus.ListWorkspaceAuditReply, error) {
-	res, err := c.next.ListWorkspaceAudit(ctx, req)
-
-	opts := []audit.Option{
-		audit.WithWorkspaceID(req.Id),
-		audit.WithDetail("workspace_id", req.Id),
-	}
-
-	if err != nil {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for workspace %d.", req.Id)),
-			audit.WithError(err),
-		)
-	} else {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Listed audit entries for workspace %d.", req.Id)),
-		)
-	}
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceAuditList, opts...)
-
-	return res, err
-}

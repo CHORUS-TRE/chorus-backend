@@ -205,26 +205,3 @@ func (c workbenchControllerAudit) RemoveUserFromWorkbench(ctx context.Context, r
 	return res, err
 }
 
-func (c workbenchControllerAudit) ListWorkbenchAudit(ctx context.Context, req *chorus.ListWorkbenchAuditRequest) (*chorus.ListWorkbenchAuditReply, error) {
-	res, err := c.next.ListWorkbenchAudit(ctx, req)
-
-	opts := []audit.Option{
-		audit.WithWorkbenchID(req.Id),
-		audit.WithDetail("workbench_id", req.Id),
-	}
-
-	if err != nil {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for workbench %d.", req.Id)),
-			audit.WithError(err),
-		)
-	} else {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Listed audit entries for workbench %d.", req.Id)),
-		)
-	}
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchAuditList, opts...)
-
-	return res, err
-}

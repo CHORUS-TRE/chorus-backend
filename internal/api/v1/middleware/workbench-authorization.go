@@ -148,11 +148,3 @@ func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Co
 	return c.next.RemoveUserFromWorkbench(ctx, req)
 }
 
-func (c workbenchControllerAuthorization) ListWorkbenchAudit(ctx context.Context, req *chorus.ListWorkbenchAuditRequest) (*chorus.ListWorkbenchAuditReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkbench, authorization.WithWorkbench(req.Id))
-	if err != nil {
-		return nil, err
-	}
-
-	return c.next.ListWorkbenchAudit(ctx, req)
-}

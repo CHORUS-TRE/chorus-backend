@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
@@ -48,6 +49,77 @@ func (c auditControllerAudit) ListAuditEntries(ctx context.Context, req *chorus.
 	}
 
 	audit.Record(ctx, c.auditWriter, model.AuditActionPlatformAuditList, opts...)
+
+	return res, err
+}
+
+func (c auditControllerAudit) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+	res, err := c.next.ListWorkspaceAudit(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithDetail("workspace_id", req.Id),
+	}
+
+	if err != nil {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for workspace %d.", req.Id)),
+			audit.WithError(err),
+		)
+	} else {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Listed audit entries for workspace %d.", req.Id)),
+		)
+	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceAuditList, opts...)
+
+	return res, err
+}
+
+func (c auditControllerAudit) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+	res, err := c.next.ListWorkbenchAudit(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkbenchID(req.Id),
+		audit.WithDetail("workbench_id", req.Id),
+	}
+
+	if err != nil {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for workbench %d.", req.Id)),
+			audit.WithError(err),
+		)
+	} else {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Listed audit entries for workbench %d.", req.Id)),
+		)
+	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchAuditList, opts...)
+
+	return res, err
+}
+
+func (c auditControllerAudit) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditEntriesReply, error) {
+	res, err := c.next.ListUserAudit(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("user_id", req.Id),
+	}
+
+	if err != nil {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for user %d.", req.Id)),
+			audit.WithError(err),
+		)
+	} else {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Listed audit entries for user %d.", req.Id)),
+		)
+	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionUserAuditList, opts...)
 
 	return res, err
 }

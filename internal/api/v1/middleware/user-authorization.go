@@ -163,26 +163,3 @@ func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *cho
 	return c.next.ResetPassword(ctx, req)
 }
 
-func (c userControllerAuthorization) ListUserAudit(ctx context.Context, req *chorus.ListUserAuditRequest) (*chorus.ListUserAuditReply, error) {
-	if req.Filter != nil && req.Filter.WorkspaceId != 0 {
-		// Workspace-scoped: caller must have audit permission for that specific workspace.
-		err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkspace, authorization.WithWorkspace(req.Filter.WorkspaceId))
-		if err != nil {
-			return nil, err
-		}
-	} else if req.Filter != nil && req.Filter.WorkbenchId != 0 {
-		// Workbench-scoped: caller must have audit permission for that specific workbench.
-		err := c.IsAuthorized(ctx, authorization.PermissionAuditWorkbench, authorization.WithWorkbench(req.Filter.WorkbenchId))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// No scope: self-audit (authenticated) or platform-level user audit permission required.
-		err := c.IsAuthorized(ctx, authorization.PermissionAuditUser, authorization.WithUser(req.Id))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return c.next.ListUserAudit(ctx, req)
-}
