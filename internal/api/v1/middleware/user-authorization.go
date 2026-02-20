@@ -171,7 +171,6 @@ func (c userControllerAuthorization) ListUserAudit(ctx context.Context, req *cho
 			return nil, err
 		}
 	} else {
-		// No workspace scope: platform-admin-level audit permission required.
 		err := c.IsAuthorized(ctx, authorization.PermissionAuditUser, authorization.WithUser(req.Id))
 		if err != nil {
 			return nil, err
