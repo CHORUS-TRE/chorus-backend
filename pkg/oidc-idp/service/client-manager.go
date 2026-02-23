@@ -63,6 +63,16 @@ func NewClientManager(cfg config.Config) (*clientManager, error) {
 				TokenAuthnMethod:  goidc.ClientAuthnType(c.TokenAuthnMethod),
 			},
 		}
+
+		if c.UserDelegation != nil {
+			if c.GrantTypes == nil || len(c.GrantTypes) != 1 || c.GrantTypes[0] != string(goidc.GrantClientCredentials) {
+				return nil, fmt.Errorf("client %s has user delegation configured, it needs to have a single grant type: client_credentials", c.ID)
+			}
+			client.SetCustomAttribute("user_delegation_user_id", c.UserDelegation.UserID)
+			client.SetCustomAttribute("user_delegation_tenant_id", c.UserDelegation.TenantID)
+			client.SetCustomAttribute("user_delegation_claims", c.UserDelegation.Claims)
+		}
+
 		cs[c.ID] = client
 	}
 

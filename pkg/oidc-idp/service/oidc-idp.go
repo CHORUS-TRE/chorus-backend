@@ -84,6 +84,7 @@ func (s *oidcProviderService) init() error {
 		provider.WithACRs(authutil.ACRs[0], authutil.ACRs...),
 		// provider.WithDCR(authutil.DCRFunc, authutil.ValidateInitialTokenFunc),
 		provider.WithTokenOptions(authutil.TokenOptionsFunc(goidc.RS256)),
+		provider.WithHandleGrantFunc(authutil.UserDelegationHandleGrantFunc(s.clientManager, s.userService)),
 		provider.WithHTTPClientFunc(authutil.HTTPClient),
 		provider.WithPolicies(authutil.Policy(s.cfg, s.userService, s.authorizer)),
 		provider.WithNotifyErrorFunc(authutil.ErrorLoggingFunc),
