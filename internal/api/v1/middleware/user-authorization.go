@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
@@ -13,13 +14,15 @@ var _ chorus.UserServiceServer = (*userControllerAuthorization)(nil)
 
 type userControllerAuthorization struct {
 	Authorization
+	cfg  config.Config
 	next chorus.UserServiceServer
 }
 
-func UserAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer) func(chorus.UserServiceServer) chorus.UserServiceServer {
+func UserAuthorizing(cfg config.Config, logger *logger.ContextLogger, authorizer authorization_service.Authorizer) func(chorus.UserServiceServer) chorus.UserServiceServer {
 	return func(next chorus.UserServiceServer) chorus.UserServiceServer {
 		return &userControllerAuthorization{
 			Authorization: Authorization{
+				cfg:        cfg,
 				logger:     logger,
 				authorizer: authorizer,
 			},
@@ -74,9 +77,20 @@ func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.Ge
 }
 
 func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateUser)
-	if err != nil {
-		return nil, err
+	modes := c.cfg.Services.AuthenticationService.Modes
+	internalModePublicRegistration := false
+	for _, mode := range modes {
+		if mode.Type == "internal" && mode.Enabled && mode.PublicRegistrationEnabled {
+			internalModePublicRegistration = true
+			break
+		}
+	}
+
+	if !internalModePublicRegistration {
+		err := c.IsAuthorized(ctx, authorization.PermissionCreateUser)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.next.CreateUser(ctx, req)
