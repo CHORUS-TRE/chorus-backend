@@ -400,6 +400,19 @@ type (
 		GrantAutoApproved bool           `yaml:"grant_auto_approved"`
 		GrantDuration     *time.Duration `yaml:"grant_duration"`
 
+		// UserDelegation enables a special client_credentials mode where the
+		// access token is issued on behalf of a specific user instead of the
+		// client itself. When enabled:
+		//   - The token "sub" claim is set to the configured user ID.
+		//   - Additional user claims (preferred_username, email, etc.) are
+		//     embedded in the access token based on UserDelegationClaims.
+		//
+		// WARNING: This effectively grants the client full API access as the
+		// configured user. Only enable this for trusted service accounts that
+		// need to act as a specific user (e.g. CI/CD pipelines, automation
+		// bots). Never expose the client secret of a user-delegation client.
+		UserDelegation *UserDelegationConfig `yaml:"user_delegation,omitempty"`
+
 		IsFederated                bool     `yaml:"is_federated"`
 		FederationRegistrationType string   `yaml:"federation_registration_type"` // automatic or explicit
 		FederationTrustMarkIDs     []string `yaml:"federation_trust_mark_ids"`
@@ -423,6 +436,18 @@ type (
 		//...
 
 		TokenAuthnMethod string `yaml:"token_endpoint_auth_method"` // none, client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth, dpop
+	}
+
+	// UserDelegationConfig configures a client to act on behalf of a specific
+	// user when using the client_credentials grant type.
+	UserDelegationConfig struct {
+		// UserID is the ID of the user the client acts on behalf of.
+		UserID uint64 `yaml:"user_id"`
+		// TenantID is the tenant of the delegated user.
+		TenantID uint64 `yaml:"tenant_id"`
+		// Claims lists extra claims to embed in the access token.
+		// Supported values: preferred_username, email, name, given_name, family_name.
+		Claims []string `yaml:"claims"`
 	}
 
 	Job struct {

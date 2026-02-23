@@ -44,7 +44,7 @@ storage:
       type: postgres
       host: 127.0.0.1
       port: 5432
-      username: audit
+      username: admin
       password: password
       database: audit
       max_connections: 10
@@ -192,6 +192,26 @@ services:
           - code
         scope: "openid profile email roles"
         token_endpoint_auth_method: "client_secret_post"
+      # User-delegation client: issues tokens on behalf of user 1.
+      # WARNING: The access token "sub" will be the user ID, not the client ID.
+      # Only use this for trusted service accounts. Never expose the secret.
+      - client_id: chorus-user1-service
+        client_name: Chorus User 1 Service Account
+        client_secret: user1-service-secret-dev
+        grant_types:
+          - client_credentials
+        response_types: []
+        scope: "openid profile email"
+        token_endpoint_auth_method: "client_secret_post"
+        user_delegation:
+          user_id: 1
+          tenant_id: 1
+          claims:
+            - preferred_username
+            - email
+            - name
+            - given_name
+            - family_name
   steward:
     init_tenant:
       enabled: true
