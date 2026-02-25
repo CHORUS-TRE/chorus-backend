@@ -9,7 +9,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
-	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
 
 func ErrorCode(err error) codes.Code {
@@ -28,12 +27,10 @@ func ErrorCode(err error) codes.Code {
 	}
 
 	switch cause.(type) {
-	case *val.InvalidValidationError, val.ValidationErrors, *service.InvalidParametersErr, *user_service.ErrWeakPassword:
+	case *val.InvalidValidationError, val.ValidationErrors, *service.InvalidParametersErr:
 		return codes.InvalidArgument
 	case *service.ResourceAlreadyExistsErr:
 		return codes.AlreadyExists
-	case *user_service.ErrUnauthorized:
-		return codes.Unauthenticated
 	default:
 		return codes.Internal
 	}
