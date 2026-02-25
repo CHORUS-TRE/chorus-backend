@@ -236,7 +236,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now(), "")
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", 0, cerr.ErrInvalidCredentials
+		return "", 0, cerr.ErrInternal.Wrap(err, "Failed to create JWT token")
 	}
 	return token, a.jwtExpirationTime, nil
 }
@@ -322,7 +322,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	user, err := a.store.GetActiveUser(ctx, username, providerID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			return "", 0, "", cerr.ErrNotFound.Wrap(err, "Failed to get user")
+			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to get user")
 		}
 
 		createUser := &userService.UserReq{
@@ -360,7 +360,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now(), "")
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", 0, "", cerr.ErrInvalidCredentials
+		return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to create JWT token")
 	}
 
 	url := ""
