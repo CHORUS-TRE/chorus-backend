@@ -25,6 +25,13 @@ enum ChorusErrorCode {
     INTERNAL_ERROR = 10;    // Unrecoverable server-side error
 }
 
+message ValidationError {
+    // The field that failed validation (e.g. "FirstName", "Email")
+    string field = 1;
+    // The reason that validation failed (e.g. "required", "min", "generalstring")
+    string reason = 2;
+}
+
 message ErrorDetail {
     // Chorus specific error code
     ChorusErrorCode chorusCode = 1;
@@ -34,4 +41,6 @@ message ErrorDetail {
     string title = 3;
     // A human-readable explanation specific to this occurrence of the problem
     string message = 4;
+    // Field-level validation errors (only populated for VALIDATION_ERROR)
+    repeated ValidationError validation_errors = 5;
 }
