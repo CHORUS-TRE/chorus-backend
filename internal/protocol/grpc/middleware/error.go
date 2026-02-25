@@ -20,14 +20,12 @@ func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	// Check if the error is a ChorusError
 	var cErr *cerr.ChorusError
 	if errors.As(err, &cErr) {
-		if cErr.CausedBy != nil {
-			logger.TechLog.Error(ctx, "request failed",
-				zap.String("method", info.FullMethod),
-				zap.String("code", cErr.ChorusCode.String()),
-				zap.String("message", cErr.Message),
-				zap.Error(cErr.CausedBy),
-			)
-		}
+		logger.TechLog.Error(ctx, "request failed",
+			zap.String("method", info.FullMethod),
+			zap.String("code", cErr.ChorusCode.String()),
+			zap.String("message", cErr.Message),
+			zap.Error(cErr.CausedBy),
+		)
 		return nil, cErr.ToGRPCStatus().Err()
 	}
 
