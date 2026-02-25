@@ -26,7 +26,7 @@ func WrapValidationError(err error) *ChorusError {
 		for i, fe := range ve {
 			fields[i] = ValidationField{
 				Field: fe.Field(),
-				Rule:  fe.Tag(),
+				Reason: fe.Tag(),
 			}
 		}
 		return ErrValidation.Wrap(err, "Validation error").WithValidationErrors(fields)

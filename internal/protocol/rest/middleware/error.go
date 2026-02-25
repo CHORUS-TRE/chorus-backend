@@ -47,8 +47,8 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 				ve := make([]map[string]string, len(errorDetail.ValidationErrors))
 				for i, v := range errorDetail.ValidationErrors {
 					ve[i] = map[string]string{
-						"field": v.Field,
-						"rule":  v.Rule,
+						"field":  v.Field,
+						"reason": v.Reason,
 					}
 				}
 				d["validationErrors"] = ve
