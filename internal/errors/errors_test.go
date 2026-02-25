@@ -194,6 +194,33 @@ func TestToGRPCStatus_WithoutValidationErrors(t *testing.T) {
 	assert.Empty(t, detail.ValidationErrors)
 }
 
+func TestNestedErrorChain(t *testing.T) {
+	// Simulate: store returns sql error → user service wraps it → workspace service wraps that
+	sqlErr := fmt.Errorf("sql: no rows in result set")
+	userServiceErr := ErrNotFound.Wrap(sqlErr, "Unable to get user 42")
+	workspaceServiceErr := ErrInternal.Wrap(userServiceErr, "Unable to create workspace")
+
+	// The full chain is visible via Error()
+	t.Logf("Error():    %s", workspaceServiceErr.Error())
+	t.Logf("CausedBy:   %s", workspaceServiceErr.CausedBy)
+	assert.Equal(t, "Unable to create workspace: Unable to get user 42: sql: no rows in result set", workspaceServiceErr.Error())
+
+	// errors.As finds the outermost ChorusError
+	var cErr *ChorusError
+	require.True(t, errors.As(workspaceServiceErr, &cErr))
+	assert.Equal(t, "Unable to create workspace", cErr.Message)
+
+	// errors.Is can still find the root cause
+	assert.True(t, errors.Is(workspaceServiceErr, sqlErr))
+
+	// Unwrap gives the next error in the chain
+	inner := errors.Unwrap(workspaceServiceErr)
+	innerChorus, ok := inner.(*ChorusError)
+	require.True(t, ok)
+	assert.Equal(t, "Unable to get user 42", innerChorus.Message)
+	assert.Equal(t, sqlErr, innerChorus.CausedBy)
+}
+
 func TestCatalogCoversAllCodes(t *testing.T) {
 	catalog := map[errorspb.ChorusErrorCode]*ChorusError{
 		errorspb.ChorusErrorCode_INVALID_REQUEST:      ErrInvalidRequest,
