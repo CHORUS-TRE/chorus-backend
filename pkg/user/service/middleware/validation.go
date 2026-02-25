@@ -34,7 +34,7 @@ func (v validation) CreateRole(ctx context.Context, role string) error {
 		allRolesStr[i] = string(role)
 	}
 	if !contains(allRolesStr, role) {
-		return fmt.Errorf("invalid role '%v', should be one of: %v", role, allRolesStr)
+		return cerr.ErrValidation.WithMessage(fmt.Sprintf("Invalid role '%v', should be one of: %v", role, allRolesStr))
 	}
 	return v.next.CreateRole(ctx, role)
 }
