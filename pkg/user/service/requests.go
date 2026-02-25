@@ -38,7 +38,7 @@ type UserUpdateReq struct {
 	Source    string           `validate:"required,generalstring"`
 	Status    model.UserStatus `validate:"required"`
 
-	Roles []model.UserRole `validate:"min=1"`
+	Roles []model.UserRole
 }
 
 type ListUsersReq struct {
