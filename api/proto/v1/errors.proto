@@ -2,11 +2,32 @@ syntax = "proto3";
 package chorus;
 option go_package = ".;chorus";
 
-import "google/protobuf/timestamp.proto";
+enum ChorusErrorCode {
+    // Default unspecified error
+    CHORUS_ERROR_CODE_UNSPECIFIED = 0;
+
+    // Client errors
+    INVALID_REQUEST = 1;    // Malformed or missing request parameters
+    VALIDATION_ERROR = 2;   // Field-level validation failure
+    CONVERSION_ERROR = 3;   // Failed to convert between API and domain models
+
+    // Resource errors
+    NOT_FOUND = 4;          // Requested resource does not exist
+    ALREADY_EXISTS = 5;     // Resource already exists
+
+    // Authentication & authorization errors
+    UNAUTHENTICATED = 6;      // No valid credentials provided
+    INVALID_CREDENTIALS = 7;  // Username/password mismatch
+    TWO_FACTOR_REQUIRED = 8;  // Valid credentials but 2FA step is needed
+    PERMISSION_DENIED = 9;    // Unauthorized request
+
+    // Server errors
+    INTERNAL_ERROR = 10;    // Unrecoverable server-side error
+}
 
 message ErrorDetail {
-    // Unique chorus specific error code
-    string chorusCode = 1;
+    // Chorus specific error code
+    ChorusErrorCode chorusCode = 1;
     // Instance identifier (url)
     string instance = 2;
     // A short human-readable summary of the problem
