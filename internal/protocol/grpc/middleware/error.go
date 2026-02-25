@@ -21,7 +21,7 @@ func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	var cErr *cerr.ChorusError
 	if errors.As(err, &cErr) {
 		if cErr.CausedBy != nil {
-			logger.TechLog.Error(ctx, fmt.Sprintf("chorus error: %s, caused by: %v", cErr.ChorusCode, cErr.CausedBy))
+			logger.TechLog.Error(ctx, fmt.Sprintf("%s %s: %s, caused by: %v", info.FullMethod, cErr.ChorusCode, cErr.Message, cErr.CausedBy))
 		}
 		return nil, cErr.ToGRPCStatus().Err()
 	}
