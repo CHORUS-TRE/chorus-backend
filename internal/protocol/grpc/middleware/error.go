@@ -3,10 +3,10 @@ package middleware
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -21,7 +21,12 @@ func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	var cErr *cerr.ChorusError
 	if errors.As(err, &cErr) {
 		if cErr.CausedBy != nil {
-			logger.TechLog.Error(ctx, fmt.Sprintf("%s %s: %s, caused by: %v", info.FullMethod, cErr.ChorusCode, cErr.Message, cErr.CausedBy))
+			logger.TechLog.Error(ctx, "request failed",
+				zap.String("method", info.FullMethod),
+				zap.String("code", cErr.ChorusCode.String()),
+				zap.String("message", cErr.Message),
+				zap.Error(cErr.CausedBy),
+			)
 		}
 		return nil, cErr.ToGRPCStatus().Err()
 	}
