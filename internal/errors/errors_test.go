@@ -19,6 +19,12 @@ func TestChorusError_Error(t *testing.T) {
 	assert.Equal(t, "user 42 not found", err.Error())
 }
 
+func TestChorusError_ErrorWithCause(t *testing.T) {
+	cause := fmt.Errorf("sql: no rows")
+	err := ErrNotFound.Wrap(cause, "user 42 not found")
+	assert.Equal(t, "user 42 not found: sql: no rows", err.Error())
+}
+
 func TestChorusError_ErrorEmpty(t *testing.T) {
 	assert.Equal(t, "", ErrNotFound.Error())
 }
@@ -128,6 +134,64 @@ func TestToGRPCStatus_RoundTrip(t *testing.T) {
 	detail, ok := recovered.Details()[0].(*errorspb.ErrorDetail)
 	require.True(t, ok)
 	assert.Equal(t, errorspb.ChorusErrorCode_PERMISSION_DENIED, detail.ChorusCode)
+}
+
+func TestWithValidationErrors(t *testing.T) {
+	fields := []ValidationField{
+		{Field: "FirstName", Reason: "required"},
+		{Field: "Email", Reason: "email"},
+	}
+	err := ErrValidation.WithMessage("Validation error").WithValidationErrors(fields)
+
+	assert.Equal(t, "Validation error", err.Message)
+	assert.Equal(t, errorspb.ChorusErrorCode_VALIDATION_ERROR, err.ChorusCode)
+	require.Len(t, err.ValidationErrors, 2)
+	assert.Equal(t, "FirstName", err.ValidationErrors[0].Field)
+	assert.Equal(t, "required", err.ValidationErrors[0].Reason)
+	assert.Equal(t, "Email", err.ValidationErrors[1].Field)
+	assert.Equal(t, "email", err.ValidationErrors[1].Reason)
+}
+
+func TestWithValidationErrors_PreservesCause(t *testing.T) {
+	cause := fmt.Errorf("validator error")
+	err := ErrValidation.Wrap(cause, "Validation error").WithValidationErrors([]ValidationField{
+		{Field: "Name", Reason: "required"},
+	})
+
+	assert.Equal(t, cause, err.CausedBy)
+	require.Len(t, err.ValidationErrors, 1)
+}
+
+func TestToGRPCStatus_WithValidationErrors(t *testing.T) {
+	fields := []ValidationField{
+		{Field: "FirstName", Reason: "required"},
+		{Field: "LastName", Reason: "required"},
+	}
+	err := ErrValidation.WithMessage("Validation error").WithValidationErrors(fields)
+	st := err.ToGRPCStatus()
+
+	assert.Equal(t, codes.InvalidArgument, st.Code())
+
+	require.Len(t, st.Details(), 1)
+	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
+	require.True(t, ok)
+
+	assert.Equal(t, errorspb.ChorusErrorCode_VALIDATION_ERROR, detail.ChorusCode)
+	assert.Equal(t, "Validation error", detail.Message)
+	require.Len(t, detail.ValidationErrors, 2)
+	assert.Equal(t, "FirstName", detail.ValidationErrors[0].Field)
+	assert.Equal(t, "required", detail.ValidationErrors[0].Reason)
+	assert.Equal(t, "LastName", detail.ValidationErrors[1].Field)
+	assert.Equal(t, "required", detail.ValidationErrors[1].Reason)
+}
+
+func TestToGRPCStatus_WithoutValidationErrors(t *testing.T) {
+	err := ErrNotFound.WithMessage("not found")
+	st := err.ToGRPCStatus()
+
+	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
+	require.True(t, ok)
+	assert.Empty(t, detail.ValidationErrors)
 }
 
 func TestCatalogCoversAllCodes(t *testing.T) {
