@@ -8,8 +8,7 @@ import (
 
 type ChorusError struct {
 	GRPCCode   codes.Code
-	ChorusCode string
-	Instance   string
+	ChorusCode errorspb.ChorusErrorCode
 	Title      string
 	Message    string
 	CausedBy   error
@@ -25,7 +24,6 @@ func (e *ChorusError) ToGRPCStatus() *status.Status {
 	// Create error details with Chorus-specific information
 	errorDetail := &errorspb.ErrorDetail{
 		ChorusCode: e.ChorusCode,
-		Instance:   e.Instance,
 		Title:      e.Title,
 		Message:    e.Message,
 	}
@@ -40,30 +38,36 @@ func (e *ChorusError) ToGRPCStatus() *status.Status {
 	return statusWithDetails
 }
 
-func NewInvalidCredentialsError() *ChorusError {
+func (e *ChorusError) WithMessage(message string) *ChorusError {
 	return &ChorusError{
-		GRPCCode:   codes.Unauthenticated,
-		ChorusCode: "INVALID_CREDENTIALS",
-		Title:      "Invalid Credentials",
-		Message:    "The provided credentials are invalid.",
+		GRPCCode:   e.GRPCCode,
+		ChorusCode: e.ChorusCode,
+		Title:      e.Title,
+		Message:    message,
+		CausedBy:   e.CausedBy,
 	}
 }
 
-func NewPermissionDeniedError(message string) *ChorusError {
+func (e *ChorusError) WithCause(causedBy error) *ChorusError {
 	return &ChorusError{
-		GRPCCode:   codes.PermissionDenied,
-		ChorusCode: "PERMISSION_DENIED",
-		Title:      "Permission Denied",
-		Message:    message,
-	}
-}
-
-func NewInternalError(message string, causedBy error) *ChorusError {
-	return &ChorusError{
-		GRPCCode:   codes.Internal,
-		ChorusCode: "INTERNAL_ERROR",
-		Title:      "Internal Server Error",
-		Message:    message,
+		GRPCCode:   e.GRPCCode,
+		ChorusCode: e.ChorusCode,
+		Title:      e.Title,
+		Message:    e.Message,
 		CausedBy:   causedBy,
 	}
+}
+
+func (e *ChorusError) Wrap(err error, message string) *ChorusError {
+	return &ChorusError{
+		GRPCCode:   e.GRPCCode,
+		ChorusCode: e.ChorusCode,
+		Title:      e.Title,
+		Message:    message,
+		CausedBy:   err,
+	}
+}
+
+func (e *ChorusError) Unwrap() error {
+	return e.CausedBy
 }
