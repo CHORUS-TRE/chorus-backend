@@ -8,7 +8,6 @@ import (
 	"google.golang.org/grpc/codes"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
-	auth_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
@@ -33,7 +32,7 @@ func ErrorCode(err error) codes.Code {
 		return codes.InvalidArgument
 	case *service.ResourceAlreadyExistsErr:
 		return codes.AlreadyExists
-	case *auth_service.ErrUnauthorized, *user_service.ErrUnauthorized:
+	case *user_service.ErrUnauthorized:
 		return codes.Unauthenticated
 	default:
 		return codes.Internal

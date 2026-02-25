@@ -17,11 +17,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/oauth2"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	choruserrors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
@@ -82,25 +79,6 @@ type CustomClaims struct {
 	Source    string                     `json:"source"`
 
 	jwt.StandardClaims
-}
-
-// ErrUnauthorized is the error message for all validation failures to avoid being an oracle.
-type ErrInvalidArgument struct{}
-
-func (e *ErrInvalidArgument) Error() string {
-	return "invalid argument"
-}
-
-type ErrUnauthorized struct{}
-
-func (e *ErrUnauthorized) Error() string {
-	return "invalid credentials"
-}
-
-type Err2FARequired struct{}
-
-func (e *Err2FARequired) Error() string {
-	return "2FA_REQUIRED"
 }
 
 // NewAuthenticationService returns a fresh authentication service instance.
@@ -200,32 +178,32 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 	user, err := a.store.GetActiveUser(ctx, username, "internal")
 	if err != nil {
 		logger.SecLog.Info(ctx, "user not found", zap.String("username", username), zap.Error(err))
-		return "", 0, choruserrors.NewInvalidCredentialsError()
+		return "", 0, cerr.ErrInvalidCredentials
 	}
 	if user == nil {
 		logger.SecLog.Info(ctx, "user not found", zap.String("username", username))
-		return "", 0, choruserrors.NewInvalidCredentialsError()
+		return "", 0, cerr.ErrInvalidCredentials
 	}
 
 	if user.Source != "internal" {
 		logger.SecLog.Info(ctx, "user from external source attempted internal password authentication", zap.String("username", username), zap.String("source", user.Source))
-		return "", 0, choruserrors.NewInvalidCredentialsError()
+		return "", 0, cerr.ErrInvalidCredentials
 	}
 
 	if !verifyPassword(user.Password, password) {
 		logger.SecLog.Info(ctx, "user has entered an invalid password", zap.String("username", username))
-		return "", 0, choruserrors.NewInvalidCredentialsError()
+		return "", 0, cerr.ErrInvalidCredentials
 	}
 
 	if user.TotpEnabled && totp == "" {
-		return "", 0, &Err2FARequired{}
+		return "", 0, cerr.ErrTwoFactorRequired
 	}
 
 	if user.TotpEnabled && user.TotpSecret != nil {
 		isTotpValid, err := crypto.VerifyTotp(totp, *user.TotpSecret, a.daemonEncryptionKey)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to verify totp", zap.Error(err))
-			return "", 0, &ErrUnauthorized{}
+			return "", 0, cerr.ErrInvalidCredentials
 		}
 		if !isTotpValid {
 			logger.SecLog.Info(ctx, "user has entered an invalid totp code", zap.String("username", username))
@@ -233,16 +211,16 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 			codes, err := a.userer.GetTotpRecoveryCodes(ctx, user.TenantID, user.ID)
 			if err != nil {
 				logger.TechLog.Error(ctx, "unable to retrieve TOTP recovery code", zap.Error(err), zap.String("username", username))
-				return "", 0, &ErrUnauthorized{}
+				return "", 0, cerr.ErrInvalidCredentials
 			}
 			code, err := crypto.VerifyTotpRecoveryCode(ctx, totp, codes, a.daemonEncryptionKey)
 			if err != nil {
 				logger.TechLog.Error(ctx, "unable to verify totp recovery code", zap.Error(err))
-				return "", 0, &ErrUnauthorized{}
+				return "", 0, cerr.ErrInvalidCredentials
 			}
 			if code == nil {
 				logger.SecLog.Info(ctx, "user has entered an invalid recovery code", zap.String("username", username))
-				return "", 0, &ErrUnauthorized{}
+				return "", 0, cerr.ErrInvalidCredentials
 			}
 
 			if err := a.userer.DeleteTotpRecoveryCode(ctx, &userService.DeleteTotpRecoveryCodeReq{
@@ -250,7 +228,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 				CodeID:   code.ID,
 			}); err != nil {
 				logger.TechLog.Error(ctx, "unable to delete used recovery code", zap.Error(err), zap.String("username", username), zap.Uint64("code", code.ID))
-				return "", 0, &ErrUnauthorized{}
+				return "", 0, cerr.ErrInvalidCredentials
 			}
 		}
 	}
@@ -258,7 +236,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now(), "")
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", 0, &ErrUnauthorized{}
+		return "", 0, cerr.ErrInvalidCredentials
 	}
 	return token, a.jwtExpirationTime, nil
 }
@@ -266,7 +244,7 @@ func (a *AuthenticationService) Authenticate(ctx context.Context, username, pass
 func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerID string) (string, error) {
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
-		return "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
+		return "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Unable to find config for provider %s", providerID))
 	}
 
 	return oauthConfig.AuthCodeURL(uuid.Next()), nil
@@ -275,16 +253,16 @@ func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerI
 func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error) {
 	mode, err := a.getAuthMode(providerID)
 	if err != nil {
-		return "", 0, "", fmt.Errorf("unable to get mode: %w", err)
+		return "", 0, "", err
 	}
 
 	if mode.Type != "openid" {
-		return "", 0, "", fmt.Errorf("invalid mode: %w", &ErrInvalidArgument{})
+		return "", 0, "", cerr.ErrInvalidRequest.WithMessage("Invalid authentication mode")
 	}
 
 	oauthConfig, exists := a.oauthConfigs[providerID]
 	if !exists {
-		return "", 0, "", fmt.Errorf("unable to find config for provider %s: %w", providerID, &ErrInvalidArgument{})
+		return "", 0, "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Unable to find config for provider %s", providerID))
 	}
 
 	// Verify state (for CSRF protection) - usually, you'd compare this with a value stored in the user's session
@@ -294,14 +272,14 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 	token, err := oauthConfig.Exchange(ctx, code)
 	if err != nil {
-		return "", 0, "", fmt.Errorf("failed to exchange token: %w", err)
+		return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to exchange token")
 	}
 
 	client := oauthConfig.Client(ctx, token)
 
 	userInfoResp, err := client.Get(mode.OpenID.UserInfoURL)
 	if err != nil {
-		return "", 0, "", fmt.Errorf("failed to get user info: %w", err)
+		return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to get user info")
 	}
 	defer userInfoResp.Body.Close()
 
@@ -310,13 +288,13 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		if err == nil {
 			logger.SecLog.Error(ctx, "failed to get user info: received non-OK response, body", zap.String("body", string(body)))
 		}
-		return "", 0, "", fmt.Errorf("failed to get user info: received non-OK response: %d", userInfoResp.StatusCode)
+		return "", 0, "", cerr.ErrInternal.WithMessage(fmt.Sprintf("Failed to get user info: received non-OK response: %d", userInfoResp.StatusCode))
 	}
 
 	// Decode user info response
 	var userInfo map[string]interface{}
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&userInfo); err != nil {
-		return "", 0, "", fmt.Errorf("failed to decode user info response: %w", err)
+		return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to decode user info response")
 	}
 
 	// Helper function to safely get string values
@@ -338,13 +316,13 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	// Get username from user info
 	username := getUserInfoString(usernameClaim)
 	if username == "" {
-		return "", 0, "", fmt.Errorf("failed to get username claim %s in user info", usernameClaim)
+		return "", 0, "", cerr.ErrInternal.WithMessage(fmt.Sprintf("Failed to get username claim %s in user info", usernameClaim))
 	}
 
 	user, err := a.store.GetActiveUser(ctx, username, providerID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			return "", 0, "", err
+			return "", 0, "", cerr.ErrNotFound.Wrap(err, "Failed to get user")
 		}
 
 		createUser := &userService.UserReq{
@@ -359,7 +337,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 
 		createdUser, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
 		if err != nil {
-			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
+			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to create user")
 		}
 
 		err = a.userer.CreateUserRoles(ctx, 1, createdUser.ID, []userModel.UserRole{{
@@ -369,20 +347,20 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			),
 		}})
 		if err != nil {
-			return "", 0, "", fmt.Errorf("failed to create user roles: %w", err)
+			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to create user roles")
 		}
 
 		// Fetch the newly created user with its roles
 		user, err = a.store.GetActiveUser(ctx, username, providerID)
 		if err != nil {
-			return "", 0, "", fmt.Errorf("failed to create user: %w", err)
+			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to fetch newly created user")
 		}
 	}
 
 	jwtToken, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Now(), "")
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to create JWT token", zap.Error(err))
-		return "", 0, "", &ErrUnauthorized{}
+		return "", 0, "", cerr.ErrInvalidCredentials
 	}
 
 	url := ""
@@ -397,12 +375,12 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.Duration, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return "", 0, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+		return "", 0, cerr.ErrInvalidRequest.WithMessage("Could not extract user ID from token")
 	}
 
 	user, err := a.userer.GetUser(ctx, service.GetUserReq{
@@ -410,22 +388,22 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.
 		ID:       userID,
 	})
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not get user")
+		return "", 0, cerr.ErrInternal.Wrap(err, "Could not get user")
 	}
 
 	issuedAt, err := jwt_model.ExtractIssuedAt(ctx)
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not extract issued at from jwt-token")
+		return "", 0, cerr.ErrInvalidRequest.WithMessage("Could not extract issued at from token")
 	}
 
 	elapsed := time.Since(time.Unix(issuedAt, 0))
 	if elapsed > a.maxRefreshTime {
-		return "", 0, status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
+		return "", 0, cerr.ErrUnauthenticated.WithMessage("Session expired, please authenticate again")
 	}
 
 	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0), "")
 	if err != nil {
-		return "", 0, status.Error(codes.Internal, "could not create jwt-token")
+		return "", 0, cerr.ErrInternal.Wrap(err, "Could not create token")
 	}
 
 	return token, a.jwtExpirationTime, nil
@@ -434,12 +412,12 @@ func (a *AuthenticationService) RefreshToken(ctx context.Context) (string, time.
 func (a *AuthenticationService) GetShortLivedTokenForClient(ctx context.Context, oidcClientID string, workspaceID uint64) (string, time.Duration, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return "", 0, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+		return "", 0, cerr.ErrInvalidRequest.WithMessage("Could not extract user ID from token")
 	}
 
 	user, err := a.userer.GetUser(ctx, service.GetUserReq{
@@ -447,7 +425,7 @@ func (a *AuthenticationService) GetShortLivedTokenForClient(ctx context.Context,
 		ID:       userID,
 	})
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not get user")
+		return "", 0, cerr.ErrInternal.Wrap(err, "Could not get user")
 	}
 
 	if workspaceID != 0 {
@@ -462,17 +440,17 @@ func (a *AuthenticationService) GetShortLivedTokenForClient(ctx context.Context,
 
 	issuedAt, err := jwt_model.ExtractIssuedAt(ctx)
 	if err != nil {
-		return "", 0, status.Error(codes.InvalidArgument, "could not extract issued at from jwt-token")
+		return "", 0, cerr.ErrInvalidRequest.WithMessage("Could not extract issued at from token")
 	}
 
 	elapsed := time.Since(time.Unix(issuedAt, 0))
 	if elapsed > a.maxRefreshTime {
-		return "", 0, status.Error(codes.InvalidArgument, "too many refreshes please authenticate")
+		return "", 0, cerr.ErrUnauthenticated.WithMessage("Session expired, please authenticate again")
 	}
 
 	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0), "")
 	if err != nil {
-		return "", 0, status.Error(codes.Internal, "could not create jwt-token")
+		return "", 0, cerr.ErrInternal.Wrap(err, "Could not create token")
 	}
 
 	return token, a.jwtExpirationTime, nil
@@ -488,7 +466,7 @@ func (a *AuthenticationService) getAuthMode(id string) (*config.Mode, error) {
 		}
 	}
 
-	return nil, &ErrInvalidArgument{}
+	return nil, cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Unable to find authentication mode %s", id))
 }
 
 // verifyPassword checks whether the hashed password matches a provided hash.
@@ -543,12 +521,12 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 func (a *AuthenticationService) Logout(ctx context.Context) (string, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return "", cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+		return "", cerr.ErrInvalidRequest.WithMessage("Could not extract user ID from token")
 	}
 
 	user, err := a.userer.GetUser(ctx, service.GetUserReq{
@@ -556,13 +534,13 @@ func (a *AuthenticationService) Logout(ctx context.Context) (string, error) {
 		ID:       userID,
 	})
 	if err != nil {
-		return "", status.Error(codes.InvalidArgument, "could not get user")
+		return "", cerr.ErrInternal.Wrap(err, "Could not get user")
 	}
 
 	mode, err := a.getAuthMode(user.Source)
 	if err != nil {
 		logger.SecLog.Error(ctx, "unknown user source, this should not happend, invalid config", zap.String("source", user.Source), zap.Uint64("user_id", user.ID), zap.Uint64("tenant_id", user.TenantID))
-		return "", status.Error(codes.InvalidArgument, "could not get auth mode")
+		return "", cerr.ErrInternal.WithMessage("Could not get auth mode")
 	}
 
 	switch mode.Type {
@@ -572,6 +550,6 @@ func (a *AuthenticationService) Logout(ctx context.Context) (string, error) {
 		return mode.OpenID.LogoutURL, nil
 	default:
 		logger.SecLog.Error(ctx, "unknown user source, this should never happend", zap.String("source", user.Source), zap.Uint64("user_id", user.ID), zap.Uint64("tenant_id", user.TenantID))
-		return "", status.Error(codes.InvalidArgument, "unknown source")
+		return "", cerr.ErrInternal.WithMessage("Unknown authentication source")
 	}
 }
