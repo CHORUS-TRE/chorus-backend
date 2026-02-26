@@ -55,21 +55,23 @@ func (e *ChorusError) ToGRPCStatus() *status.Status {
 
 func (e *ChorusError) WithMessage(message string) *ChorusError {
 	return &ChorusError{
-		GRPCCode:   e.GRPCCode,
-		ChorusCode: e.ChorusCode,
-		Title:      e.Title,
-		Message:    message,
-		CausedBy:   e.CausedBy,
+		GRPCCode:         e.GRPCCode,
+		ChorusCode:       e.ChorusCode,
+		Title:            e.Title,
+		Message:          message,
+		CausedBy:         e.CausedBy,
+		ValidationErrors: e.ValidationErrors,
 	}
 }
 
 func (e *ChorusError) WithCause(causedBy error) *ChorusError {
 	return &ChorusError{
-		GRPCCode:   e.GRPCCode,
-		ChorusCode: e.ChorusCode,
-		Title:      e.Title,
-		Message:    e.Message,
-		CausedBy:   causedBy,
+		GRPCCode:         e.GRPCCode,
+		ChorusCode:       e.ChorusCode,
+		Title:            e.Title,
+		Message:          e.Message,
+		CausedBy:         causedBy,
+		ValidationErrors: e.ValidationErrors,
 	}
 }
 
