@@ -254,7 +254,7 @@ func (a *AuthenticationService) AuthenticateOAuth(ctx context.Context, providerI
 func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, state, sessionState, code string) (string, time.Duration, string, error) {
 	mode, err := a.getAuthMode(providerID)
 	if err != nil {
-		return "", 0, "", err
+		return "", 0, "", cerr.ErrInvalidRequest.Wrap(err, fmt.Sprintf("Could not get auth mode with id %s", providerID))
 	}
 
 	if mode.Type != "openid" {
@@ -541,7 +541,7 @@ func (a *AuthenticationService) Logout(ctx context.Context) (string, error) {
 	mode, err := a.getAuthMode(user.Source)
 	if err != nil {
 		logger.SecLog.Error(ctx, "unknown user source, this should not happend, invalid config", zap.String("source", user.Source), zap.Uint64("user_id", user.ID), zap.Uint64("tenant_id", user.TenantID))
-		return "", cerr.ErrInternal.WithMessage("Could not get auth mode")
+		return "", cerr.ErrInvalidRequest.Wrap(err, fmt.Sprintf("Could not get auth mode with id %s", user.Source))
 	}
 
 	switch mode.Type {
