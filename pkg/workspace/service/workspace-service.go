@@ -6,9 +6,12 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
+	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
@@ -59,9 +62,10 @@ type WorkspaceService struct {
 	workbencher       Workbencher
 	userer            Userer
 	notificationStore NotificationStore
+	auditWriter       audit_service.AuditWriter
 }
 
-func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, notificationStore NotificationStore) *WorkspaceService {
+func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8sClienter, workbencher Workbencher, userer Userer, notificationStore NotificationStore, auditWriter audit_service.AuditWriter) *WorkspaceService {
 	ws := &WorkspaceService{
 		cfg:               cfg,
 		store:             store,
@@ -69,6 +73,7 @@ func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8s
 		workbencher:       workbencher,
 		userer:            userer,
 		notificationStore: notificationStore,
+		auditWriter:       auditWriter,
 	}
 
 	go func() {

@@ -41,6 +41,7 @@ func ProvideWorkspaceService() service.Workspaceer {
 			ProvideWorkbench(),
 			ProvideUser(),
 			ProvideNotificationStore(),
+			ProvideAuditWriter(),
 		)
 		workspaceService = service_mw.Logging(logger.BizLog)(workspaceService)
 		workspaceService = service_mw.Validation(ProvideValidator())(workspaceService)
