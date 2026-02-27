@@ -53,7 +53,6 @@ func (c userControllerAudit) GetUser(ctx context.Context, req *chorus.GetUserReq
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionUserRead,
 			audit.WithUserID(req.Id),
-			audit.WithDetail("user_id", req.Id),
 			audit.WithDescription("Failed to get user."),
 			audit.WithError(err),
 		)
@@ -107,7 +106,6 @@ func (c userControllerAudit) CreateUser(ctx context.Context, req *chorus.User) (
 		opts = append(opts,
 			audit.WithUserID(res.Result.User.Id),
 			audit.WithDescription(fmt.Sprintf("Created user with ID %d.", res.Result.User.Id)),
-			audit.WithDetail("user_id", res.Result.User.Id),
 		)
 	}
 
@@ -121,7 +119,6 @@ func (c userControllerAudit) UpdateUser(ctx context.Context, req *chorus.User) (
 
 	opts := []audit.Option{
 		audit.WithUserID(req.Id),
-		audit.WithDetail("user_id", req.Id),
 	}
 
 	if err != nil {
@@ -167,7 +164,6 @@ func (c userControllerAudit) DeleteUser(ctx context.Context, req *chorus.DeleteU
 
 	opts := []audit.Option{
 		audit.WithUserID(req.Id),
-		audit.WithDetail("user_id", req.Id),
 	}
 
 	if err != nil {
@@ -191,7 +187,6 @@ func (c userControllerAudit) CreateUserRole(ctx context.Context, req *chorus.Cre
 
 	opts := []audit.Option{
 		audit.WithUserID(req.UserId),
-		audit.WithDetail("user_id", req.UserId),
 		audit.WithDetail("role_name", req.Role.Name),
 	}
 
@@ -216,7 +211,6 @@ func (c userControllerAudit) DeleteUserRole(ctx context.Context, req *chorus.Del
 
 	opts := []audit.Option{
 		audit.WithUserID(req.UserId),
-		audit.WithDetail("user_id", req.UserId),
 		audit.WithDetail("role_id", req.RoleId),
 	}
 
@@ -283,7 +277,6 @@ func (c userControllerAudit) ResetPassword(ctx context.Context, req *chorus.Rese
 
 	opts := []audit.Option{
 		audit.WithUserID(req.Id),
-		audit.WithDetail("user_id", req.Id),
 	}
 
 	if err != nil {
