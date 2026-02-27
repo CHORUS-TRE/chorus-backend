@@ -134,6 +134,16 @@ func (s *WorkspaceService) cleanOldWorkspaces(ctx context.Context) {
 	}
 
 	for _, workspace := range workspaces {
+		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkspaceDelete,
+			audit.WithTenantID(workspace.TenantID),
+			audit.WithUsername("system"),
+			audit.WithWorkspaceID(workspace.ID),
+			audit.WithDescription(fmt.Sprintf("Workspace with ID %d auto-deleted due to fixed timeout.", workspace.ID)),
+			audit.WithDetail("trigger", "auto_cleanup_timeout"),
+		)
+	}
+
+	for _, workspace := range workspaces {
 		go func(workspaceID uint64) {
 			if err := s.k8sClient.DeleteWorkspace(model.GetWorkspaceClusterName(workspaceID)); err != nil {
 				logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to delete workspace %v: %v", workspaceID, err))
