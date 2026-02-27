@@ -108,3 +108,24 @@ func WithError(err error) Option {
 		entry.Details["grpc_status_code"] = int(grpc.ErrorCode(err))
 	}
 }
+
+// WithTenantID overrides the tenant ID (useful for system-initiated actions without JWT context)
+func WithTenantID(tenantID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.TenantID = tenantID
+	}
+}
+
+// WithUserID overrides the user ID (useful for system-initiated actions without JWT context)
+func WithUserID(userID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.UserID = userID
+	}
+}
+
+// WithUsername overrides the username (useful for system-initiated actions without JWT context)
+func WithUsername(username string) Option {
+	return func(entry *model.AuditEntry) {
+		entry.Username = username
+	}
+}
