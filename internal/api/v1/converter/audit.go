@@ -21,13 +21,16 @@ func AuditEntryFromBusiness(auditEntry *model.AuditEntry) (*chorus.AuditEntry, e
 	return &chorus.AuditEntry{
 		Id: auditEntry.ID,
 
-		UserId:        auditEntry.UserID,
-		Username:      auditEntry.Username,
+		ActorId:       auditEntry.ActorID,
+		ActorUsername: auditEntry.ActorUsername,
 		CorrelationId: auditEntry.CorrelationID,
 
-		Action:      string(auditEntry.Action),
+		Action: string(auditEntry.Action),
+
 		WorkspaceId: auditEntry.WorkspaceID,
 		WorkbenchId: auditEntry.WorkbenchID,
+		UserId:      auditEntry.UserID,
+
 		Description: auditEntry.Description,
 		Details:     details,
 
@@ -51,11 +54,15 @@ func AuditFilterToBusiness(filter *chorus.AuditFilter) (*model.AuditFilter, erro
 	}
 
 	return &model.AuditFilter{
-		UserID:      filter.UserId,
-		Action:      model.AuditAction(filter.Action),
+		ActorID: filter.ActorId,
+
+		Action: model.AuditAction(filter.Action),
+
 		WorkspaceID: filter.WorkspaceId,
 		WorkbenchID: filter.WorkbenchId,
-		FromTime:    fromTime,
-		ToTime:      toTime,
+		UserID:      filter.UserId,
+
+		FromTime: fromTime,
+		ToTime:   toTime,
 	}, nil
 }

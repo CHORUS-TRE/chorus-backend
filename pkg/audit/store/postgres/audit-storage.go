@@ -23,20 +23,21 @@ func NewAuditStorage(db *sqlx.DB) *AuditStorage {
 
 func (s *AuditStorage) Record(ctx context.Context, entry *model.AuditEntry) (*model.AuditEntry, error) {
 	const query = `
-		INSERT INTO audit (tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		RETURNING id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat;
+		INSERT INTO audit (tenantid, actorid, actorusername, correlationid, action, workspaceid, workbenchid, userid, description, details, createdat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		RETURNING id, tenantid, actorid, actorusername, correlationid, action, workspaceid, workbenchid, userid, description, details, createdat;
 	`
 
 	var createdEntry model.AuditEntry
 	err := s.db.GetContext(ctx, &createdEntry, query,
 		entry.TenantID,
-		entry.UserID,
-		entry.Username,
+		entry.ActorID,
+		entry.ActorUsername,
 		entry.CorrelationID,
 		entry.Action,
 		entry.WorkspaceID,
 		entry.WorkbenchID,
+		entry.UserID,
 		entry.Description,
 		entry.Details,
 		entry.CreatedAt,
@@ -54,29 +55,30 @@ func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEnt
 	}
 
 	const baseQuery = `
-		INSERT INTO audit (tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat)
+		INSERT INTO audit (tenantid, actorid, actorusername, correlationid, action, workspaceid, workbenchid, userid, description, details, createdat)
 		VALUES `
 
 	const returnClause = `
-		RETURNING id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat;
+		RETURNING id, tenantid, actorid, actorusername, correlationid, action, workspaceid, workbenchid, userid, description, details, createdat;
 	`
 
 	values := []string{}
 	args := []interface{}{}
 
 	for i, entry := range entries {
-		offset := i * 10 // 10 columns per entry
-		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8, offset+9, offset+10))
+		offset := i * 11 // 11 columns per entry
+		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8, offset+9, offset+10, offset+11))
 
 		args = append(args,
 			entry.TenantID,
-			entry.UserID,
-			entry.Username,
+			entry.ActorID,
+			entry.ActorUsername,
 			entry.CorrelationID,
 			entry.Action,
 			entry.WorkspaceID,
 			entry.WorkbenchID,
+			entry.UserID,
 			entry.Description,
 			entry.Details,
 			entry.CreatedAt,
@@ -113,7 +115,7 @@ func (s *AuditStorage) List(ctx context.Context, tenantID uint64, pagination *co
 
 	// Get audit entries query
 	query := `
-		SELECT id, tenantid, userid, username, correlationid, action, workspaceid, workbenchid, description, details, createdat 
+		SELECT id, tenantid, actorid, actorusername, correlationid, action, workspaceid, workbenchid, userid, description, details, createdat
 		FROM audit
 		WHERE tenantid=$1
 	`
