@@ -935,7 +935,7 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
-        - name: filter.userId
+        - name: filter.actorId
           in: query
           required: false
           type: string
@@ -946,6 +946,116 @@ paths:
           type: string
           format: uint64
         - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.userId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.action
+          in: query
+          required: false
+          type: string
+        - name: filter.fromTime
+          in: query
+          required: false
+          type: string
+          format: date-time
+        - name: filter.toTime
+          in: query
+          required: false
+          type: string
+          format: date-time
+      tags:
+        - AuditService
+  /api/rest/v1/audit/actors/{id}:
+    get:
+      summary: List audit entries by actor
+      description: This endpoint returns audit entries for actions performed by a specific user
+      operationId: AuditService_ListActorAudit
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListAuditReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.actorId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.workspaceId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.userId
           in: query
           required: false
           type: string
@@ -968,8 +1078,8 @@ paths:
         - AuditService
   /api/rest/v1/audit/users/{id}:
     get:
-      summary: List user audit entries
-      description: This endpoint returns audit entries for a specific user
+      summary: List audit entries about a user
+      description: This endpoint returns audit entries where the specified user was acted upon
       operationId: AuditService_ListUserAudit
       responses:
         "200":
@@ -1035,7 +1145,7 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
-        - name: filter.userId
+        - name: filter.actorId
           in: query
           required: false
           type: string
@@ -1046,6 +1156,11 @@ paths:
           type: string
           format: uint64
         - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.userId
           in: query
           required: false
           type: string
@@ -1135,7 +1250,7 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
-        - name: filter.userId
+        - name: filter.actorId
           in: query
           required: false
           type: string
@@ -1146,6 +1261,11 @@ paths:
           type: string
           format: uint64
         - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.userId
           in: query
           required: false
           type: string
@@ -1235,7 +1355,7 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
-        - name: filter.userId
+        - name: filter.actorId
           in: query
           required: false
           type: string
@@ -1246,6 +1366,11 @@ paths:
           type: string
           format: uint64
         - name: filter.workbenchId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.userId
           in: query
           required: false
           type: string
@@ -4569,10 +4694,10 @@ definitions:
       id:
         type: string
         format: uint64
-      userId:
+      actorId:
         type: string
         format: uint64
-      username:
+      actorUsername:
         type: string
       correlationId:
         type: string
@@ -4582,6 +4707,9 @@ definitions:
         type: string
         format: uint64
       workbenchId:
+        type: string
+        format: uint64
+      userId:
         type: string
         format: uint64
       description:
@@ -4596,13 +4724,16 @@ definitions:
   chorusAuditFilter:
     type: object
     properties:
-      userId:
+      actorId:
         type: string
         format: uint64
       workspaceId:
         type: string
         format: uint64
       workbenchId:
+        type: string
+        format: uint64
+      userId:
         type: string
         format: uint64
       action:

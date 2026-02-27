@@ -17,50 +17,50 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// NewAuditServiceListUserAuditParams creates a new AuditServiceListUserAuditParams object,
+// NewAuditServiceListActorAuditParams creates a new AuditServiceListActorAuditParams object,
 // with the default timeout for this client.
 //
 // Default values are not hydrated, since defaults are normally applied by the API server side.
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
-func NewAuditServiceListUserAuditParams() *AuditServiceListUserAuditParams {
-	return &AuditServiceListUserAuditParams{
+func NewAuditServiceListActorAuditParams() *AuditServiceListActorAuditParams {
+	return &AuditServiceListActorAuditParams{
 		timeout: cr.DefaultTimeout,
 	}
 }
 
-// NewAuditServiceListUserAuditParamsWithTimeout creates a new AuditServiceListUserAuditParams object
+// NewAuditServiceListActorAuditParamsWithTimeout creates a new AuditServiceListActorAuditParams object
 // with the ability to set a timeout on a request.
-func NewAuditServiceListUserAuditParamsWithTimeout(timeout time.Duration) *AuditServiceListUserAuditParams {
-	return &AuditServiceListUserAuditParams{
+func NewAuditServiceListActorAuditParamsWithTimeout(timeout time.Duration) *AuditServiceListActorAuditParams {
+	return &AuditServiceListActorAuditParams{
 		timeout: timeout,
 	}
 }
 
-// NewAuditServiceListUserAuditParamsWithContext creates a new AuditServiceListUserAuditParams object
+// NewAuditServiceListActorAuditParamsWithContext creates a new AuditServiceListActorAuditParams object
 // with the ability to set a context for a request.
-func NewAuditServiceListUserAuditParamsWithContext(ctx context.Context) *AuditServiceListUserAuditParams {
-	return &AuditServiceListUserAuditParams{
+func NewAuditServiceListActorAuditParamsWithContext(ctx context.Context) *AuditServiceListActorAuditParams {
+	return &AuditServiceListActorAuditParams{
 		Context: ctx,
 	}
 }
 
-// NewAuditServiceListUserAuditParamsWithHTTPClient creates a new AuditServiceListUserAuditParams object
+// NewAuditServiceListActorAuditParamsWithHTTPClient creates a new AuditServiceListActorAuditParams object
 // with the ability to set a custom HTTPClient for a request.
-func NewAuditServiceListUserAuditParamsWithHTTPClient(client *http.Client) *AuditServiceListUserAuditParams {
-	return &AuditServiceListUserAuditParams{
+func NewAuditServiceListActorAuditParamsWithHTTPClient(client *http.Client) *AuditServiceListActorAuditParams {
+	return &AuditServiceListActorAuditParams{
 		HTTPClient: client,
 	}
 }
 
 /*
-AuditServiceListUserAuditParams contains all the parameters to send to the API endpoint
+AuditServiceListActorAuditParams contains all the parameters to send to the API endpoint
 
-	for the audit service list user audit operation.
+	for the audit service list actor audit operation.
 
 	Typically these are written to a http.Request.
 */
-type AuditServiceListUserAuditParams struct {
+type AuditServiceListActorAuditParams struct {
 
 	// FilterAction.
 	FilterAction *string
@@ -133,199 +133,199 @@ type AuditServiceListUserAuditParams struct {
 	HTTPClient *http.Client
 }
 
-// WithDefaults hydrates default values in the audit service list user audit params (not the query body).
+// WithDefaults hydrates default values in the audit service list actor audit params (not the query body).
 //
 // All values with no default are reset to their zero value.
-func (o *AuditServiceListUserAuditParams) WithDefaults() *AuditServiceListUserAuditParams {
+func (o *AuditServiceListActorAuditParams) WithDefaults() *AuditServiceListActorAuditParams {
 	o.SetDefaults()
 	return o
 }
 
-// SetDefaults hydrates default values in the audit service list user audit params (not the query body).
+// SetDefaults hydrates default values in the audit service list actor audit params (not the query body).
 //
 // All values with no default are reset to their zero value.
-func (o *AuditServiceListUserAuditParams) SetDefaults() {
+func (o *AuditServiceListActorAuditParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithTimeout(timeout time.Duration) *AuditServiceListUserAuditParams {
+// WithTimeout adds the timeout to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithTimeout(timeout time.Duration) *AuditServiceListActorAuditParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetTimeout(timeout time.Duration) {
+// SetTimeout adds the timeout to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetTimeout(timeout time.Duration) {
 	o.timeout = timeout
 }
 
-// WithContext adds the context to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithContext(ctx context.Context) *AuditServiceListUserAuditParams {
+// WithContext adds the context to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithContext(ctx context.Context) *AuditServiceListActorAuditParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetContext(ctx context.Context) {
+// SetContext adds the context to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetContext(ctx context.Context) {
 	o.Context = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithHTTPClient(client *http.Client) *AuditServiceListUserAuditParams {
+// WithHTTPClient adds the HTTPClient to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithHTTPClient(client *http.Client) *AuditServiceListActorAuditParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetHTTPClient(client *http.Client) {
+// SetHTTPClient adds the HTTPClient to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithFilterAction adds the filterAction to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterAction(filterAction *string) *AuditServiceListUserAuditParams {
+// WithFilterAction adds the filterAction to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterAction(filterAction *string) *AuditServiceListActorAuditParams {
 	o.SetFilterAction(filterAction)
 	return o
 }
 
-// SetFilterAction adds the filterAction to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterAction(filterAction *string) {
+// SetFilterAction adds the filterAction to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterAction(filterAction *string) {
 	o.FilterAction = filterAction
 }
 
-// WithFilterActorID adds the filterActorID to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterActorID(filterActorID *string) *AuditServiceListUserAuditParams {
+// WithFilterActorID adds the filterActorID to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterActorID(filterActorID *string) *AuditServiceListActorAuditParams {
 	o.SetFilterActorID(filterActorID)
 	return o
 }
 
-// SetFilterActorID adds the filterActorId to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterActorID(filterActorID *string) {
+// SetFilterActorID adds the filterActorId to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterActorID(filterActorID *string) {
 	o.FilterActorID = filterActorID
 }
 
-// WithFilterFromTime adds the filterFromTime to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterFromTime(filterFromTime *strfmt.DateTime) *AuditServiceListUserAuditParams {
+// WithFilterFromTime adds the filterFromTime to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterFromTime(filterFromTime *strfmt.DateTime) *AuditServiceListActorAuditParams {
 	o.SetFilterFromTime(filterFromTime)
 	return o
 }
 
-// SetFilterFromTime adds the filterFromTime to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterFromTime(filterFromTime *strfmt.DateTime) {
+// SetFilterFromTime adds the filterFromTime to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterFromTime(filterFromTime *strfmt.DateTime) {
 	o.FilterFromTime = filterFromTime
 }
 
-// WithFilterToTime adds the filterToTime to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterToTime(filterToTime *strfmt.DateTime) *AuditServiceListUserAuditParams {
+// WithFilterToTime adds the filterToTime to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterToTime(filterToTime *strfmt.DateTime) *AuditServiceListActorAuditParams {
 	o.SetFilterToTime(filterToTime)
 	return o
 }
 
-// SetFilterToTime adds the filterToTime to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterToTime(filterToTime *strfmt.DateTime) {
+// SetFilterToTime adds the filterToTime to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterToTime(filterToTime *strfmt.DateTime) {
 	o.FilterToTime = filterToTime
 }
 
-// WithFilterUserID adds the filterUserID to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterUserID(filterUserID *string) *AuditServiceListUserAuditParams {
+// WithFilterUserID adds the filterUserID to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterUserID(filterUserID *string) *AuditServiceListActorAuditParams {
 	o.SetFilterUserID(filterUserID)
 	return o
 }
 
-// SetFilterUserID adds the filterUserId to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterUserID(filterUserID *string) {
+// SetFilterUserID adds the filterUserId to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterUserID(filterUserID *string) {
 	o.FilterUserID = filterUserID
 }
 
-// WithFilterWorkbenchID adds the filterWorkbenchID to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterWorkbenchID(filterWorkbenchID *string) *AuditServiceListUserAuditParams {
+// WithFilterWorkbenchID adds the filterWorkbenchID to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterWorkbenchID(filterWorkbenchID *string) *AuditServiceListActorAuditParams {
 	o.SetFilterWorkbenchID(filterWorkbenchID)
 	return o
 }
 
-// SetFilterWorkbenchID adds the filterWorkbenchId to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterWorkbenchID(filterWorkbenchID *string) {
+// SetFilterWorkbenchID adds the filterWorkbenchId to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterWorkbenchID(filterWorkbenchID *string) {
 	o.FilterWorkbenchID = filterWorkbenchID
 }
 
-// WithFilterWorkspaceID adds the filterWorkspaceID to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithFilterWorkspaceID(filterWorkspaceID *string) *AuditServiceListUserAuditParams {
+// WithFilterWorkspaceID adds the filterWorkspaceID to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithFilterWorkspaceID(filterWorkspaceID *string) *AuditServiceListActorAuditParams {
 	o.SetFilterWorkspaceID(filterWorkspaceID)
 	return o
 }
 
-// SetFilterWorkspaceID adds the filterWorkspaceId to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetFilterWorkspaceID(filterWorkspaceID *string) {
+// SetFilterWorkspaceID adds the filterWorkspaceId to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetFilterWorkspaceID(filterWorkspaceID *string) {
 	o.FilterWorkspaceID = filterWorkspaceID
 }
 
-// WithID adds the id to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithID(id string) *AuditServiceListUserAuditParams {
+// WithID adds the id to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithID(id string) *AuditServiceListActorAuditParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetID(id string) {
+// SetID adds the id to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithPaginationLimit adds the paginationLimit to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithPaginationLimit(paginationLimit *int64) *AuditServiceListUserAuditParams {
+// WithPaginationLimit adds the paginationLimit to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithPaginationLimit(paginationLimit *int64) *AuditServiceListActorAuditParams {
 	o.SetPaginationLimit(paginationLimit)
 	return o
 }
 
-// SetPaginationLimit adds the paginationLimit to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetPaginationLimit(paginationLimit *int64) {
+// SetPaginationLimit adds the paginationLimit to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetPaginationLimit(paginationLimit *int64) {
 	o.PaginationLimit = paginationLimit
 }
 
-// WithPaginationOffset adds the paginationOffset to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithPaginationOffset(paginationOffset *int64) *AuditServiceListUserAuditParams {
+// WithPaginationOffset adds the paginationOffset to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithPaginationOffset(paginationOffset *int64) *AuditServiceListActorAuditParams {
 	o.SetPaginationOffset(paginationOffset)
 	return o
 }
 
-// SetPaginationOffset adds the paginationOffset to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetPaginationOffset(paginationOffset *int64) {
+// SetPaginationOffset adds the paginationOffset to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetPaginationOffset(paginationOffset *int64) {
 	o.PaginationOffset = paginationOffset
 }
 
-// WithPaginationQuery adds the paginationQuery to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithPaginationQuery(paginationQuery []string) *AuditServiceListUserAuditParams {
+// WithPaginationQuery adds the paginationQuery to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithPaginationQuery(paginationQuery []string) *AuditServiceListActorAuditParams {
 	o.SetPaginationQuery(paginationQuery)
 	return o
 }
 
-// SetPaginationQuery adds the paginationQuery to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetPaginationQuery(paginationQuery []string) {
+// SetPaginationQuery adds the paginationQuery to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetPaginationQuery(paginationQuery []string) {
 	o.PaginationQuery = paginationQuery
 }
 
-// WithPaginationSortOrder adds the paginationSortOrder to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithPaginationSortOrder(paginationSortOrder *string) *AuditServiceListUserAuditParams {
+// WithPaginationSortOrder adds the paginationSortOrder to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithPaginationSortOrder(paginationSortOrder *string) *AuditServiceListActorAuditParams {
 	o.SetPaginationSortOrder(paginationSortOrder)
 	return o
 }
 
-// SetPaginationSortOrder adds the paginationSortOrder to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetPaginationSortOrder(paginationSortOrder *string) {
+// SetPaginationSortOrder adds the paginationSortOrder to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetPaginationSortOrder(paginationSortOrder *string) {
 	o.PaginationSortOrder = paginationSortOrder
 }
 
-// WithPaginationSortType adds the paginationSortType to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) WithPaginationSortType(paginationSortType *string) *AuditServiceListUserAuditParams {
+// WithPaginationSortType adds the paginationSortType to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) WithPaginationSortType(paginationSortType *string) *AuditServiceListActorAuditParams {
 	o.SetPaginationSortType(paginationSortType)
 	return o
 }
 
-// SetPaginationSortType adds the paginationSortType to the audit service list user audit params
-func (o *AuditServiceListUserAuditParams) SetPaginationSortType(paginationSortType *string) {
+// SetPaginationSortType adds the paginationSortType to the audit service list actor audit params
+func (o *AuditServiceListActorAuditParams) SetPaginationSortType(paginationSortType *string) {
 	o.PaginationSortType = paginationSortType
 }
 
 // WriteToRequest writes these params to a swagger request
-func (o *AuditServiceListUserAuditParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
+func (o *AuditServiceListActorAuditParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
 	if err := r.SetTimeout(o.timeout); err != nil {
 		return err
@@ -541,8 +541,8 @@ func (o *AuditServiceListUserAuditParams) WriteToRequest(r runtime.ClientRequest
 	return nil
 }
 
-// bindParamAuditServiceListUserAudit binds the parameter pagination.query
-func (o *AuditServiceListUserAuditParams) bindParamPaginationQuery(formats strfmt.Registry) []string {
+// bindParamAuditServiceListActorAudit binds the parameter pagination.query
+func (o *AuditServiceListActorAuditParams) bindParamPaginationQuery(formats strfmt.Registry) []string {
 	paginationQueryIR := o.PaginationQuery
 
 	var paginationQueryIC []string

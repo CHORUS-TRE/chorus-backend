@@ -22,6 +22,12 @@ type ChorusAuditEntry struct {
 	// action
 	Action string `json:"action,omitempty"`
 
+	// actor Id
+	ActorID string `json:"actorId,omitempty"`
+
+	// actor username
+	ActorUsername string `json:"actorUsername,omitempty"`
+
 	// correlation Id
 	CorrelationID string `json:"correlationId,omitempty"`
 
@@ -40,9 +46,6 @@ type ChorusAuditEntry struct {
 
 	// user Id
 	UserID string `json:"userId,omitempty"`
-
-	// username
-	Username string `json:"username,omitempty"`
 
 	// workbench Id
 	WorkbenchID string `json:"workbenchId,omitempty"`

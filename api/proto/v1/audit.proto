@@ -7,26 +7,31 @@ import "google/protobuf/timestamp.proto";
 message AuditEntry {
     uint64 id = 1;
 
-    uint64 userId = 3;
-    string username = 4;
-    string correlationId = 5;
+    uint64 actorId = 2;
+    string actorUsername = 3;
+    string correlationId = 4;
 
-    string action = 6;
-    uint64 workspaceId = 7;
-    uint64 workbenchId = 8;
+    string action = 5;
+
+    uint64 workspaceId = 6;
+    uint64 workbenchId = 7;
+    uint64 userId = 8;
+
     string description = 9;
-    map<string, string> details= 10;
+    map<string, string> details = 10;
 
     google.protobuf.Timestamp createdAt = 11;
 }
 
 message AuditFilter {
-    uint64 userId = 1;
+    uint64 actorId = 1;
+    
     uint64 workspaceId = 2;
     uint64 workbenchId = 3;
+    uint64 userId = 4;
 
-    string action = 4;
+    string action = 5;
 
-    google.protobuf.Timestamp fromTime = 5;
-    google.protobuf.Timestamp toTime = 6;
+    google.protobuf.Timestamp fromTime = 6;
+    google.protobuf.Timestamp toTime = 7;
 }
