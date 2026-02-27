@@ -73,6 +73,27 @@ func Record(ctx context.Context, writer service.AuditWriter, action model.AuditA
 	}()
 }
 
+// WithTenantID overrides the tenant ID (useful for system-initiated actions without JWT context)
+func WithTenantID(tenantID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.TenantID = tenantID
+	}
+}
+
+// WithActorID overrides the actor ID (useful for system-initiated actions without JWT context)
+func WithActorID(actorID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.ActorID = actorID
+	}
+}
+
+// WithActorUsername overrides the actor username (useful for system-initiated actions without JWT context)
+func WithActorUsername(username string) Option {
+	return func(entry *model.AuditEntry) {
+		entry.ActorUsername = username
+	}
+}
+
 // WithWorkspaceID sets the workspace ID
 func WithWorkspaceID(workspaceID uint64) Option {
 	return func(entry *model.AuditEntry) {
@@ -113,26 +134,5 @@ func WithError(err error) Option {
 	return func(entry *model.AuditEntry) {
 		entry.Details["error_message"] = err.Error()
 		entry.Details["grpc_status_code"] = int(grpc.ErrorCode(err))
-	}
-}
-
-// WithTenantID overrides the tenant ID (useful for system-initiated actions without JWT context)
-func WithTenantID(tenantID uint64) Option {
-	return func(entry *model.AuditEntry) {
-		entry.TenantID = tenantID
-	}
-}
-
-// WithUserID overrides the user ID (useful for system-initiated actions without JWT context)
-func WithUserID(userID uint64) Option {
-	return func(entry *model.AuditEntry) {
-		entry.UserID = userID
-	}
-}
-
-// WithUsername overrides the username (useful for system-initiated actions without JWT context)
-func WithUsername(username string) Option {
-	return func(entry *model.AuditEntry) {
-		entry.Username = username
 	}
 }
