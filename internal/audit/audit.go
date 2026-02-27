@@ -73,7 +73,7 @@ func Record(ctx context.Context, writer service.AuditWriter, action model.AuditA
 	}()
 }
 
-// WithWorkspaceID sets the workspace ID 
+// WithWorkspaceID sets the workspace ID
 func WithWorkspaceID(workspaceID uint64) Option {
 	return func(entry *model.AuditEntry) {
 		entry.WorkspaceID = workspaceID

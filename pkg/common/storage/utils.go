@@ -164,7 +164,6 @@ func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}
 		*args = append(*args, filter.UserID)
 	}
 
-
 	if !filter.FromTime.IsZero() {
 		clauses = append(clauses, fmt.Sprintf("createdat >= $%d", len(*args)+1))
 		*args = append(*args, filter.FromTime)
