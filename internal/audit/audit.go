@@ -25,11 +25,11 @@ func NewEntry(ctx context.Context, action model.AuditAction, opts ...Option) *mo
 		CreatedAt: time.Now().UTC(),
 	}
 
-	// Auto-extract from context
+	// Auto-extract actor from context
 	if claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); ok {
 		entry.TenantID = claims.TenantID
-		entry.UserID = claims.ID
-		entry.Username = claims.Username
+		entry.ActorID = claims.ID
+		entry.ActorUsername = claims.Username
 	}
 
 	if cid, ok := ctx.Value(correlation.CorrelationIDContextKey{}).(string); ok {
@@ -73,7 +73,7 @@ func Record(ctx context.Context, writer service.AuditWriter, action model.AuditA
 	}()
 }
 
-// WithWorkspaceID sets the workspace ID
+// WithWorkspaceID sets the workspace ID 
 func WithWorkspaceID(workspaceID uint64) Option {
 	return func(entry *model.AuditEntry) {
 		entry.WorkspaceID = workspaceID
@@ -84,6 +84,13 @@ func WithWorkspaceID(workspaceID uint64) Option {
 func WithWorkbenchID(workbenchID uint64) Option {
 	return func(entry *model.AuditEntry) {
 		entry.WorkbenchID = workbenchID
+	}
+}
+
+// WithUserID sets the user ID
+func WithUserID(userID uint64) Option {
+	return func(entry *model.AuditEntry) {
+		entry.UserID = userID
 	}
 }
 
