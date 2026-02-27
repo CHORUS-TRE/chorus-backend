@@ -5,6 +5,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	errorspb "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
@@ -219,6 +220,57 @@ func TestNestedErrorChain(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "Unable to get user 42", innerChorus.Message)
 	assert.Equal(t, sqlErr, innerChorus.CausedBy)
+}
+
+func TestSentinel_HasNoStack(t *testing.T) {
+	assert.Nil(t, ErrNotFound.Stack)
+	assert.Nil(t, ErrInternal.Stack)
+	assert.Equal(t, "", ErrNotFound.StackTrace())
+}
+
+func TestWrap_CapturesStack(t *testing.T) {
+	cause := fmt.Errorf("db error")
+	err := ErrInternal.Wrap(cause, "store failed")
+
+	require.NotNil(t, err.Stack)
+	trace := err.StackTrace()
+	assert.Contains(t, trace, "TestWrap_CapturesStack")
+}
+
+func TestWithMessage_CapturesStack(t *testing.T) {
+	err := ErrNotFound.WithMessage("user not found")
+
+	require.NotNil(t, err.Stack)
+	trace := err.StackTrace()
+	assert.Contains(t, trace, "TestWithMessage_CapturesStack")
+}
+
+func TestWithCause_CapturesStack(t *testing.T) {
+	err := ErrInternal.WithCause(fmt.Errorf("timeout"))
+
+	require.NotNil(t, err.Stack)
+	assert.Contains(t, err.StackTrace(), "TestWithCause_CapturesStack")
+}
+
+func TestStackTrace_PropagatedOnChain(t *testing.T) {
+	// First clone captures the stack
+	err := ErrNotFound.Wrap(fmt.Errorf("sql error"), "user not found")
+	originalStack := err.Stack
+
+	// Second clone should propagate, not re-capture
+	err2 := err.WithMessage("updated message")
+
+	assert.Equal(t, originalStack, err2.Stack)
+	// Both should contain the original call site
+	assert.Contains(t, err2.StackTrace(), "TestStackTrace_PropagatedOnChain")
+}
+
+func TestStackTrace_ContainsFileLine(t *testing.T) {
+	err := ErrInternal.WithMessage("something broke")
+	trace := err.StackTrace()
+
+	// Should contain file:line format
+	assert.True(t, strings.Contains(trace, ".go:"), "stack trace should contain file:line, got: %s", trace)
 }
 
 func TestCatalogCoversAllCodes(t *testing.T) {

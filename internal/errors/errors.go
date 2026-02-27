@@ -2,11 +2,15 @@ package errors
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 
 	errorspb "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+const modulePrefix = "github.com/CHORUS-TRE/chorus-backend/"
 
 // ChorusError is a custom error type that includes additional
 // context and can be converted to a gRPC status error.
@@ -17,6 +21,7 @@ type ChorusError struct {
 	Message          string
 	CausedBy         error
 	ValidationErrors []*errorspb.ValidationError
+	Stack            []uintptr
 }
 
 // ValidationField represents a single field validation failure.
@@ -35,44 +40,81 @@ func (e *ChorusError) Error() string {
 func (e *ChorusError) ToGRPCStatus() *status.Status {
 	st := status.New(e.GRPCCode, e.Message)
 
-	// Create error details with Chorus-specific information
-	errorDetail := &errorspb.ErrorDetail{
+	statusWithDetails, err := st.WithDetails(&errorspb.ErrorDetail{
 		ChorusCode:       e.ChorusCode,
 		Title:            e.Title,
 		Message:          e.Message,
 		ValidationErrors: e.ValidationErrors,
-	}
-
-	// Add details to the status
-	statusWithDetails, err := st.WithDetails(errorDetail)
+	})
 	if err != nil {
-		// If adding details fails, return original status
 		return st
 	}
 
 	return statusWithDetails
 }
 
-func (e *ChorusError) WithMessage(message string) *ChorusError {
-	return &ChorusError{
-		GRPCCode:         e.GRPCCode,
-		ChorusCode:       e.ChorusCode,
-		Title:            e.Title,
-		Message:          message,
-		CausedBy:         e.CausedBy,
-		ValidationErrors: e.ValidationErrors,
+func (e *ChorusError) clone() *ChorusError {
+	return &ChorusError{GRPCCode: e.GRPCCode, ChorusCode: e.ChorusCode, Title: e.Title, Message: e.Message, CausedBy: e.CausedBy, ValidationErrors: e.ValidationErrors, Stack: e.Stack}
+}
+
+func (e *ChorusError) Wrap(err error, message string) *ChorusError {
+	c := e.clone()
+	c.Message = message
+	c.CausedBy = err
+	c.Stack = e.stack()
+	return c
+}
+
+func (e *ChorusError) Unwrap() error {
+	return e.CausedBy
+}
+
+// StackTrace formats the captured stack as a human-readable string,
+// showing only frames from this module with shortened paths.
+func (e *ChorusError) StackTrace() string {
+	if len(e.Stack) == 0 {
+		return ""
 	}
+	var b strings.Builder
+	frames := runtime.CallersFrames(e.Stack)
+	for {
+		frame, more := frames.Next()
+		if strings.HasPrefix(frame.Function, modulePrefix) {
+			fmt.Fprintf(&b, "%s\n\t%s:%d\n",
+				strings.TrimPrefix(frame.Function, modulePrefix),
+				strings.TrimPrefix(frame.File, modulePrefix),
+				frame.Line,
+			)
+		}
+		if !more {
+			break
+		}
+	}
+	return b.String()
+}
+
+// stack returns the existing stack if present, or captures a new one.
+func (e *ChorusError) stack() []uintptr {
+	if e.Stack != nil {
+		return e.Stack
+	}
+	pcs := make([]uintptr, 32)
+	n := runtime.Callers(3, pcs) // skip: runtime.Callers, callerStack, calling method
+	return pcs[:n]
+}
+
+func (e *ChorusError) WithMessage(message string) *ChorusError {
+	c := e.clone()
+	c.Message = message
+	c.Stack = e.stack()
+	return c
 }
 
 func (e *ChorusError) WithCause(causedBy error) *ChorusError {
-	return &ChorusError{
-		GRPCCode:         e.GRPCCode,
-		ChorusCode:       e.ChorusCode,
-		Title:            e.Title,
-		Message:          e.Message,
-		CausedBy:         causedBy,
-		ValidationErrors: e.ValidationErrors,
-	}
+	c := e.clone()
+	c.CausedBy = causedBy
+	c.Stack = e.stack()
+	return c
 }
 
 func (e *ChorusError) WithValidationErrors(fields []ValidationField) *ChorusError {
@@ -83,26 +125,8 @@ func (e *ChorusError) WithValidationErrors(fields []ValidationField) *ChorusErro
 			Reason: f.Reason,
 		}
 	}
-	return &ChorusError{
-		GRPCCode:         e.GRPCCode,
-		ChorusCode:       e.ChorusCode,
-		Title:            e.Title,
-		Message:          e.Message,
-		CausedBy:         e.CausedBy,
-		ValidationErrors: ve,
-	}
-}
-
-func (e *ChorusError) Wrap(err error, message string) *ChorusError {
-	return &ChorusError{
-		GRPCCode:   e.GRPCCode,
-		ChorusCode: e.ChorusCode,
-		Title:      e.Title,
-		Message:    message,
-		CausedBy:   err,
-	}
-}
-
-func (e *ChorusError) Unwrap() error {
-	return e.CausedBy
+	c := e.clone()
+	c.ValidationErrors = ve
+	c.Stack = e.stack()
+	return c
 }
