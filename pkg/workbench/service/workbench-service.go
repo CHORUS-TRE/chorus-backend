@@ -19,6 +19,8 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
+	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
+	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -117,6 +119,7 @@ type WorkbenchService struct {
 	userer            user_service.Userer
 	authenticator     authentication_service.Authenticator
 	notificationStore NotificationStore
+	auditWriter       audit_service.AuditWriter
 
 	proxyRWMutex     sync.RWMutex
 	proxyCache       map[proxyID]*proxy
@@ -125,7 +128,7 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore, auditWriter audit_service.AuditWriter) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
@@ -135,6 +138,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		userer:            userer,
 		authenticator:     authenticator,
 		notificationStore: notificationStore,
+		auditWriter:       auditWriter,
 
 		proxyCache:       make(map[proxyID]*proxy),
 		proxyHitCountMap: make(map[uint64]uint64),
