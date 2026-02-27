@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -308,6 +309,19 @@ func (s *WorkbenchService) SetClientWatchers() {
 				logger.TechLog.Error(ctx, "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstanceIDs", appInstancesToDelete), zap.Error(err))
 				return err
 			}
+
+			for _, appInstanceID := range appInstancesToDelete {
+				audit.Record(ctx, s.auditWriter, audit_model.AuditActionAppInstanceDelete,
+					audit.WithTenantID(k8sWorkbench.TenantID),
+					audit.WithUserID(k8sWorkbench.UserID),
+					audit.WithUsername(k8sWorkbench.Username),
+					audit.WithWorkspaceID(workspaceID),
+					audit.WithWorkbenchID(workbenchID),
+					audit.WithDescription(fmt.Sprintf("Deleted app instance with ID %d.", appInstanceID)),
+					audit.WithDetail("app_instance_id", appInstanceID),
+					audit.WithDetail("trigger", "k8s_watcher"),
+				)
+			}
 		}
 
 		return nil
@@ -340,6 +354,18 @@ func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to query idle workbenches", zap.Error(err))
 		return
+	}
+
+	// Record audit logs for deleted workbenches
+	for _, workbench := range workbenches {
+		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkbenchDelete,
+			audit.WithTenantID(workbench.TenantID),
+			audit.WithUsername("system"),
+			audit.WithWorkspaceID(workbench.WorkspaceID),
+			audit.WithWorkbenchID(workbench.ID),
+			audit.WithDescription(fmt.Sprintf("Workbench with ID %d auto-deleted due to idle timeout.", workbench.ID)),
+			audit.WithDetail("trigger", "idle_cleanup"),
+		)
 	}
 
 	for _, workbench := range workbenches {
