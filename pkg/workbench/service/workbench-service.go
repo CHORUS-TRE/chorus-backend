@@ -313,8 +313,8 @@ func (s *WorkbenchService) SetClientWatchers() {
 			for _, appInstanceID := range appInstancesToDelete {
 				audit.Record(ctx, s.auditWriter, audit_model.AuditActionAppInstanceDelete,
 					audit.WithTenantID(k8sWorkbench.TenantID),
-					audit.WithUserID(k8sWorkbench.UserID),
-					audit.WithUsername(k8sWorkbench.Username),
+					audit.WithActorID(k8sWorkbench.UserID),
+					audit.WithActorUsername(k8sWorkbench.Username),
 					audit.WithWorkspaceID(workspaceID),
 					audit.WithWorkbenchID(workbenchID),
 					audit.WithDescription(fmt.Sprintf("Deleted app instance with ID %d.", appInstanceID)),
@@ -360,7 +360,7 @@ func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
 	for _, workbench := range workbenches {
 		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkbenchDelete,
 			audit.WithTenantID(workbench.TenantID),
-			audit.WithUsername("system"),
+			audit.WithActorUsername("system"),
 			audit.WithWorkspaceID(workbench.WorkspaceID),
 			audit.WithWorkbenchID(workbench.ID),
 			audit.WithDescription(fmt.Sprintf("Workbench with ID %d auto-deleted due to idle timeout.", workbench.ID)),

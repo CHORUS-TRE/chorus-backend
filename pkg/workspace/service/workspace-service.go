@@ -136,7 +136,7 @@ func (s *WorkspaceService) cleanOldWorkspaces(ctx context.Context) {
 	for _, workspace := range workspaces {
 		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkspaceDelete,
 			audit.WithTenantID(workspace.TenantID),
-			audit.WithUsername("system"),
+			audit.WithActorUsername("system"),
 			audit.WithWorkspaceID(workspace.ID),
 			audit.WithDescription(fmt.Sprintf("Workspace with ID %d auto-deleted due to fixed timeout.", workspace.ID)),
 			audit.WithDetail("trigger", "auto_cleanup_timeout"),
