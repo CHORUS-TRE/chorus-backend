@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
 
@@ -28,16 +30,27 @@ func (c *HarborNoopClient) ListApps() ([]App, error) {
 }
 
 type harborClient struct {
-	cfg    config.HarborClient
-	client *http.Client
+	cfg          config.HarborClient
+	client       *http.Client
+	dockerClient docker.DockerClienter
+	registryHost string
 }
 
-func NewHarborClient(cfg config.Config) HarborClient {
+func NewHarborClient(cfg config.Config, dockerClient docker.DockerClienter) HarborClient {
+	harborCfg := cfg.Clients.HarborClient
+
+	registryHost := ""
+	if u, err := url.Parse(harborCfg.URL); err == nil {
+		registryHost = u.Host
+	}
+
 	return &harborClient{
-		cfg: cfg.Clients.HarborClient,
+		cfg: harborCfg,
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		dockerClient: dockerClient,
+		registryHost: registryHost,
 	}
 }
 
@@ -54,22 +67,6 @@ type harborArtifact struct {
 
 type harborTag struct {
 	Name string `json:"name"`
-}
-
-// registryManifest is a Docker/OCI manifest (schema v2).
-type registryManifest struct {
-	Config manifestDescriptor `json:"config"`
-}
-
-type manifestDescriptor struct {
-	Digest string `json:"digest"`
-}
-
-// imageConfig is the OCI image config JSON.
-type imageConfig struct {
-	Config struct {
-		Labels map[string]string `json:"Labels"`
-	} `json:"config"`
 }
 
 func (c *harborClient) ListApps() ([]App, error) {
@@ -164,73 +161,17 @@ func (c *harborClient) listArtifacts(repoName string) ([]harborArtifact, error) 
 	return allArtifacts, nil
 }
 
-// fetchLabels retrieves an artifact's OCI image config via the Docker Registry
-// HTTP V2 API and returns the labels that match the configured prefixes.
+// fetchLabels builds a full image reference and delegates to the Docker client
+// to retrieve OCI image config labels, then filters by configured prefixes.
 func (c *harborClient) fetchLabels(repoName, digest string) (map[string]string, error) {
-	manifest, err := c.fetchManifest(repoName, digest)
+	imageRef := fmt.Sprintf("%s/%s/%s@%s", c.registryHost, c.cfg.Project, repoName, digest)
+
+	allLabels, err := c.dockerClient.GetLabels(imageRef, c.cfg.Username, c.cfg.Password.PlainText())
 	if err != nil {
-		return nil, fmt.Errorf("error fetching manifest: %w", err)
+		return nil, fmt.Errorf("getting labels for %s: %w", imageRef, err)
 	}
 
-	imgCfg, err := c.fetchImageConfig(repoName, manifest.Config.Digest)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching image config: %w", err)
-	}
-
-	return c.filterLabels(imgCfg.Config.Labels), nil
-}
-
-func (c *harborClient) fetchManifest(repoName, reference string) (*registryManifest, error) {
-	url := fmt.Sprintf("%s/v2/%s/%s/manifests/%s",
-		c.cfg.URL, c.cfg.Project, repoName, reference)
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json")
-	c.setAuth(req)
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("fetching manifest %s: %w", url, err)
-	}
-	defer resp.Body.Close()
-
-	var body []byte
-
-	if resp.Body != nil {
-		body, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("reading manifest response %s: %w", url, err)
-		}
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fetching manifest %s %s@%s (%s): status %d", url, repoName, reference, string(body), resp.StatusCode)
-	}
-
-	var m registryManifest
-	if err := json.Unmarshal(body, &m); err != nil {
-		return nil, fmt.Errorf("decoding manifest: %w", err)
-	}
-	return &m, nil
-}
-
-func (c *harborClient) fetchImageConfig(repoName, digest string) (*imageConfig, error) {
-	url := fmt.Sprintf("%s/v2/%s/%s/blobs/%s",
-		c.cfg.URL, c.cfg.Project, repoName, digest)
-
-	body, err := c.doGet(url)
-	if err != nil {
-		return nil, fmt.Errorf("fetching image config: %w", err)
-	}
-
-	var cfg imageConfig
-	if err := json.Unmarshal(body, &cfg); err != nil {
-		return nil, fmt.Errorf("decoding image config: %w", err)
-	}
-	return &cfg, nil
+	return c.filterLabels(allLabels), nil
 }
 
 func (c *harborClient) filterLabels(all map[string]string) map[string]string {
@@ -270,8 +211,8 @@ func (c *harborClient) doGet(url string) ([]byte, error) {
 }
 
 func (c *harborClient) setAuth(req *http.Request) {
-	if c.cfg.Username != "" && c.cfg.Password != "" {
-		req.SetBasicAuth(c.cfg.Username, string(c.cfg.Password))
+	if c.cfg.Username != "" && c.cfg.Password.PlainText() != "" {
+		req.SetBasicAuth(c.cfg.Username, c.cfg.Password.PlainText())
 	}
 }
 
