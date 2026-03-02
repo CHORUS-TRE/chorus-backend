@@ -462,7 +462,7 @@ type (
 	Jobber struct {
 		Enabled       bool          `yaml:"enabled"`
 		CheckInterval time.Duration `yaml:"check_interval"`
-		Jitter        float64       `yaml:"jitter"`
+		Jitter        float64       `yaml:"jitter"` // the actual interval is ±jitter * interval * uniform(0,1)
 		LockStore     string        `yaml:"lock_store"`
 	}
 )
