@@ -169,12 +169,12 @@ func (c *harborClient) listArtifacts(repoName string) ([]harborArtifact, error) 
 func (c *harborClient) fetchLabels(repoName, digest string) (map[string]string, error) {
 	manifest, err := c.fetchManifest(repoName, digest)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching manifest: %w", err)
 	}
 
 	imgCfg, err := c.fetchImageConfig(repoName, manifest.Config.Digest)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching image config: %w", err)
 	}
 
 	return c.filterLabels(imgCfg.Config.Labels), nil
@@ -193,17 +193,21 @@ func (c *harborClient) fetchManifest(repoName, reference string) (*registryManif
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("fetching manifest: %w", err)
+		return nil, fmt.Errorf("fetching manifest %s: %w", url, err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("fetching manifest %s@%s: status %d", repoName, reference, resp.StatusCode)
+	var body []byte
+
+	if resp.Body != nil {
+		body, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("reading manifest response %s: %w", url, err)
+		}
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("fetching manifest %s %s@%s (%s): status %d", url, repoName, reference, string(body), resp.StatusCode)
 	}
 
 	var m registryManifest
