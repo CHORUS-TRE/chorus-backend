@@ -37,21 +37,12 @@ type AppService struct {
 }
 
 func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter, harborClient harbor.HarborClient) *AppService {
-	s := &AppService{
+	return &AppService{
 		store:        store,
 		k8sClient:    k8sClient,
 		dockerClient: dockerClient,
 		harborClient: harborClient,
 	}
-
-	apps, err := s.harborClient.ListApps()
-	if err != nil {
-		fmt.Printf("error listing apps from harbor: %v\n", err)
-	} else {
-		fmt.Printf("apps from harbor: %v\n", apps)
-	}
-
-	return s
 }
 
 func (u *AppService) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error) {

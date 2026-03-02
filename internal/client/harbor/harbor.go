@@ -15,17 +15,17 @@ import (
 
 type App struct {
 	Repository string            `json:"repository"`
-	Tags       []string          `json:"tags"`
+	Tag        string            `json:"tag"`
 	Labels     map[string]string `json:"labels"`
 }
 
 type HarborClient interface {
-	ListApps() ([]App, error)
+	ListApps(existingApps map[string]struct{}) ([]App, error)
 }
 
 type HarborNoopClient struct{}
 
-func (c *HarborNoopClient) ListApps() ([]App, error) {
+func (c *HarborNoopClient) ListApps(existingApps map[string]struct{}) ([]App, error) {
 	return nil, nil
 }
 
@@ -69,7 +69,7 @@ type harborTag struct {
 	Name string `json:"name"`
 }
 
-func (c *harborClient) ListApps() ([]App, error) {
+func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error) {
 	repos, err := c.listRepositories()
 	if err != nil {
 		return nil, fmt.Errorf("listing repositories: %w", err)
@@ -89,16 +89,22 @@ func (c *harborClient) ListApps() ([]App, error) {
 				continue
 			}
 
+			if allTagsExist(existingApps, name, tags) {
+				continue
+			}
+
 			labels, err := c.fetchLabels(name, artifact.Digest)
 			if err != nil {
 				return nil, fmt.Errorf("fetching labels for %s@%s: %w", name, artifact.Digest, err)
 			}
 
-			apps = append(apps, App{
-				Repository: name,
-				Tags:       tags,
-				Labels:     labels,
-			})
+			for _, tag := range tags {
+				apps = append(apps, App{
+					Repository: name,
+					Tag:        tag,
+					Labels:     labels,
+				})
+			}
 		}
 	}
 
@@ -229,6 +235,18 @@ func (c *harborClient) pageSize() int {
 		return c.cfg.PageSize
 	}
 	return 100
+}
+
+func allTagsExist(existing map[string]struct{}, repo string, tags []string) bool {
+	if len(existing) == 0 {
+		return false
+	}
+	for _, tag := range tags {
+		if _, ok := existing[repo+":"+tag]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func extractTagNames(tags []harborTag) []string {
