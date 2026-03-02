@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/job"
 )
 
 type lockEntry struct {
@@ -42,7 +44,7 @@ func (s *LockStore) TryAcquire(_ context.Context, name, owner string, timeout ti
 	return true, nil
 }
 
-func (s *LockStore) Release(_ context.Context, name, owner string) error {
+func (s *LockStore) Release(_ context.Context, name, owner string, status job.Status, msg string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

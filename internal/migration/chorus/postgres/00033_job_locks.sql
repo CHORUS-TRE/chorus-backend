@@ -8,10 +8,13 @@ CREATE TABLE public.job_locks (
     owner TEXT NOT NULL,
     lockedat TIMESTAMP NOT NULL DEFAULT NOW(),
     expiresat TIMESTAMP NOT NULL,
-    CONSTRAINT job_locks_pkey PRIMARY KEY (id),
-    UNIQUE (name)
+    completedat TIMESTAMP,
+    status TEXT,
+    message TEXT,
+    CONSTRAINT job_locks_pkey PRIMARY KEY (id)
 );
 -- +migrate StatementEnd
 
-CREATE INDEX job_locks_name_idx ON public.job_locks (name);
-CREATE INDEX job_locks_expiresat_idx ON public.job_locks (expiresat);
+CREATE UNIQUE INDEX job_locks_name_active_idx ON public.job_locks (name) WHERE completedat IS NULL;
+CREATE INDEX job_locks_expiresat_idx ON public.job_locks (expiresat) WHERE completedat IS NULL;
+CREATE INDEX job_locks_completedat_idx ON public.job_locks (completedat);

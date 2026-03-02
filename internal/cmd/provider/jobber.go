@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"context"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/job"
@@ -12,9 +11,9 @@ import (
 )
 
 var jobberOnce sync.Once
-var jobberInstance *job.Jobber
+var jobberInstance job.Jobber
 
-func ProvideJobber() *job.Jobber {
+func ProvideJobber() job.Jobber {
 	jobberOnce.Do(func() {
 		cfg := ProvideConfig()
 
@@ -29,6 +28,8 @@ func ProvideJobber() *job.Jobber {
 		}
 
 		jobberInstance = job.NewJobber(
+			ProvideComponentInfo().ComponentID,
+			cfg.Daemon.Jobber.Enabled,
 			lockStore,
 			cfg.Daemon.Jobber.CheckInterval,
 			cfg.Daemon.Jobber.Jitter,
@@ -36,14 +37,4 @@ func ProvideJobber() *job.Jobber {
 		)
 	})
 	return jobberInstance
-}
-
-func StartJobber(ctx context.Context) {
-	cfg := ProvideConfig()
-	if !cfg.Daemon.Jobber.Enabled {
-		return
-	}
-
-	j := ProvideJobber()
-	go j.Run(ctx)
 }

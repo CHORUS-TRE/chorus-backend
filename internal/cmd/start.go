@@ -128,8 +128,8 @@ func runServer() error {
 	// services.
 	close(started)
 
-	// Start the jobber if enabled.
-	provider.StartJobber(ctx)
+	// Start the jobber (no-op if disabled).
+	go provider.ProvideJobber().Run(ctx)
 
 	// provider.InitDaemonJobs()
 
