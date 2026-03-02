@@ -201,7 +201,17 @@ func (c WorkbenchController) ManageUserRoleInWorkbench(ctx context.Context, req 
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkbench': %v", err.Error())
 	}
 
-	return &chorus.ManageUserRoleInWorkbenchReply{Result: &chorus.ManageUserRoleInWorkbenchResult{}}, nil
+	workbench, err := c.workbench.GetWorkbench(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to get workbench: %v", err.Error())
+	}
+
+	workbenchRes, err := converter.WorkbenchFromBusiness(workbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.ManageUserRoleInWorkbenchReply{Result: &chorus.ManageUserRoleInWorkbenchResult{Workbench: workbenchRes}}, nil
 }
 
 func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
@@ -219,5 +229,15 @@ func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *c
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkbench': %v", err.Error())
 	}
 
-	return &chorus.RemoveUserFromWorkbenchReply{Result: &chorus.RemoveUserFromWorkbenchResult{}}, nil
+	workbench, err := c.workbench.GetWorkbench(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to get workbench after removing user: %v", err.Error())
+	}
+
+	workbenchRes, err := converter.WorkbenchFromBusiness(workbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.RemoveUserFromWorkbenchReply{Result: &chorus.RemoveUserFromWorkbenchResult{Workbench: workbenchRes}}, nil
 }

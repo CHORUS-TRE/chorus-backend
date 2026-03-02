@@ -155,7 +155,6 @@ func (c workbenchControllerAudit) ManageUserRoleInWorkbench(ctx context.Context,
 	res, err := c.next.ManageUserRoleInWorkbench(ctx, req)
 
 	opts := []audit.Option{
-		// TODO: audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithWorkbenchID(req.Id),
 		audit.WithUserID(req.UserId),
 		audit.WithDetail("workbench_id", req.Id),
@@ -184,7 +183,6 @@ func (c workbenchControllerAudit) RemoveUserFromWorkbench(ctx context.Context, r
 	res, err := c.next.RemoveUserFromWorkbench(ctx, req)
 
 	opts := []audit.Option{
-		// TODO: audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithWorkbenchID(req.Id),
 		audit.WithUserID(req.UserId),
 		audit.WithDetail("workbench_id", req.Id),
