@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/harbor"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -32,14 +33,25 @@ type AppService struct {
 	store        AppStore
 	k8sClient    k8s.K8sClienter
 	dockerClient docker.DockerClienter
+	harborClient harbor.HarborClient
 }
 
-func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter) *AppService {
-	return &AppService{
+func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter, harborClient harbor.HarborClient) *AppService {
+	s := &AppService{
 		store:        store,
 		k8sClient:    k8sClient,
 		dockerClient: dockerClient,
+		harborClient: harborClient,
 	}
+
+	apps, err := s.harborClient.ListApps()
+	if err != nil {
+		fmt.Printf("error listing apps from harbor: %v\n", err)
+	} else {
+		fmt.Printf("apps from harbor: %v\n", apps)
+	}
+
+	return s
 }
 
 func (u *AppService) ListApps(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.App, *common.PaginationResult, error) {

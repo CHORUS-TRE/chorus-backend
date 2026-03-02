@@ -21,6 +21,12 @@ type HarborClient interface {
 	ListApps() ([]App, error)
 }
 
+type HarborNoopClient struct{}
+
+func (c *HarborNoopClient) ListApps() ([]App, error) {
+	return nil, nil
+}
+
 type harborClient struct {
 	cfg    config.HarborClient
 	client *http.Client
