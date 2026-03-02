@@ -86,7 +86,6 @@ func initConfig() {
 			for _, path := range configDevOverridePaths {
 				if _, err := os.Stat(path); err == nil {
 					configOverrideFilenames = append(configOverrideFilenames, path)
-					break
 				}
 			}
 		}
