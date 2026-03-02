@@ -82,6 +82,12 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
 
+	// Jobber
+	v.SetDefault("daemon.jobber.enabled", false)
+	v.SetDefault("daemon.jobber.check_interval", 30*time.Second)
+	v.SetDefault("daemon.jobber.jitter", 0.2)
+	v.SetDefault("daemon.jobber.lock_store", "postgres")
+
 	// Storage
 	v.SetDefault("storage.description", "Type can be 'postgres'")
 	v.SetDefault("storage.datastores.chorus.type", "postgres")
