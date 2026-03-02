@@ -138,6 +138,14 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.k8s_client.default_registry", "harbor.dev.chorus-tre.ch")
 	v.SetDefault("clients.k8s_client.default_repository", "apps")
 
+	// Harbor
+	v.SetDefault("clients.harbor_client.enabled", false)
+	v.SetDefault("clients.harbor_client.url", "https://harbor.build.chorus-tre.ch")
+	v.SetDefault("clients.harbor_client.project", "apps")
+	v.SetDefault("clients.harbor_client.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
+	v.SetDefault("clients.harbor_client.page_size", 100)
+	v.SetDefault("clients.harbor_client.username", "robot$backend-apps-client")
+
 	// Loggers
 	v.SetDefault("log.description", "Type can be either 'stdout', 'file' or 'redis'. Level can be either 'debug', 'info', 'warn', or 'error'. Category can be either 'technical', 'business' or 'security'.")
 	v.SetDefault("log.loggers.stdout_technical.enabled", true)
