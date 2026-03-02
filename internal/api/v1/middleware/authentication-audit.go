@@ -68,7 +68,7 @@ func (a authenticationControllerAudit) AuthenticateOauth(ctx context.Context, re
 			audit.WithDescription("Failed to initiate OAuth authentication."),
 			audit.WithError(err),
 		)
-		audit.Record(ctx, a.auditWriter, model.AuditActionUserLoginFailed, opts...)
+		audit.Record(ctx, a.auditWriter, model.AuditActionUserLogin, opts...)
 	}
 	// No audit on success - the actual login happens in the redirect
 
