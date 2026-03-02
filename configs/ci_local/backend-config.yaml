@@ -17,9 +17,6 @@ daemon:
     secret: "NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO" # set in secret
     expiration_time: 72h
     max_refresh_time: 4320h #180d
-  jobs:
-    job_status_gc:
-      enabled: true
   private_key: |
     -----BEGIN EC PRIVATE KEY-----
     MHcCAQEEII8kGzWHAJfOs9i/4Itm6XmR/CIb6ePuqx+2waa/U0EuoAoGCCqGSM49

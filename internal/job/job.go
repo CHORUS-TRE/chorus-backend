@@ -2,7 +2,8 @@ package job
 
 import (
 	"context"
-	"time"
+
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
 
 type Status int
@@ -24,11 +25,10 @@ func (s Status) String() string {
 }
 
 type Job interface {
-	Do(ctx context.Context) (msg string, err error)
+	Do(ctx context.Context, options map[string]interface{}) (msg string, err error)
 }
 
-type Registration struct {
-	Job      Job
-	Interval time.Duration
-	Timeout  time.Duration // Optional timeout for the job execution. 0 means no timeout.
+type registration struct {
+	Job    Job
+	Config config.Job
 }

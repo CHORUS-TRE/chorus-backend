@@ -18,9 +18,6 @@ daemon:
     secret: eREH6oV#&6bX&zadL%
     expiration_time: 72h
     max_refresh_time: 4320h #180d
-  jobs:
-    job_status_gc:
-      enabled: true
   private_key_file: ./configs/dev/files/keys/chorus_privkey.pem
   public_key_file: ./configs/dev/files/keys/chorus_pubkey.pem
   salt: primary-2tiptop-violator-6bloating-2coastline-1spearmint-unruffled5-comfy-operation4

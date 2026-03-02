@@ -74,11 +74,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.jwt.max_refresh_time", "720h") // 30 days
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 	v.SetDefault("daemon.pprof_enabled", false)
-	v.SetDefault("daemon.jobs.job_status_gc.enabled", true)
-	v.SetDefault("daemon.jobs.job_status_gc.timeout", 10*time.Minute)
-	v.SetDefault("daemon.jobs.job_status_gc.interval", 15*time.Minute)
-	v.SetDefault("daemon.jobs.job_status_gc.options.successes", 90)
-	v.SetDefault("daemon.jobs.job_status_gc.options.failures", 90)
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
 
