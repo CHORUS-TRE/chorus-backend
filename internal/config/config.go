@@ -124,6 +124,7 @@ type (
 	Clients struct {
 		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
 		DockerClient DockerClient `yaml:"docker_client,omitempty"`
+		HarborClient HarborClient `yaml:"harbor_client,omitempty"`
 	}
 
 	K8sClient struct {
@@ -151,6 +152,16 @@ type (
 
 	DockerClient struct {
 		Enabled bool `yaml:"enabled,omitempty"`
+	}
+
+	HarborClient struct {
+		Enabled       bool      `yaml:"enabled,omitempty"`
+		URL           string    `yaml:"url,omitempty"`
+		Username      string    `yaml:"username,omitempty"`
+		Password      Sensitive `yaml:"password,omitempty"`
+		Project       string    `yaml:"project,omitempty"`
+		LabelPrefixes []string  `yaml:"label_prefixes,omitempty"`
+		PageSize      int       `yaml:"page_size,omitempty"`
 	}
 
 	ImagePullSecret struct {

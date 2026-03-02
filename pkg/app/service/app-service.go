@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/harbor"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -32,13 +33,15 @@ type AppService struct {
 	store        AppStore
 	k8sClient    k8s.K8sClienter
 	dockerClient docker.DockerClienter
+	harborClient harbor.HarborClient
 }
 
-func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter) *AppService {
+func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter, harborClient harbor.HarborClient) *AppService {
 	return &AppService{
 		store:        store,
 		k8sClient:    k8sClient,
 		dockerClient: dockerClient,
+		harborClient: harborClient,
 	}
 }
 

@@ -14,6 +14,7 @@ var _ DockerClienter = &client{}
 
 type DockerClienter interface {
 	ImageExists(imageRef string, username string, password string) (bool, error)
+	GetLabels(imageRef string, username string, password string) (map[string]string, error)
 }
 
 type client struct {
@@ -56,6 +57,39 @@ func (c *client) ImageExists(imageRef string, username string, password string) 
 	}
 
 	return true, nil
+}
+
+// GetLabels retrieves the OCI image config labels for the given image reference.
+func (c *client) GetLabels(imageRef string, username, password string) (map[string]string, error) {
+	ref, err := name.ParseReference(imageRef, name.WeakValidation)
+	if err != nil {
+		return nil, fmt.Errorf("invalid docker image reference: %w", err)
+	}
+
+	registry := ref.Context().RegistryStr()
+	authenticator, err := c.getRegistryAuth(registry, username, password)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get docker registry auth: %w", err)
+	}
+
+	desc, err := remote.Get(ref, remote.WithAuth(authenticator))
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch image descriptor: %w", err)
+	}
+
+	img, err := desc.Image()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get image from descriptor: %w", err)
+	}
+
+	cfgFile, err := img.ConfigFile()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get image config: %w", err)
+	}
+
+	fmt.Println("Retrieved labels:", imageRef, cfgFile.Config.Labels)
+
+	return cfgFile.Config.Labels, nil
 }
 
 func (c *client) getRegistryAuth(registry string, username string, password string) (authn.Authenticator, error) {

@@ -22,13 +22,17 @@ const (
 )
 
 const (
-	configDevPath         = "./configs/dev"
-	configDevOverridePath = "./configs/dev/files/kind.yaml"
-	configDevFilename     = "chorus"
+	configDevPath     = "./configs/dev"
+	configDevFilename = "chorus"
 )
 
+var configDevOverridePaths = []string{
+	"./configs/dev/files/kind.yaml",
+	"./configs/dev/secrets.dec.yaml",
+}
+
 var configFilename = ""
-var configOverrideFilename = ""
+var configOverrideFilenames = []string{}
 
 var rootCmd = &cobra.Command{
 	Use:   componentName,
@@ -49,10 +53,10 @@ func init() {
 		"",
 		"config file path (default is ./configs/dev/chorus.yaml)",
 	)
-	rootCmd.PersistentFlags().StringVar(
-		&configOverrideFilename,
+	rootCmd.PersistentFlags().StringSliceVar(
+		&configOverrideFilenames,
 		"config-override",
-		"",
+		[]string{},
 		"config override file path (useful for secrets)",
 	)
 	rootCmd.PersistentFlags().StringVar(
@@ -78,9 +82,11 @@ func initConfig() {
 		viper.AddConfigPath(configDevPath)
 		viper.SetConfigName(configDevFilename)
 
-		if configOverrideFilename == "" {
-			if _, err := os.Stat(configDevOverridePath); err == nil {
-				configOverrideFilename = configDevOverridePath
+		if len(configOverrideFilenames) == 0 {
+			for _, path := range configDevOverridePaths {
+				if _, err := os.Stat(path); err == nil {
+					configOverrideFilenames = append(configOverrideFilenames, path)
+				}
 			}
 		}
 	}
@@ -92,7 +98,7 @@ func initConfig() {
 		os.Exit(1)
 	}
 
-	if configOverrideFilename != "" {
+	for _, configOverrideFilename := range configOverrideFilenames {
 		viper.SetConfigFile(configOverrideFilename)
 		if err := viper.MergeInConfig(); err == nil {
 			fmt.Println("Using additional config file:", viper.ConfigFileUsed())
