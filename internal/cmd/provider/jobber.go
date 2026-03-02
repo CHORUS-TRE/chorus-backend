@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"context"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/job"
@@ -9,7 +8,6 @@ import (
 	jobpostgres "github.com/CHORUS-TRE/chorus-backend/internal/job/postgres"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
-	"go.uber.org/zap"
 )
 
 var jobberOnce sync.Once
@@ -42,18 +40,20 @@ func ProvideJobber() job.Jobber {
 }
 
 func InitDaemonJobs() {
-	cfg := ProvideConfig()
+	// uncomment when there are jobs to register
 
-	for name, jobConfig := range cfg.Daemon.Jobs {
-		var j job.Job
-		switch name {
-		default:
-			logger.TechLog.Warn(context.Background(), "unknown job in config, skipping", zap.String("job", name))
-			continue
-		}
+	// cfg := ProvideConfig()
 
-		if err := ProvideJobber().Register(name, j, jobConfig); err != nil {
-			logger.TechLog.Error(context.Background(), "failed to register job", zap.String("job", name), zap.Error(err))
-		}
-	}
+	// for name, jobConfig := range cfg.Daemon.Jobs {
+	// 	var j job.Job
+	// 	switch name {
+	// 	default:
+	// 		logger.TechLog.Warn(context.Background(), "unknown job in config, skipping", zap.String("job", name))
+	// 		continue
+	// 	}
+
+	// 	if err := ProvideJobber().Register(name, j, jobConfig); err != nil {
+	// 		logger.TechLog.Error(context.Background(), "failed to register job", zap.String("job", name), zap.Error(err))
+	// 	}
+	// }
 }
