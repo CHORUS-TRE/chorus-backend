@@ -76,7 +76,7 @@ type Workbencher interface {
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
-	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
+	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) (*model.AppInstance, error)
 }
 
 type WorkbenchStore interface {

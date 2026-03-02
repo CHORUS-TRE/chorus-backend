@@ -113,7 +113,7 @@ func (c *Caching) GetAppInstance(ctx context.Context, tenantID, appInstanceID ui
 	return
 }
 
-func (c *Caching) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+func (c *Caching) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	return c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 }
 

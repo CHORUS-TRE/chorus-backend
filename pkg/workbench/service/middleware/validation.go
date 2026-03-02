@@ -73,7 +73,7 @@ func (v validation) GetAppInstance(ctx context.Context, tenantID, appInstanceID 
 	return v.next.GetAppInstance(ctx, tenantID, appInstanceID)
 }
 
-func (v validation) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+func (v validation) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	return v.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 }
 
