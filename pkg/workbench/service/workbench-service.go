@@ -66,7 +66,7 @@ type Workbencher interface {
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
-	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
+	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) (*model.Workbench, error)
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
 	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
@@ -471,23 +471,23 @@ func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 	return workbench, nil
 }
 
-func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
+func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		return nil, fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.store.DeleteWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
-		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
-	return nil
+	return workbench, nil
 }
 
 func (s *WorkbenchService) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {

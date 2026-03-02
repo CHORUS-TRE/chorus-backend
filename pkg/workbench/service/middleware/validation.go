@@ -40,7 +40,7 @@ func (v validation) GetWorkbench(ctx context.Context, tenantID, workbenchID uint
 	return v.next.GetWorkbench(ctx, tenantID, workbenchID)
 }
 
-func (v validation) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
+func (v validation) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	return v.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 

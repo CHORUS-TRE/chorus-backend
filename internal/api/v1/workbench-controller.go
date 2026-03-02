@@ -91,11 +91,17 @@ func (c WorkbenchController) DeleteWorkbench(ctx context.Context, req *chorus.De
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	err = c.workbench.DeleteWorkbench(ctx, tenantID, req.Id)
+	workbench, err := c.workbench.DeleteWorkbench(ctx, tenantID, req.Id)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteWorkbench': %v", err.Error())
 	}
-	return &chorus.DeleteWorkbenchReply{Result: &chorus.DeleteWorkbenchResult{}}, nil
+
+	workbenchRes, err := converter.WorkbenchFromBusiness(workbench)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.DeleteWorkbenchReply{Result: &chorus.DeleteWorkbenchResult{Workbench: workbenchRes}}, nil
 }
 
 // ListWorkbenches extracts the retrieved workbenches from the service and inserts them into a reply object.
