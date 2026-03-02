@@ -18,7 +18,7 @@ func AuditEntryFromBusiness(auditEntry *model.AuditEntry) (*chorus.AuditEntry, e
 		details[k] = fmt.Sprintf("%v", v)
 	}
 
-	return &chorus.AuditEntry{
+	entry := &chorus.AuditEntry{
 		Id: auditEntry.ID,
 
 		ActorId:       auditEntry.ActorID,
@@ -27,15 +27,23 @@ func AuditEntryFromBusiness(auditEntry *model.AuditEntry) (*chorus.AuditEntry, e
 
 		Action: string(auditEntry.Action),
 
-		WorkspaceId: auditEntry.WorkspaceID,
-		WorkbenchId: auditEntry.WorkbenchID,
-		UserId:      auditEntry.UserID,
-
 		Description: auditEntry.Description,
 		Details:     details,
 
 		CreatedAt: createdAt,
-	}, nil
+	}
+
+	if auditEntry.WorkspaceID != 0 {
+		entry.WorkspaceId = &auditEntry.WorkspaceID
+	}
+	if auditEntry.WorkbenchID != 0 {
+		entry.WorkbenchId = &auditEntry.WorkbenchID
+	}
+	if auditEntry.UserID != 0 {
+		entry.UserId = &auditEntry.UserID
+	}
+
+	return entry, nil
 }
 
 func AuditFilterToBusiness(filter *chorus.AuditFilter) (*model.AuditFilter, error) {

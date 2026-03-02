@@ -13,9 +13,9 @@ message AuditEntry {
 
     string action = 5;
 
-    uint64 workspaceId = 6;
-    uint64 workbenchId = 7;
-    uint64 userId = 8;
+    optional uint64 workspaceId = 6;
+    optional uint64 workbenchId = 7;
+    optional uint64 userId = 8;
 
     string description = 9;
     map<string, string> details = 10;
