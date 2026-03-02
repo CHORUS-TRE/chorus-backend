@@ -94,7 +94,7 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 	}
 
 	if len(harborApps) == 0 {
-		return "no apps found in harbor", nil
+		return "no new apps found in harbor", nil
 	}
 
 	var toCreate []*model.App
