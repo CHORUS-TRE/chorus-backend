@@ -139,9 +139,9 @@ func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}
 
 	var clauses []string
 
-	if filter.UserID != 0 {
-		clauses = append(clauses, fmt.Sprintf("userid = $%d", len(*args)+1))
-		*args = append(*args, filter.UserID)
+	if filter.ActorID != 0 {
+		clauses = append(clauses, fmt.Sprintf("actorid = $%d", len(*args)+1))
+		*args = append(*args, filter.ActorID)
 	}
 
 	if filter.Action != "" {
@@ -157,6 +157,11 @@ func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}
 	if filter.WorkbenchID != 0 {
 		clauses = append(clauses, fmt.Sprintf("workbenchid = $%d", len(*args)+1))
 		*args = append(*args, filter.WorkbenchID)
+	}
+
+	if filter.UserID != 0 {
+		clauses = append(clauses, fmt.Sprintf("userid = $%d", len(*args)+1))
+		*args = append(*args, filter.UserID)
 	}
 
 	if !filter.FromTime.IsZero() {

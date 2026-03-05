@@ -83,4 +83,5 @@ const (
 	AuditActionWorkspaceAuditList AuditAction = "ListWorkspaceAudit"
 	AuditActionWorkbenchAuditList AuditAction = "ListWorkbenchAudit"
 	AuditActionUserAuditList      AuditAction = "ListUserAudit"
+	AuditActionActorAuditList     AuditAction = "ListActorAudit"
 )
