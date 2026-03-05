@@ -24,7 +24,7 @@ func WrapValidationError(err error) *ChorusError {
 		fields := make([]ValidationField, len(ve))
 		for i, fe := range ve {
 			fields[i] = ValidationField{
-				Field:  fe.Field(),
+				Field: fe.Field(),
 				Reason: fe.Tag(),
 			}
 		}
