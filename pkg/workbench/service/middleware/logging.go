@@ -87,24 +87,24 @@ func (c workbenchServiceLogging) GetWorkbench(ctx context.Context, tenantID, wor
 	return res, nil
 }
 
-func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
+func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	now := time.Now()
 
-	err := c.next.DeleteWorkbench(ctx, tenantID, workbenchID)
+	res, err := c.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			logger.WithWorkbenchIDField(workbenchID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete workbench: %w", err)
+		return nil, fmt.Errorf("unable to delete workbench: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkbenchIDField(workbenchID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return res, nil
 }
 
 func (c workbenchServiceLogging) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID, workspaceID uint64) error {
@@ -205,24 +205,24 @@ func (c workbenchServiceLogging) GetAppInstance(ctx context.Context, tenantID, a
 	return res, nil
 }
 
-func (c workbenchServiceLogging) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+func (c workbenchServiceLogging) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	now := time.Now()
 
-	err := c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
+	res, err := c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			logger.WithAppInstanceIDField(appInstanceID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete appInstance: %w", err)
+		return nil, fmt.Errorf("unable to delete appInstance: %w", err)
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithAppInstanceIDField(appInstanceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return nil
+	return res, nil
 }
 
 func (c workbenchServiceLogging) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {

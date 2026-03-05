@@ -5017,6 +5017,9 @@ definitions:
         $ref: '#/definitions/chorusDeleteAppInstanceResult'
   chorusDeleteAppInstanceResult:
     type: object
+    properties:
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
   chorusDeleteAppReply:
     type: object
     properties:
@@ -5062,6 +5065,9 @@ definitions:
         $ref: '#/definitions/chorusDeleteWorkbenchResult'
   chorusDeleteWorkbenchResult:
     type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusDeleteWorkspaceFileReply:
     type: object
     properties:

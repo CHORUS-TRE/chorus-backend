@@ -37,7 +37,7 @@ docker/.diskfilestore
 
 local-doc/**/*
 
-# sonar local setup
+# Sonar local setup
 sonar-local-project.properties
 
 # Chatmodes

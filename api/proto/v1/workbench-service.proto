@@ -94,7 +94,9 @@ message DeleteWorkbenchRequest {
 message DeleteWorkbenchReply {
     DeleteWorkbenchResult result = 1;
 }
-message DeleteWorkbenchResult {}
+message DeleteWorkbenchResult {
+    Workbench workbench = 1;
+}
 
 
 service WorkbenchService {
