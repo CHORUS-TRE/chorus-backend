@@ -197,3 +197,46 @@ func (c *AuditController) ListUserAudit(ctx context.Context, req *chorus.ListEnt
 
 	return &chorus.ListAuditReply{Result: &chorus.ListAuditResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
 }
+
+func (c *AuditController) ListActorAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
+	if req == nil {
+		logger.TechLog.Error(ctx, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("unable to extract tenant id from context: %v", err))
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	pagination := converter.PaginationToBusiness(req.Pagination)
+
+	filter, err := converter.AuditFilterToBusiness(req.Filter)
+	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("invalid audit filter: %v", err))
+		return nil, status.Errorf(codes.InvalidArgument, "invalid filter: %v", err)
+	}
+	if filter == nil {
+		filter = &audit_model.AuditFilter{}
+	}
+	filter.ActorID = req.Id
+
+	res, paginationRes, err := c.auditService.List(ctx, tenantID, &pagination, filter)
+	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("unable to call 'ListActorAudit': %v", err))
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListActorAudit': %v", err)
+	}
+
+	var entries []*chorus.AuditEntry
+	for _, r := range res {
+		entry, err := converter.AuditEntryFromBusiness(r)
+		if err != nil {
+			logger.TechLog.Error(ctx, fmt.Sprintf("unable to convert audit entry from business model: %v", err))
+			return nil, status.Errorf(codes.Internal, "conversion error: %v", err)
+		}
+		entries = append(entries, entry)
+	}
+
+	return &chorus.ListAuditReply{Result: &chorus.ListAuditResult{Entries: entries}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
+}

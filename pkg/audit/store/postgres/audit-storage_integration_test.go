@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	testTenantID = uint64(88888)
-	testUserID   = uint64(90000)
-	testUsername = "testuser"
+	testTenantID      = uint64(88888)
+	testActorID       = uint64(90000)
+	testActorUsername = "testuser"
 )
 
 func setupAuditDB(t *testing.T) *sqlx.DB {
@@ -41,13 +41,13 @@ func setupAuditDB(t *testing.T) *sqlx.DB {
 
 func newTestEntry(action model.AuditAction, description string, details model.AuditDetails) *model.AuditEntry {
 	return &model.AuditEntry{
-		TenantID:    testTenantID,
-		UserID:      testUserID,
-		Username:    testUsername,
-		Action:      action,
-		Description: description,
-		Details:     details,
-		CreatedAt:   time.Now().UTC(),
+		TenantID:      testTenantID,
+		ActorID:       testActorID,
+		ActorUsername: testActorUsername,
+		Action:        action,
+		Description:   description,
+		Details:       details,
+		CreatedAt:     time.Now().UTC(),
 	}
 }
 
@@ -66,8 +66,8 @@ func TestAuditStorage_Record(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, result.ID)
 	require.Equal(t, testTenantID, result.TenantID)
-	require.Equal(t, testUserID, result.UserID)
-	require.Equal(t, testUsername, result.Username)
+	require.Equal(t, testActorID, result.ActorID)
+	require.Equal(t, testActorUsername, result.ActorUsername)
 	require.Equal(t, model.AuditActionUserCreate, result.Action)
 	require.Equal(t, "Created user with ID 123.", result.Description)
 	require.Equal(t, "jdoe", result.Details["username"])
@@ -194,6 +194,34 @@ func TestAuditStorage_List_FilterByAction(t *testing.T) {
 	require.Len(t, entries, 1)
 	require.Equal(t, uint64(1), pagination.Total)
 	require.Equal(t, model.AuditActionUserCreate, entries[0].Action)
+}
+
+func TestAuditStorage_List_FilterByActorID(t *testing.T) {
+	db := setupAuditDB(t)
+	store := NewAuditStorage(db)
+	ctx := context.Background()
+
+	// Record entries with different actor IDs.
+	_, err := store.Record(ctx, newTestEntry(model.AuditActionUserCreate, "Created user.", model.AuditDetails{}))
+	require.NoError(t, err)
+	_, err = store.Record(ctx, &model.AuditEntry{
+		TenantID:      testTenantID,
+		ActorID:       90001,
+		ActorUsername: "otheruser",
+		Action:        model.AuditActionUserUpdate,
+		Description:   "Updated user.",
+		Details:       model.AuditDetails{},
+		CreatedAt:     time.Now().UTC(),
+	})
+	require.NoError(t, err)
+
+	entries, pagination, err := store.List(ctx, testTenantID, nil, &model.AuditFilter{
+		ActorID: testActorID,
+	})
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	require.Equal(t, uint64(1), pagination.Total)
+	require.Equal(t, testActorID, entries[0].ActorID)
 }
 
 func TestAuditStorage_Count(t *testing.T) {

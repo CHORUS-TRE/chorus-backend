@@ -84,8 +84,19 @@ service AuditService {
             get: "/api/rest/v1/audit/users/{id}"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "List user audit entries";
-            description: "This endpoint returns audit entries for a specific user";
+            summary: "List audit entries for actions performed on a specific user";
+            description: "This endpoint returns audit entries where the specified user was acted upon";
+            tags: "AuditService";
+        };
+    };
+
+    rpc ListActorAudit(ListEntityAuditRequest) returns (ListAuditReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/audit/actors/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List audit entries for actions performed by a specific user (actor)";
+            description: "This endpoint returns audit entries for actions performed by a specific user";
             tags: "AuditService";
         };
     };

@@ -149,6 +149,7 @@ func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context,
 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),
+		audit.WithUserID(req.UserId),
 		audit.WithDetail("workspace_id", req.Id),
 		audit.WithDetail("user_id", req.UserId),
 		audit.WithDetail("role", req.Role),
@@ -175,6 +176,7 @@ func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, r
 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),
+		audit.WithUserID(req.UserId),
 		audit.WithDetail("workspace_id", req.Id),
 		audit.WithDetail("user_id", req.UserId),
 	}

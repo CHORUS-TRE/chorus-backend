@@ -65,6 +65,11 @@ type AuditServiceListPlatformAuditParams struct {
 	// FilterAction.
 	FilterAction *string
 
+	// FilterActorID.
+	//
+	// Format: uint64
+	FilterActorID *string
+
 	// FilterFromTime.
 	//
 	// Format: date-time
@@ -180,6 +185,17 @@ func (o *AuditServiceListPlatformAuditParams) WithFilterAction(filterAction *str
 // SetFilterAction adds the filterAction to the audit service list platform audit params
 func (o *AuditServiceListPlatformAuditParams) SetFilterAction(filterAction *string) {
 	o.FilterAction = filterAction
+}
+
+// WithFilterActorID adds the filterActorID to the audit service list platform audit params
+func (o *AuditServiceListPlatformAuditParams) WithFilterActorID(filterActorID *string) *AuditServiceListPlatformAuditParams {
+	o.SetFilterActorID(filterActorID)
+	return o
+}
+
+// SetFilterActorID adds the filterActorId to the audit service list platform audit params
+func (o *AuditServiceListPlatformAuditParams) SetFilterActorID(filterActorID *string) {
+	o.FilterActorID = filterActorID
 }
 
 // WithFilterFromTime adds the filterFromTime to the audit service list platform audit params
@@ -312,6 +328,23 @@ func (o *AuditServiceListPlatformAuditParams) WriteToRequest(r runtime.ClientReq
 		if qFilterAction != "" {
 
 			if err := r.SetQueryParam("filter.action", qFilterAction); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.FilterActorID != nil {
+
+		// query param filter.actorId
+		var qrFilterActorID string
+
+		if o.FilterActorID != nil {
+			qrFilterActorID = *o.FilterActorID
+		}
+		qFilterActorID := qrFilterActorID
+		if qFilterActorID != "" {
+
+			if err := r.SetQueryParam("filter.actorId", qFilterActorID); err != nil {
 				return err
 			}
 		}

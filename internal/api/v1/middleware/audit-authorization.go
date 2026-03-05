@@ -78,3 +78,12 @@ func (c auditControllerAuthorization) ListUserAudit(ctx context.Context, req *ch
 
 	return c.next.ListUserAudit(ctx, req)
 }
+
+func (c auditControllerAuthorization) ListActorAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionAuditUser, authorization.WithUser(req.Id))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ListActorAudit(ctx, req)
+}
