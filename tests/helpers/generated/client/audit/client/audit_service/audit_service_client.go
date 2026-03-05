@@ -68,7 +68,7 @@ type ClientService interface {
 }
 
 /*
-AuditServiceListActorAudit lists audit entries by actor
+AuditServiceListActorAudit lists audit entries for actions performed by a specific user actor
 
 This endpoint returns audit entries for actions performed by a specific user
 */
@@ -146,7 +146,7 @@ func (a *Client) AuditServiceListPlatformAudit(params *AuditServiceListPlatformA
 }
 
 /*
-AuditServiceListUserAudit lists audit entries about a user
+AuditServiceListUserAudit lists audit entries for actions performed on a specific user
 
 This endpoint returns audit entries where the specified user was acted upon
 */
