@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/mailer"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
@@ -67,24 +67,6 @@ type UserStore interface {
 	GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error)
 }
 
-type ErrUnauthorized struct{}
-
-func (e *ErrUnauthorized) Error() string {
-	return "invalid credentials"
-}
-
-type Err2FARequired struct{}
-
-func (e *Err2FARequired) Error() string {
-	return "2FA_REQUIRED"
-}
-
-type ErrWeakPassword struct{}
-
-func (e *ErrWeakPassword) Error() string {
-	return fmt.Sprintf("password does not meet security requirements: complex password (not easily guessable) with at least 14 characters, among which 1 lowercase, 1 uppercase and 1 special character: %v", helper.SpecialChars)
-}
-
 type UserService struct {
 	totpNumRecoveryCodes int
 	daemonEncryptionKey  *crypto.Secret
@@ -106,7 +88,7 @@ func NewUserService(totpNumRecoveryCodes int, daemonEncryptionKey *crypto.Secret
 func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error) {
 	users, pagination, err := u.store.ListUsers(ctx, req.TenantID, req.Pagination, req.Filter)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to query users: %w", err)
+		return nil, nil, cerr.ErrInternal.Wrap(err, "Unable to query users")
 	}
 	return users, pagination, nil
 }
@@ -114,7 +96,7 @@ func (u *UserService) ListUsers(ctx context.Context, req ListUsersReq) ([]*model
 func (u *UserService) GetUser(ctx context.Context, req GetUserReq) (*model.User, error) {
 	user, err := u.store.GetUser(ctx, req.TenantID, req.ID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get user %v: %w", req.ID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", req.ID))
 	}
 
 	user.Password = ""
@@ -126,21 +108,21 @@ func (u *UserService) GetUser(ctx context.Context, req GetUserReq) (*model.User,
 func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPasswordReq) error {
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return fmt.Errorf("unable to get user %v: %w", req.UserID, err)
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", req.UserID))
 	}
 
 	if !helper.CheckPassHash(user.Password, req.CurrentPassword) {
 		logger.SecLog.Warn(ctx, fmt.Sprintf("wrong password of user: %v", req.UserID), zap.Uint64("tenant_id", req.TenantID))
-		return &ErrUnauthorized{}
+		return cerr.ErrInvalidCredentials
 	}
 
 	if !helper.IsStrongPassword(req.NewPassword) {
-		return &ErrWeakPassword{}
+		return cerr.ErrValidation.WithMessage(fmt.Sprintf("Password does not meet security requirements: complex password (not easily guessable) with at least 14 characters, among which 1 lowercase, 1 uppercase and 1 special character: %v", helper.SpecialChars))
 	}
 
 	hashed, err := helper.HashPass(req.NewPassword)
 	if err != nil {
-		return fmt.Errorf("unable to hash password: %w", err)
+		return cerr.ErrInternal.Wrap(err, "Unable to hash password")
 	}
 
 	user.Password = hashed
@@ -148,7 +130,7 @@ func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPass
 
 	_, err = u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to update user %v", req.UserID))
 	}
 
 	return nil
@@ -156,7 +138,7 @@ func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPass
 
 func (u *UserService) SoftDeleteUser(ctx context.Context, req DeleteUserReq) error {
 	if err := u.store.SoftDeleteUser(ctx, req.TenantID, req.ID); err != nil {
-		return fmt.Errorf("unable to delete user: %w", err)
+		return cerr.WrapStoreError(err, "Unable to delete user")
 	}
 
 	return nil
@@ -166,7 +148,7 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) (*model
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.User.ID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get user %v: %w", req.User.ID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", req.User.ID))
 	}
 
 	// req.User.Roles = filterDuplicateRoles(req.User.Roles)
@@ -178,13 +160,13 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) (*model
 	user.Status = req.User.Status
 
 	if err = verifyRoles(req.User.Roles); err != nil {
-		return nil, fmt.Errorf("role verification failed: %w", err)
+		return nil, cerr.ErrValidation.Wrap(err, "Role verification failed")
 	}
 
 	user.Roles = req.User.Roles
 	updatedUser, err := u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update user %v: %w", req.User.ID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to update user %v", req.User.ID))
 	}
 
 	return updatedUser, nil
@@ -195,7 +177,7 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model
 	// req.User.Roles = filterDuplicateRoles(req.User.Roles)
 
 	if err := verifyRoles(req.User.Roles); err != nil {
-		return nil, err
+		return nil, cerr.ErrValidation.Wrap(err, "Role verification failed")
 	}
 
 	if req.User.Password != "" {
@@ -204,12 +186,12 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model
 
 	password, err := helper.GeneratePassword(20)
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate password: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to generate password")
 	}
 
 	hash, err := helper.HashPass(password)
 	if err != nil {
-		return nil, fmt.Errorf("unable to hash password: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to hash password")
 	}
 
 	user := reqToUserBusiness(req.User)
@@ -217,7 +199,7 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model
 
 	newUser, err := u.store.CreateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create user %v: %w", user.Username, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create user %v", user.Username))
 	}
 
 	go u.sendMailWithTempPassword("Please change your password", req.TenantID, user, password, mailer.TemporaryPasswordKey)
@@ -231,13 +213,13 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 
 		secret, err := crypto.CreateTotpSecret(user.Username, u.daemonEncryptionKey)
 		if err != nil {
-			return nil, fmt.Errorf("unable to create totp secret: %w", err)
+			return nil, cerr.ErrInternal.Wrap(err, "Unable to create totp secret")
 		}
 		user.TotpSecret = &secret
 
 		recoveryCodes, err := crypto.CreateTotpRecoveryCodes(u.totpNumRecoveryCodes, u.daemonEncryptionKey)
 		if err != nil {
-			return nil, fmt.Errorf("unable to create totp recovery codes: %w", err)
+			return nil, cerr.ErrInternal.Wrap(err, "Unable to create totp recovery codes")
 		}
 		user.TotpRecoveryCodes = recoveryCodes
 		user.TotpEnabled = true
@@ -245,14 +227,14 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("unable to hash password: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to hash password")
 	}
 	user.Password = string(hash)
 	user.PasswordChanged = true
 
 	newUser, err := u.store.CreateUser(ctx, req.TenantID, reqToUserBusiness(req.User))
 	if err != nil {
-		return nil, fmt.Errorf("unable to store user: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to store user %v", user.Username))
 	}
 	return newUser, nil
 }
@@ -260,22 +242,22 @@ func (u *UserService) createUserWithPassword(ctx context.Context, req CreateUser
 func (u *UserService) EnableUserTotp(ctx context.Context, req EnableTotpReq) error {
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return fmt.Errorf("unable to get user: %v: %w", req.UserID, err)
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", req.UserID))
 	}
 
 	isTotpValid, err := crypto.VerifyTotp(req.Totp, utils.ToString(user.TotpSecret), u.daemonEncryptionKey)
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to verify totp", zap.Error(err))
-		return &ErrUnauthorized{}
+		return cerr.ErrInvalidCredentials
 	}
 	if !isTotpValid {
 		logger.SecLog.Warn(ctx, fmt.Sprintf("user %v has entered an invalid totp code", req.UserID), zap.Uint64("tenant_id", req.TenantID))
-		return &ErrUnauthorized{}
+		return cerr.ErrInvalidCredentials
 	}
 
 	user.TotpEnabled = true
 	if _, err := u.store.UpdateUser(ctx, req.TenantID, user); err != nil {
-		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to update user %v", req.UserID))
 	}
 
 	return nil
@@ -285,43 +267,43 @@ func (u *UserService) ResetUserTotp(ctx context.Context, req ResetTotpReq) (stri
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to get user %v: %w", req.UserID, err)
+		return "", nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", req.UserID))
 	}
 
 	if !helper.CheckPassHash(user.Password, req.Password) {
 		logger.SecLog.Warn(ctx, fmt.Sprintf("wrong password of user: %v", req.UserID), zap.Uint64("tenant_id", req.TenantID))
-		return "", nil, &ErrUnauthorized{}
+		return "", nil, cerr.ErrInvalidCredentials
 	}
 
 	if u.totpNumRecoveryCodes == 0 {
-		return "", nil, errors.New("configuration value for totp num recovery codes is not set")
+		return "", nil, cerr.ErrInternal.WithMessage("Configuration value for totp num recovery codes is not set")
 	}
 
 	user.TotpEnabled = false
 
 	totpSecret, err := crypto.CreateTotpSecret(user.Username, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to create totp secret: %w", err)
+		return "", nil, cerr.ErrInternal.Wrap(err, "Unable to create totp secret")
 	}
 	user.TotpSecret = &totpSecret
 
 	decTotpSecret, err := crypto.DecryptTotpSecret(totpSecret, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to decrypt totp secret: %w", err)
+		return "", nil, cerr.ErrInternal.Wrap(err, "Unable to decrypt totp secret")
 	}
 
 	recoveryCodes, err := crypto.CreateTotpRecoveryCodes(u.totpNumRecoveryCodes, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to create totp recovery codes: %w", err)
+		return "", nil, cerr.ErrInternal.Wrap(err, "Unable to create totp recovery codes")
 	}
 
 	decRecoveryCodes, err := crypto.DecryptTotpRecoveryCodes(recoveryCodes, u.daemonEncryptionKey)
 	if err != nil {
-		return "", nil, fmt.Errorf("unable to decrypt totp recovery codes: %w", err)
+		return "", nil, cerr.ErrInternal.Wrap(err, "Unable to decrypt totp recovery codes")
 	}
 
 	if _, err = u.store.UpdateUserWithRecoveryCodes(ctx, req.TenantID, user, recoveryCodes); err != nil {
-		return "", nil, fmt.Errorf("unable to update user %v: %w", req.UserID, err)
+		return "", nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to update user %v", req.UserID))
 	}
 
 	return decTotpSecret, decRecoveryCodes, nil
@@ -331,17 +313,17 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 
 	password, err := helper.GeneratePassword(20)
 	if err != nil {
-		return fmt.Errorf("unable to generate password: %w", err)
+		return cerr.ErrInternal.Wrap(err, "Unable to generate password")
 	}
 
 	hash, err := helper.HashPass(password)
 	if err != nil {
-		return fmt.Errorf("unable to hash password: %w", err)
+		return cerr.ErrInternal.Wrap(err, "Unable to hash password")
 	}
 
 	user, err := u.store.GetUser(ctx, req.TenantID, req.UserID)
 	if err != nil {
-		return fmt.Errorf("unable to get user %v: %w", req.UserID, err)
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", req.UserID))
 	}
 
 	user.Password = hash
@@ -350,7 +332,7 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 
 	_, err = u.store.UpdateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return fmt.Errorf("unable to update user %v: %w", req.UserID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to update user %v", req.UserID))
 	}
 
 	go u.sendMailWithTempPassword("Password reset, please change your password", req.TenantID, user, password, mailer.TemporaryPasswordKey)
@@ -361,7 +343,7 @@ func (u *UserService) ResetUserPassword(ctx context.Context, req ResetUserPasswo
 func (s *UserService) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error) {
 	recoveryCodes, err := s.store.GetTotpRecoveryCodes(ctx, tenantID, userID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get totp recovery codes for user: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to get totp recovery codes")
 	}
 	return recoveryCodes, nil
 }
@@ -369,7 +351,7 @@ func (s *UserService) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID
 func (s *UserService) DeleteTotpRecoveryCode(ctx context.Context, req *DeleteTotpRecoveryCodeReq) error {
 	err := s.store.DeleteTotpRecoveryCode(ctx, req.TenantID, req.CodeID)
 	if err != nil {
-		return fmt.Errorf("unable to delete totp recovery code: %w", err)
+		return cerr.WrapStoreError(err, "Unable to delete totp recovery code")
 	}
 	return nil
 }
@@ -394,12 +376,12 @@ func (u *UserService) sendMailWithTempPassword(subjectMessage string, tenantID u
 func (u *UserService) CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error {
 	err := verifyRoles(roles)
 	if err != nil {
-		return fmt.Errorf("role verification failed: %w", err)
+		return cerr.ErrValidation.Wrap(err, "Role verification failed")
 	}
 
 	err = u.store.CreateUserRoles(ctx, userID, roles)
 	if err != nil {
-		return fmt.Errorf("unable to create user roles for user %v: %w", userID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create user roles for user %v", userID))
 	}
 
 	err = u.notificationStore.CreateNotification(ctx, &notification_model.Notification{
@@ -414,7 +396,7 @@ func (u *UserService) CreateUserRoles(ctx context.Context, tenantID, userID uint
 		},
 	}, []uint64{userID})
 	if err != nil {
-		return fmt.Errorf("unable to create notification for user %v: %w", userID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v", userID))
 	}
 
 	return nil
@@ -423,7 +405,7 @@ func (u *UserService) CreateUserRoles(ctx context.Context, tenantID, userID uint
 func (u *UserService) RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error {
 	err := u.store.RemoveUserRoles(ctx, userID, userRoleIDs)
 	if err != nil {
-		return fmt.Errorf("unable to remove user roles for user %v: %w", userID, err)
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to remove user roles for user %v", userID))
 	}
 
 	err = u.notificationStore.CreateNotification(ctx, &notification_model.Notification{
@@ -438,7 +420,7 @@ func (u *UserService) RemoveUserRoles(ctx context.Context, tenantID, userID uint
 		},
 	}, []uint64{userID})
 	if err != nil {
-		return fmt.Errorf("unable to create notification for user %v: %w", userID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v", userID))
 	}
 
 	return nil
@@ -455,7 +437,7 @@ func (u *UserService) GetRoles(ctx context.Context) ([]*model.Role, error) {
 func (u *UserService) UpsertGrants(ctx context.Context, grants []model.UserGrant) error {
 	err := u.store.UpsertGrants(ctx, grants)
 	if err != nil {
-		return fmt.Errorf("unable to upsert user grants: %w", err)
+		return cerr.ErrInternal.Wrap(err, "Unable to upsert user grants")
 	}
 	return nil
 }
@@ -463,7 +445,7 @@ func (u *UserService) UpsertGrants(ctx context.Context, grants []model.UserGrant
 func (u *UserService) DeleteGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) error {
 	err := u.store.DeleteGrants(ctx, tenantID, userID, clientID)
 	if err != nil {
-		return fmt.Errorf("unable to delete user grants: %w", err)
+		return cerr.ErrInternal.Wrap(err, "Unable to delete user grants")
 	}
 	return nil
 }
@@ -471,7 +453,7 @@ func (u *UserService) DeleteGrants(ctx context.Context, tenantID uint64, userID 
 func (u *UserService) GetUserGrants(ctx context.Context, tenantID uint64, userID uint64, clientID string) ([]model.UserGrant, error) {
 	grants, err := u.store.GetUserGrants(ctx, tenantID, userID, clientID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get user grants: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to get user grants")
 	}
 	return grants, nil
 }
