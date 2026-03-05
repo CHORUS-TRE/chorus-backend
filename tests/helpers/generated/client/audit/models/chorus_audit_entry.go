@@ -19,38 +19,38 @@ import (
 // swagger:model chorusAuditEntry
 type ChorusAuditEntry struct {
 
-	// action
+	// The type of action performed (e.g. CreateUser, DeleteWorkspace).
 	Action string `json:"action,omitempty"`
 
-	// actor Id
+	// ID of the user who performed the action.
 	ActorID string `json:"actorId,omitempty"`
 
-	// actor username
+	// Username of the user who performed the action.
 	ActorUsername string `json:"actorUsername,omitempty"`
 
-	// correlation Id
+	// Correlation ID to trace the request across services.
 	CorrelationID string `json:"correlationId,omitempty"`
 
-	// created at
+	// Timestamp when the action occurred.
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
-	// description
+	// Human-readable description of what happened.
 	Description string `json:"description,omitempty"`
 
-	// details
+	// Additional key-value metadata about the action.
 	Details map[string]string `json:"details,omitempty"`
 
-	// id
+	// Unique identifier of the audit entry.
 	ID string `json:"id,omitempty"`
 
-	// user Id
+	// ID of the user targeted by this action, if applicable.
 	UserID string `json:"userId,omitempty"`
 
-	// workbench Id
+	// ID of the workbench related to this action, if applicable.
 	WorkbenchID string `json:"workbenchId,omitempty"`
 
-	// workspace Id
+	// ID of the workspace related to this action, if applicable.
 	WorkspaceID string `json:"workspaceId,omitempty"`
 }
 

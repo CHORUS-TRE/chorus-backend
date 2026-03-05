@@ -3,24 +3,47 @@ package chorus;
 option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 message AuditEntry {
-    uint64 id = 1;
+    uint64 id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Unique identifier of the audit entry."
+    }];
 
-    uint64 actorId = 2;
-    string actorUsername = 3;
-    string correlationId = 4;
+    uint64 actorId = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "ID of the user who performed the action."
+    }];
+    string actorUsername = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Username of the user who performed the action."
+    }];
+    string correlationId = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Correlation ID to trace the request across services."
+    }];
 
-    string action = 5;
+    string action = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "The type of action performed (e.g. CreateUser, DeleteWorkspace)."
+    }];
 
-    optional uint64 workspaceId = 6;
-    optional uint64 workbenchId = 7;
-    optional uint64 userId = 8;
+    optional uint64 workspaceId = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "ID of the workspace related to this action, if applicable."
+    }];
+    optional uint64 workbenchId = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "ID of the workbench related to this action, if applicable."
+    }];
+    optional uint64 userId = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "ID of the user targeted by this action, if applicable."
+    }];
 
-    string description = 9;
-    map<string, string> details = 10;
+    string description = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Human-readable description of what happened."
+    }];
+    map<string, string> details = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Additional key-value metadata about the action."
+    }];
 
-    google.protobuf.Timestamp createdAt = 11;
+    google.protobuf.Timestamp createdAt = 11 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Timestamp when the action occurred."
+    }];
 }
 
 message AuditFilter {

@@ -973,7 +973,7 @@ paths:
         - AuditService
   /api/rest/v1/audit/actors/{id}:
     get:
-      summary: List audit entries by actor
+      summary: List audit entries for actions performed by a specific user (actor)
       description: This endpoint returns audit entries for actions performed by a specific user
       operationId: AuditService_ListActorAudit
       responses:
@@ -1078,7 +1078,7 @@ paths:
         - AuditService
   /api/rest/v1/audit/users/{id}:
     get:
-      summary: List audit entries about a user
+      summary: List audit entries for actions performed on a specific user
       description: This endpoint returns audit entries where the specified user was acted upon
       operationId: AuditService_ListUserAudit
       responses:
@@ -4694,33 +4694,44 @@ definitions:
       id:
         type: string
         format: uint64
+        description: Unique identifier of the audit entry.
       actorId:
         type: string
         format: uint64
+        description: ID of the user who performed the action.
       actorUsername:
         type: string
+        description: Username of the user who performed the action.
       correlationId:
         type: string
+        description: Correlation ID to trace the request across services.
       action:
         type: string
+        description: The type of action performed (e.g. CreateUser, DeleteWorkspace).
       workspaceId:
         type: string
         format: uint64
+        description: ID of the workspace related to this action, if applicable.
       workbenchId:
         type: string
         format: uint64
+        description: ID of the workbench related to this action, if applicable.
       userId:
         type: string
         format: uint64
+        description: ID of the user targeted by this action, if applicable.
       description:
         type: string
+        description: Human-readable description of what happened.
       details:
         type: object
         additionalProperties:
           type: string
+        description: Additional key-value metadata about the action.
       createdAt:
         type: string
         format: date-time
+        description: Timestamp when the action occurred.
   chorusAuditFilter:
     type: object
     properties:
