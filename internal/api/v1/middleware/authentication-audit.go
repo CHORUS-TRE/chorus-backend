@@ -38,6 +38,7 @@ func auditOptionsFromToken(token string) []audit.Option {
 		audit.WithTenantID(claims.TenantID),
 		audit.WithActorID(claims.ID),
 		audit.WithActorUsername(claims.Username),
+		audit.WithUserID(claims.ID),
 	}
 }
 
