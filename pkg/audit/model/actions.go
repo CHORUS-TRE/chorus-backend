@@ -38,6 +38,7 @@ const (
 	AuditActionWorkbenchList         AuditAction = "ListWorkbench"
 	AuditActionWorkbenchMemberAdd    AuditAction = "AddWorkbenchMember"
 	AuditActionWorkbenchMemberRemove AuditAction = "RemoveWorkbenchMember"
+	AuditActionWorkbenchStream       AuditAction = "StreamWorkbench"
 
 	// App
 	AuditActionAppCreate     AuditAction = "CreateApp"

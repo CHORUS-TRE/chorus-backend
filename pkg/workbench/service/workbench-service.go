@@ -830,6 +830,17 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 
 	go s.addWorkbenchHit(workbenchID)
 
+	// Audit the initial stream navigation (user opening the workbench in their browser).
+	// Sec-Fetch-Mode: navigate distinguishes user-initiated page loads from script-initiated fetches.
+	remainingPath := streamPathRegex.ReplaceAllString(r.URL.Path, "")
+	if remainingPath == "/" && r.Header.Get("Sec-Fetch-Mode") == "navigate" {
+		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkbenchStream,
+			audit.WithWorkbenchID(workbenchID),
+			audit.WithWorkspaceID(workbench.WorkspaceID),
+			audit.WithDescription(fmt.Sprintf("Accessed workbench stream with ID %d.", workbenchID)),
+		)
+	}
+
 	proxy.reverseProxy.ServeHTTP(w, r)
 
 	return nil
