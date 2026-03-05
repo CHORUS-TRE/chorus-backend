@@ -25,12 +25,6 @@ func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 			zap.String("code", cErr.ChorusCode.String()),
 			zap.String("message", cErr.Message),
 			zap.Error(cErr.CausedBy),
-		)
-		logger.TechLog.Debug(ctx, "error stacktrace",
-			zap.String("method", info.FullMethod),
-			zap.String("code", cErr.ChorusCode.String()),
-			zap.String("message", cErr.Message),
-			zap.Error(cErr.CausedBy),
 			zap.String("stacktrace", cErr.StackTrace()),
 		)
 		return nil, cErr.ToGRPCStatus().Err()

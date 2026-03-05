@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	val "github.com/go-playground/validator/v10"
 )
 
 // WrapStoreError translates store errors to the appropriate ChorusError.
-// sql.ErrNoRows, database.ErrNoRowsUpdated and database.ErrNoRowsDeleted → ErrNotFound, everything else → ErrInternal.
+// sql.ErrNoRows, ErrNoRowsUpdated and ErrNoRowsDeleted → ErrNotFound, everything else → ErrInternal.
 func WrapStoreError(err error, message string) *ChorusError {
-	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNoRowsUpdated) || errors.Is(err, database.ErrNoRowsDeleted) {
+	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, ErrNoRowsUpdated) || errors.Is(err, ErrNoRowsDeleted) {
 		return ErrNotFound.Wrap(err, message)
 	}
 	return ErrInternal.Wrap(err, message)
