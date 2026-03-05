@@ -78,7 +78,6 @@ func (c workbenchControllerAudit) GetWorkbench(ctx context.Context, req *chorus.
 
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchRead,
-			// TODO: audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithWorkbenchID(req.Id),
 			audit.WithDetail("workbench_id", req.Id),
 			audit.WithDescription("Failed to get workbench."),
@@ -141,7 +140,9 @@ func (c workbenchControllerAudit) DeleteWorkbench(ctx context.Context, req *chor
 	} else {
 		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Deleted workbench with ID %d.", req.Id)),
-			// TODO: audit.WithWorkspaceID(res.Result.Workbench.WorkspaceId),
+			audit.WithWorkspaceID(res.Result.Workbench.WorkspaceId),
+			audit.WithWorkbenchID(res.Result.Workbench.Id),
+			audit.WithDetail("workbench_name", res.Result.Workbench.Name),
 		)
 	}
 
@@ -154,7 +155,6 @@ func (c workbenchControllerAudit) ManageUserRoleInWorkbench(ctx context.Context,
 	res, err := c.next.ManageUserRoleInWorkbench(ctx, req)
 
 	opts := []audit.Option{
-		// TODO: audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithWorkbenchID(req.Id),
 		audit.WithUserID(req.UserId),
 		audit.WithDetail("workbench_id", req.Id),
@@ -183,7 +183,6 @@ func (c workbenchControllerAudit) RemoveUserFromWorkbench(ctx context.Context, r
 	res, err := c.next.RemoveUserFromWorkbench(ctx, req)
 
 	opts := []audit.Option{
-		// TODO: audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithWorkbenchID(req.Id),
 		audit.WithUserID(req.UserId),
 		audit.WithDetail("workbench_id", req.Id),
