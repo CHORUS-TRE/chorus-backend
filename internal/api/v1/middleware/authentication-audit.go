@@ -2,9 +2,13 @@ package middleware
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 )
@@ -14,6 +18,27 @@ var _ chorus.AuthenticationServiceServer = (*authenticationControllerAudit)(nil)
 type authenticationControllerAudit struct {
 	next        chorus.AuthenticationServiceServer
 	auditWriter service.AuditWriter
+}
+
+// auditOptionsFromToken decodes the JWT payload to extract actor info for auditing.
+func auditOptionsFromToken(token string) []audit.Option {
+	parts := strings.SplitN(token, ".", 3)
+	if len(parts) < 2 {
+		return nil
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil
+	}
+	var claims jwt_model.JWTClaims
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil
+	}
+	return []audit.Option{
+		audit.WithTenantID(claims.TenantID),
+		audit.WithActorID(claims.ID),
+		audit.WithActorUsername(claims.Username),
+	}
 }
 
 func NewAuthenticationAuditMiddleware(auditWriter service.AuditWriter) func(chorus.AuthenticationServiceServer) chorus.AuthenticationServiceServer {
@@ -33,18 +58,13 @@ func (a authenticationControllerAudit) GetAuthenticationModes(ctx context.Contex
 func (a authenticationControllerAudit) Authenticate(ctx context.Context, req *chorus.Credentials) (*chorus.AuthenticationReply, error) {
 	res, err := a.next.Authenticate(ctx, req)
 
-	var opts []audit.Option
-
 	if err != nil {
 		// No audit on failure to prevent DDOS, infra level logs for this
 	} else {
-		opts = append(opts,
+		opts := append(auditOptionsFromToken(res.Result.Token),
 			audit.WithDescription("User authenticated successfully."),
 			audit.WithDetail("username", req.Username),
 		)
-	}
-
-	if len(opts) > 0 {
 		audit.Record(ctx, a.auditWriter, model.AuditActionUserLogin, opts...)
 	}
 
@@ -78,18 +98,13 @@ func (a authenticationControllerAudit) AuthenticateOauth(ctx context.Context, re
 func (a authenticationControllerAudit) AuthenticateOauthRedirect(ctx context.Context, req *chorus.AuthenticateOauthRedirectRequest) (*chorus.AuthenticateOauthRedirectReply, error) {
 	res, err := a.next.AuthenticateOauthRedirect(ctx, req)
 
-	var opts []audit.Option
-
 	if err != nil {
 		// No audit on failure
 	} else {
-		opts = append(opts,
+		opts := append(auditOptionsFromToken(res.Result.Token),
 			audit.WithDescription("User authenticated successfully via OAuth."),
 			audit.WithDetail("oauth_provider_id", req.Id),
 		)
-	}
-
-	if len(opts) > 0 {
 		audit.Record(ctx, a.auditWriter, model.AuditActionUserLogin, opts...)
 	}
 
