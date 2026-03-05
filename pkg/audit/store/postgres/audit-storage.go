@@ -66,7 +66,7 @@ func (s *AuditStorage) BulkRecord(ctx context.Context, entries []*model.AuditEnt
 	args := []interface{}{}
 
 	for i, entry := range entries {
-		offset := i * 11 // 11 columns per entry
+		offset := i * 11
 		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
 			offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7, offset+8, offset+9, offset+10, offset+11))
 
