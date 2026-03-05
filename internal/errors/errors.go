@@ -62,6 +62,10 @@ func (e *ChorusError) Wrap(err error, message string) *ChorusError {
 	c.Message = message
 	c.CausedBy = err
 	c.Stack = e.stack()
+	if wrappedErr, ok := err.(*ChorusError); ok {
+		// TODO as the stack share common frames, keep only the differing branches
+		c.Stack = append(c.Stack, wrappedErr.Stack...)
+	}
 	return c
 }
 

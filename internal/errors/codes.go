@@ -1,6 +1,8 @@
 package errors
 
 import (
+	"errors"
+
 	errorspb "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"google.golang.org/grpc/codes"
 )
@@ -8,6 +10,9 @@ import (
 // Error catalog — each entry maps to a ChorusErrorCode enum value defined in api/proto/v1/errors.proto.
 // Use these as templates via .WithMessage(), .Wrap(), or .WithCause() to create specific error instances.
 var (
+	ErrNoRowsUpdated = errors.New("database: no rows updated")
+	ErrNoRowsDeleted = errors.New("database: no rows deleted")
+
 	// Client errors
 	ErrInvalidRequest = &ChorusError{GRPCCode: codes.InvalidArgument, ChorusCode: errorspb.ChorusErrorCode_INVALID_REQUEST, Title: "Invalid Request"}
 	ErrValidation     = &ChorusError{GRPCCode: codes.InvalidArgument, ChorusCode: errorspb.ChorusErrorCode_VALIDATION_ERROR, Title: "Validation Error"}

@@ -7,12 +7,12 @@ import (
 	val "github.com/go-playground/validator/v10"
 	"google.golang.org/grpc/codes"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
 )
 
 func ErrorCode(err error) codes.Code {
-	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNoRowsUpdated) || errors.Is(err, database.ErrNoRowsDeleted) {
+	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, cerr.ErrNoRowsUpdated) || errors.Is(err, cerr.ErrNoRowsDeleted) {
 		return codes.NotFound
 	}
 
