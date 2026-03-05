@@ -69,7 +69,9 @@ message DeleteAppInstanceRequest {
 message DeleteAppInstanceReply {
     DeleteAppInstanceResult result = 1;
 }
-message DeleteAppInstanceResult {}
+message DeleteAppInstanceResult {
+    AppInstance appInstance = 1;
+}
 
 
 service AppInstanceService {

@@ -149,19 +149,20 @@ func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context,
 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),
+		audit.WithUserID(req.UserId),
 		audit.WithDetail("workspace_id", req.Id),
 		audit.WithDetail("user_id", req.UserId),
-		audit.WithDetail("role", req.Role),
+		audit.WithDetail("role", req.Role.Name),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to add user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role)),
+			audit.WithDescription(fmt.Sprintf("Failed to add user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role.Name)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Added user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role)),
+			audit.WithDescription(fmt.Sprintf("Added user %d to workspace %d with role %s.", req.UserId, req.Id, req.Role.Name)),
 		)
 	}
 
@@ -175,6 +176,7 @@ func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, r
 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),
+		audit.WithUserID(req.UserId),
 		audit.WithDetail("workspace_id", req.Id),
 		audit.WithDetail("user_id", req.UserId),
 	}

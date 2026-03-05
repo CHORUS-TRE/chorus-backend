@@ -7,7 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
@@ -147,7 +147,7 @@ func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64,
 	}
 
 	if affected == 0 {
-		return database.ErrNoRowsDeleted
+		return cerr.ErrNoRowsDeleted
 	}
 
 	return nil

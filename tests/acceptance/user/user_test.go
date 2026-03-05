@@ -342,6 +342,7 @@ var _ = Describe("user service", func() {
 						Roles:     []string{"admin", "authenticated"},
 						Status:    "disabled",
 						Username:  "Bobby",
+						Source:    "keycloak",
 					},
 				)
 

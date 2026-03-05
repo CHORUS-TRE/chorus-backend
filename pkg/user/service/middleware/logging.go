@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -36,7 +35,7 @@ func (c userServiceLogging) ListUsers(ctx context.Context, req service.ListUsers
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to get users: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -56,7 +55,7 @@ func (c userServiceLogging) GetUser(ctx context.Context, req service.GetUserReq)
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get user: %w", err)
+		return res, err
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -76,7 +75,7 @@ func (c userServiceLogging) SoftDeleteUser(ctx context.Context, req service.Dele
 			logger.WithUserIDField(req.ID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete user: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -96,7 +95,7 @@ func (c userServiceLogging) UpdateUser(ctx context.Context, req service.UpdateUs
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to update user: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, "request completed",
@@ -115,7 +114,7 @@ func (c userServiceLogging) CreateUser(ctx context.Context, req service.CreateUs
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create user: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, "request completed",

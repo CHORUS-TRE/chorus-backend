@@ -78,8 +78,23 @@ func (c auditControllerAudit) ListUserAudit(ctx context.Context, req *chorus.Lis
 
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionUserAuditList,
+			audit.WithUserID(req.Id),
 			audit.WithDetail("user_id", req.Id),
 			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for user %d.", req.Id)),
+			audit.WithError(err),
+		)
+	}
+
+	return res, err
+}
+
+func (c auditControllerAudit) ListActorAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
+	res, err := c.next.ListActorAudit(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionActorAuditList,
+			audit.WithDetail("actor_id", req.Id),
+			audit.WithDescription(fmt.Sprintf("Failed to list audit entries for actor %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}

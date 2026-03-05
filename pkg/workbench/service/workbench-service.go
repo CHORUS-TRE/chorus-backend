@@ -66,7 +66,7 @@ type Workbencher interface {
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
-	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) error
+	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) (*model.Workbench, error)
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
 	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
@@ -76,7 +76,7 @@ type Workbencher interface {
 	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
-	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) error
+	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) (*model.AppInstance, error)
 }
 
 type WorkbenchStore interface {
@@ -313,8 +313,8 @@ func (s *WorkbenchService) SetClientWatchers() {
 			for _, appInstanceID := range appInstancesToDelete {
 				audit.Record(ctx, s.auditWriter, audit_model.AuditActionAppInstanceDelete,
 					audit.WithTenantID(k8sWorkbench.TenantID),
-					audit.WithUserID(k8sWorkbench.UserID),
-					audit.WithUsername(k8sWorkbench.Username),
+					audit.WithActorID(k8sWorkbench.UserID),
+					audit.WithActorUsername(k8sWorkbench.Username),
 					audit.WithWorkspaceID(workspaceID),
 					audit.WithWorkbenchID(workbenchID),
 					audit.WithDescription(fmt.Sprintf("Deleted app instance with ID %d.", appInstanceID)),
@@ -360,7 +360,7 @@ func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
 	for _, workbench := range workbenches {
 		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkbenchDelete,
 			audit.WithTenantID(workbench.TenantID),
-			audit.WithUsername("system"),
+			audit.WithActorUsername("system"),
 			audit.WithWorkspaceID(workbench.WorkspaceID),
 			audit.WithWorkbenchID(workbench.ID),
 			audit.WithDescription(fmt.Sprintf("Workbench with ID %d auto-deleted due to idle timeout.", workbench.ID)),
@@ -471,23 +471,23 @@ func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 	return workbench, nil
 }
 
-func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
+func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		return nil, fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.store.DeleteWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
 	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
-		return fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
-	return nil
+	return workbench, nil
 }
 
 func (s *WorkbenchService) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {

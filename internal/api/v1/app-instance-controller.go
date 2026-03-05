@@ -88,11 +88,17 @@ func (c AppInstanceController) DeleteAppInstance(ctx context.Context, req *choru
 		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
 	}
 
-	err = c.workbencher.DeleteAppInstance(ctx, tenantID, req.Id)
+	appInstance, err := c.workbencher.DeleteAppInstance(ctx, tenantID, req.Id)
 	if err != nil {
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteAppInstance': %v", err.Error())
 	}
-	return &chorus.DeleteAppInstanceReply{Result: &chorus.DeleteAppInstanceResult{}}, nil
+
+	appInstanceRes, err := converter.AppInstanceFromBusiness(appInstance)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.DeleteAppInstanceReply{Result: &chorus.DeleteAppInstanceResult{AppInstance: appInstanceRes}}, nil
 }
 
 // ListAppInstances extracts the retrieved appInstances from the service and inserts them into a reply object.

@@ -131,8 +131,8 @@ func (c appInstanceControllerAudit) DeleteAppInstance(ctx context.Context, req *
 	} else {
 		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Deleted app instance with ID %d.", req.Id)),
-			// TODO: audit.WithWorkspaceID(res.Result.AppInstance.WorkspaceId),
-			// TODO: audit.WithWorkbenchID(res.Result.AppInstance.WorkbenchId),
+			audit.WithWorkspaceID(res.Result.AppInstance.WorkspaceId),
+			audit.WithWorkbenchID(res.Result.AppInstance.WorkbenchId),
 		)
 	}
 

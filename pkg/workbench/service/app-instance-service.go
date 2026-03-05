@@ -28,15 +28,15 @@ func (s *WorkbenchService) GetAppInstance(ctx context.Context, tenantID, appInst
 	return appInstance, nil
 }
 
-func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
-		return fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+		return nil, fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
 	}
 
 	err = s.store.DeleteAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
-		return fmt.Errorf("unable to delete appInstance %v: %w", appInstanceID, err)
+		return nil, fmt.Errorf("unable to delete appInstance %v: %w", appInstanceID, err)
 	}
 
 	// Set appInstance state to Stopped
@@ -47,15 +47,15 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 
 	clientApp, err := s.getK8sAppInstance(ctx, appInstance)
 	if err != nil {
-		return fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
+		return nil, fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
 	}
 
 	err = s.client.UpdateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
-		return fmt.Errorf("unable to delete app instance %v: %w", appInstance.ID, err)
+		return nil, fmt.Errorf("unable to delete app instance %v: %w", appInstance.ID, err)
 	}
 
-	return nil
+	return appInstance, nil
 }
 
 func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {

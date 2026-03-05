@@ -37,9 +37,23 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 	// Check if we have custom error detail in status details
 	for _, detail := range st.Details() {
 		if errorDetail, ok := detail.(*errorspb.ErrorDetail); ok {
-			// Add current request context
-			errorDetail.Instance = r.URL.Path
-			customErr.Details = append(customErr.Details, &errorDetail)
+			d := map[string]interface{}{
+				"chorusCode": errorDetail.ChorusCode.String(),
+				"instance":   r.URL.Path,
+				"title":      errorDetail.Title,
+				"message":    errorDetail.Message,
+			}
+			if len(errorDetail.ValidationErrors) > 0 {
+				ve := make([]map[string]string, len(errorDetail.ValidationErrors))
+				for i, v := range errorDetail.ValidationErrors {
+					ve[i] = map[string]string{
+						"field":  v.Field,
+						"reason": v.Reason,
+					}
+				}
+				d["validationErrors"] = ve
+			}
+			customErr.Details = append(customErr.Details, d)
 		}
 	}
 

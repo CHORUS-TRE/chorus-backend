@@ -29,24 +29,15 @@ func NewWorkspaceFileAuditMiddleware(auditWriter service.AuditWriter) func(choru
 func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
 	res, err := c.next.GetWorkspaceFile(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithWorkspaceID(req.WorkspaceId),
-		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", "/"+req.Path),
-	}
-
 	if err != nil {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to get file /%s in workspace %d.", req.Path, req.WorkspaceId)),
+		audit.Record(ctx, c.auditWriter, model.AuditActionFileRead,
+			audit.WithWorkspaceID(req.WorkspaceId),
+			audit.WithDescription(fmt.Sprintf("Failed to read file /%s in workspace %d.", req.Path, req.WorkspaceId)),
 			audit.WithError(err),
-		)
-	} else {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Retrieved file /%s in workspace %d.", req.Path, req.WorkspaceId)),
+			audit.WithDetail("workspace_id", req.WorkspaceId),
+			audit.WithDetail("path", "/"+req.Path),
 		)
 	}
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionFileRead, opts...)
 
 	return res, err
 }
@@ -54,25 +45,15 @@ func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req 
 func (c workspaceFileControllerAudit) ListWorkspaceFiles(ctx context.Context, req *chorus.ListWorkspaceFilesRequest) (*chorus.ListWorkspaceFilesReply, error) {
 	res, err := c.next.ListWorkspaceFiles(ctx, req)
 
-	opts := []audit.Option{
-		audit.WithWorkspaceID(req.WorkspaceId),
-		audit.WithDetail("workspace_id", req.WorkspaceId),
-		audit.WithDetail("path", "/"+req.Path),
-	}
-
 	if err != nil {
-		opts = append(opts,
+		audit.Record(ctx, c.auditWriter, model.AuditActionFileList,
+			audit.WithWorkspaceID(req.WorkspaceId),
 			audit.WithDescription(fmt.Sprintf("Failed to list workspace %d files at /%s.", req.WorkspaceId, req.Path)),
 			audit.WithError(err),
-		)
-	} else {
-		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Listed %d files in workspace %d at /%s.", len(res.Result.Files), req.WorkspaceId, req.Path)),
-			audit.WithDetail("result_count", len(res.Result.Files)),
+			audit.WithDetail("workspace_id", req.WorkspaceId),
+			audit.WithDetail("path", "/"+req.Path),
 		)
 	}
-
-	audit.Record(ctx, c.auditWriter, model.AuditActionFileList, opts...)
 
 	return res, err
 }

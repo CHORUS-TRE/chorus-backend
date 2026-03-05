@@ -438,6 +438,9 @@ definitions:
         $ref: '#/definitions/chorusDeleteWorkbenchResult'
   chorusDeleteWorkbenchResult:
     type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
   chorusGetWorkbenchReply:
     type: object
     properties:

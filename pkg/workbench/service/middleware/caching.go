@@ -68,7 +68,7 @@ func (c *Caching) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint
 
 }
 
-func (c *Caching) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) error {
+func (c *Caching) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	return c.next.DeleteWorkbench(ctx, tenantID, workbenchID)
 }
 
@@ -113,7 +113,7 @@ func (c *Caching) GetAppInstance(ctx context.Context, tenantID, appInstanceID ui
 	return
 }
 
-func (c *Caching) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) error {
+func (c *Caching) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	return c.next.DeleteAppInstance(ctx, tenantID, appInstanceID)
 }
 

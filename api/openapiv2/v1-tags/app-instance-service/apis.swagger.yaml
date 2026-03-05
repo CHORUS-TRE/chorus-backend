@@ -223,6 +223,9 @@ definitions:
         $ref: '#/definitions/chorusDeleteAppInstanceResult'
   chorusDeleteAppInstanceResult:
     type: object
+    properties:
+      appInstance:
+        $ref: '#/definitions/chorusAppInstance'
   chorusGetAppInstanceReply:
     type: object
     properties:
