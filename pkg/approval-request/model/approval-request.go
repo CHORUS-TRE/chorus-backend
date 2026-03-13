@@ -82,6 +82,17 @@ func GetApprovalRequestStoragePath(requestID uint64) string {
 	return fmt.Sprintf("approval-request-%v", requestID)
 }
 
+// ApprovalRequestFile tracks a file associated with an approval request.
+//
+// When a request is created, files are copied from the source workspace into an
+// immutable staging area so that auditors can review the exact content that was
+// (or will be) transferred. The two path fields reflect this:
+//   - SourcePath:      the original path inside the source workspace (e.g. "data/results.csv").
+//   - DestinationPath: the path inside the staging area (e.g. "approval-request-42/data/results.csv").
+//
+// For data-transfer requests, once approved the files are copied from staging
+// (DestinationPath) into the destination workspace using SourcePath to preserve
+// the original directory structure.
 type ApprovalRequestFile struct {
 	SourcePath      string `json:"source_path"`
 	DestinationPath string `json:"destination_path"`

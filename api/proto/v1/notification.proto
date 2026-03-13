@@ -29,4 +29,5 @@ message SystemNotification {
 
 message ApprovalRequestNotification {
     uint64 approvalRequestId = 1;
+    bool autoapproved = 2;
 }

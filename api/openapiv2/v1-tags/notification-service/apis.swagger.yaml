@@ -113,6 +113,8 @@ definitions:
       approvalRequestId:
         type: string
         format: uint64
+      autoapproved:
+        type: boolean
   chorusCountUnreadNotificationsReply:
     type: object
     properties:

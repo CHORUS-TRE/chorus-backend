@@ -4662,6 +4662,8 @@ definitions:
       approvalRequestId:
         type: string
         format: uint64
+      autoapproved:
+        type: boolean
   chorusApprovalRequestStatus:
     type: string
     enum:
