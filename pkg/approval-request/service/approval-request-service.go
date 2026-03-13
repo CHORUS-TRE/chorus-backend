@@ -456,6 +456,7 @@ func (s *ApprovalRequestService) cleanupRequestStorage(ctx context.Context, requ
 }
 
 func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, request *model.ApprovalRequest) error {
+	logger.TechLog.Debug(ctx, "Executing approved request", zap.Uint64("request_id", request.ID), zap.String("type", string(request.Type)))
 	switch request.Type {
 	case model.ApprovalRequestTypeDataExtraction:
 		return nil
@@ -474,6 +475,7 @@ func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, req
 // (DestinationPath) and writes it into the destination workspace, preserving
 // the original directory structure (SourcePath).
 func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Context, details model.DataTransferDetails) error {
+	logger.TechLog.Debug(ctx, "Copying approved files to destination workspace", zap.Uint64("destination_workspace_id", details.DestinationWorkspaceID), zap.Int("file_count", len(details.Files)))
 	for _, reqFile := range details.Files {
 		file, err := s.stagingFileStore.GetFile(ctx, reqFile.DestinationPath)
 		if err != nil {
