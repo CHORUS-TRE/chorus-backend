@@ -396,6 +396,21 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 		}
 	}
 
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: request.TenantID,
+		UserID:   request.RequesterID,
+		Message:  fmt.Sprintf("Approval request '%s' has been %s.", request.Title, map[bool]string{true: "approved", false: "rejected"}[approve]),
+		Content: notification_model.NotificationContent{
+			Type: "ApprovalRequestNotification",
+			ApprovalRequest: &notification_model.ApprovalRequestNotification{
+				ApprovalRequestID: updatedRequest.ID,
+			},
+		},
+	}, []uint64{request.RequesterID})
+	if err != nil {
+		logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", request.RequesterID))
+	}
+
 	return updatedRequest, nil
 }
 
