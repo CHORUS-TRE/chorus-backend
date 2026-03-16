@@ -33,6 +33,7 @@ type Workspaceer interface {
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
 
 	ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
 }
 
@@ -244,7 +245,7 @@ func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenant
 	if len(matchingRolesIDs) != 0 {
 		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
-			return fmt.Errorf("unable to remove existing workspace roles for user %v for workspace %v: %w", userID, tenantID, err)
+			return fmt.Errorf("unable to remove existing workspace roles for user %v for workspace %v: %w", userID, role.Context["workspace"], err)
 		}
 	}
 
@@ -266,6 +267,46 @@ func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenant
 	}, []uint64{userID})
 	if err != nil {
 		return fmt.Errorf("unable to create notification for user %v about new role %v in workspace %v: %w", userID, role.Role, role.Context["workspace"], err)
+	}
+
+	return nil
+}
+
+func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return fmt.Errorf("unable to get user %v: %w", userID, err)
+	}
+
+	matchingRolesIDs := []uint64{}
+	for _, r := range user.Roles {
+		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) && r.Role.Name == roleName {
+			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		}
+	}
+
+	if len(matchingRolesIDs) == 0 {
+		return fmt.Errorf("user %v does not have role %v in workspace %v", userID, roleName, workspaceID)
+	}
+
+	err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	if err != nil {
+		return fmt.Errorf("unable to remove role %v from user %v in workspace %v: %w", roleName, userID, workspaceID, err)
+	}
+
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		UserID:   userID,
+		Message:  fmt.Sprintf("You have been removed the role %v in workspace %v", roleName, workspaceID),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: &notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return fmt.Errorf("unable to create notification for user %v about removed role %v in workspace %v: %w", userID, roleName, workspaceID, err)
 	}
 
 	return nil

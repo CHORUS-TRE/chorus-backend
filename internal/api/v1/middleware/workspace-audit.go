@@ -171,6 +171,33 @@ func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context,
 	return res, err
 }
 
+func (c workspaceControllerAudit) RemoveUserRoleInWorkspace(ctx context.Context, req *chorus.RemoveUserRoleInWorkspaceRequest) (*chorus.RemoveUserRoleInWorkspaceReply, error) {
+	res, err := c.next.RemoveUserRoleInWorkspace(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithWorkspaceID(req.Id),
+		audit.WithUserID(req.UserId),
+		audit.WithDetail("workspace_id", req.Id),
+		audit.WithDetail("user_id", req.UserId),
+		audit.WithDetail("role", req.RoleName),
+	}
+
+	if err != nil {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Failed to remove role %s from user %d in workspace %d.", req.RoleName, req.UserId, req.Id)),
+			audit.WithError(err),
+		)
+	} else {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Removed role %s from user %d in workspace %d.", req.RoleName, req.UserId, req.Id)),
+		)
+	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceMemberUpdate, opts...)
+
+	return res, err
+}
+
 func (c workspaceControllerAudit) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
 	res, err := c.next.RemoveUserFromWorkspace(ctx, req)
 
