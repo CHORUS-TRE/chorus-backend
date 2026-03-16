@@ -6,7 +6,7 @@ module github.com/CHORUS-TRE/chorus-backend
 go 1.24.3
 
 require (
-	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20260313143242-b759f3851646
+	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20260316143310-db78c9a1f242
 	github.com/coocood/freecache v1.2.4
 	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/fergusstrange/embedded-postgres v1.33.0
