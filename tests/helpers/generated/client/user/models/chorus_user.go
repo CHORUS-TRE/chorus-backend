@@ -24,6 +24,9 @@ type ChorusUser struct {
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
+	// email
+	Email string `json:"email,omitempty"`
+
 	// first name
 	FirstName string `json:"firstName,omitempty"`
 

@@ -80,9 +80,12 @@ var _ = Describe("user service", func() {
 				c := helpers.UserServiceHTTPClient()
 				resp, err := c.UserService.UserServiceListUsers(req, auth)
 
-				Then("users should be returned", func() {
+				Then("users should be returned with email", func() {
 					ExpectAPIErr(err).Should(BeNil())
 					Expect(len(resp.Payload.Result.Users)).Should(Equal(2))
+					for _, u := range resp.Payload.Result.Users {
+						Expect(u.Email).ShouldNot(Equal(""))
+					}
 				})
 				cleanTables()
 			})
@@ -145,6 +148,7 @@ var _ = Describe("user service", func() {
 					ExpectAPIErr(err).Should(BeNil())
 					me := resp.Payload.Result.User
 					Expect(me.Username).Should(Equal("hmoto"))
+					Expect(me.Email).Should(Equal("hmoto@example.com"))
 				})
 				cleanTables()
 			})
@@ -202,6 +206,7 @@ var _ = Describe("user service", func() {
 					ExpectAPIErr(err).Should(BeNil())
 					me := resp.Payload.Result.Me
 					Expect(me.Username).Should(Equal("hmoto"))
+					Expect(me.Email).Should(Equal("hmoto@example.com"))
 					Expect(me.PasswordChanged).Should(BeFalse())
 					Expect(me.TotpEnabled).Should(BeFalse())
 				})
@@ -339,6 +344,7 @@ var _ = Describe("user service", func() {
 						FirstName: "Bob",
 						ID:        "90000",
 						LastName:  "Smith",
+						Email:     "bob@example.com",
 						Roles:     []string{"admin", "authenticated"},
 						Status:    "disabled",
 						Username:  "Bobby",
@@ -347,10 +353,11 @@ var _ = Describe("user service", func() {
 				)
 
 				c := helpers.UserServiceHTTPClient()
-				_, err := c.UserService.UserServiceUpdateUser(req, auth)
+				resp, err := c.UserService.UserServiceUpdateUser(req, auth)
 
 				Then("a user should be updated", func() {
 					ExpectAPIErr(err).Should(BeNil())
+					Expect(resp.Payload.Result.User.Email).Should(Equal("bob@example.com"))
 				})
 				cleanTables()
 			})
@@ -852,6 +859,7 @@ var _ = Describe("user service", func() {
 					req := user.NewUserServiceCreateUserParams().WithBody(
 						&models.ChorusUser{
 							FirstName: "first", LastName: "last", Username: "user88888",
+							Email:    "user88888@example.com",
 							Password: "pass", Status: "active",
 							TotpEnabled: true,
 						},
@@ -863,6 +871,7 @@ var _ = Describe("user service", func() {
 					Then("a user should be returned", func() {
 						ExpectAPIErr(err).Should(BeNil())
 						Expect(resp.Payload.Result.User).ShouldNot(Equal(nil))
+						Expect(resp.Payload.Result.User.Email).Should(Equal("user88888@example.com"))
 					})
 					cleanTables()
 				})
@@ -914,10 +923,10 @@ func setupTables() {
 	q := `
 	INSERT INTO tenants (id, name) VALUES (88888, 'test tenant');
 
-	INSERT INTO users (id,tenantid, firstname, lastname, username, password, status, createdat, updatedat)
-	VALUES (90000, 88888, 'hello', 'moto', 'hmoto', '$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO', 'active', NOW(), NOW());
-	INSERT INTO users (id,tenantid, firstname, lastname, username, password, status, createdat, updatedat)
-	VALUES (90001,88888, 'jane', 'doe', 'jadoe', '$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42', 'disabled', NOW(), NOW());
+	INSERT INTO users (id,tenantid, firstname, lastname, username, email, password, status, createdat, updatedat)
+	VALUES (90000, 88888, 'hello', 'moto', 'hmoto', 'hmoto@example.com', '$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO', 'active', NOW(), NOW());
+	INSERT INTO users (id,tenantid, firstname, lastname, username, email, password, status, createdat, updatedat)
+	VALUES (90001,88888, 'jane', 'doe', 'jadoe', 'jadoe@example.com', '$2a$10$1VdWx3wG9KWZaHSzvUxQi.ZHzBJE8aPIDfsblTZPFRWyeWu4B9.42', 'disabled', NOW(), NOW());
 
 	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, (SELECT id FROM role_definitions WHERE name='Authenticated'));
 	INSERT INTO user_role (id, userid, roleid) VALUES(92002, 90000, (SELECT id FROM role_definitions WHERE name='SuperAdmin'));
@@ -933,8 +942,8 @@ func setupTablesWithTotpUser() {
 	q := `
 	INSERT INTO tenants (id, name) VALUES (88888, 'test tenant');
 
-	INSERT INTO users (id,tenantid, firstname, lastname, username, password, status, createdat, updatedat, totpsecret)
-	VALUES (90000, 88888, 'hello', 'moto', 'hmoto', '$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO', 'active',
+	INSERT INTO users (id,tenantid, firstname, lastname, username, email, password, status, createdat, updatedat, totpsecret)
+	VALUES (90000, 88888, 'hello', 'moto', 'hmoto', 'hmoto@example.com', '$2a$10$kTAQ1EsMqdNAgQecrLOdNOZF.X71sNfokCs5be8..eVFLPQ/1iCTO', 'active',
 			NOW(), NOW(), 'ohKtu9PFHMquP5Zemcfb4XFQ8TuYnA5Gk1txooQINWL2AbhonyGW0H66zmX8YdUEDEZPYGjOCDPBOF9W');
 
 	INSERT INTO user_role (id, userid, roleid) VALUES(92001, 90000, (SELECT id FROM role_definitions WHERE name='Authenticated'));

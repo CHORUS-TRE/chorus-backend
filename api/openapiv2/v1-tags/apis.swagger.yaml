@@ -5744,6 +5744,8 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+      email:
+        type: string
   chorusUserFilter:
     type: object
     properties:
