@@ -60,6 +60,15 @@ func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context
 	return c.next.ListApprovalRequests(ctx, req)
 }
 
+func (c approvalRequestControllerAuthorization) CountMyApprovalRequests(ctx context.Context, req *chorus.CountMyApprovalRequestsRequest) (*chorus.CountMyApprovalRequestsReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionListRequests)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.CountMyApprovalRequests(ctx, req)
+}
+
 func (c approvalRequestControllerAuthorization) CreateDataExtractionRequest(ctx context.Context, req *chorus.CreateDataExtractionRequestRequest) (*chorus.CreateDataExtractionRequestReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionCreateRequest, authorization.WithWorkspace(req.SourceWorkspaceId))
 	if err != nil {

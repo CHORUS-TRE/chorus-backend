@@ -24,11 +24,14 @@ type ApprovalRequestFilter struct {
 	TypesIn           *[]model.ApprovalRequestType
 	SourceWorkspaceID *uint64
 	PendingApproval   *bool
+	ApproverID        *uint64
+	RequesterID       *uint64
 }
 
 type ApprovalRequester interface {
 	GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error)
 	ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error)
+	CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error)
 	CreateDataExtractionRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error)
 	CreateDataTransferRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error)
 	ApproveApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64, approve bool) (*model.ApprovalRequest, error)
@@ -39,6 +42,7 @@ type ApprovalRequester interface {
 type ApprovalRequestStore interface {
 	GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error)
 	ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error)
+	CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error)
 	CreateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error)
 	UpdateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error)
 	DeleteApprovalRequest(ctx context.Context, tenantID, requestID uint64) error
@@ -85,6 +89,10 @@ func (s *ApprovalRequestService) GetApprovalRequest(ctx context.Context, tenantI
 
 func (s *ApprovalRequestService) ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error) {
 	return s.store.ListApprovalRequests(ctx, tenantID, userID, pagination, filter)
+}
+
+func (s *ApprovalRequestService) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	return s.store.CountMyApprovalRequests(ctx, tenantID, userID)
 }
 
 // CreateDataExtractionRequest creates an approval request to download files from a workspace.

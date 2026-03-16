@@ -94,6 +94,16 @@ paths:
           in: query
           required: false
           type: boolean
+        - name: filter.approverId
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: filter.requesterId
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
         - ApprovalRequestService
   /api/rest/v1/approval-requests/data-extraction:
@@ -138,6 +148,22 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusCreateDataTransferRequestRequest'
+      tags:
+        - ApprovalRequestService
+  /api/rest/v1/approval-requests/mine/count:
+    get:
+      summary: Count my approval requests
+      description: This endpoint returns the count of approval requests for the current user
+      operationId: ApprovalRequestService_CountMyApprovalRequests
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCountMyApprovalRequestsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
       tags:
         - ApprovalRequestService
   /api/rest/v1/approval-requests/{id}:
@@ -316,6 +342,12 @@ definitions:
         format: uint64
       pendingApproval:
         type: boolean
+      approverId:
+        type: string
+        format: uint64
+      requesterId:
+        type: string
+        format: uint64
   chorusApprovalRequestStatus:
     type: string
     enum:
@@ -342,6 +374,33 @@ definitions:
     properties:
       approvalRequest:
         $ref: '#/definitions/chorusApprovalRequest'
+  chorusCountMyApprovalRequestsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCountMyApprovalRequestsResult'
+  chorusCountMyApprovalRequestsResult:
+    type: object
+    properties:
+      total:
+        type: string
+        format: uint64
+      totalApprover:
+        type: string
+        format: uint64
+      totalRequester:
+        type: string
+        format: uint64
+      countByStatus:
+        type: object
+        additionalProperties:
+          type: string
+          format: uint64
+      countByType:
+        type: object
+        additionalProperties:
+          type: string
+          format: uint64
   chorusCreateDataExtractionRequestReply:
     type: object
     properties:
