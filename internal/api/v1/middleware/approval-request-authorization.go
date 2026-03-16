@@ -52,16 +52,41 @@ func (c approvalRequestControllerAuthorization) GetApprovalRequest(ctx context.C
 }
 
 func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context.Context, req *chorus.ListApprovalRequestsRequest) (*chorus.ListApprovalRequestsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListRequests)
+	userId, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+	}
+
+	listMine := false
+	if req.Filter != nil && req.Filter.RequesterId != nil && *req.Filter.RequesterId == userId {
+		listMine = true
+	}
+	if req.Filter != nil && req.Filter.ApproverId != nil && *req.Filter.ApproverId == userId {
+		listMine = true
+	}
+
+	if !listMine {
+		opts := []authorization.NewContextOption{}
+		if req.Filter != nil && req.Filter.SourceWorkspaceId != nil {
+			opts = append(opts, authorization.WithWorkspace(*req.Filter.SourceWorkspaceId))
+		}
+
+		err := c.IsAuthorized(ctx, authorization.PermissionListRequests, opts...)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.next.ListApprovalRequests(ctx, req)
 }
 
 func (c approvalRequestControllerAuthorization) CountMyApprovalRequests(ctx context.Context, req *chorus.CountMyApprovalRequestsRequest) (*chorus.CountMyApprovalRequestsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListRequests)
+	err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests)
 	if err != nil {
 		return nil, err
 	}

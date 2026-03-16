@@ -92,6 +92,7 @@ const (
 	PermissionAuditPlatform       PermissionName = "auditPlatform"
 
 	PermissionListRequests   PermissionName = "listRequests"
+	PermissionListMyRequests PermissionName = "listMyRequests"
 	PermissionGetRequest     PermissionName = "getRequest"
 	PermissionCreateRequest  PermissionName = "createRequest"
 	PermissionApproveRequest PermissionName = "approveRequest"
@@ -230,6 +231,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 
 	case string(PermissionListRequests):
 		return PermissionListRequests, nil
+	case string(PermissionListMyRequests):
+		return PermissionListMyRequests, nil
 	case string(PermissionGetRequest):
 		return PermissionGetRequest, nil
 	case string(PermissionCreateRequest):
