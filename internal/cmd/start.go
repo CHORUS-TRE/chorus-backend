@@ -128,7 +128,10 @@ func runServer() error {
 	// services.
 	close(started)
 
-	// provider.InitDaemonJobs()
+	provider.InitDaemonJobs()
+
+	// Start the jobber (no-op if disabled).
+	go provider.ProvideJobber().Run(ctx)
 
 	// 4. Wait for the signal to stop.
 	signal.Notify(c, os.Interrupt)
