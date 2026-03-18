@@ -47,7 +47,7 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 
 	// Get users query
 	query := `
-		SELECT id, tenantid, firstname, lastname, username, source, status, createdat, updatedat
+		SELECT id, tenantid, firstname, lastname, username, email, source, status, createdat, updatedat
 		FROM users
 		WHERE tenantid = $1 AND status != 'deleted'
 	`
@@ -87,7 +87,7 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 
 func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error) {
 	const query = `
-		SELECT id, tenantid, firstname, lastname, username, source, status, password, passwordChanged,totpenabled, totpsecret, createdat, updatedat
+		SELECT id, tenantid, firstname, lastname, username, email, source, status, password, passwordChanged,totpenabled, totpsecret, createdat, updatedat
 		FROM users
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -199,14 +199,14 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	const userUpdateQuery = `
 		UPDATE users
-		SET firstname = $3, lastname = $4, username = $5, status = $6, password = $7, passwordChanged = $8, totpenabled = $9, totpsecret = $10, updatedat = NOW()
+		SET firstname = $3, lastname = $4, username = $5, email = $6, status = $7, password = $8, passwordChanged = $9, totpenabled = $10, totpsecret = $11, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, firstname, lastname, username, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+		RETURNING id, tenantid, firstname, lastname, username, email, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 
 	var updatedUser model.User
 	err := s.db.GetContext(ctx, &updatedUser, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username,
-		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
+		user.Email, user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
@@ -223,9 +223,9 @@ func (s *UserStorage) UpdateUser(ctx context.Context, tenantID uint64, user *mod
 func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenantID uint64, user *model.User) (*model.User, error) {
 	const userUpdateQuery = `
 		UPDATE users
-		SET firstname = $3, lastname = $4, username = $5, status = $6, password = $7, passwordChanged = $8, totpenabled = $9, totpsecret = $10, updatedat = NOW()
+		SET firstname = $3, lastname = $4, username = $5, email = $6, status = $7, password = $8, passwordChanged = $9, totpenabled = $10, totpsecret = $11, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, firstname, lastname, username, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+		RETURNING id, tenantid, firstname, lastname, username, email, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 
 	const deleteUserRolesQuery = `
@@ -236,7 +236,7 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 	// Update User
 	var updatedUser model.User
 	err := tx.GetContext(ctx, &updatedUser, userUpdateQuery, tenantID, user.ID, user.FirstName, user.LastName, user.Username,
-		user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
+		user.Email, user.Status, user.Password, user.PasswordChanged, user.TotpEnabled, user.TotpSecret)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update user: %w", err)
 	}
@@ -263,18 +263,18 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 // CreateUser saves the provided user object in the database 'users' table.
 func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	var userQuery = `
-		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) 
-		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+		INSERT INTO users (tenantid, firstname, lastname, username, email, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) 
+		RETURNING id, tenantid, firstname, lastname, username, email, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
-	args := []interface{}{tenantID, user.FirstName, user.LastName, user.Username, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret}
+	args := []interface{}{tenantID, user.FirstName, user.LastName, user.Username, user.Email, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret}
 
 	if user.ID != 0 {
 		userQuery = `
-		INSERT INTO users (tenantid, firstname, lastname, username, source, password, passwordChanged, status, totpsecret, id,
+		INSERT INTO users (tenantid, firstname, lastname, username, email, source, password, passwordChanged, status, totpsecret, id,
 			createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-		RETURNING id, tenantid, firstname, lastname, username, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		RETURNING id, tenantid, firstname, lastname, username, email, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 		`
 		args = append(args, user.ID)
 	}

@@ -14,15 +14,17 @@ import (
 )
 
 type validation struct {
-	next     service.Userer
-	validate *val.Validate
+	next         service.Userer
+	validate     *val.Validate
+	requireEmail bool
 }
 
-func Validation(validate *val.Validate) func(service.Userer) service.Userer {
+func Validation(validate *val.Validate, requireEmail bool) func(service.Userer) service.Userer {
 	return func(next service.Userer) service.Userer {
 		return &validation{
-			next:     next,
-			validate: validate,
+			next:         next,
+			validate:     validate,
+			requireEmail: requireEmail,
 		}
 	}
 }
@@ -79,6 +81,9 @@ func (v validation) UpdateUser(ctx context.Context, req service.UpdateUserReq) (
 func (v validation) CreateUser(ctx context.Context, req service.CreateUserReq) (*model.User, error) {
 	if err := v.validate.Struct(req); err != nil {
 		return nil, cerr.WrapValidationError(err)
+	}
+	if v.requireEmail && req.User.Email == "" {
+		return nil, cerr.ErrValidation.WithMessage("Email is required")
 	}
 	return v.next.CreateUser(ctx, req)
 }

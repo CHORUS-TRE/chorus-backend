@@ -30,6 +30,7 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 		FirstName:       user.FirstName,
 		LastName:        user.LastName,
 		Username:        user.Username,
+		Email:           user.Email,
 		Source:          user.Source,
 		Password:        user.Password,
 		PasswordChanged: user.PasswordChanged,

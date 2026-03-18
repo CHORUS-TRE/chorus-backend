@@ -16,6 +16,7 @@ type User struct {
 	FirstName       string
 	LastName        string
 	Username        string
+	Email           string
 	Source          string
 	Password        string
 	PasswordChanged bool
@@ -67,6 +68,7 @@ func (User) IsValidSortType(sortType string) bool {
 		"firstname": true,
 		"lastname":  true,
 		"username":  true,
+		"email":     true,
 		"status":    true,
 		"createdat": true,
 	}
