@@ -62,8 +62,18 @@ ApprovalRequestServiceListApprovalRequestsParams contains all the parameters to 
 */
 type ApprovalRequestServiceListApprovalRequestsParams struct {
 
+	// FilterApproverID.
+	//
+	// Format: uint64
+	FilterApproverID *string
+
 	// FilterPendingApproval.
 	FilterPendingApproval *bool
+
+	// FilterRequesterID.
+	//
+	// Format: uint64
+	FilterRequesterID *string
 
 	// FilterSourceWorkspaceID.
 	//
@@ -157,6 +167,17 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) SetHTTPClient(client 
 	o.HTTPClient = client
 }
 
+// WithFilterApproverID adds the filterApproverID to the approval request service list approval requests params
+func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterApproverID(filterApproverID *string) *ApprovalRequestServiceListApprovalRequestsParams {
+	o.SetFilterApproverID(filterApproverID)
+	return o
+}
+
+// SetFilterApproverID adds the filterApproverId to the approval request service list approval requests params
+func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterApproverID(filterApproverID *string) {
+	o.FilterApproverID = filterApproverID
+}
+
 // WithFilterPendingApproval adds the filterPendingApproval to the approval request service list approval requests params
 func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterPendingApproval(filterPendingApproval *bool) *ApprovalRequestServiceListApprovalRequestsParams {
 	o.SetFilterPendingApproval(filterPendingApproval)
@@ -166,6 +187,17 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterPendingAppr
 // SetFilterPendingApproval adds the filterPendingApproval to the approval request service list approval requests params
 func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterPendingApproval(filterPendingApproval *bool) {
 	o.FilterPendingApproval = filterPendingApproval
+}
+
+// WithFilterRequesterID adds the filterRequesterID to the approval request service list approval requests params
+func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterRequesterID(filterRequesterID *string) *ApprovalRequestServiceListApprovalRequestsParams {
+	o.SetFilterRequesterID(filterRequesterID)
+	return o
+}
+
+// SetFilterRequesterID adds the filterRequesterId to the approval request service list approval requests params
+func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterRequesterID(filterRequesterID *string) {
+	o.FilterRequesterID = filterRequesterID
 }
 
 // WithFilterSourceWorkspaceID adds the filterSourceWorkspaceID to the approval request service list approval requests params
@@ -264,6 +296,23 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) WriteToRequest(r runt
 	}
 	var res []error
 
+	if o.FilterApproverID != nil {
+
+		// query param filter.approverId
+		var qrFilterApproverID string
+
+		if o.FilterApproverID != nil {
+			qrFilterApproverID = *o.FilterApproverID
+		}
+		qFilterApproverID := qrFilterApproverID
+		if qFilterApproverID != "" {
+
+			if err := r.SetQueryParam("filter.approverId", qFilterApproverID); err != nil {
+				return err
+			}
+		}
+	}
+
 	if o.FilterPendingApproval != nil {
 
 		// query param filter.pendingApproval
@@ -276,6 +325,23 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) WriteToRequest(r runt
 		if qFilterPendingApproval != "" {
 
 			if err := r.SetQueryParam("filter.pendingApproval", qFilterPendingApproval); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.FilterRequesterID != nil {
+
+		// query param filter.requesterId
+		var qrFilterRequesterID string
+
+		if o.FilterRequesterID != nil {
+			qrFilterRequesterID = *o.FilterRequesterID
+		}
+		qFilterRequesterID := qrFilterRequesterID
+		if qFilterRequesterID != "" {
+
+			if err := r.SetQueryParam("filter.requesterId", qFilterRequesterID); err != nil {
 				return err
 			}
 		}

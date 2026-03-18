@@ -44,6 +44,17 @@ type approvalRequestRow struct {
 	ApprovedAt      *time.Time    `db:"approvedat"`
 }
 
+type approvalRequestCountsRow struct {
+	Total          uint64 `db:"total"`
+	TotalApprover  uint64 `db:"total_approver"`
+	TotalRequester uint64 `db:"total_requester"`
+}
+
+type approvalRequestGroupedCountRow struct {
+	Key   string `db:"key"`
+	Count uint64 `db:"count"`
+}
+
 func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 	var details model.ApprovalRequestDetails
 	if len(r.Details) > 0 {
@@ -118,6 +129,16 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 		whereClause += " AND status = 'pending'"
 	}
 
+	if filter.ApproverID != nil {
+		args = append(args, *filter.ApproverID)
+		whereClause += fmt.Sprintf(" AND $%d = ANY(approverids)", len(args))
+	}
+
+	if filter.RequesterID != nil {
+		args = append(args, *filter.RequesterID)
+		whereClause += fmt.Sprintf(" AND requesterid = $%d", len(args))
+	}
+
 	countQuery := "SELECT COUNT(*) FROM approval_requests " + whereClause
 	var totalCount int
 	if err := s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
@@ -155,6 +176,73 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 	}
 
 	return requests, paginationRes, nil
+}
+
+func newApprovalRequestStatusCountMap() map[string]uint64 {
+	counts := make(map[string]uint64, len(model.ApprovalRequestStatuses()))
+	for _, status := range model.ApprovalRequestStatuses() {
+		counts[string(status)] = 0
+	}
+	return counts
+}
+
+func newApprovalRequestTypeCountMap() map[string]uint64 {
+	counts := make(map[string]uint64, len(model.ApprovalRequestTypes()))
+	for _, requestType := range model.ApprovalRequestTypes() {
+		counts[string(requestType)] = 0
+	}
+	return counts
+}
+
+func (s *ApprovalRequestStorage) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	const baseWhereClause = `
+		FROM approval_requests
+		WHERE tenantid = $1 AND deletedat IS NULL AND (requesterid = $2 OR $2 = ANY(approverids))
+	`
+
+	var summary approvalRequestCountsRow
+	if err := s.db.GetContext(ctx, &summary, `
+		SELECT
+			COUNT(*) AS total,
+			COUNT(*) FILTER (WHERE $2 = ANY(approverids)) AS total_approver,
+			COUNT(*) FILTER (WHERE requesterid = $2) AS total_requester
+		`+baseWhereClause, tenantID, userID); err != nil {
+		return nil, fmt.Errorf("unable to count approval requests: %w", err)
+	}
+
+	countByStatus := newApprovalRequestStatusCountMap()
+	var statusRows []approvalRequestGroupedCountRow
+	if err := s.db.SelectContext(ctx, &statusRows, `
+		SELECT status AS key, COUNT(*) AS count
+		`+baseWhereClause+`
+		GROUP BY status
+	`, tenantID, userID); err != nil {
+		return nil, fmt.Errorf("unable to count approval requests by status: %w", err)
+	}
+	for _, row := range statusRows {
+		countByStatus[row.Key] = row.Count
+	}
+
+	countByType := newApprovalRequestTypeCountMap()
+	var typeRows []approvalRequestGroupedCountRow
+	if err := s.db.SelectContext(ctx, &typeRows, `
+		SELECT type AS key, COUNT(*) AS count
+		`+baseWhereClause+`
+		GROUP BY type
+	`, tenantID, userID); err != nil {
+		return nil, fmt.Errorf("unable to count approval requests by type: %w", err)
+	}
+	for _, row := range typeRows {
+		countByType[row.Key] = row.Count
+	}
+
+	return &model.ApprovalRequestCounts{
+		Total:          summary.Total,
+		TotalApprover:  summary.TotalApprover,
+		TotalRequester: summary.TotalRequester,
+		CountByStatus:  countByStatus,
+		CountByType:    countByType,
+	}, nil
 }
 
 func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error) {
