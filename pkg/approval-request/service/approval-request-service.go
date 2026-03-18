@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -490,11 +492,30 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 
 		_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
 		if err != nil {
-			return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			if !strings.Contains(err.Error(), "a file already exists") {
+				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			}
+
+			destFile.Path = appendUUIDToFilename(destFile.Path)
+			destFile.Name = path.Base(destFile.Path)
+			logger.TechLog.Info(ctx, "File already exists in destination workspace, retrying with unique name", zap.String("new_path", destFile.Path))
+
+			_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
+			if err != nil {
+				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			}
 		}
 	}
 
 	return nil
+}
+
+// appendUUIDToFilename inserts an uuid suffix before the file extension.
+// e.g. "workspace-archive/hello.txt" -> "workspace-archive/hello_<uuid>.txt"
+func appendUUIDToFilename(filePath string) string {
+	ext := path.Ext(filePath)
+	base := strings.TrimSuffix(filePath, ext)
+	return fmt.Sprintf("%s_%s%s", base, uuid.Next(), ext)
 }
 
 func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {

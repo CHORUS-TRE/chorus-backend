@@ -52,6 +52,8 @@ type (
 
 		Jobs map[string]Job `yaml:"jobs"`
 
+		Jobber Jobber `yaml:"jobber"`
+
 		PPROFEnabled bool   `yaml:"pprof_enabled"`
 		TenantID     uint64 `yaml:"tenant_id"`
 
@@ -460,5 +462,12 @@ type (
 		Timeout  time.Duration          `yaml:"timeout"`
 		Interval time.Duration          `yaml:"interval"`
 		Options  map[string]interface{} `yaml:"options"`
+	}
+
+	Jobber struct {
+		Enabled       bool          `yaml:"enabled"`
+		CheckInterval time.Duration `yaml:"check_interval"`
+		Jitter        float64       `yaml:"jitter"` // the actual interval is ±jitter * interval * uniform(0,1)
+		LockStore     string        `yaml:"lock_store"`
 	}
 )

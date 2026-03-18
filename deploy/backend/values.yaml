@@ -163,9 +163,6 @@ config:
       secret: "" # set in secret
       expiration_time: 72h
       max_refresh_time: 4320h #180d
-    jobs:
-      job_status_gc:
-        enabled: true
     private_key: "" # set in secret
     salt: ""
     metrics:
