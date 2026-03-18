@@ -223,6 +223,40 @@ func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req 
 
 }
 
+func (c WorkspaceController) RemoveUserRoleInWorkspace(ctx context.Context, req *chorus.RemoveUserRoleInWorkspaceRequest) (*chorus.RemoveUserRoleInWorkspaceReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	roleName, err := authorization.ToRoleName(req.RoleName)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
+	}
+
+	err = c.workspace.RemoveUserRoleInWorkspace(ctx, tenantID, req.UserId, req.Id, roleName)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserRoleInWorkspace': %v", err.Error())
+	}
+
+	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+	}
+
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+	}
+
+	return &chorus.RemoveUserRoleInWorkspaceReply{Result: &chorus.RemoveUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
+
+}
+
 func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

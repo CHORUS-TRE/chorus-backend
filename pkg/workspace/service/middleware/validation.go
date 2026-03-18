@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
@@ -56,6 +57,10 @@ func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Worksp
 
 func (v validation) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	return v.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+}
+
+func (v validation) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
+	return v.next.RemoveUserRoleInWorkspace(ctx, tenantID, userID, workspaceID, roleName)
 }
 
 func (v validation) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {

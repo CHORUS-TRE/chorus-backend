@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -87,6 +89,16 @@ func (s *ApprovalRequestService) ListApprovalRequests(ctx context.Context, tenan
 	return s.store.ListApprovalRequests(ctx, tenantID, userID, pagination, filter)
 }
 
+// CreateDataExtractionRequest creates an approval request to download files from a workspace.
+//
+// Flow:
+//  1. Determine approvers and whether the requester can self-approve.
+//  2. Persist the request in the database (status: pending or approved).
+//  3. Copy the requested files from the source workspace into an immutable
+//     staging area so auditors can review the exact content.
+//  4. Update the request with the file metadata (staging paths + sizes).
+//  5. If auto-approved, the files are immediately available for download
+//     from the staging area. Otherwise, notify the approvers.
 func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error) {
 	request.Type = model.ApprovalRequestTypeDataExtraction
 
@@ -136,22 +148,21 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		return nil, fmt.Errorf("unable to update request with files: %w", err)
 	}
 
-	if !canAutoApprove {
-		for _, approverID := range approvers {
-			err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
-				TenantID: request.TenantID,
-				UserID:   approverID,
-				Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
-				Content: notification_model.NotificationContent{
-					Type: "ApprovalRequestNotification",
-					ApprovalRequest: &notification_model.ApprovalRequestNotification{
-						ApprovalRequestID: updatedRequest.ID,
-					},
+	for _, approverID := range approvers {
+		err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+			TenantID: request.TenantID,
+			UserID:   approverID,
+			Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
+			Content: notification_model.NotificationContent{
+				Type: "ApprovalRequestNotification",
+				ApprovalRequest: &notification_model.ApprovalRequestNotification{
+					ApprovalRequestID: updatedRequest.ID,
+					Autoapproved:      canAutoApprove,
 				},
-			}, []uint64{approverID})
-			if err != nil {
-				logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", approverID))
-			}
+			},
+		}, []uint64{approverID})
+		if err != nil {
+			logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", approverID))
 		}
 	}
 
@@ -194,6 +205,16 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 	return approvers, requesterCanApprove, nil
 }
 
+// CreateDataTransferRequest creates an approval request to transfer files between workspaces.
+//
+// Flow:
+//  1. Determine approvers and whether the requester can self-approve.
+//  2. Persist the request in the database (status: pending or approved).
+//  3. Copy the requested files from the source workspace into an immutable
+//     staging area so auditors can review the exact content.
+//  4. Update the request with the file metadata (staging paths + sizes).
+//  5. If auto-approved, immediately copy the files from staging into the
+//     destination workspace. Otherwise, notify the approvers.
 func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error) {
 	request.Type = model.ApprovalRequestTypeDataTransfer
 
@@ -247,26 +268,27 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		return nil, fmt.Errorf("unable to update request with files: %w", err)
 	}
 
-	if createdRequest.AutoApproved {
+	if canAutoApprove {
 		if err := s.executeApprovedRequest(ctx, updatedRequest); err != nil {
 			return nil, fmt.Errorf("unable to execute auto-approved request: %w", err)
 		}
-	} else {
-		for _, approverID := range approvers {
-			err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
-				TenantID: request.TenantID,
-				UserID:   approverID,
-				Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
-				Content: notification_model.NotificationContent{
-					Type: "ApprovalRequestNotification",
-					ApprovalRequest: &notification_model.ApprovalRequestNotification{
-						ApprovalRequestID: updatedRequest.ID,
-					},
+	}
+
+	for _, approverID := range approvers {
+		err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+			TenantID: request.TenantID,
+			UserID:   approverID,
+			Message:  fmt.Sprintf("Approval request '%s' has been created and is pending your approval.", request.Title),
+			Content: notification_model.NotificationContent{
+				Type: "ApprovalRequestNotification",
+				ApprovalRequest: &notification_model.ApprovalRequestNotification{
+					ApprovalRequestID: updatedRequest.ID,
+					Autoapproved:      canAutoApprove,
 				},
-			}, []uint64{approverID})
-			if err != nil {
-				logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", approverID))
-			}
+			},
+		}, []uint64{approverID})
+		if err != nil {
+			logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", approverID))
 		}
 	}
 
@@ -388,6 +410,10 @@ func (s *ApprovalRequestService) DeleteApprovalRequest(ctx context.Context, tena
 	return s.store.DeleteApprovalRequest(ctx, tenantID, requestID)
 }
 
+// copyFilesToRequestStorage copies files from the source workspace into the
+// staging area. This creates an immutable audit trail: the staged files can be
+// reviewed by approvers and are the ones ultimately delivered (for transfers)
+// or downloaded (for extractions).
 func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, requestID, sourceWorkspaceID uint64, filePaths []string) ([]model.ApprovalRequestFile, error) {
 	var requestFiles []model.ApprovalRequestFile
 
@@ -432,6 +458,7 @@ func (s *ApprovalRequestService) cleanupRequestStorage(ctx context.Context, requ
 }
 
 func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, request *model.ApprovalRequest) error {
+	logger.TechLog.Debug(ctx, "Executing approved request", zap.Uint64("request_id", request.ID), zap.String("type", string(request.Type)))
 	switch request.Type {
 	case model.ApprovalRequestTypeDataExtraction:
 		return nil
@@ -446,7 +473,11 @@ func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, req
 	}
 }
 
+// copyFilesToDestinationWorkspace reads each file from the staging area
+// (DestinationPath) and writes it into the destination workspace, preserving
+// the original directory structure (SourcePath).
 func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Context, details model.DataTransferDetails) error {
+	logger.TechLog.Debug(ctx, "Copying approved files to destination workspace", zap.Uint64("destination_workspace_id", details.DestinationWorkspaceID), zap.Int("file_count", len(details.Files)))
 	for _, reqFile := range details.Files {
 		file, err := s.stagingFileStore.GetFile(ctx, reqFile.DestinationPath)
 		if err != nil {
@@ -461,11 +492,30 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 
 		_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
 		if err != nil {
-			return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			if !strings.Contains(err.Error(), "a file already exists") {
+				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			}
+
+			destFile.Path = appendUUIDToFilename(destFile.Path)
+			destFile.Name = path.Base(destFile.Path)
+			logger.TechLog.Info(ctx, "File already exists in destination workspace, retrying with unique name", zap.String("new_path", destFile.Path))
+
+			_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
+			if err != nil {
+				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			}
 		}
 	}
 
 	return nil
+}
+
+// appendUUIDToFilename inserts an uuid suffix before the file extension.
+// e.g. "workspace-archive/hello.txt" -> "workspace-archive/hello_<uuid>.txt"
+func appendUUIDToFilename(filePath string) string {
+	ext := path.Ext(filePath)
+	base := strings.TrimSuffix(filePath, ext)
+	return fmt.Sprintf("%s_%s%s", base, uuid.Next(), ext)
 }
 
 func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {

@@ -19,6 +19,9 @@ type ChorusApprovalRequestNotification struct {
 
 	// approval request Id
 	ApprovalRequestID string `json:"approvalRequestId,omitempty"`
+
+	// autoapproved
+	Autoapproved bool `json:"autoapproved,omitempty"`
 }
 
 // Validate validates this chorus approval request notification
