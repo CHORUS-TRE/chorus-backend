@@ -27,12 +27,12 @@ func TestBuildAuditFilterClause(t *testing.T) {
 			expectedArgs:   []interface{}{},
 		},
 		{
-			name: "filter with only UserID",
+			name: "filter with only ActorID",
 			filter: &audit_model.AuditFilter{
-				UserID: 456,
+				ActorID: 456,
 			},
 			initialArgs:    []interface{}{},
-			expectedClause: "userid = $1",
+			expectedClause: "actorid = $1",
 			expectedArgs:   []interface{}{uint64(456)},
 		},
 		{
@@ -63,6 +63,15 @@ func TestBuildAuditFilterClause(t *testing.T) {
 			expectedArgs:   []interface{}{uint64(200)},
 		},
 		{
+			name: "filter with only UserID",
+			filter: &audit_model.AuditFilter{
+				UserID: 300,
+			},
+			initialArgs:    []interface{}{},
+			expectedClause: "userid = $1",
+			expectedArgs:   []interface{}{uint64(300)},
+		},
+		{
 			name: "filter with only FromTime",
 			filter: &audit_model.AuditFilter{
 				FromTime: fromTime,
@@ -81,15 +90,6 @@ func TestBuildAuditFilterClause(t *testing.T) {
 			expectedArgs:   []interface{}{toTime},
 		},
 		{
-			name: "filter with UserID",
-			filter: &audit_model.AuditFilter{
-				UserID: 456,
-			},
-			initialArgs:    []interface{}{},
-			expectedClause: "userid = $1",
-			expectedArgs:   []interface{}{uint64(456)},
-		},
-		{
 			name: "filter with time range",
 			filter: &audit_model.AuditFilter{
 				FromTime: fromTime,
@@ -102,11 +102,11 @@ func TestBuildAuditFilterClause(t *testing.T) {
 		{
 			name: "filter with multiple fields",
 			filter: &audit_model.AuditFilter{
-				UserID: 456,
-				Action: audit_model.AuditActionWorkspaceCreate,
+				ActorID: 456,
+				Action:  audit_model.AuditActionWorkspaceCreate,
 			},
 			initialArgs:    []interface{}{},
-			expectedClause: "userid = $1 AND action = $2",
+			expectedClause: "actorid = $1 AND action = $2",
 			expectedArgs: []interface{}{
 				uint64(456),
 				audit_model.AuditActionWorkspaceCreate,
@@ -115,20 +115,22 @@ func TestBuildAuditFilterClause(t *testing.T) {
 		{
 			name: "filter with all fields set",
 			filter: &audit_model.AuditFilter{
-				UserID:      2,
+				ActorID:     2,
 				Action:      audit_model.AuditActionWorkbenchCreate,
 				WorkspaceID: 4,
 				WorkbenchID: 5,
+				UserID:      6,
 				FromTime:    fromTime,
 				ToTime:      toTime,
 			},
 			initialArgs:    []interface{}{},
-			expectedClause: "userid = $1 AND action = $2 AND workspaceid = $3 AND workbenchid = $4 AND createdat >= $5 AND createdat <= $6",
+			expectedClause: "actorid = $1 AND action = $2 AND workspaceid = $3 AND workbenchid = $4 AND userid = $5 AND createdat >= $6 AND createdat <= $7",
 			expectedArgs: []interface{}{
 				uint64(2),
 				audit_model.AuditActionWorkbenchCreate,
 				uint64(4),
 				uint64(5),
+				uint64(6),
 				fromTime,
 				toTime,
 			},
@@ -143,10 +145,10 @@ func TestBuildAuditFilterClause(t *testing.T) {
 		{
 			name: "filter appends to existing args with correct placeholder numbers",
 			filter: &audit_model.AuditFilter{
-				UserID: 456,
+				ActorID: 456,
 			},
 			initialArgs:    []interface{}{"existing_arg_1", "existing_arg_2"},
-			expectedClause: "userid = $3",
+			expectedClause: "actorid = $3",
 			expectedArgs:   []interface{}{"existing_arg_1", "existing_arg_2", uint64(456)},
 		},
 	}

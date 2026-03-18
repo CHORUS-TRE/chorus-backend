@@ -66,6 +66,8 @@ type ClientService interface {
 
 	WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServiceRemoveUserFromWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserFromWorkspaceOK, error)
 
+	WorkspaceServiceRemoveUserRoleInWorkspace(params *WorkspaceServiceRemoveUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserRoleInWorkspaceOK, error)
+
 	WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -302,6 +304,45 @@ func (a *Client) WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServic
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceRemoveUserFromWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceRemoveUserRoleInWorkspace removes a user s role in a workspace
+
+This endpoint removes a user's role in a workspace
+*/
+func (a *Client) WorkspaceServiceRemoveUserRoleInWorkspace(params *WorkspaceServiceRemoveUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserRoleInWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceRemoveUserRoleInWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_RemoveUserRoleInWorkspace",
+		Method:             "DELETE",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceRemoveUserRoleInWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceRemoveUserRoleInWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceRemoveUserRoleInWorkspaceDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

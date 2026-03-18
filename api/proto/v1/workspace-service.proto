@@ -76,6 +76,18 @@ message ManageUserRoleInWorkspaceResult {
     Workspace workspace = 1;
 }
 
+message RemoveUserRoleInWorkspaceRequest {
+    uint64 id = 1;
+    uint64 userId = 2;
+    string roleName = 3;
+}
+message RemoveUserRoleInWorkspaceReply {
+    RemoveUserRoleInWorkspaceResult result = 1;
+}
+message RemoveUserRoleInWorkspaceResult {
+    Workspace workspace = 1;
+}
+
 message RemoveUserFromWorkspaceRequest {
     uint64 id = 1;
     uint64 userId = 2;
@@ -99,7 +111,7 @@ message DeleteWorkspaceResult {}
 service WorkspaceService {
     rpc GetWorkspace(GetWorkspaceRequest) returns (GetWorkspaceReply) {
         option (google.api.http) = {
-            get: "/api/rest/v1/workspaces/{id}"
+            get: "/api/rest/v1/workspaces/{id}";
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a workspace";
@@ -121,7 +133,7 @@ service WorkspaceService {
 
     rpc CreateWorkspace(Workspace) returns (CreateWorkspaceReply) {
         option (google.api.http) = {
-            post: "/api/rest/v1/workspaces"
+            post: "/api/rest/v1/workspaces";
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -133,7 +145,7 @@ service WorkspaceService {
 
     rpc UpdateWorkspace(Workspace) returns (UpdateWorkspaceReply) {
         option (google.api.http) = {
-            put: "/api/rest/v1/workspaces"
+            put: "/api/rest/v1/workspaces";
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -151,6 +163,17 @@ service WorkspaceService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Manage a user's role in a workspace";
             description: "This endpoint manages a user's role in a workspace";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc RemoveUserRoleInWorkspace(RemoveUserRoleInWorkspaceRequest) returns (RemoveUserRoleInWorkspaceReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Remove a user's role in a workspace";
+            description: "This endpoint removes a user's role in a workspace";
             tags: "WorkspaceService";
         };
     };

@@ -4,9 +4,8 @@ type AuditAction string
 
 const (
 	// Authentication
-	AuditActionUserLogin       AuditAction = "LoginUser"
-	AuditActionUserLoginFailed AuditAction = "LoginUserFailed"
-	AuditActionUserLogout      AuditAction = "LogoutUser"
+	AuditActionUserLogin  AuditAction = "LoginUser"
+	AuditActionUserLogout AuditAction = "LogoutUser"
 
 	// User CRUD
 	AuditActionUserCreate         AuditAction = "CreateUser"
@@ -83,4 +82,5 @@ const (
 	AuditActionWorkspaceAuditList AuditAction = "ListWorkspaceAudit"
 	AuditActionWorkbenchAuditList AuditAction = "ListWorkbenchAudit"
 	AuditActionUserAuditList      AuditAction = "ListUserAudit"
+	AuditActionActorAuditList     AuditAction = "ListActorAudit"
 )

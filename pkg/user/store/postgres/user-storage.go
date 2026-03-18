@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -94,12 +94,12 @@ func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint6
 
 	var user model.User
 	if err := s.db.GetContext(ctx, &user, query, tenantID, userID); err != nil {
-		return nil, fmt.Errorf("unable to get user: %w", err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
 	roles, err := s.getUserRoles(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get user roles: %w", err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get roles for user %v", userID))
 	}
 	user.Roles = roles
 
@@ -190,7 +190,7 @@ func (s *UserStorage) SoftDeleteUser(ctx context.Context, tenantID uint64, userI
 	}
 
 	if affected == 0 {
-		return database.ErrNoRowsDeleted
+		return cerr.ErrNoRowsDeleted
 	}
 
 	return nil

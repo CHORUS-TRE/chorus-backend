@@ -6,13 +6,12 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
@@ -40,7 +39,7 @@ func NewAuthenticationController(authenticator service.Authenticator, authorizer
 
 func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, req *chorus.GetAuthenticationModesRequest) (*chorus.GetAuthenticationModesReply, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials: %v", "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	modes := a.authenticator.GetAuthenticationModes()
@@ -76,17 +75,12 @@ func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, re
 // Authenticate extracts the fields from an 'AuthenticationRequest' and passes them to the service.
 func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.Credentials) (*chorus.AuthenticationReply, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid credentials: %v", "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	res, t, err := a.authenticator.Authenticate(ctx, req.Username, req.Password, req.Totp)
 	if err != nil {
-		switch err {
-		case &service.Err2FARequired{}:
-			return nil, status.Errorf(codes.FailedPrecondition, "%v", err)
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
 	expiresDate := time.Now().Add(t)
@@ -94,7 +88,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 
 	header := a.getSetCookieHeader(res, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to set cookie header")
 	}
 
 	return &chorus.AuthenticationReply{Result: &chorus.AuthenticationResult{Token: res}}, nil
@@ -108,7 +102,7 @@ func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.
 
 	res, t, err := a.authenticator.RefreshToken(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "%v", err)
+		return nil, err
 	}
 
 	expiresDate := time.Now().Add(t)
@@ -116,7 +110,7 @@ func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.
 
 	header := a.getSetCookieHeader(res, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to set cookie header")
 	}
 
 	return &chorus.RefreshTokenReply{Result: &chorus.RefreshTokenResult{Token: res}}, nil
@@ -124,12 +118,12 @@ func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.
 
 func (a AuthenticationController) AuthenticateOauth(ctx context.Context, req *chorus.AuthenticateOauthRequest) (*chorus.AuthenticateOauthReply, error) {
 	if req == nil || req.Id == "" {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	uri, err := a.authenticator.AuthenticateOAuth(ctx, req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, err
 	}
 
 	return &chorus.AuthenticateOauthReply{Result: &chorus.AuthenticateOauthResult{RedirectURI: uri}}, nil
@@ -137,12 +131,12 @@ func (a AuthenticationController) AuthenticateOauth(ctx context.Context, req *ch
 
 func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context, req *chorus.AuthenticateOauthRedirectRequest) (*chorus.AuthenticateOauthRedirectReply, error) {
 	if req == nil || req.Id == "" {
-		return nil, status.Errorf(codes.Unauthenticated, "invalid id: %v", "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	token, t, url, err := a.authenticator.OAuthCallback(ctx, req.Id, req.State, req.SessionState, req.Code)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
+		return nil, err
 	}
 
 	expiresDate := time.Now().Add(t)
@@ -150,13 +144,13 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 
 	header := a.getSetCookieHeader(token, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to set cookie header")
 	}
 
 	if url != "" {
 		header := metadata.Pairs("Location", url)
 		if err := grpc.SetHeader(ctx, header); err != nil {
-			return nil, status.Errorf(codes.Internal, "%v", err)
+			return nil, cerr.ErrInternal.Wrap(err, "Unable to set location header")
 		}
 	}
 
@@ -171,12 +165,12 @@ func (a AuthenticationController) Logout(ctx context.Context, req *chorus.Logout
 
 	redirectURL, err := a.authenticator.Logout(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
+		return nil, err
 	}
 
 	header := a.getSetCookieHeader("", "Thu, 01 Jan 1970 00:00:00 GMT")
 	if err := grpc.SetHeader(ctx, header); err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Unable to set cookie header")
 	}
 
 	return &chorus.LogoutReply{RedirectURL: utils.FromString(redirectURL)}, nil
