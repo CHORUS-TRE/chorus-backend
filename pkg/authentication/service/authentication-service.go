@@ -314,6 +314,12 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		usernameClaim = mode.OpenID.UserNameClaim
 	}
 
+	// Get email claim field from config
+	emailClaim := model.DEFAULT_EMAIL_CLAIM
+	if mode.OpenID.EmailClaim != "" {
+		emailClaim = mode.OpenID.EmailClaim
+	}
+
 	// Get username from user info
 	username := getUserInfoString(usernameClaim)
 	if username == "" {
@@ -330,6 +336,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			FirstName:   getUserInfoString(model.DEFAULT_FIRST_NAME_CLAIM),
 			LastName:    getUserInfoString(model.DEFAULT_LAST_NAME_CLAIM),
 			Username:    username,
+			Email:       getUserInfoString(emailClaim),
 			Source:      providerID,
 			Password:    "",
 			Status:      userModel.UserActive,

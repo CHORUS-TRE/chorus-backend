@@ -52,6 +52,8 @@ type (
 
 		Jobs map[string]Job `yaml:"jobs"`
 
+		Jobber Jobber `yaml:"jobber"`
+
 		PPROFEnabled bool   `yaml:"pprof_enabled"`
 		TenantID     uint64 `yaml:"tenant_id"`
 
@@ -323,6 +325,10 @@ type (
 			RequireDataManagerApproval bool   `yaml:"require_data_manager_approval"`
 		} `yaml:"approval_request_service"`
 
+		UserService struct {
+			RequireEmail bool `yaml:"require_email"`
+		} `yaml:"user_service"`
+
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`
@@ -376,6 +382,7 @@ type (
 		FinalURLFormat            string   `yaml:"final_url_format"`
 		LogoutURL                 string   `yaml:"logout_url"`
 		UserNameClaim             string   `yaml:"user_name_claim"`
+		EmailClaim                string   `yaml:"email_claim"`
 		ClientID                  string   `yaml:"client_id"`
 		ClientSecret              string   `yaml:"client_secret"`
 		Scopes                    []string `yaml:"scopes"`
@@ -455,5 +462,12 @@ type (
 		Timeout  time.Duration          `yaml:"timeout"`
 		Interval time.Duration          `yaml:"interval"`
 		Options  map[string]interface{} `yaml:"options"`
+	}
+
+	Jobber struct {
+		Enabled       bool          `yaml:"enabled"`
+		CheckInterval time.Duration `yaml:"check_interval"`
+		Jitter        float64       `yaml:"jitter"` // the actual interval is ±jitter * interval * uniform(0,1)
+		LockStore     string        `yaml:"lock_store"`
 	}
 )

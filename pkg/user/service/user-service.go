@@ -156,6 +156,7 @@ func (u *UserService) UpdateUser(ctx context.Context, req UpdateUserReq) (*model
 	user.FirstName = req.User.FirstName
 	user.LastName = req.User.LastName
 	user.Username = req.User.Username
+	user.Email = req.User.Email
 	user.Source = req.User.Source
 	user.Status = req.User.Status
 
@@ -362,8 +363,12 @@ func (u *UserService) sendMailWithTempPassword(subjectMessage string, tenantID u
 	if subject == "" {
 		subject = subjectMessage
 	}
-	err := u.mailer.Send(ctx, tenantID, []string{user.Username}, subject, u.mailer.GetTemplate(ctx, tenantID, templateKey), mailer.TemporaryPassword{
-		Email:    user.Username,
+	recipient := user.Email
+	if recipient == "" {
+		recipient = user.Username
+	}
+	err := u.mailer.Send(ctx, tenantID, []string{recipient}, subject, u.mailer.GetTemplate(ctx, tenantID, templateKey), mailer.TemporaryPassword{
+		Email:    recipient,
 		Password: password,
 	})
 	if err != nil {
