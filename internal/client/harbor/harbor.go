@@ -77,10 +77,10 @@ func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error)
 
 	var apps []App
 	for _, repo := range repos {
-		name := c.stripProjectPrefix(repo.Name)
-		artifacts, err := c.listArtifacts(name)
+		strippedName := c.stripProjectPrefix(repo.Name)
+		artifacts, err := c.listArtifacts(strippedName)
 		if err != nil {
-			return nil, fmt.Errorf("listing artifacts for %s: %w", name, err)
+			return nil, fmt.Errorf("listing artifacts for %s: %w", strippedName, err)
 		}
 
 		for _, artifact := range artifacts {
@@ -89,18 +89,18 @@ func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error)
 				continue
 			}
 
-			if allTagsExist(existingApps, name, tags) {
+			if allTagsExist(existingApps, repo.Name, tags) {
 				continue
 			}
 
-			labels, err := c.fetchLabels(name, artifact.Digest)
+			labels, err := c.fetchLabels(strippedName, artifact.Digest)
 			if err != nil {
-				return nil, fmt.Errorf("fetching labels for %s@%s: %w", name, artifact.Digest, err)
+				return nil, fmt.Errorf("fetching labels for %s@%s: %w", strippedName, artifact.Digest, err)
 			}
 
 			for _, tag := range tags {
 				apps = append(apps, App{
-					Repository: name,
+					Repository: repo.Name,
 					Tag:        tag,
 					Labels:     labels,
 				})
