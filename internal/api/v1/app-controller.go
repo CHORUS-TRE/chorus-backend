@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
@@ -138,19 +139,21 @@ func groupApps(apps []*chorus.App) []*chorus.App {
 	appVersionMap := make(map[string][]*chorus.App)
 	highestIDMap := make(map[string]*chorus.App)
 	for _, app := range apps {
-		if _, exists := appVersionMap[app.DockerImageName]; !exists {
-			appVersionMap[app.DockerImageName] = []*chorus.App{app}
-			highestIDMap[app.DockerImageName] = app
+		groupingAttribute := getGroupingAttribute(app)
+		if _, exists := appVersionMap[groupingAttribute]; !exists {
+			appVersionMap[groupingAttribute] = []*chorus.App{app}
+			highestIDMap[groupingAttribute] = app
 		}
 
-		if app.Id > highestIDMap[app.DockerImageName].Id {
-			highestIDMap[app.DockerImageName] = app
+		if app.Id > highestIDMap[groupingAttribute].Id {
+			highestIDMap[groupingAttribute] = app
 		}
 	}
 	groupedApps := make([]*chorus.App, 0, len(appVersionMap))
 	for _, app := range highestIDMap {
+		groupingAttribute := getGroupingAttribute(app)
 		groupedApps = append(groupedApps, app)
-		for _, version := range appVersionMap[app.DockerImageName] {
+		for _, version := range appVersionMap[groupingAttribute] {
 			if version.Id != app.Id {
 				appVersion := &chorus.AppVersion{
 					Id:             version.Id,
@@ -162,6 +165,13 @@ func groupApps(apps []*chorus.App) []*chorus.App {
 	}
 
 	return groupedApps
+}
+
+func getGroupingAttribute(app *chorus.App) string {
+	if app.DockerImageName == "apps/kiosk" {
+		return "kiosk-" + strings.ToLower(app.Name)
+	}
+	return app.DockerImageName
 }
 
 // CreateApp extracts the app from the request and passes it to the app service.
