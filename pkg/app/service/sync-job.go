@@ -137,16 +137,6 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 func (j *AppSyncJob) harborAppToModel(ha harbor.App, tenantID, userID uint64) *model.App {
 	labels := ha.Labels
 
-	imageName := labels[labelImageName]
-	if imageName == "" {
-		imageName = ha.Repository
-	}
-
-	imageTag := labels[labelImageTag]
-	if imageTag == "" {
-		imageTag = ha.Tag
-	}
-
 	app := &model.App{
 		TenantID:            tenantID,
 		UserID:              userID,
@@ -154,8 +144,8 @@ func (j *AppSyncJob) harborAppToModel(ha harbor.App, tenantID, userID uint64) *m
 		Description:         labels[labelOCIDescription],
 		Status:              model.AppActive,
 		DockerImageRegistry: j.registry,
-		DockerImageName:     imageName,
-		DockerImageTag:      imageTag,
+		DockerImageName:     ha.Repository,
+		DockerImageTag:      ha.Tag,
 		ShmSize:             labels[labelShmSize],
 		MaxCPU:              labels[labelMaxCPU],
 		MinCPU:              labels[labelMinCPU],
