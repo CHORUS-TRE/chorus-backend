@@ -336,6 +336,10 @@ type (
 			RequireDataManagerApproval bool   `yaml:"require_data_manager_approval"`
 		} `yaml:"approval_request_service"`
 
+		UserService struct {
+			RequireEmail bool `yaml:"require_email"`
+		} `yaml:"user_service"`
+
 		Steward struct {
 			InitTenant struct {
 				Enabled  bool   `yaml:"enabled"`
@@ -389,6 +393,7 @@ type (
 		FinalURLFormat            string   `yaml:"final_url_format"`
 		LogoutURL                 string   `yaml:"logout_url"`
 		UserNameClaim             string   `yaml:"user_name_claim"`
+		EmailClaim                string   `yaml:"email_claim"`
 		ClientID                  string   `yaml:"client_id"`
 		ClientSecret              string   `yaml:"client_secret"`
 		Scopes                    []string `yaml:"scopes"`

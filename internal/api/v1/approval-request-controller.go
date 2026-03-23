@@ -86,6 +86,12 @@ func (c ApprovalRequestController) ListApprovalRequests(ctx context.Context, req
 		if req.Filter.PendingApproval != nil {
 			filter.PendingApproval = req.Filter.PendingApproval
 		}
+		if req.Filter.ApproverId != nil {
+			filter.ApproverID = req.Filter.ApproverId
+		}
+		if req.Filter.RequesterId != nil {
+			filter.RequesterID = req.Filter.RequesterId
+		}
 	}
 
 	res, paginationRes, err := c.approvalRequest.ListApprovalRequests(ctx, tenantID, userID, &pagination, filter)
@@ -108,6 +114,37 @@ func (c ApprovalRequestController) ListApprovalRequests(ctx context.Context, req
 	}
 
 	return &chorus.ListApprovalRequestsReply{Result: &chorus.ListApprovalRequestsResult{ApprovalRequests: requests}, Pagination: paginationResult}, nil
+}
+
+func (c ApprovalRequestController) CountMyApprovalRequests(ctx context.Context, req *chorus.CountMyApprovalRequestsRequest) (*chorus.CountMyApprovalRequestsReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract user id from jwt-token")
+	}
+
+	counts, err := c.approvalRequest.CountMyApprovalRequests(ctx, tenantID, userID)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CountMyApprovalRequests': %v", err.Error())
+	}
+
+	return &chorus.CountMyApprovalRequestsReply{
+		Result: &chorus.CountMyApprovalRequestsResult{
+			Total:          counts.Total,
+			TotalApprover:  counts.TotalApprover,
+			TotalRequester: counts.TotalRequester,
+			CountByStatus:  counts.CountByStatus,
+			CountByType:    counts.CountByType,
+		},
+	}, nil
 }
 
 func (c ApprovalRequestController) CreateDataExtractionRequest(ctx context.Context, req *chorus.CreateDataExtractionRequestRequest) (*chorus.CreateDataExtractionRequestReply, error) {

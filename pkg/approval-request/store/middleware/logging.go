@@ -79,6 +79,32 @@ func (s *approvalRequestStorageLogging) ListApprovalRequests(ctx context.Context
 	return res, paginationRes, nil
 }
 
+func (s *approvalRequestStorageLogging) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	log := logger.With(s.logger,
+		zap.String("method", "CountMyApprovalRequests"),
+		zap.Uint64("tenant_id", tenantID),
+		zap.Uint64("user_id", userID),
+	)
+	log.Debug(ctx, logger.LoggerMessageRequestStarted)
+
+	now := time.Now()
+
+	res, err := s.next.CountMyApprovalRequests(ctx, tenantID, userID)
+	if err != nil {
+		log.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	log.Debug(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("total", res.Total),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (s *approvalRequestStorageLogging) CreateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error) {
 	log := logger.With(s.logger,
 		zap.String("method", "CreateApprovalRequest"),

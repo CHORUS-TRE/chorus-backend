@@ -2,10 +2,12 @@ package logger
 
 import (
 	"context"
+	"errors"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/correlation"
 )
 
@@ -51,6 +53,26 @@ func appendContextFields(ctx context.Context, fields []zapcore.Field) []zapcore.
 	return fields
 }
 
+func appendErrorFields(ctx context.Context, fields []zapcore.Field) []zapcore.Field {
+	stackTrace := ""
+	for _, field := range fields {
+		if field.Type == zapcore.ErrorType {
+			if err, ok := field.Interface.(error); ok {
+				var cErr *cerr.ChorusError
+				if errors.As(err, &cErr) {
+					stackTrace += cErr.StackTrace()
+					fields = append(fields, zap.Error(cErr.CausedBy))
+				}
+			}
+		}
+	}
+	if stackTrace != "" {
+		fields = append(fields, zap.String("stacktrace", stackTrace))
+	}
+
+	return fields
+}
+
 func (l *ContextLogger) cleanDuplicateFields(fields []zapcore.Field) []zapcore.Field {
 
 	m := map[string]struct{}{}
@@ -84,12 +106,14 @@ func (l *ContextLogger) Debug(ctx context.Context, msg string, fields ...zapcore
 
 func (l *ContextLogger) Error(ctx context.Context, msg string, fields ...zapcore.Field) {
 	ctxFields := appendContextFields(ctx, fields)
+	ctxFields = appendErrorFields(ctx, ctxFields)
 	ctxFields = l.cleanDuplicateFields(ctxFields)
 	l.loggerCallerSkip.Error(msg, ctxFields...)
 }
 
 func (l *ContextLogger) Fatal(ctx context.Context, msg string, fields ...zapcore.Field) {
 	ctxFields := appendContextFields(ctx, fields)
+	ctxFields = appendErrorFields(ctx, ctxFields)
 	ctxFields = l.cleanDuplicateFields(ctxFields)
 	l.loggerCallerSkip.Fatal(msg, ctxFields...)
 }
@@ -102,6 +126,7 @@ func (l *ContextLogger) Info(ctx context.Context, msg string, fields ...zapcore.
 
 func (l *ContextLogger) Panic(ctx context.Context, msg string, fields ...zapcore.Field) {
 	ctxFields := appendContextFields(ctx, fields)
+	ctxFields = appendErrorFields(ctx, ctxFields)
 	ctxFields = l.cleanDuplicateFields(ctxFields)
 	l.loggerCallerSkip.Panic(msg, ctxFields...)
 }

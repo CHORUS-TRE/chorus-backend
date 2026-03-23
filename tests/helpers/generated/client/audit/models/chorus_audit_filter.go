@@ -22,6 +22,9 @@ type ChorusAuditFilter struct {
 	// action
 	Action string `json:"action,omitempty"`
 
+	// actor Id
+	ActorID string `json:"actorId,omitempty"`
+
 	// from time
 	// Format: date-time
 	FromTime strfmt.DateTime `json:"fromTime,omitempty"`

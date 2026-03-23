@@ -27,19 +27,32 @@ func NewApprovalRequestStorage(db *sqlx.DB) *ApprovalRequestStorage {
 }
 
 type approvalRequestRow struct {
-	ID           uint64        `db:"id"`
-	TenantID     uint64        `db:"tenantid"`
-	RequesterID  uint64        `db:"requesterid"`
-	Type         string        `db:"type"`
-	Status       string        `db:"status"`
-	Title        string        `db:"title"`
-	Description  string        `db:"description"`
-	Details      []byte        `db:"details"`
-	ApproverIDs  pq.Int64Array `db:"approverids"`
-	ApprovedByID *uint64       `db:"approvedbyid"`
-	CreatedAt    time.Time     `db:"createdat"`
-	UpdatedAt    time.Time     `db:"updatedat"`
-	ApprovedAt   *time.Time    `db:"approvedat"`
+	ID              uint64        `db:"id"`
+	TenantID        uint64        `db:"tenantid"`
+	RequesterID     uint64        `db:"requesterid"`
+	Type            string        `db:"type"`
+	Status          string        `db:"status"`
+	Title           string        `db:"title"`
+	Description     string        `db:"description"`
+	Details         []byte        `db:"details"`
+	ApproverIDs     pq.Int64Array `db:"approverids"`
+	ApprovedByID    *uint64       `db:"approvedbyid"`
+	AutoApproved    bool          `db:"autoapproved"`
+	ApprovalMessage string        `db:"approvalmessage"`
+	CreatedAt       time.Time     `db:"createdat"`
+	UpdatedAt       time.Time     `db:"updatedat"`
+	ApprovedAt      *time.Time    `db:"approvedat"`
+}
+
+type approvalRequestCountsRow struct {
+	Total          uint64 `db:"total"`
+	TotalApprover  uint64 `db:"total_approver"`
+	TotalRequester uint64 `db:"total_requester"`
+}
+
+type approvalRequestGroupedCountRow struct {
+	Key   string `db:"key"`
+	Count uint64 `db:"count"`
 }
 
 func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
@@ -51,25 +64,27 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 	}
 
 	return &model.ApprovalRequest{
-		ID:           r.ID,
-		TenantID:     r.TenantID,
-		RequesterID:  r.RequesterID,
-		Type:         model.ApprovalRequestType(r.Type),
-		Status:       model.ApprovalRequestStatus(r.Status),
-		Title:        r.Title,
-		Description:  r.Description,
-		Details:      details,
-		ApproverIDs:  storage.PqInt64ToUint64(r.ApproverIDs),
-		ApprovedByID: r.ApprovedByID,
-		CreatedAt:    r.CreatedAt,
-		UpdatedAt:    r.UpdatedAt,
-		ApprovedAt:   r.ApprovedAt,
+		ID:              r.ID,
+		TenantID:        r.TenantID,
+		RequesterID:     r.RequesterID,
+		Type:            model.ApprovalRequestType(r.Type),
+		Status:          model.ApprovalRequestStatus(r.Status),
+		Title:           r.Title,
+		Description:     r.Description,
+		Details:         details,
+		ApproverIDs:     storage.PqInt64ToUint64(r.ApproverIDs),
+		ApprovedByID:    r.ApprovedByID,
+		AutoApproved:    r.AutoApproved,
+		ApprovalMessage: r.ApprovalMessage,
+		CreatedAt:       r.CreatedAt,
+		UpdatedAt:       r.UpdatedAt,
+		ApprovedAt:      r.ApprovedAt,
 	}, nil
 }
 
 func (s *ApprovalRequestStorage) GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error) {
 	const query = `
-		SELECT id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, createdat, updatedat, approvedat
+		SELECT id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		FROM approval_requests
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
 	`
@@ -114,6 +129,16 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 		whereClause += " AND status = 'pending'"
 	}
 
+	if filter.ApproverID != nil {
+		args = append(args, *filter.ApproverID)
+		whereClause += fmt.Sprintf(" AND $%d = ANY(approverids)", len(args))
+	}
+
+	if filter.RequesterID != nil {
+		args = append(args, *filter.RequesterID)
+		whereClause += fmt.Sprintf(" AND requesterid = $%d", len(args))
+	}
+
 	countQuery := "SELECT COUNT(*) FROM approval_requests " + whereClause
 	var totalCount int
 	if err := s.db.GetContext(ctx, &totalCount, countQuery, args...); err != nil {
@@ -121,7 +146,7 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 	}
 
 	selectQuery := `
-		SELECT id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, createdat, updatedat, approvedat
+		SELECT id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		FROM approval_requests ` + whereClause
 
 	paginationClause, validatedPagination := storage.BuildPaginationClause(pagination, model.ApprovalRequest{})
@@ -153,6 +178,73 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 	return requests, paginationRes, nil
 }
 
+func newApprovalRequestStatusCountMap() map[string]uint64 {
+	counts := make(map[string]uint64, len(model.ApprovalRequestStatuses()))
+	for _, status := range model.ApprovalRequestStatuses() {
+		counts[string(status)] = 0
+	}
+	return counts
+}
+
+func newApprovalRequestTypeCountMap() map[string]uint64 {
+	counts := make(map[string]uint64, len(model.ApprovalRequestTypes()))
+	for _, requestType := range model.ApprovalRequestTypes() {
+		counts[string(requestType)] = 0
+	}
+	return counts
+}
+
+func (s *ApprovalRequestStorage) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	const baseWhereClause = `
+		FROM approval_requests
+		WHERE tenantid = $1 AND deletedat IS NULL AND (requesterid = $2 OR $2 = ANY(approverids))
+	`
+
+	var summary approvalRequestCountsRow
+	if err := s.db.GetContext(ctx, &summary, `
+		SELECT
+			COUNT(*) AS total,
+			COUNT(*) FILTER (WHERE $2 = ANY(approverids)) AS total_approver,
+			COUNT(*) FILTER (WHERE requesterid = $2) AS total_requester
+		`+baseWhereClause, tenantID, userID); err != nil {
+		return nil, fmt.Errorf("unable to count approval requests: %w", err)
+	}
+
+	countByStatus := newApprovalRequestStatusCountMap()
+	var statusRows []approvalRequestGroupedCountRow
+	if err := s.db.SelectContext(ctx, &statusRows, `
+		SELECT status AS key, COUNT(*) AS count
+		`+baseWhereClause+`
+		GROUP BY status
+	`, tenantID, userID); err != nil {
+		return nil, fmt.Errorf("unable to count approval requests by status: %w", err)
+	}
+	for _, row := range statusRows {
+		countByStatus[row.Key] = row.Count
+	}
+
+	countByType := newApprovalRequestTypeCountMap()
+	var typeRows []approvalRequestGroupedCountRow
+	if err := s.db.SelectContext(ctx, &typeRows, `
+		SELECT type AS key, COUNT(*) AS count
+		`+baseWhereClause+`
+		GROUP BY type
+	`, tenantID, userID); err != nil {
+		return nil, fmt.Errorf("unable to count approval requests by type: %w", err)
+	}
+	for _, row := range typeRows {
+		countByType[row.Key] = row.Count
+	}
+
+	return &model.ApprovalRequestCounts{
+		Total:          summary.Total,
+		TotalApprover:  summary.TotalApprover,
+		TotalRequester: summary.TotalRequester,
+		CountByStatus:  countByStatus,
+		CountByType:    countByType,
+	}, nil
+}
+
 func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error) {
 	detailsJSON, err := json.Marshal(request.Details)
 	if err != nil {
@@ -160,9 +252,9 @@ func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tena
 	}
 
 	const query = `
-		INSERT INTO approval_requests (tenantid, requesterid, type, status, title, description, details, approverids, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
-		RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, createdat, updatedat, approvedat
+		INSERT INTO approval_requests (tenantid, requesterid, type, status, title, description, details, approverids, autoapproved, approvalmessage, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
 	`
 
 	var row approvalRequestRow
@@ -175,6 +267,8 @@ func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tena
 		request.Description,
 		detailsJSON,
 		storage.Uint64ToPqInt64(request.ApproverIDs),
+		request.AutoApproved,
+		request.ApprovalMessage,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create approval request: %w", err)
@@ -195,9 +289,9 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 	if request.Status == model.ApprovalRequestStatusApproved || request.Status == model.ApprovalRequestStatusRejected {
 		query = `
 			UPDATE approval_requests
-			SET type = $3, status = $4, title = $5, description = $6, details = $7, approverids = $8, approvedbyid = $9, approvedat = NOW(), updatedat = NOW()
+			SET type = $3, status = $4, title = $5, description = $6, details = $7, approverids = $8, approvedbyid = $9, autoapproved = $10, approvalmessage = $11, approvedat = NOW(), updatedat = NOW()
 			WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-			RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, createdat, updatedat, approvedat
+			RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		`
 		args = []interface{}{
 			tenantID,
@@ -209,13 +303,15 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 			detailsJSON,
 			storage.Uint64ToPqInt64(request.ApproverIDs),
 			request.ApprovedByID,
+			request.AutoApproved,
+			request.ApprovalMessage,
 		}
 	} else {
 		query = `
 			UPDATE approval_requests
-			SET type = $3, status = $4, title = $5, description = $6, details = $7, approverids = $8, updatedat = NOW()
+			SET type = $3, status = $4, title = $5, description = $6, details = $7, approverids = $8, autoapproved = $9, approvalmessage = $10, updatedat = NOW()
 			WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-			RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, createdat, updatedat, approvedat
+			RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		`
 		args = []interface{}{
 			tenantID,
@@ -226,6 +322,8 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 			request.Description,
 			detailsJSON,
 			storage.Uint64ToPqInt64(request.ApproverIDs),
+			request.AutoApproved,
+			request.ApprovalMessage,
 		}
 	}
 

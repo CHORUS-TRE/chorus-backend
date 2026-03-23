@@ -56,6 +56,8 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	ApprovalRequestServiceApproveApprovalRequest(params *ApprovalRequestServiceApproveApprovalRequestParams, opts ...ClientOption) (*ApprovalRequestServiceApproveApprovalRequestOK, error)
 
+	ApprovalRequestServiceCountMyApprovalRequests(params *ApprovalRequestServiceCountMyApprovalRequestsParams, opts ...ClientOption) (*ApprovalRequestServiceCountMyApprovalRequestsOK, error)
+
 	ApprovalRequestServiceCreateDataExtractionRequest(params *ApprovalRequestServiceCreateDataExtractionRequestParams, opts ...ClientOption) (*ApprovalRequestServiceCreateDataExtractionRequestOK, error)
 
 	ApprovalRequestServiceCreateDataTransferRequest(params *ApprovalRequestServiceCreateDataTransferRequestParams, opts ...ClientOption) (*ApprovalRequestServiceCreateDataTransferRequestOK, error)
@@ -107,6 +109,45 @@ func (a *Client) ApprovalRequestServiceApproveApprovalRequest(params *ApprovalRe
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ApprovalRequestServiceApproveApprovalRequestDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+ApprovalRequestServiceCountMyApprovalRequests counts my approval requests
+
+This endpoint returns the count of approval requests for the current user
+*/
+func (a *Client) ApprovalRequestServiceCountMyApprovalRequests(params *ApprovalRequestServiceCountMyApprovalRequestsParams, opts ...ClientOption) (*ApprovalRequestServiceCountMyApprovalRequestsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewApprovalRequestServiceCountMyApprovalRequestsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "ApprovalRequestService_CountMyApprovalRequests",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/approval-requests/mine/count",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ApprovalRequestServiceCountMyApprovalRequestsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ApprovalRequestServiceCountMyApprovalRequestsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ApprovalRequestServiceCountMyApprovalRequestsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

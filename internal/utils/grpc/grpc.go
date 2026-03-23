@@ -7,14 +7,12 @@ import (
 	val "github.com/go-playground/validator/v10"
 	"google.golang.org/grpc/codes"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
-	auth_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/service"
-	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
 
 func ErrorCode(err error) codes.Code {
-	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, database.ErrNoRowsUpdated) || errors.Is(err, database.ErrNoRowsDeleted) {
+	if errors.Is(err, sql.ErrNoRows) || errors.Is(err, cerr.ErrNoRowsUpdated) || errors.Is(err, cerr.ErrNoRowsDeleted) {
 		return codes.NotFound
 	}
 
@@ -29,12 +27,10 @@ func ErrorCode(err error) codes.Code {
 	}
 
 	switch cause.(type) {
-	case *val.InvalidValidationError, val.ValidationErrors, *service.InvalidParametersErr, *user_service.ErrWeakPassword:
+	case *val.InvalidValidationError, val.ValidationErrors, *service.InvalidParametersErr:
 		return codes.InvalidArgument
 	case *service.ResourceAlreadyExistsErr:
 		return codes.AlreadyExists
-	case *auth_service.ErrUnauthorized, *user_service.ErrUnauthorized:
-		return codes.Unauthenticated
 	default:
 		return codes.Internal
 	}

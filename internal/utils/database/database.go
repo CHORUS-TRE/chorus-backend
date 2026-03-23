@@ -3,16 +3,10 @@ package database
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
-)
-
-var (
-	ErrNoRowsUpdated = errors.New("database: no rows updated")
-	ErrNoRowsDeleted = errors.New("database: no rows deleted")
 )
 
 // Meant to be a constant, but cannot declare a nil const.

@@ -32,4 +32,5 @@ type SystemNotification struct {
 
 type ApprovalRequestNotification struct {
 	ApprovalRequestID uint64 `json:"approval_request_id,omitempty"`
+	Autoapproved      bool   `json:"autoapproved,omitempty"`
 }

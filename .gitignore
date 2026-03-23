@@ -25,7 +25,7 @@
 go.work
 go.work.sum
 
-# all junit.xml files
+# All junit.xml files
 junit.xml
 
 # env file
@@ -37,7 +37,7 @@ docker/.diskfilestore
 
 local-doc/**/*
 
-# sonar local setup
+# Sonar local setup
 sonar-local-project.properties
 
 # Chatmodes

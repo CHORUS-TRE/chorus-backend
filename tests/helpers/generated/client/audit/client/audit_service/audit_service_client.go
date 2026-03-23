@@ -54,6 +54,8 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	AuditServiceListActorAudit(params *AuditServiceListActorAuditParams, opts ...ClientOption) (*AuditServiceListActorAuditOK, error)
+
 	AuditServiceListPlatformAudit(params *AuditServiceListPlatformAuditParams, opts ...ClientOption) (*AuditServiceListPlatformAuditOK, error)
 
 	AuditServiceListUserAudit(params *AuditServiceListUserAuditParams, opts ...ClientOption) (*AuditServiceListUserAuditOK, error)
@@ -63,6 +65,45 @@ type ClientService interface {
 	AuditServiceListWorkspaceAudit(params *AuditServiceListWorkspaceAuditParams, opts ...ClientOption) (*AuditServiceListWorkspaceAuditOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+AuditServiceListActorAudit lists audit entries for actions performed by a specific user actor
+
+This endpoint returns audit entries for actions performed by a specific user
+*/
+func (a *Client) AuditServiceListActorAudit(params *AuditServiceListActorAuditParams, opts ...ClientOption) (*AuditServiceListActorAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuditServiceListActorAuditParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuditService_ListActorAudit",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/audit/actors/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuditServiceListActorAuditReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuditServiceListActorAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuditServiceListActorAuditDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -105,9 +146,9 @@ func (a *Client) AuditServiceListPlatformAudit(params *AuditServiceListPlatformA
 }
 
 /*
-AuditServiceListUserAudit lists user audit entries
+AuditServiceListUserAudit lists audit entries for actions performed on a specific user
 
-This endpoint returns audit entries for a specific user
+This endpoint returns audit entries where the specified user was acted upon
 */
 func (a *Client) AuditServiceListUserAudit(params *AuditServiceListUserAuditParams, opts ...ClientOption) (*AuditServiceListUserAuditOK, error) {
 	// TODO: Validate the params before sending

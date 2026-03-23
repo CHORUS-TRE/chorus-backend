@@ -215,6 +215,37 @@ paths:
             $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}:
+    delete:
+      summary: Remove a user's role in a workspace
+      description: This endpoint removes a user's role in a workspace
+      operationId: WorkspaceService_RemoveUserRoleInWorkspace
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusRemoveUserRoleInWorkspaceReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: userId
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: roleName
+          in: path
+          required: true
+          type: string
+      tags:
+        - WorkspaceService
 definitions:
   WorkspaceServiceManageUserRoleInWorkspaceBody:
     type: object
@@ -319,6 +350,16 @@ definitions:
       result:
         $ref: '#/definitions/chorusRemoveUserFromWorkspaceResult'
   chorusRemoveUserFromWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
+  chorusRemoveUserRoleInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusRemoveUserRoleInWorkspaceResult'
+  chorusRemoveUserRoleInWorkspaceResult:
     type: object
     properties:
       workspace:

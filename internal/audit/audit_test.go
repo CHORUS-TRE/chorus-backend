@@ -21,7 +21,7 @@ func TestNewEntry(t *testing.T) {
 		action         model.AuditAction
 		opts           []Option
 		expectedTenant uint64
-		expectedUser   uint64
+		expectedActor  uint64
 		expectedCID    string
 		expectedDesc   string
 		expectedDetail map[string]any
@@ -32,7 +32,7 @@ func TestNewEntry(t *testing.T) {
 			action:         model.AuditActionUserLogin,
 			opts:           nil,
 			expectedTenant: 0,
-			expectedUser:   0,
+			expectedActor:  0,
 			expectedCID:    "",
 			expectedDesc:   "",
 			expectedDetail: map[string]any{},
@@ -47,7 +47,7 @@ func TestNewEntry(t *testing.T) {
 			action:         model.AuditActionUserCreate,
 			opts:           nil,
 			expectedTenant: 123,
-			expectedUser:   456,
+			expectedActor:  456,
 			expectedCID:    "",
 			expectedDesc:   "",
 			expectedDetail: map[string]any{},
@@ -59,7 +59,7 @@ func TestNewEntry(t *testing.T) {
 			action:         model.AuditActionWorkspaceCreate,
 			opts:           nil,
 			expectedTenant: 0,
-			expectedUser:   0,
+			expectedActor:  0,
 			expectedCID:    "test-correlation-id",
 			expectedDesc:   "",
 			expectedDetail: map[string]any{},
@@ -79,15 +79,16 @@ func TestNewEntry(t *testing.T) {
 				WithDescription("Test description"),
 				WithWorkspaceID(111),
 				WithWorkbenchID(222),
-				WithDetail("app_id", uint64(333)),
+				WithUserID(333),
+				WithDetail("app_id", uint64(444)),
 				WithDetail("status", "running"),
 			},
 			expectedTenant: 999,
-			expectedUser:   888,
+			expectedActor:  888,
 			expectedCID:    "full-cid",
 			expectedDesc:   "Test description",
 			expectedDetail: map[string]any{
-				"app_id": uint64(333),
+				"app_id": uint64(444),
 				"status": "running",
 			},
 		},
@@ -101,7 +102,7 @@ func TestNewEntry(t *testing.T) {
 
 			assert.Equal(t, tt.action, entry.Action)
 			assert.Equal(t, tt.expectedTenant, entry.TenantID)
-			assert.Equal(t, tt.expectedUser, entry.UserID)
+			assert.Equal(t, tt.expectedActor, entry.ActorID)
 			assert.Equal(t, tt.expectedCID, entry.CorrelationID)
 			assert.Equal(t, tt.expectedDesc, entry.Description)
 			assert.Equal(t, tt.expectedDetail, map[string]any(entry.Details))
@@ -125,6 +126,14 @@ func TestWithWorkbenchID(t *testing.T) {
 	opt(entry)
 
 	assert.Equal(t, uint64(67890), entry.WorkbenchID)
+}
+
+func TestWithUserID(t *testing.T) {
+	entry := &model.AuditEntry{}
+	opt := WithUserID(54321)
+	opt(entry)
+
+	assert.Equal(t, uint64(54321), entry.UserID)
 }
 
 func TestWithDescription(t *testing.T) {
@@ -220,6 +229,7 @@ func TestMultipleOptions(t *testing.T) {
 		WithDescription("Created workbench"),
 		WithWorkspaceID(100),
 		WithWorkbenchID(200),
+		WithUserID(300),
 		WithDetail("name", "Test Workbench"),
 		WithDetail("status", "active"),
 		WithDetail("grpc_method", "/chorus.WorkbenchService/CreateWorkbench"),
@@ -227,17 +237,18 @@ func TestMultipleOptions(t *testing.T) {
 
 	assert.Equal(t, model.AuditActionWorkbenchCreate, entry.Action)
 	assert.Equal(t, uint64(1), entry.TenantID)
-	assert.Equal(t, uint64(2), entry.UserID)
-	assert.Equal(t, "testuser", entry.Username)
+	assert.Equal(t, uint64(2), entry.ActorID)
+	assert.Equal(t, "testuser", entry.ActorUsername)
 	assert.Equal(t, "Created workbench", entry.Description)
 	assert.Equal(t, uint64(100), entry.WorkspaceID)
 	assert.Equal(t, uint64(200), entry.WorkbenchID)
+	assert.Equal(t, uint64(300), entry.UserID)
 	assert.Equal(t, "Test Workbench", entry.Details["name"])
 	assert.Equal(t, "active", entry.Details["status"])
 	assert.Equal(t, "/chorus.WorkbenchService/CreateWorkbench", entry.Details["grpc_method"])
 }
 
-func TestNewEntry_PreservesUsername(t *testing.T) {
+func TestNewEntry_PreservesActorUsername(t *testing.T) {
 	ctx := context.WithValue(context.Background(), jwt_model.JWTClaimsContextKey, &jwt_model.JWTClaims{
 		TenantID: 1,
 		ID:       2,
@@ -246,7 +257,7 @@ func TestNewEntry_PreservesUsername(t *testing.T) {
 
 	entry := NewEntry(ctx, model.AuditActionUserLogin)
 
-	assert.Equal(t, "john.doe@example.com", entry.Username)
+	assert.Equal(t, "john.doe@example.com", entry.ActorUsername)
 }
 
 func TestRecord_CreatesEntryWithoutCancel(t *testing.T) {
@@ -256,7 +267,7 @@ func TestRecord_CreatesEntryWithoutCancel(t *testing.T) {
 			// Verify that the entry was created with expected values
 			assert.Equal(t, model.AuditActionUserLogin, entry.Action)
 			assert.Equal(t, "User logged in", entry.Description)
-			assert.Equal(t, "testuser", entry.Username)
+			assert.Equal(t, "testuser", entry.ActorUsername)
 			return entry, nil
 		},
 	}

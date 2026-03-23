@@ -22,6 +22,8 @@ message User {
 
     google.protobuf.Timestamp createdAt = 11;
     google.protobuf.Timestamp updatedAt = 12;
+
+    string email = 14;
 }
 
 message Role {

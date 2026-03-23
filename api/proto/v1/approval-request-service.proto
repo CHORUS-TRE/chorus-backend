@@ -40,6 +40,20 @@ message ApprovalRequestFilter {
     repeated ApprovalRequestType typesIn = 2;
     optional uint64 sourceWorkspaceId = 3;
     optional bool pendingApproval = 4;
+    optional uint64 approverId = 5;
+    optional uint64 requesterId = 6;
+}
+
+message CountMyApprovalRequestsRequest {}
+message CountMyApprovalRequestsReply {
+    CountMyApprovalRequestsResult result = 1;
+}
+message CountMyApprovalRequestsResult {
+    uint64 total = 1;
+    uint64 totalApprover = 2;
+    uint64 totalRequester = 3;
+    map<string, uint64> countByStatus = 4;
+    map<string, uint64> countByType = 5;
 }
 
 message GetApprovalRequestRequest {
@@ -131,6 +145,17 @@ service ApprovalRequestService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List approval requests";
             description: "This endpoint returns a list of approval requests";
+            tags: "ApprovalRequestService";
+        };
+    };
+
+    rpc CountMyApprovalRequests(CountMyApprovalRequestsRequest) returns (CountMyApprovalRequestsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/approval-requests/mine/count"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Count my approval requests";
+            description: "This endpoint returns the count of approval requests for the current user";
             tags: "ApprovalRequestService";
         };
     };

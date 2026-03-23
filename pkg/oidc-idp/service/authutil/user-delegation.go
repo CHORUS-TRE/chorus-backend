@@ -67,7 +67,7 @@ func UserDelegationHandleGrantFunc(
 			gi.AdditionalTokenClaims[goidc.ClaimPreferredUsername] = user.Username
 		}
 		if slices.Contains(claims, "email") {
-			gi.AdditionalTokenClaims[goidc.ClaimEmail] = user.Username
+			gi.AdditionalTokenClaims[goidc.ClaimEmail] = user.Email
 		}
 		if slices.Contains(claims, "name") {
 			gi.AdditionalTokenClaims[goidc.ClaimName] = user.FirstName + " " + user.LastName

@@ -12,13 +12,14 @@ type AuditEntry struct {
 	ID uint64
 
 	TenantID      uint64
-	UserID        uint64
-	Username      string
+	ActorID       uint64 // Who performed the action (from JWT)
+	ActorUsername string // Username of the actor (from JWT)
 	CorrelationID string // To correlate with other logs
 
 	Action      AuditAction  // Type of action performed
-	WorkspaceID uint64       // ID of the workspace
-	WorkbenchID uint64       // ID of the workbench
+	WorkspaceID uint64       // Context: workspace acted upon
+	WorkbenchID uint64       // Context: workbench acted upon
+	UserID      uint64       // Context: user acted upon
 	Description string       // Human readable description of the action
 	Details     AuditDetails // JSONB for flexible querying
 
@@ -53,6 +54,7 @@ func (d AuditDetails) Value() (driver.Value, error) {
 
 // AuditFilter for querying audit entries
 type AuditFilter struct {
+	ActorID     uint64
 	UserID      uint64
 	WorkspaceID uint64
 	WorkbenchID uint64

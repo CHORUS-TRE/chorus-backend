@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 
-	choruserrors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -16,15 +18,22 @@ func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 	}
 
 	// Check if the error is a ChorusError
-	var chorusErr *choruserrors.ChorusError
-	if errors.As(err, &chorusErr) {
-		// TODO: log causedBy error
-		return nil, chorusErr.ToGRPCStatus().Err()
+	var cErr *cerr.ChorusError
+	if errors.As(err, &cErr) {
+		logger.TechLog.Error(ctx, "request failed",
+			zap.String("method", info.FullMethod),
+			zap.String("code", cErr.ChorusCode.String()),
+			zap.String("message", cErr.Message),
+			zap.Error(cErr.CausedBy),
+			zap.String("stacktrace", cErr.StackTrace()),
+		)
+		return nil, cErr.ToGRPCStatus().Err()
 	}
 
+	// If it's already a gRPC status error, return it as is
 	if _, ok := status.FromError(err); ok {
 		return nil, err // Already a gRPC error
 	}
 
-	return nil, choruserrors.NewInternalError("An unexpected error occurred", err).ToGRPCStatus().Err()
+	return nil, cerr.ErrInternal.Wrap(err, "An unexpected error occurred.").ToGRPCStatus().Err()
 }

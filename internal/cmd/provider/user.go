@@ -30,7 +30,7 @@ func ProvideUser() service.Userer {
 			ProvideNotificationStore(),
 		)
 		user = service_mw.Logging(logger.BizLog)(user)
-		user = service_mw.Validation(ProvideValidator())(user)
+		user = service_mw.Validation(ProvideValidator(), cfg.Services.UserService.RequireEmail)(user)
 		user = service_mw.UserCaching(logger.TechLog)(user)
 	})
 	return user

@@ -154,6 +154,31 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 	return c.next.ManageUserRoleInWorkspace(ctx, req)
 }
 
+func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.Context, req *chorus.RemoveUserRoleInWorkspaceRequest) (*chorus.RemoveUserRoleInWorkspaceReply, error) {
+	roleName, err := authorization.ToRoleName(req.RoleName)
+	if err != nil {
+		return nil, fmt.Errorf("invalid role name: %w", err)
+	}
+
+	if !authorization.RoleIn(roleName, authorization.GetWorkspaceRoles()) {
+		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
+	}
+
+	if roleName == authorization.RoleWorkspaceDataManager {
+		err = c.IsAuthorized(ctx, authorization.PermissionManageUsersDataRoleInWorkspace, authorization.WithWorkspace(req.Id))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.next.RemoveUserRoleInWorkspace(ctx, req)
+}
+
 func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {

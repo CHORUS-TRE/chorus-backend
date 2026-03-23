@@ -150,6 +150,7 @@ func notificationFromBusiness(r *model.Notification) (*chorus.Notification, erro
 				content.Content = &chorus.NotificationContent_ApprovalRequestNotification{
 					ApprovalRequestNotification: &chorus.ApprovalRequestNotification{
 						ApprovalRequestId: r.Content.ApprovalRequest.ApprovalRequestID,
+						Autoapproved:      r.Content.ApprovalRequest.Autoapproved,
 					},
 				}
 			}
