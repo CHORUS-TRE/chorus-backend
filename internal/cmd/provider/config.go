@@ -84,7 +84,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.jobber.lock_store", "postgres")
 
 	// Jobs
-	v.SetDefault("daemon.jobs.app-sync.enabled", true)
+	v.SetDefault("daemon.jobs.app-sync.enabled", false)
 	v.SetDefault("daemon.jobs.app-sync.interval", 10*time.Minute)
 	v.SetDefault("daemon.jobs.app-sync.timeout", 30*time.Minute)
 	v.SetDefault("daemon.jobs.app-sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
