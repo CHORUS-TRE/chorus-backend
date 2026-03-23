@@ -27,6 +27,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 // List Apps
 message ListAppsRequest {
     PaginationQuery pagination = 1;
+    bool disableGrouping = 2;
 }
 message ListAppsReply {
     ListAppsResult result = 1;

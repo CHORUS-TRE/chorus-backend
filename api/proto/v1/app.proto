@@ -11,12 +11,14 @@ message App {
     uint64 userId = 3;
     
     string name = 4;
-    string description = 6;
-    string status = 7;
+    string description = 5;
+    string status = 6;
     
-    string dockerImageRegistry = 8;
-    string dockerImageName = 9;
-    string dockerImageTag = 10;
+    string dockerImageRegistry = 7;
+    string dockerImageName = 8;
+    string dockerImageTag = 9;
+
+    repeated AppVersion groupedVersions = 10;
 
     string shmSize = 11;
     string maxCPU = 12;
@@ -33,4 +35,9 @@ message App {
 
     google.protobuf.Timestamp createdAt = 22;
     google.protobuf.Timestamp updatedAt = 23;
+}
+
+message AppVersion {
+    uint64 id = 1;
+    string dockerImageTag = 8;
 }

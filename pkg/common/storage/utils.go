@@ -51,8 +51,42 @@ func SortTypeToString(sortType string, model common.Sortable) string {
 	return sortType
 }
 
+type PaginationConfig struct {
+	DefaultLimit uint64
+	MaxLimit     uint64
+}
+
+type PaginationOption func(*PaginationConfig)
+
+func WithDefaultLimit(limit uint64) PaginationOption {
+	return func(config *PaginationConfig) {
+		config.DefaultLimit = limit
+	}
+}
+
+func WithMaxLimit(limit uint64) PaginationOption {
+	return func(config *PaginationConfig) {
+		config.MaxLimit = limit
+	}
+}
+
+func GetPaginationConfig(options ...PaginationOption) PaginationConfig {
+	config := PaginationConfig{
+		DefaultLimit: common.DEFAULT_LIMIT,
+		MaxLimit:     common.MAX_LIMIT,
+	}
+
+	for _, option := range options {
+		option(&config)
+	}
+
+	return config
+}
+
 // BuildPaginationClause returns the SQL clause string for ORDER BY, LIMIT and OFFSET and the effective pagination object
-func BuildPaginationClause(pagination *common.Pagination, model common.Sortable) (string, *common.Pagination) {
+func BuildPaginationClause(pagination *common.Pagination, model common.Sortable, paginationOptions ...PaginationOption) (string, *common.Pagination) {
+	paginationConfig := GetPaginationConfig(paginationOptions...)
+
 	if pagination == nil {
 		return "", nil
 	}
@@ -74,8 +108,8 @@ func BuildPaginationClause(pagination *common.Pagination, model common.Sortable)
 
 	// Add LIMIT clause
 	limit := pagination.Limit
-	if pagination.Limit <= 0 || pagination.Limit > common.MAX_LIMIT {
-		limit = common.DEFAULT_LIMIT
+	if pagination.Limit <= 0 || pagination.Limit > paginationConfig.MaxLimit {
+		limit = paginationConfig.DefaultLimit
 	}
 	clause += fmt.Sprintf(" LIMIT %d", limit)
 

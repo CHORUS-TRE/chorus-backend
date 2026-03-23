@@ -93,9 +93,10 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
 
-	// filter, keep only apps with name label
+	// reverse order and filter, keep only apps with name label
 	var harborApps []harbor.App
-	for _, ha := range allHarborApps {
+	for i := len(allHarborApps) - 1; i >= 0; i-- {
+		ha := allHarborApps[i]
 		if _, exists := ha.Labels[labelImageName]; !exists {
 			continue
 		}
