@@ -184,6 +184,27 @@ func (c userServiceLogging) RemoveUserRoles(ctx context.Context, tenantID, userI
 	return nil
 }
 
+func (c userServiceLogging) RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error) {
+	c.logger.Debug(ctx, "request started", zap.String("contextDimension", contextDimension), zap.String("contextValue", contextValue))
+
+	now := time.Now()
+
+	userIDs, err := c.next.RemoveRolesByContext(ctx, contextDimension, contextValue)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Int("affectedUsers", len(userIDs)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return userIDs, nil
+}
+
 func (c userServiceLogging) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	c.logger.Debug(ctx, "request started")
 

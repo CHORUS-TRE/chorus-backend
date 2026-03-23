@@ -29,6 +29,7 @@ type Userer interface {
 	CreateRole(ctx context.Context, role string) error
 	CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error
 	RemoveUserRoles(ctx context.Context, tenantID, userID uint64, userRoleIDs []uint64) error
+	RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error)
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 	// GetRolesWithContext(ctx context.Context, roleContext map[string]string) ([]*model.Role, error)
 	SoftDeleteUser(ctx context.Context, req DeleteUserReq) error
@@ -56,6 +57,7 @@ type UserStore interface {
 	CreateRole(ctx context.Context, role string) error
 	CreateUserRoles(ctx context.Context, userID uint64, roles []model.UserRole) error
 	RemoveUserRoles(ctx context.Context, userID uint64, userRoleIDs []uint64) error
+	RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error)
 	GetRoles(ctx context.Context) ([]*model.Role, error)
 
 	GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error)
@@ -429,6 +431,14 @@ func (u *UserService) RemoveUserRoles(ctx context.Context, tenantID, userID uint
 	}
 
 	return nil
+}
+
+func (u *UserService) RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error) {
+	userIDs, err := u.store.RemoveRolesByContext(ctx, contextDimension, contextValue)
+	if err != nil {
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to remove roles by context %s=%s", contextDimension, contextValue))
+	}
+	return userIDs, nil
 }
 
 func (u *UserService) CreateRole(ctx context.Context, role string) error {
