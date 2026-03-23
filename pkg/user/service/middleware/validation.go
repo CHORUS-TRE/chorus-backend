@@ -49,6 +49,10 @@ func (v validation) RemoveUserRoles(ctx context.Context, tenantID, userID uint64
 	return v.next.RemoveUserRoles(ctx, tenantID, userID, userRoleIDs)
 }
 
+func (v validation) RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error) {
+	return v.next.RemoveRolesByContext(ctx, contextDimension, contextValue)
+}
+
 func (v validation) GetRoles(ctx context.Context) ([]*model.Role, error) {
 	return v.next.GetRoles(ctx)
 }

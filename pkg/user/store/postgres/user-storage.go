@@ -390,6 +390,23 @@ func (s *UserStorage) RemoveUserRoles(ctx context.Context, userID uint64, userRo
 	return nil
 }
 
+func (s *UserStorage) RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error) {
+	const query = `
+		DELETE FROM user_role
+		WHERE id IN (
+			SELECT userroleid FROM user_role_context
+			WHERE contextdimension = $1 AND value = $2
+		)
+		RETURNING userid;
+	`
+	var userIDs []uint64
+	err := s.db.SelectContext(ctx, &userIDs, query, contextDimension, contextValue)
+	if err != nil {
+		return nil, fmt.Errorf("unable to remove roles by context %s=%s: %w", contextDimension, contextValue, err)
+	}
+	return userIDs, nil
+}
+
 type DBUserRoleContext struct {
 	UserRoleID       uint64
 	ContextDimension string

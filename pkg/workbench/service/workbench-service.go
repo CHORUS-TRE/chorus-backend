@@ -482,6 +482,11 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
 	}
 
+	_, err = s.userer.RemoveRolesByContext(ctx, "workbench", fmt.Sprintf("%d", workbenchID))
+	if err != nil {
+		return nil, fmt.Errorf("unable to remove roles for workbench %v: %w", workbenchID, err)
+	}
+
 	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
 		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)

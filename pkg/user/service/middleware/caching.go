@@ -44,6 +44,10 @@ func (c *Caching) RemoveUserRoles(ctx context.Context, tenantID, userID uint64, 
 	return c.next.RemoveUserRoles(ctx, tenantID, userID, userRoleIDs)
 }
 
+func (c *Caching) RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error) {
+	return c.next.RemoveRolesByContext(ctx, contextDimension, contextValue)
+}
+
 func (c *Caching) GetRoles(ctx context.Context) (reply []*model.Role, err error) {
 	entry := c.cache.NewEntry()
 	reply = []*model.Role{}
