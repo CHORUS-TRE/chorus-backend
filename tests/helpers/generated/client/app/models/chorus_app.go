@@ -74,9 +74,6 @@ type ChorusApp struct {
 	// name
 	Name string `json:"name,omitempty"`
 
-	// pretty name
-	PrettyName string `json:"prettyName,omitempty"`
-
 	// shm size
 	ShmSize string `json:"shmSize,omitempty"`
 

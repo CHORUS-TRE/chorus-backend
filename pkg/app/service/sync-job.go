@@ -141,7 +141,6 @@ func (j *AppSyncJob) harborAppToModel(ha harbor.App, tenantID, userID uint64) *m
 		TenantID:            tenantID,
 		UserID:              userID,
 		Name:                labelOrDefault(labels, labelAppName, ha.Repository),
-		PrettyName:          labels[labelOCITitle],
 		Description:         labels[labelOCIDescription],
 		Status:              model.AppActive,
 		DockerImageRegistry: j.registry,

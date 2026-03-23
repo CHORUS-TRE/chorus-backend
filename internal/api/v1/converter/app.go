@@ -28,7 +28,6 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 		UserID:   app.UserId,
 
 		Name:        app.Name,
-		PrettyName:  app.PrettyName,
 		Description: app.Description,
 		Status:      status,
 

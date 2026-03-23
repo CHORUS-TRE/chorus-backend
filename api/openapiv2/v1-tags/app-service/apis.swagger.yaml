@@ -185,8 +185,6 @@ definitions:
         format: uint64
       name:
         type: string
-      prettyName:
-        type: string
       description:
         type: string
       status:
