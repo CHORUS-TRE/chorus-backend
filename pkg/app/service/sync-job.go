@@ -88,9 +88,18 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		existingSet[key] = struct{}{}
 	}
 
-	harborApps, err := j.harborClient.ListApps(existingSet)
+	allHarborApps, err := j.harborClient.ListApps(existingSet)
 	if err != nil {
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
+	}
+
+	// filter, keep only apps with name label
+	var harborApps []harbor.App
+	for _, ha := range allHarborApps {
+		if _, exists := ha.Labels[labelImageName]; !exists {
+			continue
+		}
+		harborApps = append(harborApps, ha)
 	}
 
 	if len(harborApps) == 0 {
