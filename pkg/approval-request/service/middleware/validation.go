@@ -39,6 +39,10 @@ func (v validation) ListApprovalRequests(ctx context.Context, tenantID, userID u
 	return v.next.ListApprovalRequests(ctx, tenantID, userID, pagination, filter)
 }
 
+func (v validation) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	return v.next.CountMyApprovalRequests(ctx, tenantID, userID)
+}
+
 func (v validation) CreateDataExtractionRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error) {
 	if request == nil {
 		return nil, &service.InvalidParametersErr{}

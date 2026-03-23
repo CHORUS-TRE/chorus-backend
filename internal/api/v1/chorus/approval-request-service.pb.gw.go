@@ -105,6 +105,25 @@ func local_request_ApprovalRequestService_ListApprovalRequests_0(ctx context.Con
 	return msg, metadata, err
 }
 
+func request_ApprovalRequestService_CountMyApprovalRequests_0(ctx context.Context, marshaler runtime.Marshaler, client ApprovalRequestServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CountMyApprovalRequestsRequest
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
+	msg, err := client.CountMyApprovalRequests(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ApprovalRequestService_CountMyApprovalRequests_0(ctx context.Context, marshaler runtime.Marshaler, server ApprovalRequestServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq CountMyApprovalRequestsRequest
+		metadata runtime.ServerMetadata
+	)
+	msg, err := server.CountMyApprovalRequests(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_ApprovalRequestService_CreateDataExtractionRequest_0(ctx context.Context, marshaler runtime.Marshaler, client ApprovalRequestServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq CreateDataExtractionRequestRequest
@@ -331,6 +350,26 @@ func RegisterApprovalRequestServiceHandlerServer(ctx context.Context, mux *runti
 		}
 		forward_ApprovalRequestService_ListApprovalRequests_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_ApprovalRequestService_CountMyApprovalRequests_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.ApprovalRequestService/CountMyApprovalRequests", runtime.WithHTTPPathPattern("/api/rest/v1/approval-requests/mine/count"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ApprovalRequestService_CountMyApprovalRequests_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ApprovalRequestService_CountMyApprovalRequests_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_ApprovalRequestService_CreateDataExtractionRequest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -505,6 +544,23 @@ func RegisterApprovalRequestServiceHandlerClient(ctx context.Context, mux *runti
 		}
 		forward_ApprovalRequestService_ListApprovalRequests_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_ApprovalRequestService_CountMyApprovalRequests_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.ApprovalRequestService/CountMyApprovalRequests", runtime.WithHTTPPathPattern("/api/rest/v1/approval-requests/mine/count"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ApprovalRequestService_CountMyApprovalRequests_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ApprovalRequestService_CountMyApprovalRequests_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_ApprovalRequestService_CreateDataExtractionRequest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -596,6 +652,7 @@ func RegisterApprovalRequestServiceHandlerClient(ctx context.Context, mux *runti
 var (
 	pattern_ApprovalRequestService_GetApprovalRequest_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "approval-requests", "id"}, ""))
 	pattern_ApprovalRequestService_ListApprovalRequests_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "approval-requests"}, ""))
+	pattern_ApprovalRequestService_CountMyApprovalRequests_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"api", "rest", "v1", "approval-requests", "mine", "count"}, ""))
 	pattern_ApprovalRequestService_CreateDataExtractionRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "rest", "v1", "approval-requests", "data-extraction"}, ""))
 	pattern_ApprovalRequestService_CreateDataTransferRequest_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "rest", "v1", "approval-requests", "data-transfer"}, ""))
 	pattern_ApprovalRequestService_ApproveApprovalRequest_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "rest", "v1", "approval-requests", "id", "approve"}, ""))
@@ -606,6 +663,7 @@ var (
 var (
 	forward_ApprovalRequestService_GetApprovalRequest_0          = runtime.ForwardResponseMessage
 	forward_ApprovalRequestService_ListApprovalRequests_0        = runtime.ForwardResponseMessage
+	forward_ApprovalRequestService_CountMyApprovalRequests_0     = runtime.ForwardResponseMessage
 	forward_ApprovalRequestService_CreateDataExtractionRequest_0 = runtime.ForwardResponseMessage
 	forward_ApprovalRequestService_CreateDataTransferRequest_0   = runtime.ForwardResponseMessage
 	forward_ApprovalRequestService_ApproveApprovalRequest_0      = runtime.ForwardResponseMessage

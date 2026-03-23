@@ -27,6 +27,14 @@ type ApprovalRequest struct {
 	ApprovedAt *time.Time
 }
 
+type ApprovalRequestCounts struct {
+	Total          uint64
+	TotalApprover  uint64
+	TotalRequester uint64
+	CountByStatus  map[string]uint64
+	CountByType    map[string]uint64
+}
+
 type ApprovalRequestDetails struct {
 	DataExtractionDetails *DataExtractionDetails `json:"data_extraction_details,omitempty"`
 	DataTransferDetails   *DataTransferDetails   `json:"data_transfer_details,omitempty"`
@@ -107,6 +115,13 @@ const (
 	ApprovalRequestTypeDataTransfer   ApprovalRequestType = "data_transfer"
 )
 
+func ApprovalRequestTypes() []ApprovalRequestType {
+	return []ApprovalRequestType{
+		ApprovalRequestTypeDataExtraction,
+		ApprovalRequestTypeDataTransfer,
+	}
+}
+
 func (t ApprovalRequestType) String() string {
 	return string(t)
 }
@@ -133,6 +148,15 @@ const (
 	ApprovalRequestStatusRejected    ApprovalRequestStatus = "rejected"
 	ApprovalRequestStatusCancelled   ApprovalRequestStatus = "cancelled"
 )
+
+func ApprovalRequestStatuses() []ApprovalRequestStatus {
+	return []ApprovalRequestStatus{
+		ApprovalRequestStatusPending,
+		ApprovalRequestStatusApproved,
+		ApprovalRequestStatusRejected,
+		ApprovalRequestStatusCancelled,
+	}
+}
 
 func (s ApprovalRequestStatus) String() string {
 	return string(s)

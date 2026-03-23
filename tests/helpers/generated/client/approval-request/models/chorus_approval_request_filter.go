@@ -19,8 +19,14 @@ import (
 // swagger:model chorusApprovalRequestFilter
 type ChorusApprovalRequestFilter struct {
 
+	// approver Id
+	ApproverID string `json:"approverId,omitempty"`
+
 	// pending approval
 	PendingApproval bool `json:"pendingApproval,omitempty"`
+
+	// requester Id
+	RequesterID string `json:"requesterId,omitempty"`
 
 	// source workspace Id
 	SourceWorkspaceID string `json:"sourceWorkspaceId,omitempty"`

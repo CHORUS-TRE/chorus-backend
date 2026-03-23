@@ -67,6 +67,19 @@ func (c approvalRequestControllerAudit) ListApprovalRequests(ctx context.Context
 	return res, err
 }
 
+func (c approvalRequestControllerAudit) CountMyApprovalRequests(ctx context.Context, req *chorus.CountMyApprovalRequestsRequest) (*chorus.CountMyApprovalRequestsReply, error) {
+	res, err := c.next.CountMyApprovalRequests(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestList,
+			audit.WithDescription("Failed to count approval requests."),
+			audit.WithError(err),
+		)
+	}
+
+	return res, err
+}
+
 func (c approvalRequestControllerAudit) CreateDataExtractionRequest(ctx context.Context, req *chorus.CreateDataExtractionRequestRequest) (*chorus.CreateDataExtractionRequestReply, error) {
 	res, err := c.next.CreateDataExtractionRequest(ctx, req)
 

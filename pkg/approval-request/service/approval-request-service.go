@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
@@ -24,11 +26,14 @@ type ApprovalRequestFilter struct {
 	TypesIn           *[]model.ApprovalRequestType
 	SourceWorkspaceID *uint64
 	PendingApproval   *bool
+	ApproverID        *uint64
+	RequesterID       *uint64
 }
 
 type ApprovalRequester interface {
 	GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error)
 	ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error)
+	CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error)
 	CreateDataExtractionRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error)
 	CreateDataTransferRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error)
 	ApproveApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64, approve bool) (*model.ApprovalRequest, error)
@@ -39,6 +44,7 @@ type ApprovalRequester interface {
 type ApprovalRequestStore interface {
 	GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error)
 	ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error)
+	CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error)
 	CreateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error)
 	UpdateApprovalRequest(ctx context.Context, tenantID uint64, request *model.ApprovalRequest) (*model.ApprovalRequest, error)
 	DeleteApprovalRequest(ctx context.Context, tenantID, requestID uint64) error
@@ -85,6 +91,10 @@ func (s *ApprovalRequestService) GetApprovalRequest(ctx context.Context, tenantI
 
 func (s *ApprovalRequestService) ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error) {
 	return s.store.ListApprovalRequests(ctx, tenantID, userID, pagination, filter)
+}
+
+func (s *ApprovalRequestService) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	return s.store.CountMyApprovalRequests(ctx, tenantID, userID)
 }
 
 // CreateDataExtractionRequest creates an approval request to download files from a workspace.
@@ -388,6 +398,21 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 		}
 	}
 
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: request.TenantID,
+		UserID:   request.RequesterID,
+		Message:  fmt.Sprintf("Approval request '%s' has been %s.", request.Title, map[bool]string{true: "approved", false: "rejected"}[approve]),
+		Content: notification_model.NotificationContent{
+			Type: "ApprovalRequestNotification",
+			ApprovalRequest: &notification_model.ApprovalRequestNotification{
+				ApprovalRequestID: updatedRequest.ID,
+			},
+		},
+	}, []uint64{request.RequesterID})
+	if err != nil {
+		logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", request.RequesterID))
+	}
+
 	return updatedRequest, nil
 }
 
@@ -490,11 +515,30 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 
 		_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
 		if err != nil {
-			return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			if !strings.Contains(err.Error(), "a file already exists") {
+				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			}
+
+			destFile.Path = appendUUIDToFilename(destFile.Path)
+			destFile.Name = path.Base(destFile.Path)
+			logger.TechLog.Info(ctx, "File already exists in destination workspace, retrying with unique name", zap.String("new_path", destFile.Path))
+
+			_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
+			if err != nil {
+				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+			}
 		}
 	}
 
 	return nil
+}
+
+// appendUUIDToFilename inserts an uuid suffix before the file extension.
+// e.g. "workspace-archive/hello.txt" -> "workspace-archive/hello_<uuid>.txt"
+func appendUUIDToFilename(filePath string) string {
+	ext := path.Ext(filePath)
+	base := strings.TrimSuffix(filePath, ext)
+	return fmt.Sprintf("%s_%s%s", base, uuid.Next(), ext)
 }
 
 func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {

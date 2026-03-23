@@ -66,6 +66,25 @@ func (c approvalRequestServiceLogging) ListApprovalRequests(ctx context.Context,
 	return res, paginationRes, nil
 }
 
+func (c approvalRequestServiceLogging) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
+	now := time.Now()
+
+	res, err := c.next.CountMyApprovalRequests(ctx, tenantID, userID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to count my approval requests: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("total", res.Total),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (c approvalRequestServiceLogging) CreateDataExtractionRequest(ctx context.Context, request *model.ApprovalRequest, filePaths []string) (*model.ApprovalRequest, error) {
 	now := time.Now()
 
