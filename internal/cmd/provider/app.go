@@ -21,7 +21,7 @@ var app service.Apper
 func ProvideAppService() service.Apper {
 	appOnce.Do(func() {
 		app = service.NewAppService(
-			ProvideAppStore(), ProvideK8sClient(), ProvideDockerClient(),
+			ProvideAppStore(), ProvideK8sClient(), ProvideDockerClient(), ProvideHarborClient(),
 		)
 		app = service_mw.Logging(logger.BizLog)(app)
 		app = service_mw.Validation(ProvideValidator())(app)

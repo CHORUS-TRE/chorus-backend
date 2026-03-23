@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -34,6 +35,9 @@ type ChorusApp struct {
 
 	// docker image tag
 	DockerImageTag string `json:"dockerImageTag,omitempty"`
+
+	// grouped versions
+	GroupedVersions []*ChorusAppVersion `json:"groupedVersions"`
 
 	// icon background color
 	IconBackgroundColor string `json:"iconBackgroundColor,omitempty"`
@@ -74,9 +78,6 @@ type ChorusApp struct {
 	// name
 	Name string `json:"name,omitempty"`
 
-	// pretty name
-	PrettyName string `json:"prettyName,omitempty"`
-
 	// shm size
 	ShmSize string `json:"shmSize,omitempty"`
 
@@ -102,6 +103,10 @@ func (m *ChorusApp) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateGroupedVersions(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateUpdatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -124,6 +129,32 @@ func (m *ChorusApp) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ChorusApp) validateGroupedVersions(formats strfmt.Registry) error {
+	if swag.IsZero(m.GroupedVersions) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.GroupedVersions); i++ {
+		if swag.IsZero(m.GroupedVersions[i]) { // not required
+			continue
+		}
+
+		if m.GroupedVersions[i] != nil {
+			if err := m.GroupedVersions[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("groupedVersions" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("groupedVersions" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *ChorusApp) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
@@ -136,8 +167,42 @@ func (m *ChorusApp) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus app based on context it is used
+// ContextValidate validate this chorus app based on the context it is used
 func (m *ChorusApp) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateGroupedVersions(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusApp) contextValidateGroupedVersions(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.GroupedVersions); i++ {
+
+		if m.GroupedVersions[i] != nil {
+
+			if swag.IsZero(m.GroupedVersions[i]) { // not required
+				return nil
+			}
+
+			if err := m.GroupedVersions[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("groupedVersions" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("groupedVersions" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

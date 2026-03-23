@@ -62,6 +62,9 @@ AppServiceListAppsParams contains all the parameters to send to the API endpoint
 */
 type AppServiceListAppsParams struct {
 
+	// DisableGrouping.
+	DisableGrouping *bool
+
 	/* PaginationLimit.
 
 	   Optionally limit the number of results (between 1 and 500)
@@ -143,6 +146,17 @@ func (o *AppServiceListAppsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithDisableGrouping adds the disableGrouping to the app service list apps params
+func (o *AppServiceListAppsParams) WithDisableGrouping(disableGrouping *bool) *AppServiceListAppsParams {
+	o.SetDisableGrouping(disableGrouping)
+	return o
+}
+
+// SetDisableGrouping adds the disableGrouping to the app service list apps params
+func (o *AppServiceListAppsParams) SetDisableGrouping(disableGrouping *bool) {
+	o.DisableGrouping = disableGrouping
+}
+
 // WithPaginationLimit adds the paginationLimit to the app service list apps params
 func (o *AppServiceListAppsParams) WithPaginationLimit(paginationLimit *int64) *AppServiceListAppsParams {
 	o.SetPaginationLimit(paginationLimit)
@@ -205,6 +219,23 @@ func (o *AppServiceListAppsParams) WriteToRequest(r runtime.ClientRequest, reg s
 		return err
 	}
 	var res []error
+
+	if o.DisableGrouping != nil {
+
+		// query param disableGrouping
+		var qrDisableGrouping bool
+
+		if o.DisableGrouping != nil {
+			qrDisableGrouping = *o.DisableGrouping
+		}
+		qDisableGrouping := swag.FormatBool(qrDisableGrouping)
+		if qDisableGrouping != "" {
+
+			if err := r.SetQueryParam("disableGrouping", qDisableGrouping); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.PaginationLimit != nil {
 

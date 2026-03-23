@@ -54,7 +54,10 @@ func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination *
 	`
 
 	// Add pagination
-	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.App{})
+	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.App{},
+		common_storage.WithDefaultLimit(1000),
+		common_storage.WithMaxLimit(1000),
+	)
 	query += clause
 
 	// Build pagination result

@@ -13,7 +13,6 @@ type App struct {
 	UserID   uint64
 
 	Name        string
-	PrettyName  string
 	Description string
 	Status      AppStatus
 
@@ -69,7 +68,6 @@ func (App) IsValidSortType(sortType string) bool {
 	validSortTypes := map[string]bool{
 		"id":                  true,
 		"name":                true,
-		"prettyname":          true,
 		"status":              true,
 		"dockerimageregistry": true,
 		"dockerimagename":     true,

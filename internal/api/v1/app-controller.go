@@ -122,12 +122,46 @@ func (c AppController) ListApps(ctx context.Context, req *chorus.ListAppsRequest
 		apps = append(apps, app)
 	}
 
+	if !req.DisableGrouping {
+		apps = groupApps(apps)
+	}
+
 	var paginationResult *chorus.PaginationResult
 	if paginationRes != nil {
 		paginationResult = converter.PaginationResultFromBusiness(paginationRes)
 	}
 
 	return &chorus.ListAppsReply{Result: &chorus.ListAppsResult{Apps: apps}, Pagination: paginationResult}, nil
+}
+
+func groupApps(apps []*chorus.App) []*chorus.App {
+	appVersionMap := make(map[string][]*chorus.App)
+	highestIDMap := make(map[string]*chorus.App)
+	for _, app := range apps {
+		if _, exists := appVersionMap[app.DockerImageName]; !exists {
+			appVersionMap[app.DockerImageName] = []*chorus.App{app}
+			highestIDMap[app.DockerImageName] = app
+		}
+
+		if app.Id > highestIDMap[app.DockerImageName].Id {
+			highestIDMap[app.DockerImageName] = app
+		}
+	}
+	groupedApps := make([]*chorus.App, 0, len(appVersionMap))
+	for _, app := range highestIDMap {
+		groupedApps = append(groupedApps, app)
+		for _, version := range appVersionMap[app.DockerImageName] {
+			if version.Id != app.Id {
+				appVersion := &chorus.AppVersion{
+					Id:             version.Id,
+					DockerImageTag: version.DockerImageTag,
+				}
+				app.GroupedVersions = append(app.GroupedVersions, appVersion)
+			}
+		}
+	}
+
+	return groupedApps
 }
 
 // CreateApp extracts the app from the request and passes it to the app service.

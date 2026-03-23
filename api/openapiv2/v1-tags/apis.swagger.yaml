@@ -716,6 +716,10 @@ paths:
           x-example:
             - user_id=9999
             - status=STATUS_CREATED,STATUS_CLOSED
+        - name: disableGrouping
+          in: query
+          required: false
+          type: boolean
       tags:
         - AppService
     post:
@@ -4587,8 +4591,6 @@ definitions:
         format: uint64
       name:
         type: string
-      prettyName:
-        type: string
       description:
         type: string
       status:
@@ -4599,6 +4601,11 @@ definitions:
         type: string
       dockerImageTag:
         type: string
+      groupedVersions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusAppVersion'
       shmSize:
         type: string
       maxCPU:
@@ -4678,6 +4685,14 @@ definitions:
         items:
           type: string
           format: uint64
+  chorusAppVersion:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      dockerImageTag:
+        type: string
   chorusApprovalRequest:
     type: object
     properties:
