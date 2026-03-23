@@ -15,6 +15,7 @@ import (
 const (
 	labelAppName        = "ch.chorus-tre.app.name"
 	labelAppIcon        = "ch.chorus-tre.app.icon"
+	labelAppCategory    = "ch.chorus-tre.app.category"
 	labelImageName      = "ch.chorus-tre.image.name"
 	labelImageTag       = "ch.chorus-tre.image.tag"
 	labelMaxCPU         = "ch.chorus-tre.resources.max-cpu"
@@ -93,11 +94,11 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
 
-	// reverse order and filter, keep only apps with name label
+	// reverse order and filter, keep only apps with app category label
 	var harborApps []harbor.App
 	for i := len(allHarborApps) - 1; i >= 0; i-- {
 		ha := allHarborApps[i]
-		if _, exists := ha.Labels[labelImageName]; !exists {
+		if _, exists := ha.Labels[labelAppCategory]; !exists {
 			continue
 		}
 		harborApps = append(harborApps, ha)
@@ -140,7 +141,7 @@ func (j *AppSyncJob) harborAppToModel(ha harbor.App, tenantID, userID uint64) *m
 	app := &model.App{
 		TenantID:            tenantID,
 		UserID:              userID,
-		Name:                labelOrDefault(labels, labelAppName, ha.Repository),
+		Name:                labelOrDefault(labels, labelOCITitle, labelOrDefault(labels, labelAppName, ha.Repository)),
 		Description:         labels[labelOCIDescription],
 		Status:              model.AppActive,
 		DockerImageRegistry: j.registry,
