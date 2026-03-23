@@ -53,6 +53,7 @@ type WorkspaceStore interface {
 type Userer interface {
 	CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []user_model.UserRole) error
 	RemoveUserRoles(ctx context.Context, tenantID, userID uint64, roleIDs []uint64) error
+	RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error)
 	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
 }
 
@@ -174,6 +175,11 @@ func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, worksp
 	err := s.workbencher.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
+	}
+
+	_, err = s.userer.RemoveRolesByContext(ctx, "workspace", fmt.Sprintf("%d", workspaceID))
+	if err != nil {
+		return fmt.Errorf("unable to remove roles for workspace %v: %w", workspaceID, err)
 	}
 
 	err = s.store.DeleteWorkspace(ctx, tenantID, workspaceID)
