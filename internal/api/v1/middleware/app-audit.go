@@ -79,8 +79,13 @@ func (c appControllerAudit) CreateApp(ctx context.Context, req *chorus.App) (*ch
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created app with ID %d.", res.Result.App.Id)),
+			audit.WithDescription(fmt.Sprintf("Created app %s (ID %d).", res.Result.App.Name, res.Result.App.Id)),
 			audit.WithDetail("app_id", res.Result.App.Id),
+			audit.WithDetail("app_name", res.Result.App.Name),
+			audit.WithDetail("app_description", res.Result.App.Description),
+			audit.WithDetail("app_registry", res.Result.App.DockerImageRegistry),
+			audit.WithDetail("app_image_name", res.Result.App.DockerImageName),
+			audit.WithDetail("app_image_tag", res.Result.App.DockerImageTag),
 		)
 	}
 
@@ -98,13 +103,18 @@ func (c appControllerAudit) UpdateApp(ctx context.Context, req *chorus.App) (*ch
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to update app."),
+			audit.WithDescription(fmt.Sprintf("Failed to update app (ID %d).", req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated app with ID %d.", req.Id)),
-			audit.WithDetail("app_name", req.Name),
+			audit.WithDescription(fmt.Sprintf("Updated app %s (ID %d).", req.Name, req.Id)),
+			audit.WithDetail("app_id", res.Result.App.Id),
+			audit.WithDetail("app_name", res.Result.App.Name),
+			audit.WithDetail("app_description", res.Result.App.Description),
+			audit.WithDetail("app_registry", res.Result.App.DockerImageRegistry),
+			audit.WithDetail("app_image_name", res.Result.App.DockerImageName),
+			audit.WithDetail("app_image_tag", res.Result.App.DockerImageTag),
 		)
 	}
 
@@ -122,12 +132,13 @@ func (c appControllerAudit) DeleteApp(ctx context.Context, req *chorus.DeleteApp
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete app."),
+			audit.WithDescription(fmt.Sprintf("Failed to delete app (ID %d).", req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Deleted app with ID %d.", req.Id)),
+			audit.WithDetail("app_id", req.Id),
 		)
 	}
 
