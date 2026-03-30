@@ -4648,15 +4648,23 @@ definitions:
       userId:
         type: string
         format: uint64
-      appId:
-        type: string
-        format: uint64
       workspaceId:
         type: string
         format: uint64
       workbenchId:
         type: string
         format: uint64
+      appId:
+        type: string
+        format: uint64
+      appName:
+        type: string
+      appDockerImageRegistry:
+        type: string
+      appDockerImageName:
+        type: string
+      appDockerImageTag:
+        type: string
       status:
         type: string
       k8sStatus:
