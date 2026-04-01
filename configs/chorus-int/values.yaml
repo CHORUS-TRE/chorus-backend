@@ -217,7 +217,7 @@ config:
       server_version: "latest"
     harbor_client:
       enabled: true
-      endpoint: "https://harbor.int.chorus-tre.ch"
+      url: "https://harbor.int.chorus-tre.ch"
       username: "robot$backend-apps-client"
       password: "" # set in secret
 
