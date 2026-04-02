@@ -41,6 +41,9 @@ type ChorusWorkspace struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// namespace
+	Namespace string `json:"namespace,omitempty"`
+
 	// short name
 	ShortName string `json:"shortName,omitempty"`
 

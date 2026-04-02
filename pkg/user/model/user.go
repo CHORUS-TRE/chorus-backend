@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -35,6 +36,21 @@ type User struct {
 type UserRole struct {
 	authorization_model.Role
 	ID uint64
+}
+
+func (u User) Namespaces() []string {
+	seen := make(map[string]struct{})
+	var namespaces []string
+	for _, r := range u.Roles {
+		if wsID, ok := r.Context[authorization_model.RoleContextWorkspace]; ok && wsID != "" {
+			ns := fmt.Sprintf("workspace%s", wsID)
+			if _, exists := seen[ns]; !exists {
+				seen[ns] = struct{}{}
+				namespaces = append(namespaces, ns)
+			}
+		}
+	}
+	return namespaces
 }
 
 type UserStatus string

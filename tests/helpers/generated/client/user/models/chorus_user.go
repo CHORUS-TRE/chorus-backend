@@ -36,6 +36,9 @@ type ChorusUser struct {
 	// last name
 	LastName string `json:"lastName,omitempty"`
 
+	// namespaces
+	Namespaces []string `json:"namespaces"`
+
 	// password
 	Password string `json:"password,omitempty"`
 

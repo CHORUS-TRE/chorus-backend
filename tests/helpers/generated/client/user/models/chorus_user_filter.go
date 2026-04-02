@@ -17,11 +17,17 @@ import (
 // swagger:model chorusUserFilter
 type ChorusUserFilter struct {
 
+	// from main source
+	FromMainSource bool `json:"fromMainSource,omitempty"`
+
 	// ids in
 	IdsIn []string `json:"idsIn"`
 
 	// search
 	Search string `json:"search,omitempty"`
+
+	// with namespaces
+	WithNamespaces bool `json:"withNamespaces,omitempty"`
 
 	// workbench i ds
 	WorkbenchIDs []string `json:"workbenchIDs"`
