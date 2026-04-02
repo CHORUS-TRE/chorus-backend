@@ -82,7 +82,7 @@ func IssueRefreshToken(client *goidc.Client, grantInfo goidc.GrantInfo) bool {
 	return slices.Contains(client.GrantTypes, goidc.GrantRefreshToken)
 }
 
-func HTTPClient(_ context.Context) *http.Client {
+func InsecureSkipVerifyHTTPClient(_ context.Context) *http.Client {
 	return &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
