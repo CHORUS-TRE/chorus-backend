@@ -62,11 +62,17 @@ UserServiceListUsersParams contains all the parameters to send to the API endpoi
 */
 type UserServiceListUsersParams struct {
 
+	// FilterFromMainSource.
+	FilterFromMainSource *bool
+
 	// FilterIdsIn.
 	FilterIdsIn []string
 
 	// FilterSearch.
 	FilterSearch *string
+
+	// FilterWithNamespaces.
+	FilterWithNamespaces *bool
 
 	// FilterWorkbenchIDs.
 	FilterWorkbenchIDs []string
@@ -155,6 +161,17 @@ func (o *UserServiceListUsersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithFilterFromMainSource adds the filterFromMainSource to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterFromMainSource(filterFromMainSource *bool) *UserServiceListUsersParams {
+	o.SetFilterFromMainSource(filterFromMainSource)
+	return o
+}
+
+// SetFilterFromMainSource adds the filterFromMainSource to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterFromMainSource(filterFromMainSource *bool) {
+	o.FilterFromMainSource = filterFromMainSource
+}
+
 // WithFilterIdsIn adds the filterIdsIn to the user service list users params
 func (o *UserServiceListUsersParams) WithFilterIdsIn(filterIdsIn []string) *UserServiceListUsersParams {
 	o.SetFilterIdsIn(filterIdsIn)
@@ -175,6 +192,17 @@ func (o *UserServiceListUsersParams) WithFilterSearch(filterSearch *string) *Use
 // SetFilterSearch adds the filterSearch to the user service list users params
 func (o *UserServiceListUsersParams) SetFilterSearch(filterSearch *string) {
 	o.FilterSearch = filterSearch
+}
+
+// WithFilterWithNamespaces adds the filterWithNamespaces to the user service list users params
+func (o *UserServiceListUsersParams) WithFilterWithNamespaces(filterWithNamespaces *bool) *UserServiceListUsersParams {
+	o.SetFilterWithNamespaces(filterWithNamespaces)
+	return o
+}
+
+// SetFilterWithNamespaces adds the filterWithNamespaces to the user service list users params
+func (o *UserServiceListUsersParams) SetFilterWithNamespaces(filterWithNamespaces *bool) {
+	o.FilterWithNamespaces = filterWithNamespaces
 }
 
 // WithFilterWorkbenchIDs adds the filterWorkbenchIDs to the user service list users params
@@ -262,6 +290,23 @@ func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg
 	}
 	var res []error
 
+	if o.FilterFromMainSource != nil {
+
+		// query param filter.fromMainSource
+		var qrFilterFromMainSource bool
+
+		if o.FilterFromMainSource != nil {
+			qrFilterFromMainSource = *o.FilterFromMainSource
+		}
+		qFilterFromMainSource := swag.FormatBool(qrFilterFromMainSource)
+		if qFilterFromMainSource != "" {
+
+			if err := r.SetQueryParam("filter.fromMainSource", qFilterFromMainSource); err != nil {
+				return err
+			}
+		}
+	}
+
 	if o.FilterIdsIn != nil {
 
 		// binding items for filter.idsIn
@@ -285,6 +330,23 @@ func (o *UserServiceListUsersParams) WriteToRequest(r runtime.ClientRequest, reg
 		if qFilterSearch != "" {
 
 			if err := r.SetQueryParam("filter.search", qFilterSearch); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.FilterWithNamespaces != nil {
+
+		// query param filter.withNamespaces
+		var qrFilterWithNamespaces bool
+
+		if o.FilterWithNamespaces != nil {
+			qrFilterWithNamespaces = *o.FilterWithNamespaces
+		}
+		qFilterWithNamespaces := swag.FormatBool(qrFilterWithNamespaces)
+		if qFilterWithNamespaces != "" {
+
+			if err := r.SetQueryParam("filter.withNamespaces", qFilterWithNamespaces); err != nil {
 				return err
 			}
 		}

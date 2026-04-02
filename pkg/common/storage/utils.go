@@ -163,6 +163,11 @@ func BuildUserFilterClause(filter *user_service.UserFilter, args *[]interface{})
 		*args = append(*args, "%"+*filter.Search+"%")
 	}
 
+	if filter != nil && filter.Source != nil && *filter.Source != "" {
+		clauses = append(clauses, fmt.Sprintf("source = $%d", len(*args)+1))
+		*args = append(*args, *filter.Source)
+	}
+
 	return strings.Join(clauses, " AND ")
 }
 

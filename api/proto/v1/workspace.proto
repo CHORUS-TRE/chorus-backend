@@ -21,4 +21,6 @@ message Workspace {
     
     google.protobuf.Timestamp createdAt = 11;
     google.protobuf.Timestamp updatedAt = 12;
+
+    string namespace = 13;
 }

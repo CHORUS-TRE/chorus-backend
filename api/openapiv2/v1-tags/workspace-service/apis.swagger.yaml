@@ -431,6 +431,8 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+      namespace:
+        type: string
   chorusWorkspaceFilter:
     type: object
     properties:

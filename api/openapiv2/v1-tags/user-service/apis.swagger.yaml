@@ -89,6 +89,14 @@ paths:
           in: query
           required: false
           type: string
+        - name: filter.fromMainSource
+          in: query
+          required: false
+          type: boolean
+        - name: filter.withNamespaces
+          in: query
+          required: false
+          type: boolean
       tags:
         - UserService
     post:
@@ -584,6 +592,10 @@ definitions:
         format: date-time
       email:
         type: string
+      namespaces:
+        type: array
+        items:
+          type: string
   chorusUserFilter:
     type: object
     properties:
@@ -604,6 +616,10 @@ definitions:
           format: uint64
       search:
         type: string
+      fromMainSource:
+        type: boolean
+      withNamespaces:
+        type: boolean
   protobufAny:
     type: object
     properties:
