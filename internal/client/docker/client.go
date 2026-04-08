@@ -1,13 +1,16 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	"go.uber.org/zap"
 )
 
 var _ DockerClienter = &client{}
@@ -87,7 +90,7 @@ func (c *client) GetLabels(imageRef string, username, password string) (map[stri
 		return nil, fmt.Errorf("failed to get image config: %w", err)
 	}
 
-	fmt.Println("Retrieved labels:", imageRef, cfgFile.Config.Labels)
+	logger.TechLog.Debug(context.Background(), "retrieved image labels", zap.String("image", imageRef))
 
 	return cfgFile.Config.Labels, nil
 }
