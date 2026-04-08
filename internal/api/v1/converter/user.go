@@ -38,6 +38,7 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 		// Roles:           rs,
 		RolesWithContext: roles,
 		TotpEnabled:      user.TotpEnabled,
+		Namespaces:       user.Namespaces(),
 		CreatedAt:        ca,
 		UpdatedAt:        ua,
 	}, nil

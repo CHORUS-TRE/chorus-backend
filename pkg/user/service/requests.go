@@ -50,10 +50,12 @@ type ListUsersReq struct {
 }
 
 type UserFilter struct {
-	IDsIn        []uint64
-	WorkspaceIDs []uint64
-	WorkbenchIDs []uint64
-	Search       *string
+	IDsIn          []uint64
+	WorkspaceIDs   []uint64
+	WorkbenchIDs   []uint64
+	Search         *string
+	Source         *string
+	WithNamespaces bool
 }
 
 type GetUserReq struct {

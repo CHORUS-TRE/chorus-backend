@@ -10,6 +10,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -177,7 +178,7 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 	}
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
-	filter := UserFilterToBusiness(req.Filter)
+	filter := UserFilterToBusiness(req.Filter, c.cfg)
 	res, paginationRes, err := c.user.ListUsers(ctx, service.ListUsersReq{TenantID: tenantID, Pagination: &pagination, Filter: filter})
 	if err != nil {
 		return nil, err
@@ -201,16 +202,24 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 	return &chorus.ListUsersReply{Result: &chorus.ListUsersResult{Users: users}, Pagination: paginationResult}, nil
 }
 
-func UserFilterToBusiness(aFilter *chorus.UserFilter) *service.UserFilter {
+func UserFilterToBusiness(aFilter *chorus.UserFilter, cfg config.Config) *service.UserFilter {
 	if aFilter == nil {
 		return nil
 	}
-	return &service.UserFilter{
+	f := &service.UserFilter{
 		IDsIn:        aFilter.IdsIn,
 		WorkspaceIDs: aFilter.WorkspaceIDs,
 		WorkbenchIDs: aFilter.WorkbenchIDs,
 		Search:       aFilter.Search,
 	}
+	if aFilter.FromMainSource != nil && *aFilter.FromMainSource {
+		mainSource := auth_helper.GetMainSourceID(cfg)
+		f.Source = &mainSource
+	}
+	if aFilter.WithNamespaces != nil && *aFilter.WithNamespaces {
+		f.WithNamespaces = true
+	}
+	return f
 }
 
 // CreateUser extracts the user from the request and passes it to the user service.

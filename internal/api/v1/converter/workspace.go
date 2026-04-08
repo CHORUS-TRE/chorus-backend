@@ -58,6 +58,8 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 
 		IsMain: workspace.IsMain,
 
+		Namespace: workspace.GetClusterName(),
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
