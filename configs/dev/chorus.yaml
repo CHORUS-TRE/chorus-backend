@@ -270,8 +270,8 @@ services:
 #     enabled: true
 #   harbor_client:
 #     enabled: true
-#     url: "https://harbor.int.chorus-tre.ch"
-#     username: "" # set in secret
+#     url: ""
+#     username: ""
 #     password: "" # set in secret
 
 log:
