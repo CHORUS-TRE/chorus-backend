@@ -10,18 +10,28 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func getK8sConfig(cfg config.Config) (*rest.Config, error) {
-	if cfg.Clients.K8sClient.KubeConfig != "" {
-		return getK8sConfigFromKubeConfig(cfg)
+func getK8sConfig(cfg config.Config) (restConfig *rest.Config, err error) {
+	switch {
+	case cfg.Clients.K8sClient.KubeConfig != "":
+		restConfig, err = getK8sConfigFromKubeConfig(cfg)
+	case cfg.Clients.K8sClient.ServiceAccountSecretPath != "":
+		restConfig, err = getK8sConfigFromServiceAccountPath(cfg)
+	case cfg.Clients.K8sClient.Token != "":
+		restConfig, err = getK8sConfigFromServiceAccount(cfg)
+	default:
+		return nil, errors.New("no config for k8s client found")
 	}
-	if cfg.Clients.K8sClient.ServiceAccountSecretPath != "" {
-		return getK8sConfigFromServiceAccountPath(cfg)
-	}
-	if cfg.Clients.K8sClient.Token != "" {
-		return getK8sConfigFromServiceAccount(cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, errors.New("no config for k8s client found")
+	if cfg.Clients.K8sClient.InsecureTLS {
+		restConfig.TLSClientConfig.Insecure = true
+		restConfig.TLSClientConfig.CAData = nil
+		restConfig.TLSClientConfig.CAFile = ""
+	}
+
+	return restConfig, nil
 }
 
 func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
@@ -49,6 +59,10 @@ func getK8sConfigFromServiceAccountPath(cfg config.Config) (*rest.Config, error)
 	caCert, err := os.ReadFile(saPath + "/ca.crt")
 	if err != nil {
 		return nil, fmt.Errorf("error reading service account CA cert: %w", err)
+	}
+
+	if cfg.Clients.K8sClient.ServiceAccountOverrideCA != "" {
+		caCert = []byte(cfg.Clients.K8sClient.ServiceAccountOverrideCA)
 	}
 
 	restConfig := &rest.Config{

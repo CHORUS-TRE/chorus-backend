@@ -136,6 +136,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", false)
 	v.SetDefault("clients.k8s_client.enabled", false)
+	v.SetDefault("clients.k8s_client.insecure_tls", false)
 	v.SetDefault("clients.k8s_client.is_watcher", false)
 	v.SetDefault("clients.k8s_client.server_version", "latest")
 	v.SetDefault("clients.k8s_client.init_container_version", "latest")
