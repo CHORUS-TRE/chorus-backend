@@ -37,6 +37,7 @@ type ChorusUser struct {
 	LastName string `json:"lastName,omitempty"`
 
 	// namespaces
+	// Read Only: true
 	Namespaces []string `json:"namespaces"`
 
 	// password
@@ -52,6 +53,7 @@ type ChorusUser struct {
 	RolesWithContext []*ChorusRole `json:"rolesWithContext"`
 
 	// source
+	// Read Only: true
 	Source string `json:"source,omitempty"`
 
 	// status
@@ -144,13 +146,30 @@ func (m *ChorusUser) validateUpdatedAt(formats strfmt.Registry) error {
 func (m *ChorusUser) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateNamespaces(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateRolesWithContext(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateSource(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusUser) contextValidateNamespaces(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "namespaces", "body", []string(m.Namespaces)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -174,6 +193,15 @@ func (m *ChorusUser) contextValidateRolesWithContext(ctx context.Context, format
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *ChorusUser) contextValidateSource(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := validate.ReadOnly(ctx, "source", "body", string(m.Source)); err != nil {
+		return err
 	}
 
 	return nil

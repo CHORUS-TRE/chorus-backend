@@ -5880,6 +5880,7 @@ definitions:
         type: string
       source:
         type: string
+        readOnly: true
       password:
         type: string
       status:
@@ -5909,6 +5910,7 @@ definitions:
         type: array
         items:
           type: string
+        readOnly: true
   chorusUserFilter:
     type: object
     properties:
