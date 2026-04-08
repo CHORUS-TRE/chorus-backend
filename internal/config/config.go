@@ -144,6 +144,8 @@ type (
 		InitContainerVersion string `yaml:"init_container_version,omitempty"`
 		AddUserDetails       bool   `yaml:"add_user_details,omitempty"`
 
+		InsecureTLS bool `yaml:"insecure_tls,omitempty"` // if true, TLS certificate verification is skipped (testing only)
+
 		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
 
 		DefaultRegistry   string `yaml:"default_registry,omitempty"`
