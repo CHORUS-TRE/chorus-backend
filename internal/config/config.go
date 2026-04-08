@@ -400,6 +400,8 @@ type (
 		ClientID                  string   `yaml:"client_id"`
 		ClientSecret              string   `yaml:"client_secret"`
 		Scopes                    []string `yaml:"scopes"`
+		InsecureSkipTLS           bool     `yaml:"insecure_skip_tls"`
+		CustomCA                  string   `yaml:"custom_ca"`
 	}
 
 	OpenIDConnectProviderClient struct {
