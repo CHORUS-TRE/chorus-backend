@@ -134,6 +134,7 @@ type (
 
 		APIServer                string `yaml:"api_server,omitempty"`     // or a service account api server
 		ServiceAccountSecretPath string `yaml:"sa_secret_path,omitempty"` // and a service account secret path
+		ServiceAccountOverrideCA string `yaml:"sa_override_ca,omitempty"` // optional CA crt content to override the one provided in the service account secret, useful for private clusters with custom CAs
 		Token                    string `yaml:"token,omitempty"`          // or a service account token
 		CA                       string `yaml:"ca,omitempty"`             // and service account ca
 

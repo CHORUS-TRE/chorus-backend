@@ -61,6 +61,10 @@ func getK8sConfigFromServiceAccountPath(cfg config.Config) (*rest.Config, error)
 		return nil, fmt.Errorf("error reading service account CA cert: %w", err)
 	}
 
+	if cfg.Clients.K8sClient.ServiceAccountOverrideCA != "" {
+		caCert = []byte(cfg.Clients.K8sClient.ServiceAccountOverrideCA)
+	}
+
 	restConfig := &rest.Config{
 		Host:            apiServer,
 		BearerTokenFile: saPath + "/token",
