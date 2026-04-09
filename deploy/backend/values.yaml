@@ -305,7 +305,8 @@ config:
     k8s_client:
       enabled: true
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
-      api_server: ""
+      # Point to the internal API server hostname by default
+      api_server: "https://kubernetes.default.svc"
       add_user_details: true
 
   log:
