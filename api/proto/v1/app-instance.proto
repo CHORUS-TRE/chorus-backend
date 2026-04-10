@@ -9,18 +9,23 @@ message AppInstance {
 
     uint64 tenantId = 2;
     uint64 userId = 3;
-    uint64 appId = 4;
-    uint64 workspaceId = 5;
-    uint64 workbenchId = 6;
-    
-    string status = 7;
-    string k8sStatus = 8;
-    string k8sMessage = 9;
-    string k8sState = 10;
+    uint64 workspaceId = 4;
+    uint64 workbenchId = 5;
 
-    uint32 initialResolutionWidth = 11;
-    uint32 initialResolutionHeight = 12;
-    
-    google.protobuf.Timestamp createdAt = 13;
-    google.protobuf.Timestamp updatedAt = 14;
+    uint64 appId = 6;
+    string appName = 7;
+    string appDockerImageRegistry = 8;
+    string appDockerImageName = 9;
+    string appDockerImageTag = 10;
+
+    string status = 11;
+    string k8sStatus = 12;
+    string k8sMessage = 13;
+    string k8sState = 14;
+
+    uint32 initialResolutionWidth = 15;
+    uint32 initialResolutionHeight = 16;
+
+    google.protobuf.Timestamp createdAt = 17;
+    google.protobuf.Timestamp updatedAt = 18;
 }

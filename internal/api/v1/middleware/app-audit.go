@@ -31,8 +31,8 @@ func (c appControllerAudit) GetApp(ctx context.Context, req *chorus.GetAppReques
 
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionAppRead,
+			audit.WithDescription(fmt.Sprintf("Failed to get app with ID %d.", req.Id)),
 			audit.WithDetail("app_id", req.Id),
-			audit.WithDescription("Failed to get app."),
 			audit.WithError(err),
 		)
 	}
@@ -74,13 +74,25 @@ func (c appControllerAudit) CreateApp(ctx context.Context, req *chorus.App) (*ch
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create app."),
+			audit.WithDescription(fmt.Sprintf("Failed to create app %s.", req.Name)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created app with ID %d.", res.Result.App.Id)),
+			audit.WithDescription(fmt.Sprintf("Created app %s (ID %d).", res.Result.App.Name, res.Result.App.Id)),
 			audit.WithDetail("app_id", res.Result.App.Id),
+			audit.WithDetail("app_name", res.Result.App.Name),
+			audit.WithDetail("app_description", res.Result.App.Description),
+			audit.WithDetail("app_registry", res.Result.App.DockerImageRegistry),
+			audit.WithDetail("app_image_name", res.Result.App.DockerImageName),
+			audit.WithDetail("app_image_tag", res.Result.App.DockerImageTag),
+			audit.WithDetail("app_shm_size", res.Result.App.ShmSize),
+			audit.WithDetail("app_max_cpu", res.Result.App.MaxCPU),
+			audit.WithDetail("app_min_cpu", res.Result.App.MinCPU),
+			audit.WithDetail("app_max_memory", res.Result.App.MaxMemory),
+			audit.WithDetail("app_min_memory", res.Result.App.MinMemory),
+			audit.WithDetail("app_max_ephemeral_storage", res.Result.App.MaxEphemeralStorage),
+			audit.WithDetail("app_min_ephemeral_storage", res.Result.App.MinEphemeralStorage),
 		)
 	}
 
@@ -98,13 +110,25 @@ func (c appControllerAudit) UpdateApp(ctx context.Context, req *chorus.App) (*ch
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to update app."),
+			audit.WithDescription(fmt.Sprintf("Failed to update app %s (ID %d).", req.Name, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated app with ID %d.", req.Id)),
-			audit.WithDetail("app_name", req.Name),
+			audit.WithDescription(fmt.Sprintf("Updated app %s (ID %d).", req.Name, req.Id)),
+			audit.WithDetail("app_id", res.Result.App.Id),
+			audit.WithDetail("app_name", res.Result.App.Name),
+			audit.WithDetail("app_description", res.Result.App.Description),
+			audit.WithDetail("app_registry", res.Result.App.DockerImageRegistry),
+			audit.WithDetail("app_image_name", res.Result.App.DockerImageName),
+			audit.WithDetail("app_image_tag", res.Result.App.DockerImageTag),
+			audit.WithDetail("app_shm_size", res.Result.App.ShmSize),
+			audit.WithDetail("app_max_cpu", res.Result.App.MaxCPU),
+			audit.WithDetail("app_min_cpu", res.Result.App.MinCPU),
+			audit.WithDetail("app_max_memory", res.Result.App.MaxMemory),
+			audit.WithDetail("app_min_memory", res.Result.App.MinMemory),
+			audit.WithDetail("app_max_ephemeral_storage", res.Result.App.MaxEphemeralStorage),
+			audit.WithDetail("app_min_ephemeral_storage", res.Result.App.MinEphemeralStorage),
 		)
 	}
 
@@ -122,12 +146,13 @@ func (c appControllerAudit) DeleteApp(ctx context.Context, req *chorus.DeleteApp
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete app."),
+			audit.WithDescription(fmt.Sprintf("Failed to delete app with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Deleted app with ID %d.", req.Id)),
+			audit.WithDetail("app_id", req.Id),
 		)
 	}
 
@@ -145,7 +170,7 @@ func (c appControllerAudit) BulkCreateApps(ctx context.Context, req *chorus.Bulk
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to bulk create apps."),
+			audit.WithDescription(fmt.Sprintf("Failed to bulk create %d apps.", len(req.Apps))),
 			audit.WithError(err),
 		)
 	} else {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
@@ -55,9 +56,14 @@ func AppInstanceFromBusiness(appInstance *model.AppInstance) (*chorus.AppInstanc
 
 		TenantId:    appInstance.TenantID,
 		UserId:      appInstance.UserID,
-		AppId:       appInstance.AppID,
 		WorkspaceId: appInstance.WorkspaceID,
 		WorkbenchId: appInstance.WorkbenchID,
+
+		AppId:                  appInstance.AppID,
+		AppName:                utils.ToString(appInstance.AppName),
+		AppDockerImageRegistry: utils.ToString(appInstance.AppDockerImageRegistry),
+		AppDockerImageName:     utils.ToString(appInstance.AppDockerImageName),
+		AppDockerImageTag:      utils.ToString(appInstance.AppDockerImageTag),
 
 		Status:     appInstance.Status.String(),
 		K8SState:   appInstance.K8sState.String(),
