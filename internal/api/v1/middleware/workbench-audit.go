@@ -32,7 +32,7 @@ func (c workbenchControllerAudit) ListWorkbenches(ctx context.Context, req *chor
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchList,
 			audit.WithDetail("filter", req.Filter),
-			audit.WithDescription("Failed to list workbenches."),
+			audit.WithDescription("Failed to list sessions."),
 			audit.WithError(err),
 		)
 	}
@@ -53,16 +53,17 @@ func (c workbenchControllerAudit) CreateWorkbench(ctx context.Context, req *chor
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workbench_name", req.Name),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create workbench."),
+			audit.WithDescription(fmt.Sprintf("Failed to create session '%s' in workspace %d.", req.Name, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created workbench with ID %d.", res.Result.Workbench.Id)),
+			audit.WithDescription(fmt.Sprintf("Created session '%s' (ID %d) in workspace %d.", req.Name, res.Result.Workbench.Id, req.WorkspaceId)),
 			audit.WithWorkbenchID(res.Result.Workbench.Id),
 			audit.WithDetail("workbench_id", res.Result.Workbench.Id),
 		)
@@ -77,22 +78,14 @@ func (c workbenchControllerAudit) GetWorkbench(ctx context.Context, req *chorus.
 	res, err := c.next.GetWorkbench(ctx, req)
 
 	if err != nil {
+		// WorkspaceID is not available in the request, only in the response.
 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchRead,
 			audit.WithWorkbenchID(req.Id),
 			audit.WithDetail("workbench_id", req.Id),
-			audit.WithDescription("Failed to get workbench."),
+			audit.WithDescription(fmt.Sprintf("Failed to get session with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}
-	//  else {
-	// 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkbenchRead,
-	// 			// TODO: audit.WithWorkspaceID(req.WorkspaceId),
-	// 			audit.WithWorkbenchID(req.Id),
-	// 			audit.WithDetail("workbench_id", req.Id),
-	// 			audit.WithDescription(fmt.Sprintf("Retrieved workbench with ID %d.", req.Id)),
-	// 			audit.WithDetail("workbench_name", res.Result.Workbench.Name),
-	// 		)
-	// }
 
 	return res, err
 }
@@ -104,17 +97,18 @@ func (c workbenchControllerAudit) UpdateWorkbench(ctx context.Context, req *chor
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithWorkbenchID(req.Id),
 		audit.WithDetail("workbench_id", req.Id),
+		audit.WithDetail("workbench_name", req.Name),
+		audit.WithDetail("workspace_id", req.WorkspaceId),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to update workbench."),
+			audit.WithDescription(fmt.Sprintf("Failed to update session '%s' (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated workbench with ID %d.", req.Id)),
-			audit.WithDetail("workbench_name", req.Name),
+			audit.WithDescription(fmt.Sprintf("Updated session '%s' (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
 		)
 	}
 
@@ -134,15 +128,15 @@ func (c workbenchControllerAudit) DeleteWorkbench(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete workbench."),
+			audit.WithDescription(fmt.Sprintf("Failed to delete session with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Deleted workbench with ID %d.", req.Id)),
+			audit.WithDescription(fmt.Sprintf("Deleted session '%s' (ID %d) from workspace %d.", res.Result.Workbench.Name, res.Result.Workbench.Id, res.Result.Workbench.WorkspaceId)),
 			audit.WithWorkspaceID(res.Result.Workbench.WorkspaceId),
-			audit.WithWorkbenchID(res.Result.Workbench.Id),
 			audit.WithDetail("workbench_name", res.Result.Workbench.Name),
+			audit.WithDetail("workspace_id", res.Result.Workbench.WorkspaceId),
 		)
 	}
 
@@ -164,12 +158,12 @@ func (c workbenchControllerAudit) ManageUserRoleInWorkbench(ctx context.Context,
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to add user %d to workbench %d with role %s.", req.UserId, req.Id, req.Role)),
+			audit.WithDescription(fmt.Sprintf("Failed to add user %d to session %d with role %s.", req.UserId, req.Id, req.Role)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Added user %d to workbench %d with role %s.", req.UserId, req.Id, req.Role)),
+			audit.WithDescription(fmt.Sprintf("Added user %d to session %d with role %s.", req.UserId, req.Id, req.Role)),
 			audit.WithWorkspaceID(res.Result.Workbench.WorkspaceId),
 		)
 	}
@@ -191,12 +185,12 @@ func (c workbenchControllerAudit) RemoveUserFromWorkbench(ctx context.Context, r
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to remove user %d from workbench %d.", req.UserId, req.Id)),
+			audit.WithDescription(fmt.Sprintf("Failed to remove user %d from session %d.", req.UserId, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Removed user %d from workbench %d.", req.UserId, req.Id)),
+			audit.WithDescription(fmt.Sprintf("Removed user %d from session %d.", req.UserId, req.Id)),
 			audit.WithWorkspaceID(res.Result.Workbench.WorkspaceId),
 		)
 	}
