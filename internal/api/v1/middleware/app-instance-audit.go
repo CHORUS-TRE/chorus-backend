@@ -116,7 +116,7 @@ func (c appInstanceControllerAudit) UpdateAppInstance(ctx context.Context, req *
 	} else {
 		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated instance (ID %d) of '%s' %s (app ID %d).", ai.Id, ai.AppName, ai.AppDockerImageTag, ai.AppId)),
+			audit.WithDescription(fmt.Sprintf("Updated instance (ID %d) of '%s' (version %s).", ai.Id, ai.AppName, ai.AppDockerImageTag)),
 			audit.WithDetail("app_id", ai.AppId),
 			audit.WithDetail("app_name", ai.AppName),
 			audit.WithDetail("app_image_registry", ai.AppDockerImageRegistry),
