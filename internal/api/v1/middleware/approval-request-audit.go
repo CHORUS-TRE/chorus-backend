@@ -32,7 +32,7 @@ func (c approvalRequestControllerAudit) GetApprovalRequest(ctx context.Context, 
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionApprovalRequestRead,
 			audit.WithDetail("approval_request_id", req.Id),
-			audit.WithDescription("Failed to get approval request."),
+			audit.WithDescription(fmt.Sprintf("Failed to get approval request with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}
@@ -91,12 +91,12 @@ func (c approvalRequestControllerAudit) CreateDataExtractionRequest(ctx context.
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create data extraction request."),
+			audit.WithDescription(fmt.Sprintf("Failed to create data extraction request '%s' from workspace %d.", req.Title, req.SourceWorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created data extraction request with ID %d.", res.Result.ApprovalRequest.Id)),
+			audit.WithDescription(fmt.Sprintf("Created data extraction request '%s' (ID %d) from workspace %d.", req.Title, res.Result.ApprovalRequest.Id, req.SourceWorkspaceId)),
 			audit.WithWorkspaceID(req.SourceWorkspaceId),
 			audit.WithDetail("approval_request_id", res.Result.ApprovalRequest.Id),
 		)
@@ -119,13 +119,13 @@ func (c approvalRequestControllerAudit) CreateDataTransferRequest(ctx context.Co
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create data transfer request."),
+			audit.WithDescription(fmt.Sprintf("Failed to create data transfer request '%s' from workspace %d to workspace %d.", req.Title, req.SourceWorkspaceId, req.DestinationWorkspaceId)),
 			audit.WithError(err),
 		)
 		audit.Record(ctx, c.auditWriter, model.AuditActionDataTransferRequestCreate, opts...)
 	} else {
 		successOpts := append(opts,
-			audit.WithDescription(fmt.Sprintf("Created data transfer request with ID %d from workspace %d to workspace %d.", res.Result.ApprovalRequest.Id, req.SourceWorkspaceId, req.DestinationWorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Created data transfer request '%s' (ID %d) from workspace %d to workspace %d.", req.Title, res.Result.ApprovalRequest.Id, req.SourceWorkspaceId, req.DestinationWorkspaceId)),
 			audit.WithDetail("approval_request_id", res.Result.ApprovalRequest.Id),
 		)
 
@@ -176,7 +176,7 @@ func (c approvalRequestControllerAudit) DeleteApprovalRequest(ctx context.Contex
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete approval request."),
+			audit.WithDescription(fmt.Sprintf("Failed to delete approval request with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	} else {
@@ -200,12 +200,12 @@ func (c approvalRequestControllerAudit) DownloadApprovalRequestFile(ctx context.
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to download file from approval request %d.", req.Id)),
+			audit.WithDescription(fmt.Sprintf("Failed to download file '%s' from approval request %d.", req.Path, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Downloaded file from approval request %d.", req.Id)),
+			audit.WithDescription(fmt.Sprintf("Downloaded file '%s' from approval request %d.", req.Path, req.Id)),
 		)
 	}
 
