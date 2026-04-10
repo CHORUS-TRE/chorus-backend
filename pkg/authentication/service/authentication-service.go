@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
@@ -65,6 +67,7 @@ type AuthenticationService struct {
 	daemonEncryptionKey *crypto.Secret
 	store               AuthenticationStore // store is the database handler object.
 	oauthConfigs        map[string]*oauth2.Config
+	oauthHTTPClients    map[string]*http.Client // Custom HTTP clients per OAuth provider for TLS configuration
 }
 
 // CustomClaims groups the JWT-token data fields.
@@ -85,6 +88,7 @@ type CustomClaims struct {
 // NewAuthenticationService returns a fresh authentication service instance.
 func NewAuthenticationService(cfg config.Config, userer Userer, store AuthenticationStore, daemonEncryptionKey *crypto.Secret) (*AuthenticationService, error) {
 	oauthConfigs := make(map[string]*oauth2.Config)
+	oauthHTTPClients := make(map[string]*http.Client)
 	modes := make(map[string]config.Mode)
 
 	// Initialize the OAuth2 configs for each OpenID mode
@@ -126,6 +130,15 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 				RedirectURL: redirectURL,
 				Scopes:      mode.OpenID.Scopes,
 			}
+
+			// Create custom HTTP client if TLS configuration is needed
+			if mode.OpenID.InsecureSkipTLS || mode.OpenID.CustomCA != "" {
+				httpClient, err := createOAuthHTTPClient(mode.OpenID.InsecureSkipTLS, mode.OpenID.CustomCA)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create HTTP client for OpenID provider %s: %w", mode.OpenID.ID, err)
+				}
+				oauthHTTPClients[mode.OpenID.ID] = httpClient
+			}
 		}
 	}
 
@@ -138,6 +151,30 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 		daemonEncryptionKey: daemonEncryptionKey,
 		store:               store,
 		oauthConfigs:        oauthConfigs,
+		oauthHTTPClients:    oauthHTTPClients,
+	}, nil
+}
+
+// createOAuthHTTPClient creates an HTTP client with custom TLS configuration.
+func createOAuthHTTPClient(insecureSkipTLS bool, customCA string) (*http.Client, error) {
+	tlsConfig := &tls.Config{}
+
+	if insecureSkipTLS {
+		tlsConfig.InsecureSkipVerify = true
+	}
+
+	if customCA != "" {
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM([]byte(customCA)) {
+			return nil, fmt.Errorf("failed to parse custom CA certificate")
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
 	}, nil
 }
 
@@ -271,15 +308,23 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 	// 	return nil, errors.New("invalid state parameter")
 	// }
 
-	token, err := oauthConfig.Exchange(ctx, code)
+	// Use custom HTTP client if configured for this provider
+	oauthCtx := ctx
+	if httpClient, exists := a.oauthHTTPClients[providerID]; exists {
+		oauthCtx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+	}
+
+	token, err := oauthConfig.Exchange(oauthCtx, code)
 	if err != nil {
+		logger.TechLog.Error(ctx, "oauth token exchange failed", zap.Error(err))
 		return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to exchange token")
 	}
 
-	client := oauthConfig.Client(ctx, token)
+	client := oauthConfig.Client(oauthCtx, token)
 
 	userInfoResp, err := client.Get(mode.OpenID.UserInfoURL)
 	if err != nil {
+		logger.TechLog.Error(ctx, "failed to get user info", zap.Error(err))
 		return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to get user info")
 	}
 	defer userInfoResp.Body.Close()

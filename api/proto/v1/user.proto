@@ -24,6 +24,7 @@ message User {
     google.protobuf.Timestamp updatedAt = 12;
 
     string email = 14;
+    repeated string namespaces = 15;
 }
 
 message Role {

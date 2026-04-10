@@ -33,11 +33,11 @@ type UserReq struct {
 type UserUpdateReq struct {
 	ID uint64
 
-	FirstName string           `validate:"required,generalstring"`
-	LastName  string           `validate:"required,generalstring"`
-	Username  string           `validate:"required,generalstring"`
+	FirstName string `validate:"required,generalstring"`
+	LastName  string `validate:"required,generalstring"`
+	Username  string `validate:"required,generalstring"`
 	Email     string
-	Source    string           `validate:"required,generalstring"`
+	Source    string           `validate:"generalstring"`
 	Status    model.UserStatus `validate:"required"`
 
 	Roles []model.UserRole
@@ -50,10 +50,12 @@ type ListUsersReq struct {
 }
 
 type UserFilter struct {
-	IDsIn        []uint64
-	WorkspaceIDs []uint64
-	WorkbenchIDs []uint64
-	Search       *string
+	IDsIn          []uint64
+	WorkspaceIDs   []uint64
+	WorkbenchIDs   []uint64
+	Search         *string
+	Source         *string
+	WithNamespaces bool
 }
 
 type GetUserReq struct {
