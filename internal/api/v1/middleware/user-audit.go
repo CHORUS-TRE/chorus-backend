@@ -99,13 +99,14 @@ func (c userControllerAudit) CreateUser(ctx context.Context, req *chorus.User) (
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create user."),
+			audit.WithDescription(fmt.Sprintf("Failed to create user '%s'.", req.Username)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
 			audit.WithUserID(res.Result.User.Id),
-			audit.WithDescription(fmt.Sprintf("Created user with ID %d.", res.Result.User.Id)),
+			audit.WithDetail("user_id", res.Result.User.Id),
+			audit.WithDescription(fmt.Sprintf("Created user '%s' (ID %d).", req.Username, res.Result.User.Id)),
 		)
 	}
 
@@ -119,17 +120,18 @@ func (c userControllerAudit) UpdateUser(ctx context.Context, req *chorus.User) (
 
 	opts := []audit.Option{
 		audit.WithUserID(req.Id),
+		audit.WithDetail("user_id", req.Id),
+		audit.WithDetail("username", req.Username),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to update user."),
+			audit.WithDescription(fmt.Sprintf("Failed to update user '%s' (ID %d).", req.Username, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated user with ID %d.", req.Id)),
-			audit.WithDetail("username", req.Username),
+			audit.WithDescription(fmt.Sprintf("Updated user '%s' (ID %d).", req.Username, req.Id)),
 		)
 	}
 
