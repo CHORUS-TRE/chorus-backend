@@ -53,7 +53,7 @@ func (c userControllerAudit) GetUser(ctx context.Context, req *chorus.GetUserReq
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionUserRead,
 			audit.WithUserID(req.Id),
-			audit.WithDescription("Failed to get user."),
+			audit.WithDescription(fmt.Sprintf("Failed to get user with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}
@@ -170,7 +170,7 @@ func (c userControllerAudit) DeleteUser(ctx context.Context, req *chorus.DeleteU
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete user."),
+			audit.WithDescription(fmt.Sprintf("Failed to delete user with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	} else {

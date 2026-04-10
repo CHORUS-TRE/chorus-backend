@@ -79,7 +79,7 @@ func (c workspaceControllerAudit) GetWorkspace(ctx context.Context, req *chorus.
 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceRead,
 			audit.WithWorkspaceID(req.Id),
 			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDescription("Failed to get workspace."),
+			audit.WithDescription(fmt.Sprintf("Failed to get workspace with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}
