@@ -843,7 +843,10 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkbenchStream,
 			audit.WithWorkbenchID(workbenchID),
 			audit.WithWorkspaceID(workbench.WorkspaceID),
-			audit.WithDescription(fmt.Sprintf("Accessed workbench stream with ID %d.", workbenchID)),
+			audit.WithDescription(fmt.Sprintf("Accessed stream of session '%s' (ID %d) in workspace %d.", workbench.Name, workbenchID, workbench.WorkspaceID)),
+			audit.WithDetail("workbench_id", workbenchID),
+			audit.WithDetail("workbench_name", workbench.Name),
+			audit.WithDetail("workspace_id", workbench.WorkspaceID),
 		)
 	}
 
