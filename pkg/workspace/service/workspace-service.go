@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand/v2"
 	"time"
@@ -415,7 +416,11 @@ func workspaceToK8sInput(ws *model.Workspace) k8s.WorkspaceInput {
 		}
 		var values *apiextensionsv1.JSON
 		if len(svc.Values) > 0 {
-			values = &apiextensionsv1.JSON{Raw: svc.Values}
+			raw, err := json.Marshal(svc.Values)
+			if err != nil {
+				continue
+			}
+			values = &apiextensionsv1.JSON{Raw: raw}
 		}
 		services[name] = k8s.WorkspaceK8sService{
 			Chart: k8s.WorkspaceServiceChart{

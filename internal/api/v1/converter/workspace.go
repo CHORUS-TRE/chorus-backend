@@ -20,9 +20,11 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 
 	services := model.JSONMap[model.WorkspaceServiceSpec]{}
 	for name, svc := range workspace.GetServices() {
-		var valuesRaw json.RawMessage
+		var values map[string]any
 		if svc.ValuesJson != "" {
-			valuesRaw = json.RawMessage(svc.ValuesJson)
+			if err := json.Unmarshal([]byte(svc.ValuesJson), &values); err != nil {
+				return nil, fmt.Errorf("unable to unmarshal values JSON for service %s: %w", name, err)
+			}
 		}
 		var creds *model.WorkspaceServiceCredentials
 		if svc.Credentials != nil {
@@ -42,7 +44,7 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		services[name] = model.WorkspaceServiceSpec{
 			State:                  svc.State,
 			Chart:                  chart,
-			Values:                 valuesRaw,
+			Values:                 values,
 			Credentials:            creds,
 			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
 			ComputedValues:         svc.ComputedValues,
@@ -85,7 +87,11 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 	for name, svc := range workspace.Services {
 		var valuesJson string
 		if len(svc.Values) > 0 {
-			valuesJson = string(svc.Values)
+			b, err := json.Marshal(svc.Values)
+			if err != nil {
+				return nil, fmt.Errorf("unable to marshal values for service %s: %w", name, err)
+			}
+			valuesJson = string(b)
 		}
 		var creds *chorus.WorkspaceServiceCredentials
 		if svc.Credentials != nil {
