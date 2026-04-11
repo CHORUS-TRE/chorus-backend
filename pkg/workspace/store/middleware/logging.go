@@ -151,3 +151,24 @@ func (c workspaceStorageLogging) DeleteOldWorkspaces(ctx context.Context, timeou
 
 	return deletedWorkspaces, nil
 }
+
+func (c workspaceStorageLogging) UpdateWorkspaceStatus(ctx context.Context, tenantID uint64, workspaceID uint64, networkPolicyStatus, networkPolicyMessage string, serviceStatuses model.JSONMap[model.WorkspaceServiceStatusInfo]) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.UpdateWorkspaceStatus(ctx, tenantID, workspaceID, networkPolicyStatus, networkPolicyMessage, serviceStatuses)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithWorkspaceIDField(workspaceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithWorkspaceIDField(workspaceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}

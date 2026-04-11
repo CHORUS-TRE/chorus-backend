@@ -9,8 +9,12 @@ func NewTestClient() *testClient {
 	return c
 }
 
-// Workspace (Namespace) operations
-func (c *testClient) CreateWorkspace(tenantID uint64, namespace string) error {
+// Workspace (Namespace + CRD) operations
+func (c *testClient) CreateWorkspace(workspace WorkspaceInput) error {
+	return nil
+}
+
+func (c *testClient) UpdateWorkspace(workspace WorkspaceInput) error {
 	return nil
 }
 
@@ -61,5 +65,9 @@ func (c *testClient) RegisterOnUpdateWorkbenchHandler(func(workbench Workbench) 
 }
 
 func (c *testClient) RegisterOnDeleteWorkbenchHandler(func(workbench Workbench) error) error {
+	return nil
+}
+
+func (c *testClient) RegisterOnUpdateWorkspaceHandler(func(workspace WorkspaceOutput) error) error {
 	return nil
 }

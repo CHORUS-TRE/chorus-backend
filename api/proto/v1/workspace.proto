@@ -3,6 +3,34 @@ package chorus;
 option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+message WorkspaceServiceChart {
+    string registry = 1;
+    string repository = 2;
+    string tag = 3;
+}
+
+message WorkspaceServiceCredentials {
+    string secretName = 1;
+    repeated string paths = 2;
+}
+
+message WorkspaceServiceSpec {
+    string state = 1;
+    WorkspaceServiceChart chart = 2;
+    google.protobuf.Struct values = 3;
+    WorkspaceServiceCredentials credentials = 4;
+    string connectionInfoTemplate = 5;
+    map<string, string> computedValues = 6;
+}
+
+message WorkspaceServiceStatusInfo {
+    string status = 1;
+    string message = 2;
+    string connectionInfo = 3;
+    string secretName = 4;
+}
 
 message Workspace {
     uint64 id = 1;
@@ -23,4 +51,12 @@ message Workspace {
     google.protobuf.Timestamp updatedAt = 12;
 
     string namespace = 13;
+
+    string networkPolicy = 14;
+    repeated string allowedFqdns = 15;
+    string networkPolicyStatus = 16;
+    string networkPolicyMessage = 17;
+    string clipboard = 18;
+    map<string, WorkspaceServiceSpec> services = 19;
+    map<string, WorkspaceServiceStatusInfo> serviceStatuses = 20;
 }

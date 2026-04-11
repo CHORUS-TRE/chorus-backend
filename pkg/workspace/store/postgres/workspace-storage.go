@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
@@ -13,6 +14,11 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
+
+// pqStringArray converts a StringSlice to a pq.StringArray for use in SQL queries.
+func pqStringArray(s model.StringSlice) pq.StringArray {
+	return pq.StringArray(s)
+}
 
 // WorkspaceStorage is the handler through which a PostgresDB backend can be queried.
 type WorkspaceStorage struct {
@@ -26,7 +32,10 @@ func NewWorkspaceStorage(db *sqlx.DB) *WorkspaceStorage {
 
 func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error) {
 	const query = `
-		SELECT id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat
+		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
+		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		       clipboard, services, servicestatuses,
+		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
@@ -59,7 +68,10 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 
 	// Get workspaces query
 	query := `
-		SELECT id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat
+		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
+		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		       clipboard, services, servicestatuses,
+		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1
 	`
@@ -97,13 +109,39 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 // CreateWorkspace saves the provided workspace object in the database 'workspaces' table.
 func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
 	const workspaceQuery = `
-		INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
+		INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, ismain,
+		                        networkpolicy, allowedfqdns, clipboard, services,
+		                        createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
+		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		          clipboard, services, servicestatuses,
+		          createdat, updatedat;
 	`
 
+	servicesVal, err := workspace.Services.Value()
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal services: %w", err)
+	}
+
+	networkPolicy := workspace.NetworkPolicy
+	if networkPolicy == "" {
+		networkPolicy = "Airgapped"
+	}
+	clipboard := workspace.Clipboard
+	if clipboard == "" {
+		clipboard = "disabled"
+	}
+	allowedFQDNs := workspace.AllowedFQDNs
+	if allowedFQDNs == nil {
+		allowedFQDNs = model.StringSlice{}
+	}
+
 	var createdWorkspace model.Workspace
-	err := s.db.GetContext(ctx, &createdWorkspace, workspaceQuery, tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain)
+	err = s.db.GetContext(ctx, &createdWorkspace, workspaceQuery,
+		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
+		networkPolicy, pqStringArray(allowedFQDNs), clipboard, servicesVal,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -114,19 +152,65 @@ func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64,
 func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
-		SET name = $3, shortname = $4, description = $5, status = $6, isMain = $7, updatedat = NOW()
+		SET name = $3, shortname = $4, description = $5, status = $6, isMain = $7,
+		    networkpolicy = $8, allowedfqdns = $9, clipboard = $10, services = $11,
+		    updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
+		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
+		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		          clipboard, services, servicestatuses,
+		          createdat, updatedat;
 	`
 
-	// Update Workspace
+	servicesVal, err := workspace.Services.Value()
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal services: %w", err)
+	}
+
+	networkPolicy := workspace.NetworkPolicy
+	if networkPolicy == "" {
+		networkPolicy = "Airgapped"
+	}
+	clipboard := workspace.Clipboard
+	if clipboard == "" {
+		clipboard = "disabled"
+	}
+	allowedFQDNs := workspace.AllowedFQDNs
+	if allowedFQDNs == nil {
+		allowedFQDNs = model.StringSlice{}
+	}
+
 	var updatedWorkspace model.Workspace
-	err := s.db.GetContext(ctx, &updatedWorkspace, workspaceUpdateQuery, tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain)
+	err = s.db.GetContext(ctx, &updatedWorkspace, workspaceUpdateQuery,
+		tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
+		networkPolicy, pqStringArray(allowedFQDNs), clipboard, servicesVal,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update workspace: %w", err)
 	}
 
 	return &updatedWorkspace, nil
+}
+
+// UpdateWorkspaceStatus updates only the status fields (from K8s watcher).
+func (s *WorkspaceStorage) UpdateWorkspaceStatus(ctx context.Context, tenantID uint64, workspaceID uint64, networkPolicyStatus, networkPolicyMessage string, serviceStatuses model.JSONMap[model.WorkspaceServiceStatusInfo]) error {
+	const query = `
+		UPDATE workspaces
+		SET networkpolicystatus = $3, networkpolicymessage = $4, servicestatuses = $5, updatedat = NOW()
+		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
+	`
+
+	serviceStatusesVal, err := serviceStatuses.Value()
+	if err != nil {
+		return fmt.Errorf("unable to marshal service statuses: %w", err)
+	}
+
+	_, err = s.db.ExecContext(ctx, query, tenantID, workspaceID, networkPolicyStatus, networkPolicyMessage, serviceStatusesVal)
+	if err != nil {
+		return fmt.Errorf("unable to update workspace status: %w", err)
+	}
+
+	return nil
 }
 
 func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
@@ -160,7 +244,10 @@ func (s *WorkspaceStorage) DeleteOldWorkspaces(ctx context.Context, timeout time
 		WHERE createdat < NOW() - $3::INTERVAL
 		  AND status != 'deleted'
 		  AND deletedat IS NULL
-		RETURNING id, tenantid, userid, name, shortname, description, status, ismain, createdat, updatedat;
+		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
+		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		          clipboard, services, servicestatuses,
+		          createdat, updatedat;
 	`
 
 	var deletedWorkspaces []*model.Workspace

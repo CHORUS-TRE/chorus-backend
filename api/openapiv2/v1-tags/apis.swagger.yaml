@@ -8,8 +8,8 @@ info:
     url: https://www.chorus-tre.ch
 tags:
   - name: AppInstanceService
-  - name: AppService
   - name: ApprovalRequestService
+  - name: AppService
   - name: AuditService
   - name: AuthenticationService
   - name: AuthorizationService
@@ -6030,6 +6030,26 @@ definitions:
         format: date-time
       namespace:
         type: string
+      networkPolicy:
+        type: string
+      allowedFqdns:
+        type: array
+        items:
+          type: string
+      networkPolicyStatus:
+        type: string
+      networkPolicyMessage:
+        type: string
+      clipboard:
+        type: string
+      services:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusWorkspaceServiceSpec'
+      serviceStatuses:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusWorkspaceServiceStatusInfo'
   chorusWorkspaceFile:
     type: object
     properties:
@@ -6072,12 +6092,70 @@ definitions:
         items:
           type: string
           format: uint64
+  chorusWorkspaceServiceChart:
+    type: object
+    properties:
+      registry:
+        type: string
+      repository:
+        type: string
+      tag:
+        type: string
+  chorusWorkspaceServiceCredentials:
+    type: object
+    properties:
+      secretName:
+        type: string
+      paths:
+        type: array
+        items:
+          type: string
+  chorusWorkspaceServiceSpec:
+    type: object
+    properties:
+      state:
+        type: string
+      chart:
+        $ref: '#/definitions/chorusWorkspaceServiceChart'
+      values:
+        type: object
+      credentials:
+        $ref: '#/definitions/chorusWorkspaceServiceCredentials'
+      connectionInfoTemplate:
+        type: string
+      computedValues:
+        type: object
+        additionalProperties:
+          type: string
+  chorusWorkspaceServiceStatusInfo:
+    type: object
+    properties:
+      status:
+        type: string
+      message:
+        type: string
+      connectionInfo:
+        type: string
+      secretName:
+        type: string
   protobufAny:
     type: object
     properties:
       '@type':
         type: string
     additionalProperties: {}
+  protobufNullValue:
+    type: string
+    enum:
+      - NULL_VALUE
+    default: NULL_VALUE
+    description: |-
+      `NullValue` is a singleton enumeration to represent the null value for the
+      `Value` type union.
+
+       The JSON representation for `NullValue` is JSON `null`.
+
+       - NULL_VALUE: Null value.
   rpcStatus:
     type: object
     properties:

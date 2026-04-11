@@ -52,6 +52,10 @@ type NotificationStore interface {
 	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
 }
 
+type WorkspaceReader interface {
+	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
+}
+
 type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
 }
@@ -120,6 +124,7 @@ type WorkbenchService struct {
 	userer            user_service.Userer
 	authenticator     authentication_service.Authenticator
 	notificationStore NotificationStore
+	workspaceReader   WorkspaceReader
 	auditWriter       audit_service.AuditWriter
 
 	proxyRWMutex     sync.RWMutex
@@ -129,7 +134,7 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore, auditWriter audit_service.AuditWriter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore, workspaceReader WorkspaceReader, auditWriter audit_service.AuditWriter) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
@@ -139,6 +144,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		userer:            userer,
 		authenticator:     authenticator,
 		notificationStore: notificationStore,
+		workspaceReader:   workspaceReader,
 		auditWriter:       auditWriter,
 
 		proxyCache:       make(map[proxyID]*proxy),
@@ -424,6 +430,14 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
+		clipboard := ""
+		ws, wsErr := s.workspaceReader.GetWorkspace(ctx, workbench.TenantID, workbench.WorkspaceID)
+		if wsErr != nil {
+			logger.TechLog.Warn(ctx, "unable to get workspace for clipboard", zap.Error(wsErr), zap.Uint64("workspaceID", workbench.WorkspaceID))
+		} else {
+			clipboard = ws.Clipboard
+		}
+
 		err = s.client.UpdateWorkbench(k8s.Workbench{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
@@ -431,6 +445,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 			UserID:                  user.ID,
 			Name:                    workbenchName,
 			Apps:                    clientApps,
+			Clipboard:               clipboard,
 			InitialResolutionWidth:  workbench.InitialResolutionWidth,
 			InitialResolutionHeight: workbench.InitialResolutionHeight,
 		})
@@ -540,12 +555,21 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
+	clipboard := ""
+	ws, wsErr := s.workspaceReader.GetWorkspace(ctx, workbench.TenantID, workbench.WorkspaceID)
+	if wsErr != nil {
+		logger.TechLog.Warn(ctx, "unable to get workspace for clipboard", zap.Error(wsErr), zap.Uint64("workspaceID", workbench.WorkspaceID))
+	} else {
+		clipboard = ws.Clipboard
+	}
+
 	err = s.client.CreateWorkbench(k8s.Workbench{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
 		Username:                username,
 		UserID:                  user.ID,
 		Name:                    workbenchName,
+		Clipboard:               clipboard,
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
 		InitialResolutionHeight: workbench.InitialResolutionHeight,
 	})

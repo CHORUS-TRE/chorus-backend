@@ -38,6 +38,7 @@ func (c *client) workbenchToK8sWorkbench(workbench Workbench) (K8sWorkbench, err
 			Server: WorkbenchServer{
 				InitialResolutionWidth:  int(workbench.InitialResolutionWidth),
 				InitialResolutionHeight: int(workbench.InitialResolutionHeight),
+				Clipboard:               workbench.Clipboard,
 			},
 			Apps: map[string]WorkbenchApp{},
 		},
@@ -318,6 +319,81 @@ func (c *client) eventInterfaceToWorkbench(obj any) (Workbench, error) {
 	return workbench, nil
 }
 
+// Converts event object to WorkspaceOutput
+func (c *client) eventInterfaceToWorkspaceOutput(obj any) (WorkspaceOutput, error) {
+	if obj == nil {
+		return WorkspaceOutput{}, fmt.Errorf("nil object received in event")
+	}
+
+	k8sWorkspace, err := eventInterfaceToK8sWorkspace(obj)
+	if err != nil {
+		return WorkspaceOutput{}, fmt.Errorf("error converting to Workspace: %w", err)
+	}
+
+	return c.k8sWorkspaceToWorkspaceOutput(*k8sWorkspace)
+}
+
+// ----------------------------------------------------------------
+// Workspace converters
+// ----------------------------------------------------------------
+
+func (c *client) workspaceInputToK8sWorkspace(workspace WorkspaceInput) K8sWorkspace {
+	k8sWorkspace := K8sWorkspace{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Workspace",
+			APIVersion: "default.chorus-tre.ch/v1alpha1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      workspace.Namespace,
+			Namespace: workspace.Namespace,
+			Labels: map[string]string{
+				"chorus-tre.ch/created-by": "chorus-backend",
+				"chorus-tre.ch/tenant-id":  fmt.Sprintf("%d", workspace.TenantID),
+			},
+		},
+		Spec: WorkspaceSpec{
+			NetworkPolicy: workspace.NetworkPolicy,
+			AllowedFQDNs:  workspace.AllowedFQDNs,
+			Services:      workspace.Services,
+		},
+	}
+
+	if k8sWorkspace.Spec.NetworkPolicy == "" {
+		k8sWorkspace.Spec.NetworkPolicy = "Airgapped"
+	}
+
+	return k8sWorkspace
+}
+
+func (c *client) k8sWorkspaceToWorkspaceOutput(ws K8sWorkspace) (WorkspaceOutput, error) {
+	tenantIDStr := ws.Labels["chorus-tre.ch/tenant-id"]
+	tenantID, err := strconv.ParseUint(tenantIDStr, 10, 64)
+	if err != nil {
+		return WorkspaceOutput{}, fmt.Errorf("error parsing tenant ID: %w", err)
+	}
+
+	output := WorkspaceOutput{
+		CurrentGeneration:    ws.ObjectMeta.Generation,
+		ObservedGeneration:   ws.Status.ObservedGeneration,
+		Namespace:            ws.Namespace,
+		TenantID:             tenantID,
+		NetworkPolicyStatus:  ws.Status.NetworkPolicy.Status,
+		NetworkPolicyMessage: ws.Status.NetworkPolicy.Message,
+		ServiceStatuses:      make(map[string]WorkspaceServiceStatusOutput),
+	}
+
+	for name, svc := range ws.Status.Services {
+		output.ServiceStatuses[name] = WorkspaceServiceStatusOutput{
+			Status:         string(svc.Status),
+			Message:        svc.Message,
+			ConnectionInfo: svc.ConnectionInfo,
+			SecretName:     svc.SecretName,
+		}
+	}
+
+	return output, nil
+}
+
 // ----------------------------------------------------------------
 // Converters from unstructured to K8s types
 // ----------------------------------------------------------------
@@ -337,6 +413,23 @@ func unstructuredToK8sWorkbench(u *unstructured.Unstructured) (*K8sWorkbench, er
 		return nil, err
 	}
 	return &wb, nil
+}
+
+func eventInterfaceToK8sWorkspace(a any) (*K8sWorkspace, error) {
+	u, ok := a.(*unstructured.Unstructured)
+	if !ok {
+		return nil, fmt.Errorf("expected unstructured.Unstructured, got %T", a)
+	}
+	return unstructuredToK8sWorkspace(u)
+}
+
+func unstructuredToK8sWorkspace(u *unstructured.Unstructured) (*K8sWorkspace, error) {
+	var ws K8sWorkspace
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, &ws)
+	if err != nil {
+		return nil, err
+	}
+	return &ws, nil
 }
 
 // func eventInterfaceToNamespace(a any) (*Namespace, error) {

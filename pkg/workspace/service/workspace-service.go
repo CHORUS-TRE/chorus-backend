@@ -19,6 +19,7 @@ import (
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"go.uber.org/zap"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 type NotificationStore interface {
@@ -48,6 +49,7 @@ type WorkspaceStore interface {
 	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	UpdateWorkspaceStatus(ctx context.Context, tenantID uint64, workspaceID uint64, networkPolicyStatus, networkPolicyMessage string, serviceStatuses model.JSONMap[model.WorkspaceServiceStatusInfo]) error
 }
 
 type Userer interface {
@@ -77,6 +79,8 @@ func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8s
 		notificationStore: notificationStore,
 		auditWriter:       auditWriter,
 	}
+
+	ws.SetClientWatchers()
 
 	go func() {
 		if err := ws.updateAllWorkspaces(context.Background()); err != nil {
@@ -118,7 +122,8 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 			}()
 		} else {
 			go func() {
-				if err := s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(workspace.ID)); err != nil {
+				input := workspaceToK8sInput(workspace)
+				if err := s.k8sClient.CreateWorkspace(input); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to create workspace %v: %v", workspace.ID, err))
 				}
 			}()
@@ -201,6 +206,11 @@ func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model
 		return nil, fmt.Errorf("unable to update workspace %v: %w", workspace.ID, err)
 	}
 
+	input := workspaceToK8sInput(updatedWorkspace)
+	if err := s.k8sClient.UpdateWorkspace(input); err != nil {
+		return nil, fmt.Errorf("unable to sync workspace %v to K8s: %w", workspace.ID, err)
+	}
+
 	return updatedWorkspace, nil
 }
 
@@ -227,7 +237,8 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		}
 	}
 
-	err = s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))
+	input := workspaceToK8sInput(newWorkspace)
+	err = s.k8sClient.CreateWorkspace(input)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workbench %v: %w", workspace.ID, err)
 	}
@@ -339,4 +350,92 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	}
 
 	return nil
+}
+
+// SetClientWatchers registers a handler for Workspace CRD status updates from K8s.
+func (s *WorkspaceService) SetClientWatchers() {
+	watcher := func(wsOutput k8s.WorkspaceOutput) error {
+		ctx := context.Background()
+		logger.TechLog.Debug(ctx, "workspace watcher received update",
+			zap.String("namespace", wsOutput.Namespace),
+			zap.Int64("currentGeneration", wsOutput.CurrentGeneration),
+			zap.Int64("observedGeneration", wsOutput.ObservedGeneration),
+		)
+
+		// Skip updates if operator has not reconciled yet
+		if wsOutput.ObservedGeneration != wsOutput.CurrentGeneration {
+			logger.TechLog.Debug(ctx, "skipping workspace update - operator has not reconciled",
+				zap.String("namespace", wsOutput.Namespace),
+				zap.Int64("currentGeneration", wsOutput.CurrentGeneration),
+				zap.Int64("observedGeneration", wsOutput.ObservedGeneration),
+			)
+			return nil
+		}
+
+		workspaceID, err := model.GetIDFromClusterName(wsOutput.Namespace)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to get workspace ID from namespace", zap.String("namespace", wsOutput.Namespace), zap.Error(err))
+			return fmt.Errorf("unable to get workspace ID from namespace %s: %w", wsOutput.Namespace, err)
+		}
+
+		serviceStatuses := model.JSONMap[model.WorkspaceServiceStatusInfo]{}
+		for name, ss := range wsOutput.ServiceStatuses {
+			serviceStatuses[name] = model.WorkspaceServiceStatusInfo{
+				Status:         ss.Status,
+				Message:        ss.Message,
+				ConnectionInfo: ss.ConnectionInfo,
+				SecretName:     ss.SecretName,
+			}
+		}
+
+		err = s.store.UpdateWorkspaceStatus(ctx, wsOutput.TenantID, workspaceID,
+			wsOutput.NetworkPolicyStatus, wsOutput.NetworkPolicyMessage, serviceStatuses)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to update workspace status from watcher",
+				zap.Uint64("workspaceID", workspaceID), zap.Error(err))
+			return fmt.Errorf("unable to update workspace status %v: %w", workspaceID, err)
+		}
+
+		return nil
+	}
+
+	s.k8sClient.RegisterOnUpdateWorkspaceHandler(watcher)
+}
+
+// workspaceToK8sInput converts a workspace model to a K8s WorkspaceInput.
+func workspaceToK8sInput(ws *model.Workspace) k8s.WorkspaceInput {
+	services := make(map[string]k8s.WorkspaceK8sService, len(ws.Services))
+	for name, svc := range ws.Services {
+		var creds *k8s.WorkspaceServiceCredentials
+		if svc.Credentials != nil {
+			creds = &k8s.WorkspaceServiceCredentials{
+				SecretName: svc.Credentials.SecretName,
+				Paths:      svc.Credentials.Paths,
+			}
+		}
+		var values *apiextensionsv1.JSON
+		if len(svc.Values) > 0 {
+			values = &apiextensionsv1.JSON{Raw: svc.Values}
+		}
+		services[name] = k8s.WorkspaceK8sService{
+			Chart: k8s.WorkspaceServiceChart{
+				Registry:   svc.Chart.Registry,
+				Repository: svc.Chart.Repository,
+				Tag:        svc.Chart.Tag,
+			},
+			Values:                 values,
+			Credentials:            creds,
+			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
+			ComputedValues:         svc.ComputedValues,
+		}
+	}
+
+	return k8s.WorkspaceInput{
+		TenantID:      ws.TenantID,
+		Namespace:     model.GetWorkspaceClusterName(ws.ID),
+		NetworkPolicy: ws.NetworkPolicy,
+		AllowedFQDNs:  []string(ws.AllowedFQDNs),
+		Clipboard:     ws.Clipboard,
+		Services:      services,
+	}
 }
