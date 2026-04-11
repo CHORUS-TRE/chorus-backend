@@ -33,8 +33,8 @@ type ChorusWorkspaceServiceSpec struct {
 	// state
 	State string `json:"state,omitempty"`
 
-	// values
-	Values interface{} `json:"values,omitempty"`
+	// JSON-encoded string, replaces google.protobuf.Struct
+	ValuesJSON string `json:"valuesJson,omitempty"`
 }
 
 // Validate validates this chorus workspace service spec

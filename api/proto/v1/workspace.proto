@@ -3,7 +3,6 @@ package chorus;
 option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/struct.proto";
 
 message WorkspaceServiceChart {
     string registry = 1;
@@ -19,7 +18,7 @@ message WorkspaceServiceCredentials {
 message WorkspaceServiceSpec {
     string state = 1;
     WorkspaceServiceChart chart = 2;
-    google.protobuf.Struct values = 3;
+    string valuesJson = 3; // JSON-encoded string, replaces google.protobuf.Struct
     WorkspaceServiceCredentials credentials = 4;
     string connectionInfoTemplate = 5;
     map<string, string> computedValues = 6;

@@ -76,10 +76,10 @@ type WorkspaceStatusService struct {
 
 // WorkspaceStatus defines the observed state of the Workspace CRD
 type K8sWorkspaceStatus struct {
-	ObservedGeneration int64                              `json:"observedGeneration,omitempty"`
-	NetworkPolicy      NetworkPolicyStatus                `json:"networkPolicy,omitempty"`
-	Conditions         []metav1.Condition                 `json:"conditions,omitempty"`
-	Services           map[string]WorkspaceStatusService  `json:"services,omitempty"`
+	ObservedGeneration int64                             `json:"observedGeneration,omitempty"`
+	NetworkPolicy      NetworkPolicyStatus               `json:"networkPolicy,omitempty"`
+	Conditions         []metav1.Condition                `json:"conditions,omitempty"`
+	Services           map[string]WorkspaceStatusService `json:"services,omitempty"`
 }
 
 // K8sWorkspace is the full Workspace CRD object

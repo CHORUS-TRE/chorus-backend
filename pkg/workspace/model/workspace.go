@@ -8,12 +8,12 @@ import (
 
 // WorkspaceServiceSpec defines a workspace service configuration (stored as JSONB).
 type WorkspaceServiceSpec struct {
-	State                  string                        `json:"state,omitempty"`
-	Chart                  WorkspaceServiceChart         `json:"chart"`
-	Values                 json.RawMessage               `json:"values,omitempty"`
-	Credentials            *WorkspaceServiceCredentials  `json:"credentials,omitempty"`
-	ConnectionInfoTemplate string                        `json:"connectionInfoTemplate,omitempty"`
-	ComputedValues         map[string]string             `json:"computedValues,omitempty"`
+	State                  string                       `json:"state,omitempty"`
+	Chart                  WorkspaceServiceChart        `json:"chart"`
+	Values                 json.RawMessage              `json:"values,omitempty"`
+	Credentials            *WorkspaceServiceCredentials `json:"credentials,omitempty"`
+	ConnectionInfoTemplate string                       `json:"connectionInfoTemplate,omitempty"`
+	ComputedValues         map[string]string            `json:"computedValues,omitempty"`
 }
 
 // WorkspaceServiceChart identifies a Helm chart.

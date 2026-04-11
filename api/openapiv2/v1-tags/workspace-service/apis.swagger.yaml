@@ -486,8 +486,9 @@ definitions:
         type: string
       chart:
         $ref: '#/definitions/chorusWorkspaceServiceChart'
-      values:
-        type: object
+      valuesJson:
+        type: string
+        title: JSON-encoded string, replaces google.protobuf.Struct
       credentials:
         $ref: '#/definitions/chorusWorkspaceServiceCredentials'
       connectionInfoTemplate:
@@ -513,18 +514,6 @@ definitions:
       '@type':
         type: string
     additionalProperties: {}
-  protobufNullValue:
-    type: string
-    enum:
-      - NULL_VALUE
-    default: NULL_VALUE
-    description: |-
-      `NullValue` is a singleton enumeration to represent the null value for the
-      `Value` type union.
-
-       The JSON representation for `NullValue` is JSON `null`.
-
-       - NULL_VALUE: Null value.
   rpcStatus:
     type: object
     properties:

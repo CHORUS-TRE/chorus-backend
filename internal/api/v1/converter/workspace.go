@@ -6,7 +6,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) {
@@ -22,12 +21,8 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 	services := model.JSONMap[model.WorkspaceServiceSpec]{}
 	for name, svc := range workspace.GetServices() {
 		var valuesRaw json.RawMessage
-		if svc.Values != nil {
-			b, err := json.Marshal(svc.Values.AsMap())
-			if err != nil {
-				return nil, fmt.Errorf("unable to marshal service values for %s: %w", name, err)
-			}
-			valuesRaw = b
+		if svc.ValuesJson != "" {
+			valuesRaw = json.RawMessage(svc.ValuesJson)
 		}
 		var creds *model.WorkspaceServiceCredentials
 		if svc.Credentials != nil {
@@ -88,16 +83,9 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 
 	services := map[string]*chorus.WorkspaceServiceSpec{}
 	for name, svc := range workspace.Services {
-		var values *structpb.Struct
+		var valuesJson string
 		if len(svc.Values) > 0 {
-			var m map[string]interface{}
-			if err := json.Unmarshal(svc.Values, &m); err != nil {
-				return nil, fmt.Errorf("unable to unmarshal service values for %s: %w", name, err)
-			}
-			values, err = structpb.NewStruct(m)
-			if err != nil {
-				return nil, fmt.Errorf("unable to convert service values for %s: %w", name, err)
-			}
+			valuesJson = string(svc.Values)
 		}
 		var creds *chorus.WorkspaceServiceCredentials
 		if svc.Credentials != nil {
@@ -113,7 +101,7 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 				Repository: svc.Chart.Repository,
 				Tag:        svc.Chart.Tag,
 			},
-			Values:                 values,
+			ValuesJson:             valuesJson,
 			Credentials:            creds,
 			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
 			ComputedValues:         svc.ComputedValues,
