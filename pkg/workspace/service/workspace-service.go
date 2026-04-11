@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand/v2"
 	"time"
@@ -20,7 +19,6 @@ import (
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"go.uber.org/zap"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 type NotificationStore interface {
@@ -405,7 +403,7 @@ func (s *WorkspaceService) SetClientWatchers() {
 
 // workspaceToK8sInput converts a workspace model to a K8s WorkspaceInput.
 func workspaceToK8sInput(ws *model.Workspace) k8s.WorkspaceInput {
-	services := make(map[string]k8s.WorkspaceK8sService, len(ws.Services))
+	services := make(map[string]k8s.WorkspaceInputService, len(ws.Services))
 	for name, svc := range ws.Services {
 		var creds *k8s.WorkspaceServiceCredentials
 		if svc.Credentials != nil {
@@ -414,21 +412,13 @@ func workspaceToK8sInput(ws *model.Workspace) k8s.WorkspaceInput {
 				Paths:      svc.Credentials.Paths,
 			}
 		}
-		var values *apiextensionsv1.JSON
-		if len(svc.Values) > 0 {
-			raw, err := json.Marshal(svc.Values)
-			if err != nil {
-				continue
-			}
-			values = &apiextensionsv1.JSON{Raw: raw}
-		}
-		services[name] = k8s.WorkspaceK8sService{
+		services[name] = k8s.WorkspaceInputService{
 			Chart: k8s.WorkspaceServiceChart{
 				Registry:   svc.Chart.Registry,
 				Repository: svc.Chart.Repository,
 				Tag:        svc.Chart.Tag,
 			},
-			Values:                 values,
+			Values:                 svc.Values,
 			Credentials:            creds,
 			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
 			ComputedValues:         svc.ComputedValues,

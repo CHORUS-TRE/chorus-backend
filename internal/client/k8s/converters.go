@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -338,6 +340,36 @@ func (c *client) eventInterfaceToWorkspaceOutput(obj any) (WorkspaceOutput, erro
 // ----------------------------------------------------------------
 
 func (c *client) workspaceInputToK8sWorkspace(workspace WorkspaceInput) K8sWorkspace {
+	services := make(map[string]WorkspaceK8sService, len(workspace.Services))
+	for name, svc := range workspace.Services {
+		var creds *WorkspaceServiceCredentials
+		if svc.Credentials != nil {
+			creds = &WorkspaceServiceCredentials{
+				SecretName: svc.Credentials.SecretName,
+				Paths:      svc.Credentials.Paths,
+			}
+		}
+		var values *apiextensionsv1.JSON
+		if len(svc.Values) > 0 {
+			raw, err := json.Marshal(svc.Values)
+			if err != nil {
+				continue
+			}
+			values = &apiextensionsv1.JSON{Raw: raw}
+		}
+		services[name] = WorkspaceK8sService{
+			Chart: WorkspaceServiceChart{
+				Registry:   svc.Chart.Registry,
+				Repository: svc.Chart.Repository,
+				Tag:        svc.Chart.Tag,
+			},
+			Values:                 values,
+			Credentials:            creds,
+			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
+			ComputedValues:         svc.ComputedValues,
+		}
+	}
+
 	k8sWorkspace := K8sWorkspace{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Workspace",
@@ -354,7 +386,7 @@ func (c *client) workspaceInputToK8sWorkspace(workspace WorkspaceInput) K8sWorks
 		Spec: WorkspaceSpec{
 			NetworkPolicy: workspace.NetworkPolicy,
 			AllowedFQDNs:  workspace.AllowedFQDNs,
-			Services:      workspace.Services,
+			Services:      services,
 		},
 	}
 

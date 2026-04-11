@@ -101,6 +101,15 @@ type K8sWorkspaceList struct {
 // Internal workspace input/output for K8s client
 // ----------------------------------------------------------------
 
+// WorkspaceInputService defines a workspace service for input (no K8s-specific types).
+type WorkspaceInputService struct {
+	Chart                  WorkspaceServiceChart        `json:"chart"`
+	Values                 map[string]any               `json:"values,omitempty"`
+	Credentials            *WorkspaceServiceCredentials `json:"credentials,omitempty"`
+	ConnectionInfoTemplate string                       `json:"connectionInfoTemplate,omitempty"`
+	ComputedValues         map[string]string            `json:"computedValues,omitempty"`
+}
+
 // WorkspaceInput is the internal model used to create/update a Workspace CRD
 type WorkspaceInput struct {
 	TenantID      uint64
@@ -108,7 +117,7 @@ type WorkspaceInput struct {
 	NetworkPolicy string
 	AllowedFQDNs  []string
 	Clipboard     string
-	Services      map[string]WorkspaceK8sService
+	Services      map[string]WorkspaceInputService
 }
 
 // WorkspaceOutput is the internal model received from Workspace CRD watch events
