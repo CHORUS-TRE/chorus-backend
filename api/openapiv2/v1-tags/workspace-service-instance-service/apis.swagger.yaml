@@ -265,52 +265,71 @@ definitions:
       id:
         type: string
         format: uint64
+        description: Unique identifier of the workspace service instance.
       tenantId:
         type: string
         format: uint64
+        description: ID of the tenant owning this service instance.
       workspaceId:
         type: string
         format: uint64
+        description: ID of the workspace this service instance belongs to.
       name:
         type: string
+        description: Unique name of the service instance within its workspace. Used as the key in the K8s CRD services map. Must be unique per workspace.
       state:
         type: string
+        description: 'Desired lifecycle state of the service instance. One of: Running, Stopped, Deleted.'
         title: Spec
       chartRegistry:
         type: string
+        description: OCI registry hosting the Helm chart (e.g. oci://registry.example.com).
       chartRepository:
         type: string
+        description: Repository path of the Helm chart within the registry.
       chartTag:
         type: string
+        description: Version tag of the Helm chart.
       valuesJson:
         type: string
+        description: JSON-encoded Helm values override. Stored encrypted at rest.
       credentialsSecretName:
         type: string
+        description: Name of the K8s secret containing credentials for the service. Stored encrypted at rest.
       credentialsPaths:
         type: array
         items:
           type: string
+        description: Paths within the credentials secret to mount. Stored encrypted at rest.
       connectionInfoTemplate:
         type: string
+        description: Go template string used to render connection info from computed values.
       computedValues:
         type: object
         additionalProperties:
           type: string
+        description: Key-value pairs of computed values derived from the running service.
       status:
         type: string
+        description: 'Observed status of the service instance. One of: Progressing, Running, Stopped, Deleted, Failed.'
         title: Status (observed)
       statusMessage:
         type: string
+        description: Human-readable message providing details about the current status.
       connectionInfo:
         type: string
+        description: Rendered connection info string (from connectionInfoTemplate + computedValues).
       secretName:
         type: string
+        description: Name of the K8s secret created by the operator for this service instance.
       createdAt:
         type: string
         format: date-time
+        description: Timestamp when this service instance was created.
       updatedAt:
         type: string
         format: date-time
+        description: Timestamp when this service instance was last updated.
   chorusWorkspaceServiceInstanceFilter:
     type: object
     properties:

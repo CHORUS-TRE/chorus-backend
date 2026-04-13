@@ -79,10 +79,16 @@ func (v validation) ListWorkspaceServiceInstances(ctx context.Context, tenantID 
 }
 
 func (v validation) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	if err := v.validate.Struct(svc); err != nil {
+		return nil, err
+	}
 	return v.next.CreateWorkspaceServiceInstance(ctx, svc)
 }
 
 func (v validation) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	if err := v.validate.Struct(svc); err != nil {
+		return nil, err
+	}
 	return v.next.UpdateWorkspaceServiceInstance(ctx, svc)
 }
 

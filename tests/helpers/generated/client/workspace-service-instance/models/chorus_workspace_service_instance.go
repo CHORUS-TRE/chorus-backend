@@ -19,63 +19,67 @@ import (
 // swagger:model chorusWorkspaceServiceInstance
 type ChorusWorkspaceServiceInstance struct {
 
-	// chart registry
+	// OCI registry hosting the Helm chart (e.g. oci://registry.example.com).
 	ChartRegistry string `json:"chartRegistry,omitempty"`
 
-	// chart repository
+	// Repository path of the Helm chart within the registry.
 	ChartRepository string `json:"chartRepository,omitempty"`
 
-	// chart tag
+	// Version tag of the Helm chart.
 	ChartTag string `json:"chartTag,omitempty"`
 
-	// computed values
+	// Key-value pairs of computed values derived from the running service.
 	ComputedValues map[string]string `json:"computedValues,omitempty"`
 
-	// connection info
+	// Rendered connection info string (from connectionInfoTemplate + computedValues).
 	ConnectionInfo string `json:"connectionInfo,omitempty"`
 
-	// connection info template
+	// Go template string used to render connection info from computed values.
 	ConnectionInfoTemplate string `json:"connectionInfoTemplate,omitempty"`
 
-	// created at
+	// Timestamp when this service instance was created.
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
-	// credentials paths
+	// Paths within the credentials secret to mount. Stored encrypted at rest.
 	CredentialsPaths []string `json:"credentialsPaths"`
 
-	// credentials secret name
+	// Name of the K8s secret containing credentials for the service. Stored encrypted at rest.
 	CredentialsSecretName string `json:"credentialsSecretName,omitempty"`
 
-	// id
+	// Unique identifier of the workspace service instance.
 	ID string `json:"id,omitempty"`
 
-	// name
+	// Unique name of the service instance within its workspace. Used as the key in the K8s CRD services map. Must be unique per workspace.
 	Name string `json:"name,omitempty"`
 
-	// secret name
+	// Name of the K8s secret created by the operator for this service instance.
 	SecretName string `json:"secretName,omitempty"`
 
 	// Spec
+	//
+	// Desired lifecycle state of the service instance. One of: Running, Stopped, Deleted.
 	State string `json:"state,omitempty"`
 
 	// Status (observed)
+	//
+	// Observed status of the service instance. One of: Progressing, Running, Stopped, Deleted, Failed.
 	Status string `json:"status,omitempty"`
 
-	// status message
+	// Human-readable message providing details about the current status.
 	StatusMessage string `json:"statusMessage,omitempty"`
 
-	// tenant Id
+	// ID of the tenant owning this service instance.
 	TenantID string `json:"tenantId,omitempty"`
 
-	// updated at
+	// Timestamp when this service instance was last updated.
 	// Format: date-time
 	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
 
-	// values Json
+	// JSON-encoded Helm values override. Stored encrypted at rest.
 	ValuesJSON string `json:"valuesJson,omitempty"`
 
-	// workspace Id
+	// ID of the workspace this service instance belongs to.
 	WorkspaceID string `json:"workspaceId,omitempty"`
 }
 
