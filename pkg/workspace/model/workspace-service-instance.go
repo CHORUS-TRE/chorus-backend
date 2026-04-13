@@ -34,15 +34,15 @@ func (s ServiceInstanceStatus) String() string {
 type WorkspaceServiceInstance struct {
 	ID          uint64
 	TenantID    uint64
-	WorkspaceID uint64               `validate:"required,min=1"`
-	Name        string               `validate:"required,min=1,max=63,safestring"`
+	WorkspaceID uint64 `validate:"required,min=1"`
+	Name        string `validate:"required,min=1,max=63,safestring"`
 
 	// Spec (desired state)
 	State                  ServiceInstanceState `validate:"omitempty,oneof=Running Stopped Deleted"`
 	ChartRegistry          string               `validate:"omitempty,generalstring"`
 	ChartRepository        string               `validate:"omitempty,generalstring"`
 	ChartTag               string               `validate:"omitempty,safestring"`
-	Values                 JSONMap[any]          `db:"valuesoverride"`
+	Values                 JSONMap[any]         `db:"valuesoverride"`
 	CredentialsSecretName  string               `validate:"omitempty,safestring"`
 	CredentialsPaths       StringSlice
 	ConnectionInfoTemplate string
