@@ -73,7 +73,7 @@ var workspaceServiceInstanceController chorus.WorkspaceServiceInstanceServiceSer
 func ProvideWorkspaceServiceInstanceController() chorus.WorkspaceServiceInstanceServiceServer {
 	workspaceServiceInstanceControllerOnce.Do(func() {
 		workspaceServiceInstanceController = v1.NewWorkspaceServiceInstanceController(ProvideWorkspaceService())
-		workspaceServiceInstanceController = ctrl_mw.WorkspaceServiceInstanceAuthorizing(logger.SecLog, ProvideAuthorizer())(workspaceServiceInstanceController)
+		workspaceServiceInstanceController = ctrl_mw.WorkspaceServiceInstanceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideWorkspaceService())(workspaceServiceInstanceController)
 	})
 	return workspaceServiceInstanceController
 }
