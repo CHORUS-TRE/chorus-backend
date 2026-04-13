@@ -87,22 +87,22 @@ func (c *Caching) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID 
 	return c.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
 }
 
-func (c *Caching) GetWorkspaceSvc(ctx context.Context, tenantID, workspaceSvcID uint64) (*model.WorkspaceSvc, error) {
-	return c.next.GetWorkspaceSvc(ctx, tenantID, workspaceSvcID)
+func (c *Caching) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
+	return c.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
 }
 
-func (c *Caching) ListWorkspaceSvcs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceSvcFilter) ([]*model.WorkspaceSvc, *common_model.PaginationResult, error) {
-	return c.next.ListWorkspaceSvcs(ctx, tenantID, pagination, filter)
+func (c *Caching) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
+	return c.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
 }
 
-func (c *Caching) CreateWorkspaceSvc(ctx context.Context, svc *model.WorkspaceSvc) (*model.WorkspaceSvc, error) {
-	return c.next.CreateWorkspaceSvc(ctx, svc)
+func (c *Caching) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	return c.next.CreateWorkspaceServiceInstance(ctx, svc)
 }
 
-func (c *Caching) UpdateWorkspaceSvc(ctx context.Context, svc *model.WorkspaceSvc) (*model.WorkspaceSvc, error) {
-	return c.next.UpdateWorkspaceSvc(ctx, svc)
+func (c *Caching) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	return c.next.UpdateWorkspaceServiceInstance(ctx, svc)
 }
 
-func (c *Caching) DeleteWorkspaceSvc(ctx context.Context, tenantID, workspaceSvcID uint64) error {
-	return c.next.DeleteWorkspaceSvc(ctx, tenantID, workspaceSvcID)
+func (c *Caching) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error {
+	return c.next.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
 }

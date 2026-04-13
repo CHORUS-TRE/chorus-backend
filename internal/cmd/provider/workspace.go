@@ -58,11 +58,22 @@ func ProvideWorkspaceStore() service.WorkspaceStore {
 		db := ProvideMainDB(WithClient("workspace-store"), WithMigrations(migration.GetMigration))
 		switch db.Type {
 		case POSTGRES:
-			workspaceStore = postgres.NewWorkspaceStorage(db.DB.GetSqlxDB())
+			workspaceStore = postgres.NewWorkspaceStorage(db.DB.GetSqlxDB(), ProvideDaemonEncryptionKey())
 		default:
 			logger.TechLog.Fatal(context.Background(), "unsupported database type: "+db.Type)
 		}
 		workspaceStore = store_mw.Logging(logger.TechLog)(workspaceStore)
 	})
 	return workspaceStore
+}
+
+var workspaceServiceInstanceControllerOnce sync.Once
+var workspaceServiceInstanceController chorus.WorkspaceServiceInstanceServiceServer
+
+func ProvideWorkspaceServiceInstanceController() chorus.WorkspaceServiceInstanceServiceServer {
+	workspaceServiceInstanceControllerOnce.Do(func() {
+		workspaceServiceInstanceController = v1.NewWorkspaceServiceInstanceController(ProvideWorkspaceService())
+		workspaceServiceInstanceController = ctrl_mw.WorkspaceServiceInstanceAuthorizing(logger.SecLog, ProvideAuthorizer())(workspaceServiceInstanceController)
+	})
+	return workspaceServiceInstanceController
 }

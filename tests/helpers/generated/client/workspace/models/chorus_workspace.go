@@ -59,12 +59,6 @@ type ChorusWorkspace struct {
 	// network policy status
 	NetworkPolicyStatus string `json:"networkPolicyStatus,omitempty"`
 
-	// service statuses
-	ServiceStatuses map[string]ChorusWorkspaceServiceStatusInfo `json:"serviceStatuses,omitempty"`
-
-	// services
-	Services map[string]ChorusWorkspaceServiceSpec `json:"services,omitempty"`
-
 	// short name
 	ShortName string `json:"shortName,omitempty"`
 
@@ -90,14 +84,6 @@ func (m *ChorusWorkspace) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateServiceStatuses(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateServices(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateUpdatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -120,58 +106,6 @@ func (m *ChorusWorkspace) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusWorkspace) validateServiceStatuses(formats strfmt.Registry) error {
-	if swag.IsZero(m.ServiceStatuses) { // not required
-		return nil
-	}
-
-	for k := range m.ServiceStatuses {
-
-		if err := validate.Required("serviceStatuses"+"."+k, "body", m.ServiceStatuses[k]); err != nil {
-			return err
-		}
-		if val, ok := m.ServiceStatuses[k]; ok {
-			if err := val.Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("serviceStatuses" + "." + k)
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("serviceStatuses" + "." + k)
-				}
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
-func (m *ChorusWorkspace) validateServices(formats strfmt.Registry) error {
-	if swag.IsZero(m.Services) { // not required
-		return nil
-	}
-
-	for k := range m.Services {
-
-		if err := validate.Required("services"+"."+k, "body", m.Services[k]); err != nil {
-			return err
-		}
-		if val, ok := m.Services[k]; ok {
-			if err := val.Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("services" + "." + k)
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("services" + "." + k)
-				}
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
 func (m *ChorusWorkspace) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
@@ -184,51 +118,8 @@ func (m *ChorusWorkspace) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this chorus workspace based on the context it is used
+// ContextValidate validates this chorus workspace based on context it is used
 func (m *ChorusWorkspace) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
-	var res []error
-
-	if err := m.contextValidateServiceStatuses(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateServices(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if len(res) > 0 {
-		return errors.CompositeValidationError(res...)
-	}
-	return nil
-}
-
-func (m *ChorusWorkspace) contextValidateServiceStatuses(ctx context.Context, formats strfmt.Registry) error {
-
-	for k := range m.ServiceStatuses {
-
-		if val, ok := m.ServiceStatuses[k]; ok {
-			if err := val.ContextValidate(ctx, formats); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
-func (m *ChorusWorkspace) contextValidateServices(ctx context.Context, formats strfmt.Registry) error {
-
-	for k := range m.Services {
-
-		if val, ok := m.Services[k]; ok {
-			if err := val.ContextValidate(ctx, formats); err != nil {
-				return err
-			}
-		}
-
-	}
-
 	return nil
 }
 

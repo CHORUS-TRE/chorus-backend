@@ -435,7 +435,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 		if wsErr != nil {
 			logger.TechLog.Warn(ctx, "unable to get workspace for clipboard", zap.Error(wsErr), zap.Uint64("workspaceID", workbench.WorkspaceID))
 		} else {
-			clipboard = ws.Clipboard
+			clipboard = string(ws.Clipboard)
 		}
 
 		err = s.client.UpdateWorkbench(k8s.Workbench{
@@ -560,7 +560,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	if wsErr != nil {
 		logger.TechLog.Warn(ctx, "unable to get workspace for clipboard", zap.Error(wsErr), zap.Uint64("workspaceID", workbench.WorkspaceID))
 	} else {
-		clipboard = ws.Clipboard
+		clipboard = string(ws.Clipboard)
 	}
 
 	err = s.client.CreateWorkbench(k8s.Workbench{

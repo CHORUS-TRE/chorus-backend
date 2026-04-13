@@ -6,6 +6,33 @@ import (
 	"time"
 )
 
+// NetworkPolicyMode defines the network policy type for a workspace.
+type NetworkPolicyMode string
+
+const (
+	NetworkPolicyOpen          NetworkPolicyMode = "Open"
+	NetworkPolicyAirgapped     NetworkPolicyMode = "Airgapped"
+	NetworkPolicyFQDNAllowlist NetworkPolicyMode = "FQDNAllowlist"
+)
+
+func (n NetworkPolicyMode) String() string {
+	return string(n)
+}
+
+// ClipboardMode defines the clipboard direction for a workspace.
+type ClipboardMode string
+
+const (
+	ClipboardDisabled ClipboardMode = "disabled"
+	ClipboardToServer ClipboardMode = "to-server"
+	ClipboardToClient ClipboardMode = "to-client"
+	ClipboardBoth     ClipboardMode = "both"
+)
+
+func (c ClipboardMode) String() string {
+	return string(c)
+}
+
 // Workspace maps an entry in the 'workspaces' database table.
 type Workspace struct {
 	ID uint64
@@ -22,13 +49,13 @@ type Workspace struct {
 	IsMain bool
 
 	// Network policy fields
-	NetworkPolicy        string
+	NetworkPolicy        NetworkPolicyMode
 	AllowedFQDNs         StringSlice
 	NetworkPolicyStatus  string
 	NetworkPolicyMessage string
 
 	// Clipboard (workspace-wide default for workbenches)
-	Clipboard string
+	Clipboard ClipboardMode
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

@@ -445,14 +445,6 @@ definitions:
         type: string
       clipboard:
         type: string
-      services:
-        type: object
-        additionalProperties:
-          $ref: '#/definitions/chorusWorkspaceServiceSpec'
-      serviceStatuses:
-        type: object
-        additionalProperties:
-          $ref: '#/definitions/chorusWorkspaceServiceStatusInfo'
   chorusWorkspaceFilter:
     type: object
     properties:
@@ -461,53 +453,6 @@ definitions:
         items:
           type: string
           format: uint64
-  chorusWorkspaceServiceChart:
-    type: object
-    properties:
-      registry:
-        type: string
-      repository:
-        type: string
-      tag:
-        type: string
-  chorusWorkspaceServiceCredentials:
-    type: object
-    properties:
-      secretName:
-        type: string
-      paths:
-        type: array
-        items:
-          type: string
-  chorusWorkspaceServiceSpec:
-    type: object
-    properties:
-      state:
-        type: string
-      chart:
-        $ref: '#/definitions/chorusWorkspaceServiceChart'
-      valuesJson:
-        type: string
-        title: JSON-encoded string, replaces google.protobuf.Struct
-      credentials:
-        $ref: '#/definitions/chorusWorkspaceServiceCredentials'
-      connectionInfoTemplate:
-        type: string
-      computedValues:
-        type: object
-        additionalProperties:
-          type: string
-  chorusWorkspaceServiceStatusInfo:
-    type: object
-    properties:
-      status:
-        type: string
-      message:
-        type: string
-      connectionInfo:
-        type: string
-      secretName:
-        type: string
   protobufAny:
     type: object
     properties:

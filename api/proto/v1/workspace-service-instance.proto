@@ -1,0 +1,32 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message WorkspaceServiceInstance {
+    uint64 id = 1;
+    uint64 tenantId = 2;
+    uint64 workspaceId = 3;
+    string name = 4;
+    
+    // Spec
+    string state = 5;
+    string chartRegistry = 6;
+    string chartRepository = 7;
+    string chartTag = 8;
+    string valuesJson = 9;
+    string credentialsSecretName = 10;
+    repeated string credentialsPaths = 11;
+    string connectionInfoTemplate = 12;
+    map<string, string> computedValues = 13;
+    
+    // Status (observed)
+    string status = 14;
+    string statusMessage = 15;
+    string connectionInfo = 16;
+    string secretName = 17;
+
+    google.protobuf.Timestamp createdAt = 18;
+    google.protobuf.Timestamp updatedAt = 19;
+}

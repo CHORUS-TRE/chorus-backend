@@ -8,8 +8,8 @@ info:
     url: https://www.chorus-tre.ch
 tags:
   - name: AppInstanceService
-  - name: ApprovalRequestService
   - name: AppService
+  - name: ApprovalRequestService
   - name: AuditService
   - name: AuthenticationService
   - name: AuthorizationService
@@ -20,6 +20,7 @@ tags:
   - name: UserService
   - name: WorkbenchService
   - name: WorkspaceFileService
+  - name: WorkspaceServiceInstanceService
   - name: WorkspaceService
 schemes:
   - http
@@ -3722,6 +3723,237 @@ paths:
             $ref: '#/definitions/WorkbenchServiceManageUserRoleInWorkbenchBody'
       tags:
         - WorkbenchService
+  /api/rest/v1/workspace-service-instances:
+    get:
+      summary: List workspace service instances
+      description: This endpoint returns a list of workspace service instances
+      operationId: WorkspaceServiceInstanceService_ListWorkspaceServiceInstances
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkspaceServiceInstancesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.workspaceIdsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+      tags:
+        - WorkspaceServiceInstanceService
+    post:
+      summary: Create a workspace service instance
+      description: This endpoint creates a workspace service instance
+      operationId: WorkspaceServiceInstanceService_CreateWorkspaceServiceInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateWorkspaceServiceInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceServiceInstance'
+      tags:
+        - WorkspaceServiceInstanceService
+    put:
+      summary: Update a workspace service instance
+      description: This endpoint updates a workspace service instance
+      operationId: WorkspaceServiceInstanceService_UpdateWorkspaceServiceInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateWorkspaceServiceInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusWorkspaceServiceInstance'
+      tags:
+        - WorkspaceServiceInstanceService
+  /api/rest/v1/workspace-service-instances/{id}:
+    get:
+      summary: Get a workspace service instance
+      description: This endpoint returns a workspace service instance
+      operationId: WorkspaceServiceInstanceService_GetWorkspaceServiceInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkspaceServiceInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceServiceInstanceService
+    delete:
+      summary: Delete a workspace service instance
+      description: This endpoint deletes a workspace service instance
+      operationId: WorkspaceServiceInstanceService_DeleteWorkspaceServiceInstance
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteWorkspaceServiceInstanceReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceServiceInstanceService
   /api/rest/v1/workspaces:
     get:
       summary: List workspaces
@@ -5135,6 +5367,16 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusCreateWorkspaceServiceInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateWorkspaceServiceInstanceResult'
+  chorusCreateWorkspaceServiceInstanceResult:
+    type: object
+    properties:
+      workspaceServiceInstance:
+        $ref: '#/definitions/chorusWorkspaceServiceInstance'
   chorusCredentials:
     type: object
     properties:
@@ -5241,6 +5483,16 @@ definitions:
         $ref: '#/definitions/chorusDeleteWorkspaceResult'
   chorusDeleteWorkspaceResult:
     type: object
+  chorusDeleteWorkspaceServiceInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteWorkspaceServiceInstanceResult'
+  chorusDeleteWorkspaceServiceInstanceResult:
+    type: object
+    properties:
+      workspaceServiceInstance:
+        $ref: '#/definitions/chorusWorkspaceServiceInstance'
   chorusDownloadApprovalRequestFileReply:
     type: object
     properties:
@@ -5385,6 +5637,16 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusGetWorkspaceServiceInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkspaceServiceInstanceResult'
+  chorusGetWorkspaceServiceInstanceResult:
+    type: object
+    properties:
+      workspaceServiceInstance:
+        $ref: '#/definitions/chorusWorkspaceServiceInstance'
   chorusInitializeTenantRequest:
     type: object
     properties:
@@ -5553,6 +5815,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkspaceFile'
+  chorusListWorkspaceServiceInstancesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListWorkspaceServiceInstancesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListWorkspaceServiceInstancesResult:
+    type: object
+    properties:
+      workspaceServiceInstances:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceServiceInstance'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -5864,6 +6141,16 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusUpdateWorkspaceServiceInstanceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateWorkspaceServiceInstanceResult'
+  chorusUpdateWorkspaceServiceInstanceResult:
+    type: object
+    properties:
+      workspaceServiceInstance:
+        $ref: '#/definitions/chorusWorkspaceServiceInstance'
   chorusUploadWorkspaceFilePartReply:
     type: object
     properties:
@@ -6042,14 +6329,6 @@ definitions:
         type: string
       clipboard:
         type: string
-      services:
-        type: object
-        additionalProperties:
-          $ref: '#/definitions/chorusWorkspaceServiceSpec'
-      serviceStatuses:
-        type: object
-        additionalProperties:
-          $ref: '#/definitions/chorusWorkspaceServiceStatusInfo'
   chorusWorkspaceFile:
     type: object
     properties:
@@ -6092,53 +6371,66 @@ definitions:
         items:
           type: string
           format: uint64
-  chorusWorkspaceServiceChart:
+  chorusWorkspaceServiceInstance:
     type: object
     properties:
-      registry:
+      id:
         type: string
-      repository:
+        format: uint64
+      tenantId:
         type: string
-      tag:
+        format: uint64
+      workspaceId:
         type: string
-  chorusWorkspaceServiceCredentials:
-    type: object
-    properties:
-      secretName:
+        format: uint64
+      name:
         type: string
-      paths:
+      state:
+        type: string
+        title: Spec
+      chartRegistry:
+        type: string
+      chartRepository:
+        type: string
+      chartTag:
+        type: string
+      valuesJson:
+        type: string
+      credentialsSecretName:
+        type: string
+      credentialsPaths:
         type: array
         items:
           type: string
-  chorusWorkspaceServiceSpec:
-    type: object
-    properties:
-      state:
-        type: string
-      chart:
-        $ref: '#/definitions/chorusWorkspaceServiceChart'
-      valuesJson:
-        type: string
-        title: JSON-encoded string, replaces google.protobuf.Struct
-      credentials:
-        $ref: '#/definitions/chorusWorkspaceServiceCredentials'
       connectionInfoTemplate:
         type: string
       computedValues:
         type: object
         additionalProperties:
           type: string
-  chorusWorkspaceServiceStatusInfo:
-    type: object
-    properties:
       status:
         type: string
-      message:
+        title: Status (observed)
+      statusMessage:
         type: string
       connectionInfo:
         type: string
       secretName:
         type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusWorkspaceServiceInstanceFilter:
+    type: object
+    properties:
+      workspaceIdsIn:
+        type: array
+        items:
+          type: string
+          format: uint64
   protobufAny:
     type: object
     properties:
