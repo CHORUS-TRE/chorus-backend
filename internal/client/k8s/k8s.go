@@ -47,6 +47,16 @@ func (c *client) syncWorkbench(tenantID uint64, workbench K8sWorkbench, namespac
 	return c.syncResource(workbench, kind, name, namespace, "spec")
 }
 
+func (c *client) syncWorkspaceCRD(workspace WorkspaceInput) error {
+	logger.TechLog.Debug(context.Background(), "syncing workspace CRD",
+		zap.String("namespace", workspace.Namespace), zap.Uint64("tenantID", workspace.TenantID),
+	)
+
+	k8sWorkspace := c.workspaceInputToK8sWorkspace(workspace)
+
+	return c.syncResource(k8sWorkspace, "Workspace", workspace.Namespace, workspace.Namespace, "spec")
+}
+
 func (c *client) syncResource(spec interface{}, kind, name, namespace, specFieldName string) error {
 	logger.TechLog.Debug(context.Background(), "syncing resource",
 		zap.String("namespace", namespace), zap.Any("kind", kind),

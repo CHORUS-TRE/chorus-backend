@@ -186,3 +186,101 @@ func (c workspaceServiceLogging) RemoveUserFromWorkspace(ctx context.Context, te
 
 	return nil
 }
+
+func (c workspaceServiceLogging) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
+	now := time.Now()
+
+	res, err := c.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to get workspace service instance: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workspaceServiceLogging) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
+	now := time.Now()
+
+	res, paginationRes, err := c.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, fmt.Errorf("unable to list workspace service instances: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Int("num_workspace_service_instances", len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, paginationRes, nil
+}
+
+func (c workspaceServiceLogging) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	now := time.Now()
+
+	created, err := c.next.CreateWorkspaceServiceInstance(ctx, svc)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to create workspace service instance: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_service_instance_id", created.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return created, nil
+}
+
+func (c workspaceServiceLogging) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	now := time.Now()
+
+	updated, err := c.next.UpdateWorkspaceServiceInstance(ctx, svc)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_service_instance_id", svc.ID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to update workspace service instance: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_service_instance_id", svc.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return updated, nil
+}
+
+func (c workspaceServiceLogging) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error {
+	now := time.Now()
+
+	err := c.next.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to delete workspace service instance: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}

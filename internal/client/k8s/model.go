@@ -31,6 +31,7 @@ type Workbench struct {
 	Name                    string
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
+	Clipboard               string
 	Status                  string
 	ServerPodStatus         string
 	ServerPodMessage        string

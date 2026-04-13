@@ -29,6 +29,10 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 
 		IsMain: workspace.IsMain,
 
+		NetworkPolicy: model.NetworkPolicyMode(workspace.NetworkPolicy),
+		AllowedFQDNs:  model.StringSlice(workspace.AllowedFqdns),
+		Clipboard:     model.ClipboardMode(workspace.Clipboard),
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
@@ -59,6 +63,12 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 		IsMain: workspace.IsMain,
 
 		Namespace: workspace.GetClusterName(),
+
+		NetworkPolicy:        string(workspace.NetworkPolicy),
+		AllowedFqdns:         []string(workspace.AllowedFQDNs),
+		NetworkPolicyStatus:  workspace.NetworkPolicyStatus,
+		NetworkPolicyMessage: workspace.NetworkPolicyMessage,
+		Clipboard:            string(workspace.Clipboard),
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

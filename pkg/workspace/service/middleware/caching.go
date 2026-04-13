@@ -86,3 +86,23 @@ func (c *Caching) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userI
 func (c *Caching) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
 	return c.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
 }
+
+func (c *Caching) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
+	return c.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+}
+
+func (c *Caching) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
+	return c.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
+}
+
+func (c *Caching) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	return c.next.CreateWorkspaceServiceInstance(ctx, svc)
+}
+
+func (c *Caching) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	return c.next.UpdateWorkspaceServiceInstance(ctx, svc)
+}
+
+func (c *Caching) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error {
+	return c.next.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+}

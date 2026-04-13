@@ -1,0 +1,71 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+message WorkspaceServiceInstance {
+    uint64 id = 1 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Unique identifier of the workspace service instance."
+    }];
+    uint64 tenantId = 2 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "ID of the tenant owning this service instance."
+    }];
+    uint64 workspaceId = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "ID of the workspace this service instance belongs to."
+    }];
+    string name = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Unique name of the service instance within its workspace. Used as the key in the K8s CRD services map. Must be unique per workspace."
+    }];
+
+    // Spec
+    string state = 5 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Desired lifecycle state of the service instance. One of: Running, Stopped, Deleted."
+    }];
+    string chartRegistry = 6 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "OCI registry hosting the Helm chart (e.g. oci://registry.example.com)."
+    }];
+    string chartRepository = 7 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Repository path of the Helm chart within the registry."
+    }];
+    string chartTag = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Version tag of the Helm chart."
+    }];
+    string valuesJson = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "JSON-encoded Helm values override. Stored encrypted at rest."
+    }];
+    string credentialsSecretName = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Name of the K8s secret containing credentials for the service. Stored encrypted at rest."
+    }];
+    repeated string credentialsPaths = 11 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Paths within the credentials secret to mount. Stored encrypted at rest."
+    }];
+    string connectionInfoTemplate = 12 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Go template string used to render connection info from computed values."
+    }];
+    map<string, string> computedValues = 13 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Key-value pairs of computed values derived from the running service."
+    }];
+
+    // Status (observed)
+    string status = 14 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Observed status of the service instance. One of: Progressing, Running, Stopped, Deleted, Failed."
+    }];
+    string statusMessage = 15 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Human-readable message providing details about the current status."
+    }];
+    string connectionInfo = 16 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Rendered connection info string (from connectionInfoTemplate + computedValues)."
+    }];
+    string secretName = 17 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Name of the K8s secret created by the operator for this service instance."
+    }];
+
+    google.protobuf.Timestamp createdAt = 18 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Timestamp when this service instance was created."
+    }];
+    google.protobuf.Timestamp updatedAt = 19 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+        description: "Timestamp when this service instance was last updated."
+    }];
+}

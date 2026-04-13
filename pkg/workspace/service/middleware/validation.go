@@ -66,3 +66,32 @@ func (v validation) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, use
 func (v validation) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
 	return v.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
 }
+
+func (v validation) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
+	return v.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+}
+
+func (v validation) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
+	if err := v.validate.Struct(pagination); err != nil {
+		return nil, nil, err
+	}
+	return v.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
+}
+
+func (v validation) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	if err := v.validate.Struct(svc); err != nil {
+		return nil, err
+	}
+	return v.next.CreateWorkspaceServiceInstance(ctx, svc)
+}
+
+func (v validation) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	if err := v.validate.Struct(svc); err != nil {
+		return nil, err
+	}
+	return v.next.UpdateWorkspaceServiceInstance(ctx, svc)
+}
+
+func (v validation) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error {
+	return v.next.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+}
