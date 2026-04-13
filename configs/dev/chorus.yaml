@@ -21,6 +21,11 @@ daemon:
   private_key_file: ./configs/dev/files/keys/chorus_privkey.pem
   public_key_file: ./configs/dev/files/keys/chorus_pubkey.pem
   salt: primary-2tiptop-violator-6bloating-2coastline-1spearmint-unruffled5-comfy-operation4
+  jobs:
+    app-sync:
+      enabled: true
+      timeout: 10m
+      interval: 30m
 
 storage:
   datastores:
@@ -263,6 +268,11 @@ services:
 # clients:
 #   docker_client:
 #     enabled: true
+#   harbor_client:
+#     enabled: true
+#     url: ""
+#     username: ""
+#     password: "" # set in secret
 
 log:
   loggers:
