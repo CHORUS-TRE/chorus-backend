@@ -186,3 +186,101 @@ func (c workspaceServiceLogging) RemoveUserFromWorkspace(ctx context.Context, te
 
 	return nil
 }
+
+func (c workspaceServiceLogging) GetWorkspaceSvc(ctx context.Context, tenantID, workspaceSvcID uint64) (*model.WorkspaceSvc, error) {
+	now := time.Now()
+
+	res, err := c.next.GetWorkspaceSvc(ctx, tenantID, workspaceSvcID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_svc_id", workspaceSvcID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to get workspace svc: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_svc_id", workspaceSvcID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workspaceServiceLogging) ListWorkspaceSvcs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceSvcFilter) ([]*model.WorkspaceSvc, *common_model.PaginationResult, error) {
+	now := time.Now()
+
+	res, paginationRes, err := c.next.ListWorkspaceSvcs(ctx, tenantID, pagination, filter)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, fmt.Errorf("unable to list workspace svcs: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Int("num_workspace_svcs", len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, paginationRes, nil
+}
+
+func (c workspaceServiceLogging) CreateWorkspaceSvc(ctx context.Context, svc *model.WorkspaceSvc) (*model.WorkspaceSvc, error) {
+	now := time.Now()
+
+	created, err := c.next.CreateWorkspaceSvc(ctx, svc)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to create workspace svc: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_svc_id", created.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return created, nil
+}
+
+func (c workspaceServiceLogging) UpdateWorkspaceSvc(ctx context.Context, svc *model.WorkspaceSvc) (*model.WorkspaceSvc, error) {
+	now := time.Now()
+
+	updated, err := c.next.UpdateWorkspaceSvc(ctx, svc)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_svc_id", svc.ID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, fmt.Errorf("unable to update workspace svc: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_svc_id", svc.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return updated, nil
+}
+
+func (c workspaceServiceLogging) DeleteWorkspaceSvc(ctx context.Context, tenantID, workspaceSvcID uint64) error {
+	now := time.Now()
+
+	err := c.next.DeleteWorkspaceSvc(ctx, tenantID, workspaceSvcID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_svc_id", workspaceSvcID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return fmt.Errorf("unable to delete workspace svc: %w", err)
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_svc_id", workspaceSvcID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}

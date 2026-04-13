@@ -6,37 +6,6 @@ import (
 	"time"
 )
 
-// WorkspaceServiceSpec defines a workspace service configuration (stored as JSONB).
-type WorkspaceServiceSpec struct {
-	State                  string                       `json:"state,omitempty"`
-	Chart                  WorkspaceServiceChart        `json:"chart"`
-	Values                 map[string]any               `json:"values,omitempty"`
-	Credentials            *WorkspaceServiceCredentials `json:"credentials,omitempty"`
-	ConnectionInfoTemplate string                       `json:"connectionInfoTemplate,omitempty"`
-	ComputedValues         map[string]string            `json:"computedValues,omitempty"`
-}
-
-// WorkspaceServiceChart identifies a Helm chart.
-type WorkspaceServiceChart struct {
-	Registry   string `json:"registry,omitempty"`
-	Repository string `json:"repository,omitempty"`
-	Tag        string `json:"tag"`
-}
-
-// WorkspaceServiceCredentials configures auto-generated password injection.
-type WorkspaceServiceCredentials struct {
-	SecretName string   `json:"secretName"`
-	Paths      []string `json:"paths,omitempty"`
-}
-
-// WorkspaceServiceStatusInfo is the observed status of a workspace service.
-type WorkspaceServiceStatusInfo struct {
-	Status         string `json:"status"`
-	Message        string `json:"message,omitempty"`
-	ConnectionInfo string `json:"connectionInfo,omitempty"`
-	SecretName     string `json:"secretName,omitempty"`
-}
-
 // Workspace maps an entry in the 'workspaces' database table.
 type Workspace struct {
 	ID uint64
@@ -60,10 +29,6 @@ type Workspace struct {
 
 	// Clipboard (workspace-wide default for workbenches)
 	Clipboard string
-
-	// Services (JSONB)
-	Services        JSONMap[WorkspaceServiceSpec]
-	ServiceStatuses JSONMap[WorkspaceServiceStatusInfo]
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

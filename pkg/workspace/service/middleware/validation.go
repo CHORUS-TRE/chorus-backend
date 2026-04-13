@@ -66,3 +66,26 @@ func (v validation) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, use
 func (v validation) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
 	return v.next.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
 }
+
+func (v validation) GetWorkspaceSvc(ctx context.Context, tenantID, workspaceSvcID uint64) (*model.WorkspaceSvc, error) {
+	return v.next.GetWorkspaceSvc(ctx, tenantID, workspaceSvcID)
+}
+
+func (v validation) ListWorkspaceSvcs(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceSvcFilter) ([]*model.WorkspaceSvc, *common_model.PaginationResult, error) {
+	if err := v.validate.Struct(pagination); err != nil {
+		return nil, nil, err
+	}
+	return v.next.ListWorkspaceSvcs(ctx, tenantID, pagination, filter)
+}
+
+func (v validation) CreateWorkspaceSvc(ctx context.Context, svc *model.WorkspaceSvc) (*model.WorkspaceSvc, error) {
+	return v.next.CreateWorkspaceSvc(ctx, svc)
+}
+
+func (v validation) UpdateWorkspaceSvc(ctx context.Context, svc *model.WorkspaceSvc) (*model.WorkspaceSvc, error) {
+	return v.next.UpdateWorkspaceSvc(ctx, svc)
+}
+
+func (v validation) DeleteWorkspaceSvc(ctx context.Context, tenantID, workspaceSvcID uint64) error {
+	return v.next.DeleteWorkspaceSvc(ctx, tenantID, workspaceSvcID)
+}
