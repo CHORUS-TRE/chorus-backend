@@ -315,7 +315,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 				audit.WithActorUsername(k8sWorkbench.Username),
 				audit.WithWorkspaceID(workspaceID),
 				audit.WithWorkbenchID(workbenchID),
-				audit.WithDescription(fmt.Sprintf("Terminated instance of '%s' (app ID %d).", ai.AppName, ai.ID)),
+				audit.WithDescription(fmt.Sprintf("Terminated instance of '%s' (version %s).", ai.AppName, ai.AppTag)),
 				audit.WithDetail("app_instance_id", ai.ID),
 				audit.WithDetail("app_name", ai.AppName),
 				audit.WithDetail("app_image_registry", ai.AppRegistry),
