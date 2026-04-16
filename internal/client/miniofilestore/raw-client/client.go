@@ -14,6 +14,7 @@ var _ MinioClienter = &client{}
 
 type MinioClienter interface {
 	GetClientConfig() MinioClientConfig
+	Ping() error
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
 	ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error)
@@ -59,6 +60,17 @@ func NewClient(clientCfg MinioClientConfig) (*client, error) {
 
 func (c *client) GetClientConfig() MinioClientConfig {
 	return c.minioClientCfg
+}
+
+func (c *client) Ping() error {
+	exists, err := c.minioClient.BucketExists(context.Background(), c.minioClientCfg.BucketName)
+	if err != nil {
+		return fmt.Errorf("unable to reach minio bucket %s: %w", c.minioClientCfg.BucketName, err)
+	}
+	if !exists {
+		return fmt.Errorf("minio bucket %s does not exist", c.minioClientCfg.BucketName)
+	}
+	return nil
 }
 
 func (c *client) StatObject(objectKey string) (*MinioObjectInfo, error) {
