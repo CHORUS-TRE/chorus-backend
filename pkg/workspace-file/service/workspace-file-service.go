@@ -7,6 +7,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -82,7 +83,7 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) 
 	}
 
 	if selectedStoreName == "" {
-		return "", fmt.Errorf("no suitable file store found for path %s", filePath)
+		return "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("No suitable file store found for path %s", filePath))
 	}
 
 	return selectedStoreName, nil
@@ -103,15 +104,15 @@ func (s *WorkspaceFileService) listStores() []*filestore.File {
 func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
-	// For now, only return object Metadata, not the content
+	// Returns only file metadata without content
 	file, err := s.fileStores[storeName].StatFile(ctx, storePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workspace file at path %s: %w", filePath, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workspace file at path %s", filePath))
 	}
 
 	return file, nil
@@ -120,14 +121,14 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 func (s *WorkspaceFileService) GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
 	file, err := s.fileStores[storeName].GetFile(ctx, storePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workspace file with content at path %s: %w", filePath, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workspace file with content at path %s", filePath))
 	}
 
 	return file, nil
@@ -140,13 +141,13 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 	storeFiles, err := s.fileStores[storeName].ListFiles(ctx, storePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list workspace files at path %s: %w", filePath, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to list workspace files at path %s", filePath))
 	}
 
 	var files []*filestore.File
@@ -167,7 +168,7 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(file.Path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
@@ -180,7 +181,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 			IsDirectory: file.IsDirectory,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("unable to create workspace directory at path %s: %w", file.Path, err)
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create workspace directory at path %s", file.Path))
 		}
 	} else {
 		createdFile, err = s.fileStores[storeName].CreateFile(ctx, &filestore.File{
@@ -191,7 +192,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 			Content:     file.Content,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("unable to create workspace file at path %s: %w", file.Path, err)
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create workspace file at path %s", file.Path))
 		}
 	}
 
@@ -208,12 +209,12 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
 	oldStoreName, err := s.selectFileStore(oldPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store for old path: %w", err)
+		return nil, err
 	}
 
 	newStoreName, err := s.selectFileStore(file.Path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store for new path: %w", err)
+		return nil, err
 	}
 
 	oldStore := s.fileStores[oldStoreName]
@@ -222,7 +223,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	oldStorePath := s.toStorePath(oldStoreName, workspaceID, oldPath)
 	oldFile, err := oldStore.GetFile(ctx, oldStorePath)
 	if err != nil {
-		return nil, fmt.Errorf("workspace file at path %s does not exist: %w", oldPath, err)
+		return nil, cerr.ErrNotFound.Wrap(err, fmt.Sprintf("Workspace file at path %s does not exist", oldPath))
 	}
 
 	if oldStoreName != newStoreName {
@@ -237,13 +238,13 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 			Content:     oldFile.Content,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("unable to create new workspace file at path %s: %w", file.Path, err)
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create new workspace file at path %s", file.Path))
 		}
 
 		err = s.fileStores[oldStoreName].DeleteFile(ctx, oldStorePath)
 		if err != nil {
 			_ = s.fileStores[newStoreName].DeleteFile(ctx, newStorePath)
-			return nil, fmt.Errorf("unable to delete old workspace file at path %s: %w", oldPath, err)
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete old workspace file at path %s", oldPath))
 		}
 
 		return &filestore.File{
@@ -260,7 +261,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	newStorePath := s.toStorePath(newStoreName, workspaceID, file.Path)
 	updatedFile, err := s.fileStores[oldStoreName].MoveFile(ctx, oldStorePath, newStorePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update old workspace file at path %s: %w", oldPath, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to move workspace file from path %s", oldPath))
 	}
 
 	return updatedFile, nil
@@ -269,7 +270,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return fmt.Errorf("unable to select file store: %w", err)
+		return err
 	}
 
 	store := s.fileStores[storeName]
@@ -278,12 +279,12 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 	if strings.HasSuffix(storePath, "/") {
 		err = store.DeleteDirectory(ctx, storePath)
 		if err != nil {
-			return fmt.Errorf("unable to delete workspace directory at path %s: %w", filePath, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete workspace directory at path %s", filePath))
 		}
 	} else {
 		err = store.DeleteFile(ctx, storePath)
 		if err != nil {
-			return fmt.Errorf("unable to delete workspace file at path %s: %w", filePath, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete workspace file at path %s", filePath))
 		}
 	}
 
@@ -293,7 +294,7 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	store := s.fileStores[storeName]
@@ -307,7 +308,7 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 		Size:        file.Size,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to initiate multipart upload for file at path %s: %w", file.Path, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to initiate multipart upload for file at path %s", file.Path))
 	}
 
 	return uploadInfo, nil
@@ -316,7 +317,7 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	store := s.fileStores[storeName]
@@ -324,7 +325,7 @@ func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, work
 
 	uploadedPart, err := store.UploadPart(ctx, storePath, uploadID, part)
 	if err != nil {
-		return nil, fmt.Errorf("unable to upload part number %d for upload ID %s at path %s: %w", part.PartNumber, uploadID, filePath, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to upload part number %d for upload ID %s at path %s", part.PartNumber, uploadID, filePath))
 	}
 
 	return uploadedPart, nil
@@ -333,7 +334,7 @@ func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, work
 func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*filestore.FilePart) (*filestore.File, error) {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to select file store: %w", err)
+		return nil, err
 	}
 
 	store := s.fileStores[storeName]
@@ -341,7 +342,7 @@ func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, 
 
 	completedFile, err := store.CompleteMultipartUpload(ctx, storePath, uploadID, parts)
 	if err != nil {
-		return nil, fmt.Errorf("unable to complete multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to complete multipart upload for upload ID %s at path %s", uploadID, filePath))
 	}
 
 	return completedFile, nil
@@ -350,7 +351,7 @@ func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, 
 func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string) error {
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
-		return fmt.Errorf("unable to select file store: %w", err)
+		return err
 	}
 
 	store := s.fileStores[storeName]
@@ -358,7 +359,7 @@ func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, wor
 
 	err = store.AbortMultipartUpload(ctx, storePath, uploadID)
 	if err != nil {
-		return fmt.Errorf("unable to abort multipart upload for upload ID %s at path %s: %w", uploadID, filePath, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to abort multipart upload for upload ID %s at path %s", uploadID, filePath))
 	}
 
 	return nil
