@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
 	val "github.com/go-playground/validator/v10"
@@ -37,14 +38,14 @@ func (v validation) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, 
 
 func (v validation) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error) {
 	if err := v.validate.Struct(file); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateWorkspaceFile(ctx, workspaceID, file)
 }
 
 func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
 	if err := v.validate.Struct(file); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)
 }
@@ -55,14 +56,14 @@ func (v validation) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64,
 
 func (v validation) InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error) {
 	if err := v.validate.Struct(file); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.InitiateWorkspaceFileUpload(ctx, workspaceID, filePath, file)
 }
 
 func (v validation) UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error) {
 	if err := v.validate.Struct(part); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UploadWorkspaceFilePart(ctx, workspaceID, filePath, uploadID, part)
 }
@@ -70,7 +71,7 @@ func (v validation) UploadWorkspaceFilePart(ctx context.Context, workspaceID uin
 func (v validation) CompleteWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, uploadID string, parts []*filestore.FilePart) (*filestore.File, error) {
 	for _, part := range parts {
 		if err := v.validate.Struct(part); err != nil {
-			return nil, err
+			return nil, cerr.WrapValidationError(err)
 		}
 	}
 	return v.next.CompleteWorkspaceFileUpload(ctx, workspaceID, filePath, uploadID, parts)
