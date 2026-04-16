@@ -7,6 +7,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -88,9 +89,13 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) 
 	return selectedStoreName, nil
 }
 
-func (s *WorkspaceFileService) listStores() []*filestore.File {
+func (s *WorkspaceFileService) listStores(ctx context.Context) []*filestore.File {
 	var stores []*filestore.File
 	for storeName, storeCfg := range s.storeConfigs {
+		if err := s.fileStores[storeName].Ping(ctx); err != nil {
+			logger.TechLog.Warn(ctx, fmt.Sprintf("file store %s is unreachable, skipping: %v", storeName, err))
+			continue
+		}
 		stores = append(stores, &filestore.File{
 			Path:        storeCfg.StorePrefix,
 			Name:        storeName,
@@ -135,7 +140,7 @@ func (s *WorkspaceFileService) GetWorkspaceFileWithContent(ctx context.Context, 
 
 func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	if filePath == "" || filePath == "/" {
-		return s.listStores(), nil
+		return s.listStores(ctx), nil
 	}
 
 	storeName, err := s.selectFileStore(filePath)
