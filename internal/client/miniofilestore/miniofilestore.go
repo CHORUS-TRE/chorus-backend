@@ -61,6 +61,10 @@ func (s *minioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64,
 	return partSize, totalParts, nil
 }
 
+func (s *minioFileStorage) Ping(_ context.Context) error {
+	return s.minioClient.Ping()
+}
+
 func (s *minioFileStorage) StatFile(ctx context.Context, path string) (*filestore.File, error) {
 	objectInfo, err := s.minioClient.StatObject(path)
 	if err != nil {
