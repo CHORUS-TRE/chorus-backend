@@ -32,8 +32,8 @@ type Caching struct {
 	next  service.WorkspaceFiler
 }
 
-func (c *Caching) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
-	return c.next.ListWorkspaceFileStores(ctx)
+func (c *Caching) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
+	return c.next.ListWorkspaceFileStores(ctx, workspaceID)
 }
 
 func (c *Caching) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {

@@ -25,8 +25,8 @@ func Validation(validate *val.Validate) func(service.WorkspaceFiler) service.Wor
 	}
 }
 
-func (v validation) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
-	return v.next.ListWorkspaceFileStores(ctx)
+func (v validation) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
+	return v.next.ListWorkspaceFileStores(ctx, workspaceID)
 }
 
 func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {

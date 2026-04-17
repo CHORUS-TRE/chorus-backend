@@ -26,10 +26,10 @@ func Logging(logger *logger.ContextLogger) func(service.WorkspaceFiler) service.
 	}
 }
 
-func (c workspaceServiceLogging) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
+func (c workspaceServiceLogging) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
 	now := time.Now()
 
-	stores, err := c.next.ListWorkspaceFileStores(ctx)
+	stores, err := c.next.ListWorkspaceFileStores(ctx, workspaceID)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
