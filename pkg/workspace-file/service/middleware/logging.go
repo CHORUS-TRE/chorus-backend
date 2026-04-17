@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
 	"go.uber.org/zap"
@@ -26,6 +26,25 @@ func Logging(logger *logger.ContextLogger) func(service.WorkspaceFiler) service.
 	}
 }
 
+func (c workspaceServiceLogging) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
+	now := time.Now()
+
+	stores, err := c.next.ListWorkspaceFileStores(ctx)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Int("num_stores", len(stores)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return stores, nil
+}
+
 func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
 	now := time.Now()
 
@@ -36,7 +55,7 @@ func (c workspaceServiceLogging) GetWorkspaceFile(ctx context.Context, workspace
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to get workspace file: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -56,7 +75,7 @@ func (c workspaceServiceLogging) GetWorkspaceFileWithContent(ctx context.Context
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to get workspace file with content: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -76,7 +95,7 @@ func (c workspaceServiceLogging) ListWorkspaceFiles(ctx context.Context, workspa
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to list workspace files: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -97,14 +116,13 @@ func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, worksp
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create workspace file: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return newFile, nil
 }
 
@@ -118,14 +136,13 @@ func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, worksp
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to update workspace file: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return updatedFile, nil
 }
 
@@ -139,14 +156,13 @@ func (c workspaceServiceLogging) DeleteWorkspaceFile(ctx context.Context, worksp
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete workspace file: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return nil
 }
 
@@ -160,14 +176,13 @@ func (c workspaceServiceLogging) InitiateWorkspaceFileUpload(ctx context.Context
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to initiate workspace file upload: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return uploadInfo, nil
 }
 
@@ -181,14 +196,13 @@ func (c workspaceServiceLogging) UploadWorkspaceFilePart(ctx context.Context, wo
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to upload workspace file part: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return uploadedPart, nil
 }
 
@@ -202,14 +216,13 @@ func (c workspaceServiceLogging) CompleteWorkspaceFileUpload(ctx context.Context
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to complete workspace file upload: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return completedFile, nil
 }
 
@@ -223,13 +236,12 @@ func (c workspaceServiceLogging) AbortWorkspaceFileUpload(ctx context.Context, w
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to abort workspace file upload: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		logger.WithWorkspaceIDField(workspaceID),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-
 	return nil
 }
