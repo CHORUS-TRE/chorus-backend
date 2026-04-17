@@ -22,6 +22,24 @@ func NewWorkspaceFileController(workspaceFile service.WorkspaceFiler) WorkspaceF
 	return WorkspaceFileController{workspaceFile: workspaceFile}
 }
 
+func (c WorkspaceFileController) ListWorkspaceFileStores(ctx context.Context, req *chorus.ListWorkspaceFileStoresRequest) (*chorus.ListWorkspaceFileStoresReply, error) {
+	if req == nil {
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
+	}
+
+	stores, err := c.workspaceFile.ListWorkspaceFileStores(ctx, req.WorkspaceId)
+	if err != nil {
+		return nil, err
+	}
+
+	tgStores := make([]*chorus.WorkspaceFileStoreInfo, 0, len(stores))
+	for _, store := range stores {
+		tgStores = append(tgStores, converter.WorkspaceFileStoreInfoFromBusiness(store))
+	}
+
+	return &chorus.ListWorkspaceFileStoresReply{Result: &chorus.ListWorkspaceFileStoresResult{Stores: tgStores}}, nil
+}
+
 func (c WorkspaceFileController) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
 	if req == nil {
 		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
