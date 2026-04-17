@@ -14,7 +14,7 @@ import (
 )
 
 type WorkspaceFiler interface {
-	ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error)
+	ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error)
 	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error)
@@ -96,7 +96,7 @@ func (s *WorkspaceFileService) getFileStore(storeName string) filestore.FileStor
 	return s.fileStores[s.storeConfigs[storeName].FileStoreName]
 }
 
-func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
+func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
 	var storeInfos []*model.WorkspaceFileStoreInfo
 	for storeName, storeCfg := range s.storeConfigs {
 		fileStore := s.fileStores[storeCfg.FileStoreName]

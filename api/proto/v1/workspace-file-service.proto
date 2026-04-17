@@ -22,6 +22,17 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     produces: "application/json";
 };
 
+// File store listing messages
+message ListWorkspaceFileStoresRequest {
+    uint64 workspaceId = 1;
+}
+message ListWorkspaceFileStoresReply {
+    ListWorkspaceFileStoresResult result = 1;
+}
+message ListWorkspaceFileStoresResult {
+    repeated WorkspaceFileStoreInfo stores = 1;
+}
+
 // File management related messages
 message GetWorkspaceFileRequest {
     uint64 workspaceId = 1;
@@ -129,6 +140,17 @@ message AbortWorkspaceFileUploadReply {
 message AbortWorkspaceFileUploadResult {}
 
 service WorkspaceFileService {
+    rpc ListWorkspaceFileStores(ListWorkspaceFileStoresRequest) returns (ListWorkspaceFileStoresReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspaces/{workspaceId}/stores"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workspace file stores";
+            description: "This endpoint returns all configured file stores for the specified workspace with their reachability status";
+            tags: "WorkspaceFileService";
+        };
+    };
+
     // File management methods
     rpc GetWorkspaceFile(GetWorkspaceFileRequest) returns (GetWorkspaceFileReply) {
         option (google.api.http) = {

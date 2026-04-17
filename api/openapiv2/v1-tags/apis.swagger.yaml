@@ -4536,6 +4536,46 @@ paths:
           pattern: .+
       tags:
         - WorkspaceFileService
+  /api/rest/v1/workspaces/{workspaceId}/stores:
+    get:
+      summary: List workspace file stores
+      description: This endpoint returns all configured file stores for the specified workspace with their reachability status
+      operationId: WorkspaceFileService_ListWorkspaceFileStores
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListWorkspaceFileStoresReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: workspaceId
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceFileService
 definitions:
   ApprovalRequestServiceApproveApprovalRequestBody:
     type: object
@@ -5540,6 +5580,19 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkbench'
+  chorusListWorkspaceFileStoresReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListWorkspaceFileStoresResult'
+  chorusListWorkspaceFileStoresResult:
+    type: object
+    properties:
+      stores:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusWorkspaceFileStoreInfo'
   chorusListWorkspaceFilesReply:
     type: object
     properties:
@@ -6064,6 +6117,18 @@ definitions:
       etag:
         type: string
         title: ETag returned by MinIO
+  chorusWorkspaceFileStoreInfo:
+    type: object
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+        title: '"ready", "disconnected", or "disabled"'
   chorusWorkspaceFilter:
     type: object
     properties:

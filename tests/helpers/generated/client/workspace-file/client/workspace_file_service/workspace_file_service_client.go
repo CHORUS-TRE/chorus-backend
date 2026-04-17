@@ -66,6 +66,8 @@ type ClientService interface {
 
 	WorkspaceFileServiceInitiateWorkspaceFileUpload(params *WorkspaceFileServiceInitiateWorkspaceFileUploadParams, opts ...ClientOption) (*WorkspaceFileServiceInitiateWorkspaceFileUploadOK, error)
 
+	WorkspaceFileServiceListWorkspaceFileStores(params *WorkspaceFileServiceListWorkspaceFileStoresParams, opts ...ClientOption) (*WorkspaceFileServiceListWorkspaceFileStoresOK, error)
+
 	WorkspaceFileServiceListWorkspaceFiles(params *WorkspaceFileServiceListWorkspaceFilesParams, opts ...ClientOption) (*WorkspaceFileServiceListWorkspaceFilesOK, error)
 
 	WorkspaceFileServiceUpdateWorkspaceFile(params *WorkspaceFileServiceUpdateWorkspaceFileParams, opts ...ClientOption) (*WorkspaceFileServiceUpdateWorkspaceFileOK, error)
@@ -306,6 +308,45 @@ func (a *Client) WorkspaceFileServiceInitiateWorkspaceFileUpload(params *Workspa
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceFileServiceInitiateWorkspaceFileUploadDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceFileServiceListWorkspaceFileStores lists workspace file stores
+
+This endpoint returns all configured file stores for the specified workspace with their reachability status
+*/
+func (a *Client) WorkspaceFileServiceListWorkspaceFileStores(params *WorkspaceFileServiceListWorkspaceFileStoresParams, opts ...ClientOption) (*WorkspaceFileServiceListWorkspaceFileStoresOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceFileServiceListWorkspaceFileStoresParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceFileService_ListWorkspaceFileStores",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workspaces/{workspaceId}/stores",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceFileServiceListWorkspaceFileStoresReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceFileServiceListWorkspaceFileStoresOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceFileServiceListWorkspaceFileStoresDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

@@ -22,3 +22,10 @@ message WorkspaceFilePart {
     bytes data = 2;
     string etag = 3; // ETag returned by MinIO
 }
+
+message WorkspaceFileStoreInfo {
+    string name = 1;
+    string type = 2;
+    string description = 3;
+    string status = 4; // "ready", "disconnected", or "disabled"
+}
