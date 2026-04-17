@@ -46,6 +46,10 @@ func ProvideFileStores() map[string]filestore.FileStore {
 				fileStores[fileStoreName] = fileStore
 
 			case "disk":
+				if !fileStoreCfg.DiskConfig.Enabled {
+					logger.TechLog.Info(context.Background(), fmt.Sprintf("disk file store '%s' is disabled, skipping", fileStoreName))
+					continue
+				}
 				if fileStoreCfg.DiskConfig.BasePath == "" {
 					logger.TechLog.Fatal(context.Background(), fmt.Sprintf("disk_config.base_path is required for disk file store: %s", fileStoreName))
 				}
