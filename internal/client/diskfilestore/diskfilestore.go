@@ -152,6 +152,10 @@ func (s *diskFileStorage) fileInfoToFile(path string, info os.FileInfo) *filesto
 	}
 }
 
+func (s *diskFileStorage) GetType() string {
+	return "disk"
+}
+
 func (s *diskFileStorage) Ping(_ context.Context) error {
 	if _, err := os.Stat(s.basePath); err != nil {
 		return fmt.Errorf("disk store base path %s is not accessible: %w", s.basePath, err)

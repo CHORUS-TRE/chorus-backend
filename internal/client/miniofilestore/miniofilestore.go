@@ -61,6 +61,10 @@ func (s *minioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64,
 	return partSize, totalParts, nil
 }
 
+func (s *minioFileStorage) GetType() string {
+	return "minio"
+}
+
 func (s *minioFileStorage) Ping(_ context.Context) error {
 	return s.minioClient.Ping()
 }
