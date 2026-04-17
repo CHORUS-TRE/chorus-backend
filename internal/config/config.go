@@ -261,6 +261,7 @@ type (
 	}
 
 	FileStoreDiskConfig struct {
+		Enabled  bool   `yaml:"enabled"`
 		BasePath string `yaml:"base_path"` // Base directory path for disk storage
 	}
 
