@@ -7,12 +7,14 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
 type WorkspaceFiler interface {
+	ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error)
 	GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error)
@@ -90,20 +92,38 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) 
 	return selectedStoreName, nil
 }
 
-func (s *WorkspaceFileService) listStores(ctx context.Context) []*filestore.File {
-	var stores []*filestore.File
+func (s *WorkspaceFileService) getFileStore(storeName string) filestore.FileStore {
+	return s.fileStores[s.storeConfigs[storeName].FileStoreName]
+}
+
+func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
+	var storeInfos []*model.WorkspaceFileStoreInfo
 	for storeName, storeCfg := range s.storeConfigs {
-		if err := s.fileStores[storeName].Ping(ctx); err != nil {
-			logger.TechLog.Warn(ctx, fmt.Sprintf("file store %s is unreachable, skipping: %v", storeName, err))
-			continue
+		fileStore := s.fileStores[storeCfg.FileStoreName]
+
+		var status model.WorkspaceFileStoreStatus
+		if fileStore == nil {
+			status = model.WorkspaceFileStoreStatusDisabled
+		} else if err := fileStore.Ping(ctx); err != nil {
+			logger.TechLog.Warn(ctx, fmt.Sprintf("file store %s is unreachable: %v", storeName, err))
+			status = model.WorkspaceFileStoreStatusDisconnected
+		} else {
+			status = model.WorkspaceFileStoreStatusReady
 		}
-		stores = append(stores, &filestore.File{
-			Path:        storeCfg.StorePrefix,
+
+		storeType := ""
+		if fileStore != nil {
+			storeType = fileStore.GetType()
+		}
+
+		storeInfos = append(storeInfos, &model.WorkspaceFileStoreInfo{
 			Name:        storeName,
-			IsDirectory: true,
+			Type:        storeType,
+			Description: storeCfg.Description,
+			Status:      status,
 		})
 	}
-	return stores
+	return storeInfos, nil
 }
 
 func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
@@ -115,7 +135,7 @@ func (s *WorkspaceFileService) GetWorkspaceFile(ctx context.Context, workspaceID
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
 	// Returns only file metadata without content
-	file, err := s.fileStores[storeName].StatFile(ctx, storePath)
+	file, err := s.getFileStore(storeName).StatFile(ctx, storePath)
 	if err != nil {
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workspace file at path %s", filePath))
 	}
@@ -131,7 +151,7 @@ func (s *WorkspaceFileService) GetWorkspaceFileWithContent(ctx context.Context, 
 
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
-	file, err := s.fileStores[storeName].GetFile(ctx, storePath)
+	file, err := s.getFileStore(storeName).GetFile(ctx, storePath)
 	if err != nil {
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workspace file with content at path %s", filePath))
 	}
@@ -141,7 +161,7 @@ func (s *WorkspaceFileService) GetWorkspaceFileWithContent(ctx context.Context, 
 
 func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
 	if filePath == "" || filePath == "/" {
-		return s.listStores(ctx), nil
+		return nil, cerr.ErrInvalidRequest.WithMessage("Use ListWorkspaceFileStores to list available stores")
 	}
 
 	storeName, err := s.selectFileStore(filePath)
@@ -150,7 +170,7 @@ func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspace
 	}
 
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
-	storeFiles, err := s.fileStores[storeName].ListFiles(ctx, storePath)
+	storeFiles, err := s.getFileStore(storeName).ListFiles(ctx, storePath)
 	if err != nil {
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to list workspace files at path %s", filePath))
 	}
@@ -180,7 +200,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 
 	var createdFile *filestore.File
 	if file.IsDirectory {
-		createdFile, err = s.fileStores[storeName].CreateDirectory(ctx, &filestore.File{
+		createdFile, err = s.getFileStore(storeName).CreateDirectory(ctx, &filestore.File{
 			Path:        storePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -189,7 +209,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create workspace directory at path %s", file.Path))
 		}
 	} else {
-		createdFile, err = s.fileStores[storeName].CreateFile(ctx, &filestore.File{
+		createdFile, err = s.getFileStore(storeName).CreateFile(ctx, &filestore.File{
 			Path:        storePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -222,7 +242,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 		return nil, err
 	}
 
-	oldStore := s.fileStores[oldStoreName]
+	oldStore := s.getFileStore(oldStoreName)
 
 	// Check if old file exists
 	oldStorePath := s.toStorePath(oldStoreName, workspaceID, oldPath)
@@ -235,7 +255,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 		newStorePath := s.toStorePath(newStoreName, workspaceID, file.Path)
 
 		// Cross-store move
-		createdFile, err := s.fileStores[newStoreName].CreateFile(ctx, &filestore.File{
+		createdFile, err := s.getFileStore(newStoreName).CreateFile(ctx, &filestore.File{
 			Path:        newStorePath,
 			Name:        file.Name,
 			IsDirectory: file.IsDirectory,
@@ -246,9 +266,9 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create new workspace file at path %s", file.Path))
 		}
 
-		err = s.fileStores[oldStoreName].DeleteFile(ctx, oldStorePath)
+		err = s.getFileStore(oldStoreName).DeleteFile(ctx, oldStorePath)
 		if err != nil {
-			_ = s.fileStores[newStoreName].DeleteFile(ctx, newStorePath)
+			_ = s.getFileStore(newStoreName).DeleteFile(ctx, newStorePath)
 			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete old workspace file at path %s", oldPath))
 		}
 
@@ -264,7 +284,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 
 	// Same store move
 	newStorePath := s.toStorePath(newStoreName, workspaceID, file.Path)
-	updatedFile, err := s.fileStores[oldStoreName].MoveFile(ctx, oldStorePath, newStorePath)
+	updatedFile, err := s.getFileStore(oldStoreName).MoveFile(ctx, oldStorePath, newStorePath)
 	if err != nil {
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to move workspace file from path %s", oldPath))
 	}
@@ -278,7 +298,7 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 		return err
 	}
 
-	store := s.fileStores[storeName]
+	store := s.getFileStore(storeName)
 
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 	if strings.HasSuffix(storePath, "/") {
@@ -302,7 +322,7 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 		return nil, err
 	}
 
-	store := s.fileStores[storeName]
+	store := s.getFileStore(storeName)
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
 
 	uploadInfo, err := store.InitiateMultipartUpload(ctx, &filestore.File{
@@ -325,7 +345,7 @@ func (s *WorkspaceFileService) UploadWorkspaceFilePart(ctx context.Context, work
 		return nil, err
 	}
 
-	store := s.fileStores[storeName]
+	store := s.getFileStore(storeName)
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
 	uploadedPart, err := store.UploadPart(ctx, storePath, uploadID, part)
@@ -342,7 +362,7 @@ func (s *WorkspaceFileService) CompleteWorkspaceFileUpload(ctx context.Context, 
 		return nil, err
 	}
 
-	store := s.fileStores[storeName]
+	store := s.getFileStore(storeName)
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
 	completedFile, err := store.CompleteMultipartUpload(ctx, storePath, uploadID, parts)
@@ -359,7 +379,7 @@ func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, wor
 		return err
 	}
 
-	store := s.fileStores[storeName]
+	store := s.getFileStore(storeName)
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
 
 	err = store.AbortMultipartUpload(ctx, storePath, uploadID)
