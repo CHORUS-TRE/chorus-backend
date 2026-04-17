@@ -6,6 +6,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/cache"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
 	"github.com/coocood/freecache"
@@ -29,6 +30,10 @@ func WorkspaceCaching(log *logger.ContextLogger) func(service.WorkspaceFiler) *C
 type Caching struct {
 	cache *cache.Cache
 	next  service.WorkspaceFiler
+}
+
+func (c *Caching) ListWorkspaceFileStores(ctx context.Context) ([]*model.WorkspaceFileStoreInfo, error) {
+	return c.next.ListWorkspaceFileStores(ctx)
 }
 
 func (c *Caching) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {
