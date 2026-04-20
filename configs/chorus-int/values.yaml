@@ -134,8 +134,8 @@ config:
             enable_frontend_redirect: true
             chorus_frontend_redirect_url: "https://int.chorus-tre.ch/oauthredirect"
             authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
-            token_url: "http://chorus-int-keycloak.keycloak.svc.cluster.local/realms/chorus/protocol/openid-connect/token"
-            user_info_url: "http://chorus-int-keycloak.keycloak.svc.cluster.local/realms/chorus/protocol/openid-connect/userinfo"
+            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
             logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
             user_name_claim: "preferred_username"
             # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
