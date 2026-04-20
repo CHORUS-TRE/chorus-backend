@@ -28,6 +28,7 @@ func ProvideWorkbench() service.Workbencher {
 			ProvideUser(),
 			ProvideAuthenticator(),
 			ProvideNotificationStore(),
+			ProvideWorkspaceStore(),
 			ProvideAuditWriter(),
 		)
 		workbench = service_mw.Logging(logger.BizLog)(workbench)

@@ -38,8 +38,9 @@ const (
 var _ = K8sClienter(&client{})
 
 type K8sClienter interface {
-	// Workspace (Namespace) operations
-	CreateWorkspace(tenantID uint64, namespace string) error
+	// Workspace (Namespace + CRD) operations
+	CreateWorkspace(workspace WorkspaceInput) error
+	UpdateWorkspace(workspace WorkspaceInput) error
 	DeleteWorkspace(namespace string) error
 
 	// Workbench operations
@@ -60,6 +61,7 @@ type K8sClienter interface {
 	RegisterOnNewWorkbenchHandler(func(workbench Workbench) error) error
 	RegisterOnUpdateWorkbenchHandler(func(workbench Workbench) error) error
 	RegisterOnDeleteWorkbenchHandler(func(workbench Workbench) error) error
+	RegisterOnUpdateWorkspaceHandler(func(workspace WorkspaceOutput) error) error
 }
 
 type client struct {
@@ -73,6 +75,7 @@ type client struct {
 	onNewWorkbench    func(workbench Workbench) error
 	onUpdateWorkbench func(workbench Workbench) error
 	onDeleteWorkbench func(workbench Workbench) error
+	onUpdateWorkspace func(workspace WorkspaceOutput) error
 }
 
 func NewClient(cfg config.Config) (*client, error) {
@@ -134,6 +137,20 @@ func (c *client) watchWorkbenchEvents() {
 		},
 	})
 
+	// Get GVR for Workspace
+	workspaceGvr, err := c.getGroupVersionFromKind("Workspace")
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "Error getting GVR for Workspace", zap.Error(err))
+		return
+	}
+
+	workspaceInformer := factory.ForResource(workspaceGvr).Informer()
+	workspaceInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			c.handleWorkspaceEvent(newObj, "updated", c.onUpdateWorkspace)
+		},
+	})
+
 	logger.TechLog.Info(context.Background(), "Starting informers...")
 	stopCh := make(chan struct{})
 	factory.Start(stopCh)
@@ -174,11 +191,42 @@ func (c *client) handleWorkbenchEvent(obj any, eventType string, handler func(wo
 	}
 }
 
+// Generic handler for workspace events
+func (c *client) handleWorkspaceEvent(obj any, eventType string, handler func(workspace WorkspaceOutput) error) {
+	logger.TechLog.Debug(context.Background(), fmt.Sprintf("%s workspace", eventType), zap.Any("workspace", obj))
+
+	if obj == nil {
+		logger.TechLog.Error(context.Background(), fmt.Sprintf("nil object received during %s workspace event", eventType))
+		return
+	}
+
+	workspace, err := c.eventInterfaceToWorkspaceOutput(obj)
+	if err != nil {
+		logger.TechLog.Error(context.Background(), "Error converting event interface to Workspace", zap.Error(err))
+		return
+	}
+
+	if handler != nil {
+		if err := handler(workspace); err != nil {
+			logger.TechLog.Error(context.Background(), fmt.Sprintf("Error handling %s workspace event", eventType), zap.Error(err))
+		}
+	}
+}
+
 // ----------------------------------------------------------------
-// Workspace (Namespace) operations
+// Workspace (Namespace + CRD) operations
 // ----------------------------------------------------------------
-func (c *client) CreateWorkspace(tenantID uint64, namespace string) error {
-	return c.syncNamespace(tenantID, namespace)
+func (c *client) CreateWorkspace(workspace WorkspaceInput) error {
+	err := c.syncNamespace(workspace.TenantID, workspace.Namespace)
+	if err != nil {
+		return fmt.Errorf("error syncing namespace: %w", err)
+	}
+
+	return c.syncWorkspaceCRD(workspace)
+}
+
+func (c *client) UpdateWorkspace(workspace WorkspaceInput) error {
+	return c.syncWorkspaceCRD(workspace)
 }
 
 func (c *client) DeleteWorkspace(namespace string) error {
@@ -473,5 +521,9 @@ func (c *client) RegisterOnUpdateWorkbenchHandler(handler func(workbench Workben
 }
 func (c *client) RegisterOnDeleteWorkbenchHandler(handler func(workbench Workbench) error) error {
 	c.onDeleteWorkbench = handler
+	return nil
+}
+func (c *client) RegisterOnUpdateWorkspaceHandler(handler func(workspace WorkspaceOutput) error) error {
+	c.onUpdateWorkspace = handler
 	return nil
 }

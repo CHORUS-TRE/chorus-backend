@@ -19,11 +19,17 @@ import (
 // swagger:model chorusWorkspace
 type ChorusWorkspace struct {
 
+	// allowed fqdns
+	AllowedFqdns []string `json:"allowedFqdns"`
+
 	// app instance ids
 	AppInstanceIds []string `json:"appInstanceIds"`
 
 	// app instances
 	AppInstances []string `json:"appInstances"`
+
+	// clipboard
+	Clipboard string `json:"clipboard,omitempty"`
 
 	// created at
 	// Format: date-time
@@ -43,6 +49,15 @@ type ChorusWorkspace struct {
 
 	// namespace
 	Namespace string `json:"namespace,omitempty"`
+
+	// network policy
+	NetworkPolicy string `json:"networkPolicy,omitempty"`
+
+	// network policy message
+	NetworkPolicyMessage string `json:"networkPolicyMessage,omitempty"`
+
+	// network policy status
+	NetworkPolicyStatus string `json:"networkPolicyStatus,omitempty"`
 
 	// short name
 	ShortName string `json:"shortName,omitempty"`
