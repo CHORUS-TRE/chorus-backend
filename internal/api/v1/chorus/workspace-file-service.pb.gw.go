@@ -220,6 +220,8 @@ func local_request_WorkspaceFileService_CreateWorkspaceFile_0(ctx context.Contex
 	return msg, metadata, err
 }
 
+var filter_WorkspaceFileService_UpdateWorkspaceFile_0 = &utilities.DoubleArray{Encoding: map[string]int{"file": 0, "workspaceId": 1, "oldPath": 2}, Base: []int{1, 1, 2, 3, 0, 0, 0}, Check: []int{0, 1, 1, 1, 2, 3, 4}}
+
 func request_WorkspaceFileService_UpdateWorkspaceFile_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceFileServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq UpdateWorkspaceFileRequest
@@ -244,6 +246,12 @@ func request_WorkspaceFileService_UpdateWorkspaceFile_0(ctx context.Context, mar
 	protoReq.OldPath, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "oldPath", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkspaceFileService_UpdateWorkspaceFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := client.UpdateWorkspaceFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -273,6 +281,12 @@ func local_request_WorkspaceFileService_UpdateWorkspaceFile_0(ctx context.Contex
 	protoReq.OldPath, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "oldPath", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkspaceFileService_UpdateWorkspaceFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.UpdateWorkspaceFile(ctx, &protoReq)
 	return msg, metadata, err

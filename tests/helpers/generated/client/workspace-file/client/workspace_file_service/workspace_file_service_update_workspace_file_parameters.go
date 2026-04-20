@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 
 	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace-file/models"
 )
@@ -62,6 +63,12 @@ WorkspaceFileServiceUpdateWorkspaceFileParams contains all the parameters to sen
 	Typically these are written to a http.Request.
 */
 type WorkspaceFileServiceUpdateWorkspaceFileParams struct {
+
+	/* Copy.
+
+	   When true, preserve the source file after transfer
+	*/
+	Copy *bool
 
 	// File.
 	File *models.ChorusWorkspaceFile
@@ -130,6 +137,17 @@ func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) SetHTTPClient(client *ht
 	o.HTTPClient = client
 }
 
+// WithCopy adds the copy to the workspace file service update workspace file params
+func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WithCopy(copy *bool) *WorkspaceFileServiceUpdateWorkspaceFileParams {
+	o.SetCopy(copy)
+	return o
+}
+
+// SetCopy adds the copy to the workspace file service update workspace file params
+func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) SetCopy(copy *bool) {
+	o.Copy = copy
+}
+
 // WithFile adds the file to the workspace file service update workspace file params
 func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WithFile(file *models.ChorusWorkspaceFile) *WorkspaceFileServiceUpdateWorkspaceFileParams {
 	o.SetFile(file)
@@ -170,6 +188,23 @@ func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WriteToRequest(r runtime
 		return err
 	}
 	var res []error
+
+	if o.Copy != nil {
+
+		// query param copy
+		var qrCopy bool
+
+		if o.Copy != nil {
+			qrCopy = *o.Copy
+		}
+		qCopy := swag.FormatBool(qrCopy)
+		if qCopy != "" {
+
+			if err := r.SetQueryParam("copy", qCopy); err != nil {
+				return err
+			}
+		}
+	}
 	if o.File != nil {
 		if err := r.SetBodyParam(o.File); err != nil {
 			return err
