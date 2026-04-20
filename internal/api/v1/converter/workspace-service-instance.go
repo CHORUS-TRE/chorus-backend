@@ -19,9 +19,9 @@ func WorkspaceServiceInstanceToBusiness(pb *chorus.WorkspaceServiceInstance) (*m
 	}
 
 	var values model.JSONMap[any]
-	if pb.ValuesJson != "" {
-		if err := json.Unmarshal([]byte(pb.ValuesJson), &values); err != nil {
-			return nil, fmt.Errorf("unable to unmarshal valuesJson: %w", err)
+	if pb.ValuesOverrideJson != "" {
+		if err := json.Unmarshal([]byte(pb.ValuesOverrideJson), &values); err != nil {
+			return nil, fmt.Errorf("unable to unmarshal valuesOverrideJson: %w", err)
 		}
 	}
 
@@ -63,13 +63,13 @@ func WorkspaceServiceInstanceFromBusiness(svc *model.WorkspaceServiceInstance) (
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
-	var valuesJson string
+	var valuesOverrideJson string
 	if svc.Values != nil {
 		b, err := json.Marshal(svc.Values)
 		if err != nil {
 			return nil, fmt.Errorf("unable to marshal values: %w", err)
 		}
-		valuesJson = string(b)
+		valuesOverrideJson = string(b)
 	}
 
 	return &chorus.WorkspaceServiceInstance{
@@ -82,7 +82,7 @@ func WorkspaceServiceInstanceFromBusiness(svc *model.WorkspaceServiceInstance) (
 		ChartRegistry:          svc.ChartRegistry,
 		ChartRepository:        svc.ChartRepository,
 		ChartTag:               svc.ChartTag,
-		ValuesJson:             valuesJson,
+		ValuesOverrideJson:     valuesOverrideJson,
 		CredentialsSecretName:  svc.CredentialsSecretName,
 		CredentialsPaths:       []string(svc.CredentialsPaths),
 		ConnectionInfoTemplate: svc.ConnectionInfoTemplate,

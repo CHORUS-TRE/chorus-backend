@@ -32,7 +32,7 @@ message WorkspaceServiceInstance {
     string chartTag = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
         description: "Version tag of the Helm chart."
     }];
-    string valuesJson = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    string valuesOverrideJson = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
         description: "JSON-encoded Helm values override. Stored encrypted at rest."
     }];
     string credentialsSecretName = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {

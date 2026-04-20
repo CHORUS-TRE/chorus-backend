@@ -77,7 +77,7 @@ type ChorusWorkspaceServiceInstance struct {
 	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
 
 	// JSON-encoded Helm values override. Stored encrypted at rest.
-	ValuesJSON string `json:"valuesJson,omitempty"`
+	ValuesOverrideJSON string `json:"valuesOverrideJson,omitempty"`
 
 	// ID of the workspace this service instance belongs to.
 	WorkspaceID string `json:"workspaceId,omitempty"`

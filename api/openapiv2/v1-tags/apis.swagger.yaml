@@ -6402,7 +6402,7 @@ definitions:
       chartTag:
         type: string
         description: Version tag of the Helm chart.
-      valuesJson:
+      valuesOverrideJson:
         type: string
         description: JSON-encoded Helm values override. Stored encrypted at rest.
       credentialsSecretName:

@@ -74,6 +74,9 @@ func ProvideWorkspaceServiceInstanceController() chorus.WorkspaceServiceInstance
 	workspaceServiceInstanceControllerOnce.Do(func() {
 		workspaceServiceInstanceController = v1.NewWorkspaceServiceInstanceController(ProvideWorkspaceService())
 		workspaceServiceInstanceController = ctrl_mw.WorkspaceServiceInstanceAuthorizing(logger.SecLog, ProvideAuthorizer(), ProvideWorkspaceService())(workspaceServiceInstanceController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			workspaceServiceInstanceController = ctrl_mw.NewWorkspaceServiceInstanceAuditMiddleware(ProvideAuditWriter())(workspaceServiceInstanceController)
+		}
 	})
 	return workspaceServiceInstanceController
 }
