@@ -33,8 +33,8 @@ func ProvideWorkspaceFileService() service.WorkspaceFiler {
 	workspaceFileServiceOnce.Do(func() {
 		var err error
 		workspaceFileService, err = service.NewWorkspaceFileService(
+			ProvideConfig(),
 			ProvideFileStores(),
-			ProvideConfig().Services.WorkspaceFileService.Stores,
 		)
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create workspace file service: "+err.Error())
