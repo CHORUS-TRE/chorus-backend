@@ -33,6 +33,12 @@ type FileUploadInfo struct {
 // The FileStore interface abstracts UNIX-like file operations which can be performed on a MinIO object storage.
 // The directories are represented as objects with keys ending in a '/' character.
 type FileStore interface {
+	// Get the type of the file store (e.g., "minio", "disk").
+	GetType() string
+
+	// Check whether the store is reachable and operational.
+	Ping(ctx context.Context) error
+
 	// Get file metadata at the specified path without downloading the content.
 	StatFile(ctx context.Context, path string) (*File, error)
 

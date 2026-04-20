@@ -31,6 +31,15 @@ func WorkspaceFileAuthorizing(logger *logger.ContextLogger, authorizer authoriza
 	}
 }
 
+func (c workspaceFileControllerAuthorization) ListWorkspaceFileStores(ctx context.Context, req *chorus.ListWorkspaceFileStoresRequest) (*chorus.ListWorkspaceFileStoresReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionListFilesInWorkspace, authorization.WithWorkspace(req.WorkspaceId))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ListWorkspaceFileStores(ctx, req)
+}
+
 func (c workspaceFileControllerAuthorization) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {

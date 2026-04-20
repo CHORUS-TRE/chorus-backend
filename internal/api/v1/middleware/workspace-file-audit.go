@@ -26,6 +26,21 @@ func NewWorkspaceFileAuditMiddleware(auditWriter service.AuditWriter) func(choru
 	}
 }
 
+func (c workspaceFileControllerAudit) ListWorkspaceFileStores(ctx context.Context, req *chorus.ListWorkspaceFileStoresRequest) (*chorus.ListWorkspaceFileStoresReply, error) {
+	res, err := c.next.ListWorkspaceFileStores(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionFileListStores,
+			audit.WithWorkspaceID(req.WorkspaceId),
+			audit.WithDescription(fmt.Sprintf("Failed to list file stores for workspace %d.", req.WorkspaceId)),
+			audit.WithError(err),
+			audit.WithDetail("workspace_id", req.WorkspaceId),
+		)
+	}
+
+	return res, err
+}
+
 func (c workspaceFileControllerAudit) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
 	res, err := c.next.GetWorkspaceFile(ctx, req)
 

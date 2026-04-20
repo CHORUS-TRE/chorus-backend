@@ -46,6 +46,10 @@ func ProvideFileStores() map[string]filestore.FileStore {
 				fileStores[fileStoreName] = fileStore
 
 			case "disk":
+				if !fileStoreCfg.DiskConfig.Enabled {
+					logger.TechLog.Info(context.Background(), fmt.Sprintf("disk file store '%s' is disabled, skipping", fileStoreName))
+					continue
+				}
 				if fileStoreCfg.DiskConfig.BasePath == "" {
 					logger.TechLog.Fatal(context.Background(), fmt.Sprintf("disk_config.base_path is required for disk file store: %s", fileStoreName))
 				}
@@ -57,6 +61,20 @@ func ProvideFileStores() map[string]filestore.FileStore {
 
 			default:
 				logger.TechLog.Fatal(context.Background(), fmt.Sprintf("unsupported file store type '%s' for file store: %s", fileStoreCfg.Type, fileStoreName))
+			}
+
+			// Ping enabled file stores to verify availability at startup
+			var storeEnabled bool
+			switch fileStoreCfg.Type {
+			case "minio":
+				storeEnabled = fileStoreCfg.MinioConfig.Enabled
+			case "disk":
+				storeEnabled = fileStoreCfg.DiskConfig.Enabled
+			}
+			if storeEnabled {
+				if err := fileStores[fileStoreName].Ping(context.Background()); err != nil {
+					logger.TechLog.Fatal(context.Background(), fmt.Sprintf("file store '%s' is unreachable: %v", fileStoreName, err))
+				}
 			}
 
 			logger.TechLog.Info(context.Background(), fmt.Sprintf("Initialized file store '%s' of type '%s'", fileStoreName, fileStoreCfg.Type))

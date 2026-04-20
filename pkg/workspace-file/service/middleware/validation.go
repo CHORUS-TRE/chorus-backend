@@ -5,6 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
 
 	val "github.com/go-playground/validator/v10"
@@ -22,6 +23,10 @@ func Validation(validate *val.Validate) func(service.WorkspaceFiler) service.Wor
 			validate: validate,
 		}
 	}
+}
+
+func (v validation) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
+	return v.next.ListWorkspaceFileStores(ctx, workspaceID)
 }
 
 func (v validation) GetWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error) {

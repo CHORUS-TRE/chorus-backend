@@ -37,6 +37,10 @@ func (c *testClient) GetClientConfig() MinioClientConfig {
 	}
 }
 
+func (c *testClient) Ping() error {
+	return nil
+}
+
 func (c *testClient) GetObject(objectKey string) (*MinioObject, error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()

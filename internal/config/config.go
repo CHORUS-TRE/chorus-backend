@@ -261,6 +261,7 @@ type (
 	}
 
 	FileStoreDiskConfig struct {
+		Enabled  bool   `yaml:"enabled"`
 		BasePath string `yaml:"base_path"` // Base directory path for disk storage
 	}
 
@@ -372,6 +373,7 @@ type (
 		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
 		StorePrefix     string `yaml:"store_prefix,omitempty"`
 		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
+		Description     string `yaml:"description,omitempty"`
 	}
 
 	Mode struct {

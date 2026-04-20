@@ -68,6 +68,7 @@ const (
 	AuditActionFileUpdate         AuditAction = "UpdateFile"
 	AuditActionFileDelete         AuditAction = "DeleteFile"
 	AuditActionFileList           AuditAction = "ListFile"
+	AuditActionFileListStores     AuditAction = "ListFileStores"
 	AuditActionFileUploadInitiate AuditAction = "InitiateFileUpload"
 	AuditActionFileUploadComplete AuditAction = "CompleteFileUpload"
 	AuditActionFileUploadAbort    AuditAction = "AbortFileUpload"
