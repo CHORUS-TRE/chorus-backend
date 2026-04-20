@@ -1,0 +1,132 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "common.proto";
+import "workspace-service-instance.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus workspace service instance service";
+        version: "1.0";
+        contact: {
+            name: "chorus workspace service instance service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListWorkspaceServiceInstancesRequest {
+    PaginationQuery pagination = 1;
+    optional WorkspaceServiceInstanceFilter filter = 2;
+}
+message WorkspaceServiceInstanceFilter {
+    repeated uint64 workspace_ids_in = 1;
+}
+message ListWorkspaceServiceInstancesReply {
+    ListWorkspaceServiceInstancesResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListWorkspaceServiceInstancesResult {
+    repeated WorkspaceServiceInstance workspaceServiceInstances = 1;
+}
+
+message GetWorkspaceServiceInstanceRequest {
+    uint64 id = 1;
+}
+message GetWorkspaceServiceInstanceReply {
+    GetWorkspaceServiceInstanceResult result = 1;
+}
+message GetWorkspaceServiceInstanceResult {
+    WorkspaceServiceInstance workspaceServiceInstance = 1;
+}
+
+message CreateWorkspaceServiceInstanceReply {
+    CreateWorkspaceServiceInstanceResult result = 1;
+}
+message CreateWorkspaceServiceInstanceResult {
+    WorkspaceServiceInstance workspaceServiceInstance = 1;
+}
+
+message UpdateWorkspaceServiceInstanceReply {
+    UpdateWorkspaceServiceInstanceResult result = 1;
+}
+message UpdateWorkspaceServiceInstanceResult {
+    WorkspaceServiceInstance workspaceServiceInstance = 1;
+}
+
+message DeleteWorkspaceServiceInstanceRequest {
+    uint64 id = 1;
+}
+message DeleteWorkspaceServiceInstanceReply {
+    DeleteWorkspaceServiceInstanceResult result = 1;
+}
+message DeleteWorkspaceServiceInstanceResult {
+    WorkspaceServiceInstance workspaceServiceInstance = 1;
+}
+
+service WorkspaceServiceInstanceService {
+    rpc GetWorkspaceServiceInstance(GetWorkspaceServiceInstanceRequest) returns (GetWorkspaceServiceInstanceReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspace-service-instances/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a workspace service instance";
+            description: "This endpoint returns a workspace service instance";
+            tags: "WorkspaceServiceInstanceService";
+        };
+    };
+
+    rpc ListWorkspaceServiceInstances(ListWorkspaceServiceInstancesRequest) returns (ListWorkspaceServiceInstancesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspace-service-instances"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List workspace service instances";
+            description: "This endpoint returns a list of workspace service instances";
+            tags: "WorkspaceServiceInstanceService";
+        };
+    };
+
+    rpc CreateWorkspaceServiceInstance(WorkspaceServiceInstance) returns (CreateWorkspaceServiceInstanceReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/workspace-service-instances"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a workspace service instance";
+            description: "This endpoint creates a workspace service instance";
+            tags: "WorkspaceServiceInstanceService";
+        };
+    };
+
+    rpc UpdateWorkspaceServiceInstance(WorkspaceServiceInstance) returns (UpdateWorkspaceServiceInstanceReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/workspace-service-instances"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update a workspace service instance";
+            description: "This endpoint updates a workspace service instance";
+            tags: "WorkspaceServiceInstanceService";
+        };
+    };
+
+    rpc DeleteWorkspaceServiceInstance(DeleteWorkspaceServiceInstanceRequest) returns (DeleteWorkspaceServiceInstanceReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/workspace-service-instances/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete a workspace service instance";
+            description: "This endpoint deletes a workspace service instance";
+            tags: "WorkspaceServiceInstanceService";
+        };
+    };
+}

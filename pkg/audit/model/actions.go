@@ -30,6 +30,13 @@ const (
 	AuditActionWorkspaceMemberUpdate AuditAction = "UpdateWorkspaceMember"
 	AuditActionWorkspaceMemberRemove AuditAction = "RemoveWorkspaceMember"
 
+	// Workspace Service Instance
+	AuditActionServiceInstanceCreate AuditAction = "CreateServiceInstance"
+	AuditActionServiceInstanceRead   AuditAction = "ReadServiceInstance"
+	AuditActionServiceInstanceUpdate AuditAction = "UpdateServiceInstance"
+	AuditActionServiceInstanceDelete AuditAction = "DeleteServiceInstance"
+	AuditActionServiceInstanceList   AuditAction = "ListServiceInstance"
+
 	// Workbench
 	AuditActionWorkbenchCreate       AuditAction = "CreateWorkbench"
 	AuditActionWorkbenchRead         AuditAction = "ReadWorkbench"

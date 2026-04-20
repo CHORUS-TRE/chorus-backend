@@ -433,6 +433,18 @@ definitions:
         format: date-time
       namespace:
         type: string
+      networkPolicy:
+        type: string
+      allowedFqdns:
+        type: array
+        items:
+          type: string
+      networkPolicyStatus:
+        type: string
+      networkPolicyMessage:
+        type: string
+      clipboard:
+        type: string
   chorusWorkspaceFilter:
     type: object
     properties:
