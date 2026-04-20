@@ -253,7 +253,7 @@ func (c *client) k8sWorkbenchAppToAppInstance(w WorkbenchApp) (AppInstance, erro
 
 	app := AppInstance{
 		ID:      id,
-		AppName: w.Name,
+		AppName: w.Name[:strings.LastIndex((w.Name), "-")],
 	}
 
 	if w.Image.Registry != "" && w.Image.Repository != "" && w.Image.Tag != "" {

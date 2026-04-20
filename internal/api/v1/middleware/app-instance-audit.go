@@ -76,8 +76,12 @@ func (c appInstanceControllerAudit) CreateAppInstance(ctx context.Context, req *
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to launch instance of app (ID %d).", req.AppId)),
+			audit.WithDescription(fmt.Sprintf("Failed to launch instance of app '%s' (ID %d).", req.AppName, req.AppId)),
 			audit.WithDetail("app_id", req.AppId),
+			audit.WithDetail("app_name", req.AppName),
+			audit.WithDetail("app_image_registry", req.AppDockerImageRegistry),
+			audit.WithDetail("app_image_name", req.AppDockerImageName),
+			audit.WithDetail("app_image_tag", req.AppDockerImageTag),
 			audit.WithError(err),
 		)
 	} else {
