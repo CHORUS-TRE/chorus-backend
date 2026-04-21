@@ -28,7 +28,6 @@ type WorkspaceFiler interface {
 }
 
 type workspaceFileStore struct {
-	storePrefix     string
 	workspacePrefix string
 	description     string
 	storeType       string
@@ -43,22 +42,10 @@ type WorkspaceFileService struct {
 func NewWorkspaceFileService(cfg config.Config, fileStores map[string]filestore.FileStore) (*WorkspaceFileService, error) {
 	storeConfigs := cfg.Services.WorkspaceFileService.Stores
 
-	// Validate store prefixes uniqueness
-	for storeName, storeCfg := range storeConfigs {
-		for otherStoreName, otherStoreCfg := range storeConfigs {
-			trimmedPrefix := strings.Trim(storeCfg.StorePrefix, "/")
-			otherTrimmedPrefix := strings.Trim(otherStoreCfg.StorePrefix, "/")
-			if storeName != otherStoreName && strings.HasPrefix(trimmedPrefix, otherTrimmedPrefix) {
-				return nil, fmt.Errorf("workspace file store prefix conflict: store %s prefix %s overlaps with store %s prefix %s", storeName, storeCfg.StorePrefix, otherStoreName, otherStoreCfg.StorePrefix)
-			}
-		}
-	}
-
 	stores := make(map[string]workspaceFileStore, len(storeConfigs))
 	for storeName, storeCfg := range storeConfigs {
 		rawCfg := cfg.Storage.FileStores[storeCfg.FileStoreName]
 		stores[storeName] = workspaceFileStore{
-			storePrefix:     "/" + strings.Trim(storeCfg.StorePrefix, "/") + "/",
 			workspacePrefix: storeCfg.WorkspacePrefix,
 			description:     storeCfg.Description,
 			storeType:       rawCfg.Type,
@@ -81,31 +68,35 @@ func isFileStoreEnabled(cfg config.FileStore) bool {
 	}
 }
 
+// toStorePath converts a user path (/{storeName}/relative/path) to the internal storage path.
 func (s *WorkspaceFileService) toStorePath(storeName string, workspaceID uint64, filePath string) string {
 	store := s.stores[storeName]
-	normalizedPath := "/" + strings.TrimPrefix(filePath, "/")                                                // Normalize user path
-	relPath := strings.TrimPrefix(normalizedPath, store.storePrefix)                                         // Strip store prefix to get relative path
-	workspaceDir := fmt.Sprintf(store.workspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID)) // Format workspace prefix with workspace ID
-	objectKey := fmt.Sprintf("%s/%s", workspaceDir, strings.TrimPrefix(relPath, "/"))                        // Combine workspace_prefix and relative path
-	return objectKey
+	normalizedPath := "/" + strings.TrimPrefix(filePath, "/")
+	relPath := strings.TrimPrefix(normalizedPath, "/"+storeName)
+	relPath = strings.TrimPrefix(relPath, "/")
+	workspaceDir := fmt.Sprintf(store.workspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID))
+	return fmt.Sprintf("%s/%s", workspaceDir, relPath)
 }
 
+// fromStorePath converts an internal storage path back to a user path (/{storeName}/relative/path).
 func (s *WorkspaceFileService) fromStorePath(storeName string, workspaceID uint64, storePath string) string {
 	store := s.stores[storeName]
-	workspaceDir := fmt.Sprintf(store.workspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID)) // Format workspace prefix with workspace ID
-	relPath := strings.TrimPrefix(storePath, workspaceDir+"/")                                               // Strip workspace prefix to get relative path
-	userPath := store.storePrefix + strings.TrimPrefix(relPath, "/")                                         // Prepend store prefix to get user path
-	return userPath
+	workspaceDir := fmt.Sprintf(store.workspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID))
+	relPath := strings.TrimPrefix(storePath, workspaceDir+"/")
+	return "/" + storeName + "/" + strings.TrimPrefix(relPath, "/")
 }
 
 func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) {
-	normalizedPath := "/" + strings.TrimPrefix(filePath, "/")
-	for storeName, store := range s.stores {
-		if strings.HasPrefix(normalizedPath, store.storePrefix) {
-			return storeName, nil
-		}
+	parts := strings.SplitN(strings.TrimPrefix(filePath, "/"), "/", 2)
+	if len(parts) == 0 || parts[0] == "" {
+		return "", cerr.ErrInvalidRequest.WithMessage("path must include a store name as the first segment")
 	}
-	return "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("No suitable file store found for path %s", filePath))
+	storeName := parts[0]
+	_, ok := s.stores[storeName]
+	if !ok {
+		return "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Unknown file store: %s", storeName))
+	}
+	return storeName, nil
 }
 
 func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
@@ -170,10 +161,6 @@ func (s *WorkspaceFileService) GetWorkspaceFileWithContent(ctx context.Context, 
 }
 
 func (s *WorkspaceFileService) ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error) {
-	if filePath == "" || filePath == "/" {
-		return nil, cerr.ErrInvalidRequest.WithMessage("Use ListWorkspaceFileStores to list available stores")
-	}
-
 	storeName, err := s.selectFileStore(filePath)
 	if err != nil {
 		return nil, err

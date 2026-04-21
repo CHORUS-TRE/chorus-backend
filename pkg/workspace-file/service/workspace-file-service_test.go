@@ -15,7 +15,6 @@ import (
 
 const (
 	testStoreName       = "test"
-	testStorePrefix     = "/test-client/"
 	testWorkspacePrefix = "workspaces/%s"
 )
 
@@ -27,7 +26,6 @@ func createTestService() *WorkspaceFileService {
 	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
 		"test": {
 			FileStoreName:   "test",
-			StorePrefix:     testStorePrefix,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}
@@ -57,33 +55,33 @@ func TestToStorePath(t *testing.T) {
 		expected    string
 	}{
 		{
-			name:        "strips prefix and adds workspace scope",
+			name:        "strips store name and adds workspace scope",
 			workspaceID: 1,
-			globalPath:  "/test-client/file.txt",
+			globalPath:  "/test/file.txt",
 			expected:    "workspaces/workspace1/file.txt",
 		},
 		{
 			name:        "handles nested paths",
 			workspaceID: 1,
-			globalPath:  "/test-client/folder/file.txt",
+			globalPath:  "/test/folder/file.txt",
 			expected:    "workspaces/workspace1/folder/file.txt",
 		},
 		{
 			name:        "handles path without leading slash",
 			workspaceID: 1,
-			globalPath:  "test-client/file.txt",
+			globalPath:  "test/file.txt",
 			expected:    "workspaces/workspace1/file.txt",
 		},
 		{
 			name:        "handles root of store",
 			workspaceID: 1,
-			globalPath:  "/test-client/",
+			globalPath:  "/test/",
 			expected:    "workspaces/workspace1/",
 		},
 		{
 			name:        "different workspace ID",
 			workspaceID: 42,
-			globalPath:  "/test-client/data.json",
+			globalPath:  "/test/data.json",
 			expected:    "workspaces/workspace42/data.json",
 		},
 	}
@@ -108,31 +106,31 @@ func TestFromStorePath(t *testing.T) {
 			name:        "removes workspace scope and adds prefix",
 			workspaceID: 1,
 			storePath:   "workspaces/workspace1/file.txt",
-			expected:    "/test-client/file.txt",
+			expected:    "/test/file.txt",
 		},
 		{
 			name:        "handles nested paths with workspace scope",
 			workspaceID: 1,
 			storePath:   "workspaces/workspace1/folder/file.txt",
-			expected:    "/test-client/folder/file.txt",
+			expected:    "/test/folder/file.txt",
 		},
 		{
 			name:        "handles workspace root",
 			workspaceID: 1,
 			storePath:   "workspaces/workspace1/",
-			expected:    "/test-client/",
+			expected:    "/test/",
 		},
 		{
 			name:        "handles different workspace ID",
 			workspaceID: 42,
 			storePath:   "workspaces/workspace42/data.json",
-			expected:    "/test-client/data.json",
+			expected:    "/test/data.json",
 		},
 		{
 			name:        "handles path without workspace scope",
 			workspaceID: 1,
 			storePath:   "file.txt",
-			expected:    "/test-client/file.txt",
+			expected:    "/test/file.txt",
 		},
 	}
 
@@ -153,15 +151,15 @@ func TestPathRoundTrip(t *testing.T) {
 	}{
 		{
 			name:       "simple file",
-			globalPath: "/test-client/file.txt",
+			globalPath: "/test/file.txt",
 		},
 		{
 			name:       "nested file",
-			globalPath: "/test-client/folder/subfolder/file.txt",
+			globalPath: "/test/folder/subfolder/file.txt",
 		},
 		{
 			name:       "directory",
-			globalPath: "/test-client/folder/",
+			globalPath: "/test/folder/",
 		},
 	}
 
@@ -183,7 +181,7 @@ func TestFileLifecycle(t *testing.T) {
 
 	// Define test parameters
 	workspaceID := uint64(1)
-	globalPath := "/test-client/testfile.txt"
+	globalPath := "/test/testfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Hello, Minio!")
 
@@ -234,7 +232,7 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalPath := "/test-client/existingfile.txt"
+	globalPath := "/test/existingfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Existing file content")
 	storage := s.stores[testStoreName].store
@@ -261,7 +259,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 
 	storage := s.stores[testStoreName].store
 	workspaceID := uint64(1)
-	globalDirPath := "/test-client/mydir/"
+	globalDirPath := "/test/mydir/"
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
 
 	// Create directory
@@ -327,7 +325,7 @@ func TestCreateConflictingDirectory(t *testing.T) {
 	storage := s.stores[testStoreName].store
 
 	workspaceID := uint64(1)
-	globalFilePath := "/test-client/conflict"
+	globalFilePath := "/test/conflict"
 	storeFilePath := s.toStorePath(testStoreName, workspaceID, globalFilePath)
 
 	// Create a file first
@@ -351,7 +349,7 @@ func TestCreateConflictingFile(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalDirPath := "/test-client/conflictdir/"
+	globalDirPath := "/test/conflictdir/"
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
 	storage := s.stores[testStoreName].store
 
@@ -377,7 +375,7 @@ func TestFileUpload(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalPath := "/test-client/largefile.txt"
+	globalPath := "/test/largefile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	fileSize := uint64(10 * 1024 * 1024) // 10 MB
 	storage := s.stores[testStoreName].store
@@ -425,7 +423,7 @@ func TestAbortFileUpload(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalPath := "/test-client/abortfile.txt"
+	globalPath := "/test/abortfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	storage := s.stores[testStoreName].store
 
@@ -507,7 +505,7 @@ func TestFileUploadPartSizeCalculation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
-				Path:        "/test-client/testfile.txt",
+				Path:        "/test/testfile.txt",
 				IsDirectory: false,
 				Size:        tt.fileSize,
 			})

@@ -371,7 +371,6 @@ type (
 
 	WorkspaceFileStore struct {
 		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
-		StorePrefix     string `yaml:"store_prefix,omitempty"`
 		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
 		Description     string `yaml:"description,omitempty"`
 	}

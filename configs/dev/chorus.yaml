@@ -49,7 +49,7 @@ storage:
       ssl:
         enabled: false
   file_stores:
-    archive:
+    s3:
       type: minio
       minio_config:
         enabled: true
@@ -61,7 +61,7 @@ storage:
         multipart_min_part_size: 5242880 # 5MB
         multipart_max_part_size: 5368709120 # 5GB
         multipart_max_total_parts: 10000
-    scratch:
+    s3-copy:
       type: minio
       minio_config:
         enabled: true
@@ -245,17 +245,18 @@ services:
   workspace_file_service:
     stores:
       archive:
-        file_store_name: archive
-        store_prefix: /archive
+        file_store_name: s3
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+        description: "Long-term object storage (MinIO)"
       scratch:
-        file_store_name: scratch
-        store_prefix: /scratch
+        file_store_name: s3-copy
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+        description: "Copy of long-term storage for testing purposes (MinIO)"
       disk:
         file_store_name: disk
-        store_prefix: /disk
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
+        description: "Local disk storage."
+
   approval_request_service:
     staging_file_store_name: disk
         
