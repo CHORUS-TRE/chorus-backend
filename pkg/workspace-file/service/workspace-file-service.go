@@ -44,7 +44,16 @@ func NewWorkspaceFileService(cfg config.Config, fileStores map[string]filestore.
 
 	stores := make(map[string]workspaceFileStore, len(storeConfigs))
 	for storeName, storeCfg := range storeConfigs {
-		rawCfg := cfg.Storage.FileStores[storeCfg.FileStoreName]
+		if !strings.Contains(storeCfg.WorkspacePrefix, "%s") {
+			return nil, fmt.Errorf("workspace file store %q: workspace_prefix must contain %%s for workspace name substitution", storeName)
+		}
+		rawCfg, ok := cfg.Storage.FileStores[storeCfg.FileStoreName]
+		if !ok {
+			return nil, fmt.Errorf("workspace file store %q references unknown file store %q", storeName, storeCfg.FileStoreName)
+		}
+		if isFileStoreEnabled(rawCfg) && fileStores[storeCfg.FileStoreName] == nil {
+			return nil, fmt.Errorf("workspace file store %q: file store %q is enabled but was not initialized", storeName, storeCfg.FileStoreName)
+		}
 		stores[storeName] = workspaceFileStore{
 			workspacePrefix: storeCfg.WorkspacePrefix,
 			description:     storeCfg.Description,
@@ -88,13 +97,16 @@ func (s *WorkspaceFileService) fromStorePath(storeName string, workspaceID uint6
 
 func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) {
 	parts := strings.SplitN(strings.TrimPrefix(filePath, "/"), "/", 2)
-	if len(parts) == 0 || parts[0] == "" {
+	if parts[0] == "" {
 		return "", cerr.ErrInvalidRequest.WithMessage("path must include a store name as the first segment")
 	}
 	storeName := parts[0]
-	_, ok := s.stores[storeName]
+	store, ok := s.stores[storeName]
 	if !ok {
 		return "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Unknown file store: %s", storeName))
+	}
+	if !store.enabled {
+		return "", cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("File store %s is disabled", storeName))
 	}
 	return storeName, nil
 }
