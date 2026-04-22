@@ -33,7 +33,7 @@ type workspaceFileStore struct {
 	description     string
 	storeType       string
 	enabled         bool
-	order           int
+	order           uint
 	store           filestore.FileStore
 }
 
@@ -145,7 +145,7 @@ func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context, work
 	slices.SortFunc(storeInfos, func(a, b *model.WorkspaceFileStoreInfo) int {
 		orderA, orderB := s.stores[a.Name].order, s.stores[b.Name].order
 		if orderA != orderB {
-			return orderA - orderB
+			return int(orderA) - int(orderB)
 		}
 		return strings.Compare(a.Name, b.Name)
 	})
