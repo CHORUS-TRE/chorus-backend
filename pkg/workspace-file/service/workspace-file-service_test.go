@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	testStoreName       = "test"
-	testStorePrefix     = "/test-client/"
+	testStoreName       = "test-client"
 	testWorkspacePrefix = "workspaces/%s"
 )
 
@@ -25,14 +24,13 @@ func createTestService() *WorkspaceFileService {
 
 	cfg := config.Config{}
 	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
-		"test": {
-			FileStoreName:   "test",
-			StorePrefix:     testStorePrefix,
+		testStoreName: {
+			FileStoreName:   testStoreName,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}
 	cfg.Storage.FileStores = map[string]config.FileStore{
-		"test": {
+		testStoreName: {
 			Type: "minio",
 			MinioConfig: config.FileStoreMinioConfig{
 				Enabled: true,
@@ -41,7 +39,7 @@ func createTestService() *WorkspaceFileService {
 	}
 
 	fileStores := map[string]filestore.FileStore{
-		"test": fileStore,
+		testStoreName: fileStore,
 	}
 
 	service, _ := NewWorkspaceFileService(cfg, fileStores)
@@ -57,7 +55,7 @@ func TestToStorePath(t *testing.T) {
 		expected    string
 	}{
 		{
-			name:        "strips prefix and adds workspace scope",
+			name:        "strips store name and adds workspace scope",
 			workspaceID: 1,
 			globalPath:  "/test-client/file.txt",
 			expected:    "workspaces/workspace1/file.txt",
