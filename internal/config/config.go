@@ -373,6 +373,7 @@ type (
 		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
 		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
 		Description     string `yaml:"description,omitempty"`
+		Order           int    `yaml:"order,omitempty"`
 	}
 
 	Mode struct {

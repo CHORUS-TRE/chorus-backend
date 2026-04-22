@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
@@ -32,6 +33,7 @@ type workspaceFileStore struct {
 	description     string
 	storeType       string
 	enabled         bool
+	order           int
 	store           filestore.FileStore
 }
 
@@ -59,6 +61,7 @@ func NewWorkspaceFileService(cfg config.Config, fileStores map[string]filestore.
 			description:     storeCfg.Description,
 			storeType:       rawCfg.Type,
 			enabled:         isFileStoreEnabled(rawCfg),
+			order:           storeCfg.Order,
 			store:           fileStores[storeCfg.FileStoreName],
 		}
 	}
@@ -114,6 +117,7 @@ func (s *WorkspaceFileService) selectFileStore(filePath string) (string, error) 
 func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceFileStoreInfo, error) {
 	var storeInfos []*model.WorkspaceFileStoreInfo
 	for storeName, store := range s.stores {
+		// Determine store status
 		var status model.WorkspaceFileStoreStatus
 		switch {
 		case !store.enabled:
@@ -136,6 +140,16 @@ func (s *WorkspaceFileService) ListWorkspaceFileStores(ctx context.Context, work
 			Status:      status,
 		})
 	}
+
+	// Sort stores by order, then by name
+	slices.SortFunc(storeInfos, func(a, b *model.WorkspaceFileStoreInfo) int {
+		orderA, orderB := s.stores[a.Name].order, s.stores[b.Name].order
+		if orderA != orderB {
+			return orderA - orderB
+		}
+		return strings.Compare(a.Name, b.Name)
+	})
+
 	return storeInfos, nil
 }
 
