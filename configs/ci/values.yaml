@@ -54,23 +54,6 @@ service:
   type: ClusterIP
   port: 5000
 
-ingress:
-  enabled: false
-  className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: 20g
-  hosts:
-    - host: backend.chorus-tre.ch
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: backend-tls
-      hosts:
-        - backend.chorus-tre.ch
-
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
