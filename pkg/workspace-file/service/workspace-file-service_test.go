@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	testStoreName       = "test"
+	testStoreName       = "test-client"
 	testWorkspacePrefix = "workspaces/%s"
 )
 
@@ -24,13 +24,13 @@ func createTestService() *WorkspaceFileService {
 
 	cfg := config.Config{}
 	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
-		"test": {
-			FileStoreName:   "test",
+		testStoreName: {
+			FileStoreName:   testStoreName,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}
 	cfg.Storage.FileStores = map[string]config.FileStore{
-		"test": {
+		testStoreName: {
 			Type: "minio",
 			MinioConfig: config.FileStoreMinioConfig{
 				Enabled: true,
@@ -39,7 +39,7 @@ func createTestService() *WorkspaceFileService {
 	}
 
 	fileStores := map[string]filestore.FileStore{
-		"test": fileStore,
+		testStoreName: fileStore,
 	}
 
 	service, _ := NewWorkspaceFileService(cfg, fileStores)
@@ -57,31 +57,31 @@ func TestToStorePath(t *testing.T) {
 		{
 			name:        "strips store name and adds workspace scope",
 			workspaceID: 1,
-			globalPath:  "/test/file.txt",
+			globalPath:  "/test-client/file.txt",
 			expected:    "workspaces/workspace1/file.txt",
 		},
 		{
 			name:        "handles nested paths",
 			workspaceID: 1,
-			globalPath:  "/test/folder/file.txt",
+			globalPath:  "/test-client/folder/file.txt",
 			expected:    "workspaces/workspace1/folder/file.txt",
 		},
 		{
 			name:        "handles path without leading slash",
 			workspaceID: 1,
-			globalPath:  "test/file.txt",
+			globalPath:  "test-client/file.txt",
 			expected:    "workspaces/workspace1/file.txt",
 		},
 		{
 			name:        "handles root of store",
 			workspaceID: 1,
-			globalPath:  "/test/",
+			globalPath:  "/test-client/",
 			expected:    "workspaces/workspace1/",
 		},
 		{
 			name:        "different workspace ID",
 			workspaceID: 42,
-			globalPath:  "/test/data.json",
+			globalPath:  "/test-client/data.json",
 			expected:    "workspaces/workspace42/data.json",
 		},
 	}
@@ -106,31 +106,31 @@ func TestFromStorePath(t *testing.T) {
 			name:        "removes workspace scope and adds prefix",
 			workspaceID: 1,
 			storePath:   "workspaces/workspace1/file.txt",
-			expected:    "/test/file.txt",
+			expected:    "/test-client/file.txt",
 		},
 		{
 			name:        "handles nested paths with workspace scope",
 			workspaceID: 1,
 			storePath:   "workspaces/workspace1/folder/file.txt",
-			expected:    "/test/folder/file.txt",
+			expected:    "/test-client/folder/file.txt",
 		},
 		{
 			name:        "handles workspace root",
 			workspaceID: 1,
 			storePath:   "workspaces/workspace1/",
-			expected:    "/test/",
+			expected:    "/test-client/",
 		},
 		{
 			name:        "handles different workspace ID",
 			workspaceID: 42,
 			storePath:   "workspaces/workspace42/data.json",
-			expected:    "/test/data.json",
+			expected:    "/test-client/data.json",
 		},
 		{
 			name:        "handles path without workspace scope",
 			workspaceID: 1,
 			storePath:   "file.txt",
-			expected:    "/test/file.txt",
+			expected:    "/test-client/file.txt",
 		},
 	}
 
@@ -151,15 +151,15 @@ func TestPathRoundTrip(t *testing.T) {
 	}{
 		{
 			name:       "simple file",
-			globalPath: "/test/file.txt",
+			globalPath: "/test-client/file.txt",
 		},
 		{
 			name:       "nested file",
-			globalPath: "/test/folder/subfolder/file.txt",
+			globalPath: "/test-client/folder/subfolder/file.txt",
 		},
 		{
 			name:       "directory",
-			globalPath: "/test/folder/",
+			globalPath: "/test-client/folder/",
 		},
 	}
 
@@ -181,7 +181,7 @@ func TestFileLifecycle(t *testing.T) {
 
 	// Define test parameters
 	workspaceID := uint64(1)
-	globalPath := "/test/testfile.txt"
+	globalPath := "/test-client/testfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Hello, Minio!")
 
@@ -232,7 +232,7 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalPath := "/test/existingfile.txt"
+	globalPath := "/test-client/existingfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Existing file content")
 	storage := s.stores[testStoreName].store
@@ -259,7 +259,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 
 	storage := s.stores[testStoreName].store
 	workspaceID := uint64(1)
-	globalDirPath := "/test/mydir/"
+	globalDirPath := "/test-client/mydir/"
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
 
 	// Create directory
@@ -325,7 +325,7 @@ func TestCreateConflictingDirectory(t *testing.T) {
 	storage := s.stores[testStoreName].store
 
 	workspaceID := uint64(1)
-	globalFilePath := "/test/conflict"
+	globalFilePath := "/test-client/conflict"
 	storeFilePath := s.toStorePath(testStoreName, workspaceID, globalFilePath)
 
 	// Create a file first
@@ -349,7 +349,7 @@ func TestCreateConflictingFile(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalDirPath := "/test/conflictdir/"
+	globalDirPath := "/test-client/conflictdir/"
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
 	storage := s.stores[testStoreName].store
 
@@ -375,7 +375,7 @@ func TestFileUpload(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalPath := "/test/largefile.txt"
+	globalPath := "/test-client/largefile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	fileSize := uint64(10 * 1024 * 1024) // 10 MB
 	storage := s.stores[testStoreName].store
@@ -423,7 +423,7 @@ func TestAbortFileUpload(t *testing.T) {
 	s := createTestService()
 
 	workspaceID := uint64(1)
-	globalPath := "/test/abortfile.txt"
+	globalPath := "/test-client/abortfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	storage := s.stores[testStoreName].store
 
@@ -505,7 +505,7 @@ func TestFileUploadPartSizeCalculation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
-				Path:        "/test/testfile.txt",
+				Path:        "/test-client/testfile.txt",
 				IsDirectory: false,
 				Size:        tt.fileSize,
 			})
