@@ -195,8 +195,9 @@ config:
       stores:
         archive:
           file_store_name: archive
-          store_prefix: /workspace-archive
           workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+          description: "Long-term object storage (S3)"
+          order: 1
     approval_request_service:
       staging_file_store_name: archive
     openid_connect_provider:
