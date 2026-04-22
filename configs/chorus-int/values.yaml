@@ -6,9 +6,6 @@ image:
 service:
   port: 5000
 
-ingress:
-  enabled: false
-
 # Disable mounting of secrets volume and config override
 # all password will need to be set via the config below
 # which is not recommended for production use cases
