@@ -18,6 +18,11 @@ func (s Sensitive) MarshalYAML() (interface{}, error) {
 	return redacted, nil
 }
 
+// String returns the redacted string for a sensitive string
+func (s Sensitive) String() string {
+	return redacted
+}
+
 // PlainText returns the plain text of a sensitive string
 func (s Sensitive) PlainText() string {
 	return string(s)

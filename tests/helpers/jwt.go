@@ -25,7 +25,7 @@ func CreateJWTToken(id, tenantId uint64, roleName string, roleContext map[string
 		},
 	}
 	obj := jwt_go.NewWithClaims(jwt_go.SigningMethodHS256, claims)
-	token, err := obj.SignedString([]byte(Conf().Daemon.JWT.Secret))
+	token, err := obj.SignedString([]byte(Conf().Daemon.JWT.Secret.PlainText()))
 	if err != nil {
 		panic(err)
 	}
