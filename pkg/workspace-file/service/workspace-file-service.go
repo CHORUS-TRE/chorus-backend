@@ -86,7 +86,7 @@ func (s *WorkspaceFileService) toStorePath(storeName string, workspaceID uint64,
 	store := s.stores[storeName]
 	normalizedPath := "/" + strings.TrimPrefix(filePath, "/")
 	relPath := strings.TrimPrefix(normalizedPath, "/"+storeName)
-	relPath = strings.TrimPrefix(relPath, "/")
+	relPath = strings.TrimLeft(relPath, "/")
 	workspaceDir := fmt.Sprintf(store.workspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID))
 	return fmt.Sprintf("%s/%s", workspaceDir, relPath)
 }
