@@ -280,6 +280,10 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 			return nil, cerr.ErrNotFound.Wrap(err, fmt.Sprintf("Workspace file at path %s does not exist", sourcePath))
 		}
 
+		if _, statErr := sourceStore.StatFile(ctx, destinationStorePath); statErr == nil {
+			return nil, cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("Workspace file already exists at path %s", file.Path))
+		}
+
 		updatedFile, err := sourceStore.MoveFile(ctx, sourceStorePath, destinationStorePath)
 		if err != nil {
 			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to move workspace file from path %s", sourcePath))
