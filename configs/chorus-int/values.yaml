@@ -85,7 +85,7 @@ config:
         minio_config:
           enabled: true
           endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-          access_key_id: ""
+          access_key_id: "" # set in secret
           secret_access_key: "" # set in secret
           bucket_name: chorus-data
           use_ssl: false
@@ -209,18 +209,20 @@ config:
         - profile
         - email
         - roles
-      jwks: "{}" # replaced in secret
-      clients: [] # replaced in secret
+      jwks: "{}" # set in secret
+      clients: [] # set in secret
 
   clients:
     docker_client:
       enabled: true
     k8s_client:
       enabled: true
+      api_server: "" # set in secret
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
-      api_server: ""
-      add_user_details: true
       server_version: "latest"
+      add_user_details: true
+      image_pull_secret: [] # set in secret
+      is_watcher: true
     harbor_client:
       enabled: true
       url: "https://harbor.int.chorus-tre.ch"
