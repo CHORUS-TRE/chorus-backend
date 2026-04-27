@@ -226,7 +226,8 @@ config:
     harbor_client:
       enabled: true
       url: "https://harbor.int.chorus-tre.ch"
-      username: "robot$backend-apps-client"
+      project: apps
+      username: "robot$chorus-int"
       password: "" # set in secret
 
   log:
