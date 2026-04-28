@@ -159,6 +159,30 @@ config:
               - profile
               - email
               - roles
+        keycloaktmp:
+          type: openid
+          enabled: true
+          button_text: "Login with CHUV (temp)"
+          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
+          order: 3
+          openid:
+            id: keycloaktmp
+            chorus_backend_host: "https://backend.int.chorus-tre.ch"
+            enable_frontend_redirect: true
+            chorus_frontend_redirect_url: "https://int.chorus-tre.ch/oauthredirect"
+            authorize_url: "https://authx.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            token_url: "https://authx.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            user_info_url: "https://authx.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logout_url: "https://authx.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
+            user_name_claim: "preferred_username"
+            # final_url_format: "https://int.chorus-tre.ch/login?token=%s"
+            client_id: chorus
+            client_secret: ""  # set in secret
+            scopes:
+              - openid
+              - profile
+              - email
+              - roles
     steward:
       init_tenant:
         enabled: true
