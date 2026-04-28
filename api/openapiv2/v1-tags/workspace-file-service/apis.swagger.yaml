@@ -73,6 +73,11 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
+        - name: copy
+          description: When true, preserve the source file after transfer
+          in: query
+          required: false
+          type: boolean
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{path}:

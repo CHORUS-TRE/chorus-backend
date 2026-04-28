@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -205,6 +206,32 @@ func (s *diskFileStorage) GetFile(ctx context.Context, path string) (*filestore.
 
 	logger.TechLog.Info(ctx, fmt.Sprintf("Downloaded %s", path))
 	return file, nil
+}
+
+func (s *diskFileStorage) GetFileStream(ctx context.Context, path string) (io.ReadCloser, *filestore.File, error) {
+	fullPath := s.resolvePath(path)
+
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil, fmt.Errorf("file not found at %s", path)
+		}
+		return nil, nil, fmt.Errorf("unable to stat file at %s: %w", path, err)
+	}
+
+	if info.IsDir() {
+		return nil, nil, fmt.Errorf("path %s is a directory", path)
+	}
+
+	f, err := os.Open(fullPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to open file at %s: %w", path, err)
+	}
+
+	file := s.fileInfoToFile(fullPath, info)
+
+	logger.TechLog.Info(ctx, fmt.Sprintf("Opened stream for %s", path))
+	return f, file, nil
 }
 
 func (s *diskFileStorage) ListFiles(ctx context.Context, path string) ([]*filestore.File, error) {

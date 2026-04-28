@@ -48,11 +48,11 @@ func (v validation) CreateWorkspaceFile(ctx context.Context, workspaceID uint64,
 	return v.next.CreateWorkspaceFile(ctx, workspaceID, file)
 }
 
-func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
+func (v validation) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, copy bool) (*filestore.File, error) {
 	if err := v.validate.Struct(file); err != nil {
 		return nil, cerr.WrapValidationError(err)
 	}
-	return v.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)
+	return v.next.UpdateWorkspaceFile(ctx, workspaceID, sourcePath, file, copy)
 }
 
 func (v validation) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
 	"slices"
 	"strings"
 
@@ -20,7 +21,7 @@ type WorkspaceFiler interface {
 	GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error)
 	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error)
-	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error)
+	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File, copy bool) (*filestore.File, error)
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 	InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error)
 	UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error)
@@ -85,7 +86,7 @@ func (s *WorkspaceFileService) toStorePath(storeName string, workspaceID uint64,
 	store := s.stores[storeName]
 	normalizedPath := "/" + strings.TrimPrefix(filePath, "/")
 	relPath := strings.TrimPrefix(normalizedPath, "/"+storeName)
-	relPath = strings.TrimPrefix(relPath, "/")
+	relPath = strings.TrimLeft(relPath, "/")
 	workspaceDir := fmt.Sprintf(store.workspacePrefix, workspace_model.GetWorkspaceClusterName(workspaceID))
 	return fmt.Sprintf("%s/%s", workspaceDir, relPath)
 }
@@ -255,66 +256,113 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}, nil
 }
 
-func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
-	oldStoreName, err := s.selectFileStore(oldPath)
+func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, copy bool) (*filestore.File, error) {
+	sourceStoreName, err := s.selectFileStore(sourcePath)
 	if err != nil {
 		return nil, err
 	}
 
-	newStoreName, err := s.selectFileStore(file.Path)
+	destinationStoreName, err := s.selectFileStore(file.Path)
 	if err != nil {
 		return nil, err
 	}
 
-	oldStore := s.stores[oldStoreName].store
+	sourceStorePath := s.toStorePath(sourceStoreName, workspaceID, sourcePath)
+	destinationStorePath := s.toStorePath(destinationStoreName, workspaceID, file.Path)
 
-	// Check if old file exists
-	oldStorePath := s.toStorePath(oldStoreName, workspaceID, oldPath)
-	oldFile, err := oldStore.GetFile(ctx, oldStorePath)
-	if err != nil {
-		return nil, cerr.ErrNotFound.Wrap(err, fmt.Sprintf("Workspace file at path %s does not exist", oldPath))
-	}
+	sourceStore := s.stores[sourceStoreName].store
+	destinationStore := s.stores[destinationStoreName].store
 
-	if oldStoreName != newStoreName {
-		newStorePath := s.toStorePath(newStoreName, workspaceID, file.Path)
-		newStore := s.stores[newStoreName].store
-
-		// Cross-store move
-		createdFile, err := newStore.CreateFile(ctx, &filestore.File{
-			Path:        newStorePath,
-			Name:        file.Name,
-			IsDirectory: file.IsDirectory,
-			MimeType:    file.MimeType,
-			Content:     oldFile.Content,
-		})
+	if !copy && sourceStoreName == destinationStoreName {
+		// Same-store move
+		_, err = sourceStore.StatFile(ctx, sourceStorePath)
 		if err != nil {
-			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create new workspace file at path %s", file.Path))
+			return nil, cerr.ErrNotFound.Wrap(err, fmt.Sprintf("Workspace file at path %s does not exist", sourcePath))
 		}
 
-		err = oldStore.DeleteFile(ctx, oldStorePath)
+		if _, statErr := sourceStore.StatFile(ctx, destinationStorePath); statErr == nil {
+			return nil, cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("Workspace file already exists at path %s", file.Path))
+		}
+
+		updatedFile, err := sourceStore.MoveFile(ctx, sourceStorePath, destinationStorePath)
 		if err != nil {
-			_ = newStore.DeleteFile(ctx, newStorePath)
-			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete old workspace file at path %s", oldPath))
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to move workspace file from path %s", sourcePath))
 		}
 
 		return &filestore.File{
-			Path:        s.fromStorePath(newStoreName, workspaceID, createdFile.Path),
-			Name:        createdFile.Name,
-			IsDirectory: createdFile.IsDirectory,
-			Size:        createdFile.Size,
-			MimeType:    createdFile.MimeType,
-			UpdatedAt:   createdFile.UpdatedAt,
+			Path:        s.fromStorePath(destinationStoreName, workspaceID, updatedFile.Path),
+			Name:        updatedFile.Name,
+			IsDirectory: updatedFile.IsDirectory,
+			Size:        updatedFile.Size,
+			MimeType:    updatedFile.MimeType,
+			UpdatedAt:   updatedFile.UpdatedAt,
 		}, nil
 	}
 
-	// Same store move
-	newStorePath := s.toStorePath(newStoreName, workspaceID, file.Path)
-	updatedFile, err := oldStore.MoveFile(ctx, oldStorePath, newStorePath)
+	// Copy (same-store or cross-store) and cross-store move
+	sourceFile, err := sourceStore.StatFile(ctx, sourceStorePath)
 	if err != nil {
-		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to move workspace file from path %s", oldPath))
+		return nil, cerr.ErrNotFound.Wrap(err, fmt.Sprintf("Workspace file at path %s does not exist", sourcePath))
 	}
 
-	return updatedFile, nil
+	// Check if destination file already exists
+	if _, statErr := destinationStore.StatFile(ctx, destinationStorePath); statErr == nil {
+		return nil, cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("Workspace file already exists at path %s", file.Path))
+	}
+
+	uploadInfo, err := destinationStore.InitiateMultipartUpload(ctx, &filestore.File{
+		Path:        destinationStorePath,
+		Name:        file.Name,
+		IsDirectory: file.IsDirectory,
+		MimeType:    file.MimeType,
+		Size:        sourceFile.Size,
+	})
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to initiate multipart upload for workspace file at path %s", file.Path))
+	}
+
+	// Ensure multipart upload is aborted if anything goes wrong during the copy process
+	var completed bool
+	defer func() {
+		if !completed {
+			_ = destinationStore.AbortMultipartUpload(ctx, destinationStorePath, uploadInfo.UploadID)
+		}
+	}()
+
+	// Stream file from source to destination in parts
+	reader, _, err := sourceStore.GetFileStream(ctx, sourceStorePath)
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to open stream for workspace file at path %s", sourceStorePath))
+	}
+	defer reader.Close()
+
+	parts, err := uploadFromReader(ctx, destinationStore, destinationStorePath, uploadInfo.UploadID, uploadInfo.PartSize, reader)
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to upload workspace file at path %s", file.Path))
+	}
+
+	// Complete the multipart upload to finalize the copy
+	createdFile, err := destinationStore.CompleteMultipartUpload(ctx, destinationStorePath, uploadInfo.UploadID, parts)
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to complete multipart upload for workspace file at path %s", file.Path))
+	}
+	completed = true
+
+	// Delete source file if this is a move operation (not copy)
+	if !copy {
+		if err := sourceStore.DeleteFile(ctx, sourceStorePath); err != nil {
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete source workspace file at path %s after move", sourceStorePath))
+		}
+	}
+
+	return &filestore.File{
+		Path:        s.fromStorePath(destinationStoreName, workspaceID, createdFile.Path),
+		Name:        createdFile.Name,
+		IsDirectory: createdFile.IsDirectory,
+		Size:        createdFile.Size,
+		MimeType:    createdFile.MimeType,
+		UpdatedAt:   createdFile.UpdatedAt,
+	}, nil
 }
 
 func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {
@@ -412,4 +460,31 @@ func (s *WorkspaceFileService) AbortWorkspaceFileUpload(ctx context.Context, wor
 	}
 
 	return nil
+}
+
+func uploadFromReader(ctx context.Context, store filestore.FileStore, destPath, uploadID string, partSize uint64, reader io.Reader) ([]*filestore.FilePart, error) {
+	var parts []*filestore.FilePart
+	buf := make([]byte, partSize)
+	var partNumber uint64 = 1
+	for {
+		n, readErr := io.ReadFull(reader, buf)
+		if n > 0 {
+			part, err := store.UploadPart(ctx, destPath, uploadID, &filestore.FilePart{
+				PartNumber: partNumber,
+				Data:       buf[:n],
+			})
+			if err != nil {
+				return nil, fmt.Errorf("part %d: %w", partNumber, err)
+			}
+			parts = append(parts, part)
+			partNumber++
+		}
+		if readErr == io.EOF || readErr == io.ErrUnexpectedEOF {
+			break
+		}
+		if readErr != nil {
+			return nil, readErr
+		}
+	}
+	return parts, nil
 }
