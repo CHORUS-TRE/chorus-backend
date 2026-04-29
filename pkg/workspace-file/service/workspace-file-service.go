@@ -325,7 +325,9 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	var completed bool
 	defer func() {
 		if !completed {
-			_ = destinationStore.AbortMultipartUpload(ctx, destinationStorePath, uploadInfo.UploadID)
+			if abortErr := destinationStore.AbortMultipartUpload(ctx, destinationStorePath, uploadInfo.UploadID); abortErr != nil {
+				logger.TechLog.Warn(ctx, fmt.Sprintf("Failed to abort multipart upload %s at path %s: %v", uploadInfo.UploadID, destinationStorePath, abortErr))
+			}
 		}
 	}()
 
@@ -351,7 +353,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	// Delete source file if this is a move operation (not copy)
 	if !isCopy {
 		if err := sourceStore.DeleteFile(ctx, sourceStorePath); err != nil {
-			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete source workspace file at path %s after move", sourceStorePath))
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete source workspace file at path %s after move (file was copied to destination but source was not removed)", sourceStorePath))
 		}
 	}
 
