@@ -31,10 +31,11 @@ message App {
     string kioskConfigJWTURL = 19;
     string kioskConfigJWTOIDCClientID = 20;
     string iconURL = 21;
-    string iconBackgroundColor = 24;
+    string iconBackgroundColor = 22;
+    string stabilityStatus = 23;
 
-    google.protobuf.Timestamp createdAt = 22;
-    google.protobuf.Timestamp updatedAt = 23;
+    google.protobuf.Timestamp createdAt = 24;
+    google.protobuf.Timestamp updatedAt = 25;
 }
 
 message AppVersion {
