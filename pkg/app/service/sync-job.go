@@ -16,6 +16,7 @@ const (
 	labelAppName        = "ch.chorus-tre.app.name"
 	labelAppIcon        = "ch.chorus-tre.app.icon"
 	labelAppCategory    = "ch.chorus-tre.app.category"
+	labelAppStability   = "ch.chorus-tre.app.stability"
 	labelImageName      = "ch.chorus-tre.image.name"
 	labelImageTag       = "ch.chorus-tre.image.tag"
 	labelMaxCPU         = "ch.chorus-tre.resources.max-cpu"
@@ -155,6 +156,7 @@ func (j *AppSyncJob) harborAppToModel(ha harbor.App, tenantID, userID uint64) *m
 		MaxEphemeralStorage: labels[labelMaxEphemeral],
 		MinEphemeralStorage: labels[labelMinEphemeral],
 		IconURL:             labels[labelAppIcon],
+		StabilityStatus:     model.AppStabilityStatus(labels[labelAppStability]),
 	}
 
 	return app
