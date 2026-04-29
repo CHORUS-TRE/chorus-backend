@@ -56,12 +56,12 @@ func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create workspace."),
+			audit.WithDescription(fmt.Sprintf("Failed to create workspace '%s'.", req.Name)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created workspace with ID %d.", res.Result.Workspace.Id)),
+			audit.WithDescription(fmt.Sprintf("Created workspace '%s' (ID %d).", req.Name, res.Result.Workspace.Id)),
 			audit.WithWorkspaceID(res.Result.Workspace.Id),
 			audit.WithDetail("workspace_id", res.Result.Workspace.Id),
 		)
@@ -79,7 +79,7 @@ func (c workspaceControllerAudit) GetWorkspace(ctx context.Context, req *chorus.
 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceRead,
 			audit.WithWorkspaceID(req.Id),
 			audit.WithDetail("workspace_id", req.Id),
-			audit.WithDescription("Failed to get workspace."),
+			audit.WithDescription(fmt.Sprintf("Failed to get workspace with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}
@@ -101,17 +101,17 @@ func (c workspaceControllerAudit) UpdateWorkspace(ctx context.Context, req *chor
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),
 		audit.WithDetail("workspace_id", req.Id),
+		audit.WithDetail("workspace_name", req.Name),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to update workspace."),
+			audit.WithDescription(fmt.Sprintf("Failed to update workspace '%s' (ID %d).", req.Name, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated workspace with ID %d.", req.Id)),
-			audit.WithDetail("workspace_name", req.Name),
+			audit.WithDescription(fmt.Sprintf("Updated workspace '%s' (ID %d).", req.Name, req.Id)),
 		)
 	}
 
@@ -130,7 +130,7 @@ func (c workspaceControllerAudit) DeleteWorkspace(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete workspace."),
+			audit.WithDescription(fmt.Sprintf("Failed to delete workspace with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	} else {

@@ -291,9 +291,11 @@ func (s *WorkbenchStorage) DeleteWorkbenchesInWorkspace(ctx context.Context, ten
 
 func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
-		FROM app_instances
-		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
+		SELECT ai.id, ai.tenantid, ai.userid, ai.appid, ai.workspaceid, ai.workbenchid, ai.status, ai.k8sstate, ai.k8sstatus, ai.k8smessage, ai.initialresolutionwidth, ai.initialresolutionheight, ai.kioskconfigjwttoken, ai.createdat, ai.updatedat,
+			a.name as appname, a.dockerimageregistry as appdockerimageregistry, a.dockerimagename as appdockerimagename, a.dockerimagetag as appdockerimagetag
+		FROM app_instances ai
+		JOIN apps a ON ai.tenantid = a.tenantid AND ai.appid = a.id
+		WHERE ai.tenantid = $1 AND ai.id = $2 AND ai.deletedat IS NULL;
 	`
 
 	var appInstance model.AppInstance
@@ -319,12 +321,14 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 
 	// Get app instances query
 	query := `
-		SELECT id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, kioskconfigjwttoken, createdat, updatedat
-		FROM app_instances
-		WHERE tenantid = $1 AND deletedat IS NULL
+		SELECT ai.id, ai.tenantid, ai.userid, ai.appid, ai.workspaceid, ai.workbenchid, ai.status, ai.k8sstate, ai.k8sstatus, ai.k8smessage, ai.initialresolutionwidth, ai.initialresolutionheight, ai.kioskconfigjwttoken, ai.createdat, ai.updatedat,
+			a.name as appname, a.dockerimageregistry as appdockerimageregistry, a.dockerimagename as appdockerimagename, a.dockerimagetag as appdockerimagetag
+		FROM app_instances ai
+		JOIN apps a ON ai.tenantid = a.tenantid AND ai.appid = a.id
+		WHERE ai.tenantid = $1 AND ai.deletedat IS NULL
 	`
 	if workbenchIDsIn != nil {
-		query += " AND workbenchid = ANY($2) "
+		query += " AND ai.workbenchid = ANY($2) "
 	}
 
 	// Add pagination
@@ -366,7 +370,8 @@ func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint6
 		return nil, err
 	}
 
-	return &newAppInstance, nil
+	// Get the app instance with app details
+	return s.GetAppInstance(ctx, tenantID, newAppInstance.ID)
 }
 
 func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
@@ -383,7 +388,8 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 		return nil, err
 	}
 
-	return &updatedAppInstance, nil
+	// Get the app instance with app details
+	return s.GetAppInstance(ctx, tenantID, updatedAppInstance.ID)
 }
 
 func (s *WorkbenchStorage) UpdateAppInstances(ctx context.Context, tenantID uint64, appInstances []*model.AppInstance) (err error) {

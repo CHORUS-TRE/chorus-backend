@@ -151,3 +151,170 @@ func (c workspaceStorageLogging) DeleteOldWorkspaces(ctx context.Context, timeou
 
 	return deletedWorkspaces, nil
 }
+
+func (c workspaceStorageLogging) UpdateWorkspaceStatus(ctx context.Context, tenantID uint64, workspaceID uint64, networkPolicyStatus, networkPolicyMessage string) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.UpdateWorkspaceStatus(ctx, tenantID, workspaceID, networkPolicyStatus, networkPolicyMessage)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithWorkspaceIDField(workspaceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithWorkspaceIDField(workspaceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c workspaceStorageLogging) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	res, err := c.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workspaceStorageLogging) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	res, paginationRes, err := c.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, workspaceIDsIn)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithCountField(len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, paginationRes, nil
+}
+
+func (c workspaceStorageLogging) ListWorkspaceServiceInstancesByWorkspace(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceServiceInstance, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	res, err := c.next.ListWorkspaceServiceInstancesByWorkspace(ctx, workspaceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			logger.WithWorkspaceIDField(workspaceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithWorkspaceIDField(workspaceID),
+		logger.WithCountField(len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workspaceStorageLogging) CreateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	created, err := c.next.CreateWorkspaceServiceInstance(ctx, tenantID, svc)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Uint64("workspace_service_instance_id", created.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return created, nil
+}
+
+func (c workspaceStorageLogging) UpdateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	updated, err := c.next.UpdateWorkspaceServiceInstance(ctx, tenantID, svc)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			zap.Uint64("workspace_service_instance_id", svc.ID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Uint64("workspace_service_instance_id", svc.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return updated, nil
+}
+
+func (c workspaceStorageLogging) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}
+
+func (c workspaceStorageLogging) UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[string]model.WorkspaceServiceInstanceStatusUpdate) error {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	err := c.next.UpdateWorkspaceServiceInstanceStatuses(ctx, workspaceID, statuses)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithWorkspaceIDField(workspaceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithWorkspaceIDField(workspaceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return nil
+}

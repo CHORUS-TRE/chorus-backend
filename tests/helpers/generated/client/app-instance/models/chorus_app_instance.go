@@ -19,8 +19,20 @@ import (
 // swagger:model chorusAppInstance
 type ChorusAppInstance struct {
 
+	// app docker image name
+	AppDockerImageName string `json:"appDockerImageName,omitempty"`
+
+	// app docker image registry
+	AppDockerImageRegistry string `json:"appDockerImageRegistry,omitempty"`
+
+	// app docker image tag
+	AppDockerImageTag string `json:"appDockerImageTag,omitempty"`
+
 	// app Id
 	AppID string `json:"appId,omitempty"`
+
+	// app name
+	AppName string `json:"appName,omitempty"`
 
 	// created at
 	// Format: date-time

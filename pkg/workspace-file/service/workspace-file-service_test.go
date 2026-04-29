@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	testStoreName       = "test"
-	testStorePrefix     = "/test-client/"
+	testStoreName       = "test-client"
 	testWorkspacePrefix = "workspaces/%s"
 )
 
@@ -23,19 +22,27 @@ func createTestService() *WorkspaceFileService {
 	client := miniorawclient.NewTestClient()
 	fileStore, _ := miniofilestore.NewMinioFileStorage(client)
 
-	storeConfigs := map[string]config.WorkspaceFileStore{
-		"test": {
-			FileStoreName:   "test",
-			StorePrefix:     testStorePrefix,
+	cfg := config.Config{}
+	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
+		testStoreName: {
+			FileStoreName:   testStoreName,
 			WorkspacePrefix: testWorkspacePrefix,
+		},
+	}
+	cfg.Storage.FileStores = map[string]config.FileStore{
+		testStoreName: {
+			Type: "minio",
+			MinioConfig: config.FileStoreMinioConfig{
+				Enabled: true,
+			},
 		},
 	}
 
 	fileStores := map[string]filestore.FileStore{
-		"test": fileStore,
+		testStoreName: fileStore,
 	}
 
-	service, _ := NewWorkspaceFileService(fileStores, storeConfigs)
+	service, _ := NewWorkspaceFileService(cfg, fileStores)
 	return service
 }
 
@@ -48,7 +55,7 @@ func TestToStorePath(t *testing.T) {
 		expected    string
 	}{
 		{
-			name:        "strips prefix and adds workspace scope",
+			name:        "strips store name and adds workspace scope",
 			workspaceID: 1,
 			globalPath:  "/test-client/file.txt",
 			expected:    "workspaces/workspace1/file.txt",
@@ -178,7 +185,7 @@ func TestFileLifecycle(t *testing.T) {
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Hello, Minio!")
 
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	// Create file
 	createdFile, err := storage.CreateFile(context.Background(), &filestore.File{
@@ -228,7 +235,7 @@ func TestCreateFileAlreadyExists(t *testing.T) {
 	globalPath := "/test-client/existingfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	content := []byte("Existing file content")
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	// Create the file first time
 	_, err := storage.CreateFile(context.Background(), &filestore.File{
@@ -250,7 +257,7 @@ func TestDirectoryLifeCycle(t *testing.T) {
 
 	s := createTestService()
 
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 	workspaceID := uint64(1)
 	globalDirPath := "/test-client/mydir/"
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
@@ -315,7 +322,7 @@ func TestCreateConflictingDirectory(t *testing.T) {
 
 	s := createTestService()
 
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	workspaceID := uint64(1)
 	globalFilePath := "/test-client/conflict"
@@ -344,7 +351,7 @@ func TestCreateConflictingFile(t *testing.T) {
 	workspaceID := uint64(1)
 	globalDirPath := "/test-client/conflictdir/"
 	storeDirPath := s.toStorePath(testStoreName, workspaceID, globalDirPath)
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	// Create a directory first
 	_, err := storage.CreateDirectory(context.Background(), &filestore.File{
@@ -371,7 +378,7 @@ func TestFileUpload(t *testing.T) {
 	globalPath := "/test-client/largefile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
 	fileSize := uint64(10 * 1024 * 1024) // 10 MB
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	// Initiate multipart upload
 	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
@@ -418,7 +425,7 @@ func TestAbortFileUpload(t *testing.T) {
 	workspaceID := uint64(1)
 	globalPath := "/test-client/abortfile.txt"
 	storePath := s.toStorePath(testStoreName, workspaceID, globalPath)
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	// Initiate multipart upload
 	uploadInfo, err := storage.InitiateMultipartUpload(context.Background(), &filestore.File{
@@ -438,7 +445,7 @@ func TestFileUploadPartSizeCalculation(t *testing.T) {
 	unit.InitTestLogger()
 
 	s := createTestService()
-	storage := s.fileStores[testStoreName]
+	storage := s.stores[testStoreName].store
 
 	tests := []struct {
 		name               string

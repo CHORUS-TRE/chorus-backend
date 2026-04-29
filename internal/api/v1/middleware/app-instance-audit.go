@@ -32,7 +32,7 @@ func (c appInstanceControllerAudit) GetAppInstance(ctx context.Context, req *cho
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionAppInstanceRead,
 			audit.WithDetail("app_instance_id", req.Id),
-			audit.WithDescription("Failed to get app instance."),
+			audit.WithDescription(fmt.Sprintf("Failed to get app instance with ID %d.", req.Id)),
 			audit.WithError(err),
 		)
 	}
@@ -76,13 +76,24 @@ func (c appInstanceControllerAudit) CreateAppInstance(ctx context.Context, req *
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to create app instance."),
+			audit.WithDescription(fmt.Sprintf("Failed to launch instance of app '%s' (ID %d).", req.AppName, req.AppId)),
+			audit.WithDetail("app_id", req.AppId),
+			audit.WithDetail("app_name", req.AppName),
+			audit.WithDetail("app_image_registry", req.AppDockerImageRegistry),
+			audit.WithDetail("app_image_name", req.AppDockerImageName),
+			audit.WithDetail("app_image_tag", req.AppDockerImageTag),
 			audit.WithError(err),
 		)
 	} else {
+		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created app instance with ID %d.", res.Result.AppInstance.Id)),
-			audit.WithDetail("app_instance_id", res.Result.AppInstance.Id),
+			audit.WithDescription(fmt.Sprintf("Launched instance of '%s' (version %s)", ai.AppName, ai.AppDockerImageTag)),
+			audit.WithDetail("app_instance_id", ai.Id),
+			audit.WithDetail("app_id", ai.AppId),
+			audit.WithDetail("app_name", ai.AppName),
+			audit.WithDetail("app_image_registry", ai.AppDockerImageRegistry),
+			audit.WithDetail("app_image_name", ai.AppDockerImageName),
+			audit.WithDetail("app_image_tag", ai.AppDockerImageTag),
 		)
 	}
 
@@ -95,19 +106,26 @@ func (c appInstanceControllerAudit) UpdateAppInstance(ctx context.Context, req *
 	res, err := c.next.UpdateAppInstance(ctx, req)
 
 	opts := []audit.Option{
+		audit.WithDetail("app_instance_id", req.Id),
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithWorkbenchID(req.WorkbenchId),
-		audit.WithDetail("app_instance_id", req.Id),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to update app instance."),
+			audit.WithDescription(fmt.Sprintf("Failed to update instance (ID %d) of app (ID %d).", req.Id, req.AppId)),
+			audit.WithDetail("app_id", req.AppId),
 			audit.WithError(err),
 		)
 	} else {
+		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated app instance with ID %d.", req.Id)),
+			audit.WithDescription(fmt.Sprintf("Updated instance (ID %d) of '%s' (version %s).", ai.Id, ai.AppName, ai.AppDockerImageTag)),
+			audit.WithDetail("app_id", ai.AppId),
+			audit.WithDetail("app_name", ai.AppName),
+			audit.WithDetail("app_image_registry", ai.AppDockerImageRegistry),
+			audit.WithDetail("app_image_name", ai.AppDockerImageName),
+			audit.WithDetail("app_image_tag", ai.AppDockerImageTag),
 		)
 	}
 
@@ -125,14 +143,20 @@ func (c appInstanceControllerAudit) DeleteAppInstance(ctx context.Context, req *
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription("Failed to delete app instance."),
+			audit.WithDescription(fmt.Sprintf("Failed to terminate app instance (ID %d).", req.Id)),
 			audit.WithError(err),
 		)
 	} else {
+		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Deleted app instance with ID %d.", req.Id)),
-			audit.WithWorkspaceID(res.Result.AppInstance.WorkspaceId),
-			audit.WithWorkbenchID(res.Result.AppInstance.WorkbenchId),
+			audit.WithDescription(fmt.Sprintf("Terminated instance of '%s' (version %s).", ai.AppName, ai.AppDockerImageTag)),
+			audit.WithWorkspaceID(ai.WorkspaceId),
+			audit.WithWorkbenchID(ai.WorkbenchId),
+			audit.WithDetail("app_id", ai.AppId),
+			audit.WithDetail("app_name", ai.AppName),
+			audit.WithDetail("app_image_registry", ai.AppDockerImageRegistry),
+			audit.WithDetail("app_image_name", ai.AppDockerImageName),
+			audit.WithDetail("app_image_tag", ai.AppDockerImageTag),
 		)
 	}
 

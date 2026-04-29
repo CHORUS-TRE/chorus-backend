@@ -20,6 +20,7 @@ type WorkbenchServer struct {
 	Version                 string `json:"version,omitempty"`
 	User                    string `json:"user,omitempty"`
 	UserID                  int    `json:"userid,omitempty"`
+	Clipboard               string `json:"clipboard,omitempty"`
 }
 type Image struct {
 	Registry   string `json:"registry,omitempty"`

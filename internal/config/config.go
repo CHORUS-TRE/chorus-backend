@@ -134,6 +134,7 @@ type (
 
 		APIServer                string `yaml:"api_server,omitempty"`     // or a service account api server
 		ServiceAccountSecretPath string `yaml:"sa_secret_path,omitempty"` // and a service account secret path
+		ServiceAccountOverrideCA string `yaml:"sa_override_ca,omitempty"` // optional CA crt content to override the one provided in the service account secret, useful for private clusters with custom CAs
 		Token                    string `yaml:"token,omitempty"`          // or a service account token
 		CA                       string `yaml:"ca,omitempty"`             // and service account ca
 
@@ -143,6 +144,8 @@ type (
 		ServerVersion        string `yaml:"server_version,omitempty"`
 		InitContainerVersion string `yaml:"init_container_version,omitempty"`
 		AddUserDetails       bool   `yaml:"add_user_details,omitempty"`
+
+		InsecureTLS bool `yaml:"insecure_tls,omitempty"` // if true, TLS certificate verification is skipped (testing only)
 
 		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
 
@@ -258,6 +261,7 @@ type (
 	}
 
 	FileStoreDiskConfig struct {
+		Enabled  bool   `yaml:"enabled"`
 		BasePath string `yaml:"base_path"` // Base directory path for disk storage
 	}
 
@@ -367,8 +371,9 @@ type (
 
 	WorkspaceFileStore struct {
 		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
-		StorePrefix     string `yaml:"store_prefix,omitempty"`
 		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
+		Description     string `yaml:"description,omitempty"`
+		Order           uint   `yaml:"order,omitempty"`
 	}
 
 	Mode struct {
@@ -397,6 +402,8 @@ type (
 		ClientID                  string   `yaml:"client_id"`
 		ClientSecret              string   `yaml:"client_secret"`
 		Scopes                    []string `yaml:"scopes"`
+		InsecureSkipTLS           bool     `yaml:"insecure_skip_tls"`
+		CustomCA                  string   `yaml:"custom_ca"`
 	}
 
 	OpenIDConnectProviderClient struct {

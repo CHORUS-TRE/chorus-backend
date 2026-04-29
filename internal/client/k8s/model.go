@@ -31,6 +31,7 @@ type Workbench struct {
 	Name                    string
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
+	Clipboard               string
 	Status                  string
 	ServerPodStatus         string
 	ServerPodMessage        string
@@ -94,4 +95,44 @@ func (a AppInstance) SanitizedAppName() string {
 	}
 
 	return name
+}
+
+// ----------------------------------------------------------------
+// Workspace input/output models for K8s client
+// ----------------------------------------------------------------
+
+type WorkspaceInputService struct {
+	Chart                  WorkspaceServiceChart        `json:"chart"`
+	Values                 map[string]any               `json:"values,omitempty"`
+	Credentials            *WorkspaceServiceCredentials `json:"credentials,omitempty"`
+	ConnectionInfoTemplate string                       `json:"connectionInfoTemplate,omitempty"`
+	ComputedValues         map[string]string            `json:"computedValues,omitempty"`
+}
+
+type WorkspaceInput struct {
+	TenantID      uint64
+	Namespace     string
+	NetworkPolicy string
+	AllowedFQDNs  []string
+	Clipboard     string
+	Services      map[string]WorkspaceInputService
+}
+
+type WorkspaceOutput struct {
+	CurrentGeneration  int64
+	ObservedGeneration int64
+	Namespace          string
+	TenantID           uint64
+
+	NetworkPolicyStatus  string
+	NetworkPolicyMessage string
+
+	ServiceStatuses map[string]WorkspaceServiceStatusOutput
+}
+
+type WorkspaceServiceStatusOutput struct {
+	Status         string
+	Message        string
+	ConnectionInfo string
+	SecretName     string
 }

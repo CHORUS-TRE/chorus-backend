@@ -6,17 +6,6 @@ image:
 service:
   port: 5000
 
-ingress:
-  hosts:
-    - host: backend.int.chorus-tre.ch
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: backend-tls
-      hosts:
-        - backend.int.chorus-tre.ch
-
 # Disable mounting of secrets volume and config override
 # all password will need to be set via the config below
 # which is not recommended for production use cases
@@ -52,6 +41,11 @@ config:
         enabled: true
         username: prometheus
         password: "" # set in secret
+    jobs:
+      app-sync:
+        enabled: true
+        timeout: 10m
+        interval: 30m
 
   storage:
     datastores:
@@ -91,7 +85,7 @@ config:
         minio_config:
           enabled: true
           endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-          access_key_id: ""
+          access_key_id: "" # set in secret
           secret_access_key: "" # set in secret
           bucket_name: chorus-data
           use_ssl: false
@@ -144,7 +138,7 @@ config:
         keycloakdev:
           type: openid
           enabled: true
-          button_text: "Login with CHUV"
+          button_text: "Login with CHUV (dev)"
           icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 3
           openid:
@@ -201,24 +195,39 @@ config:
       stores:
         archive:
           file_store_name: archive
-          store_prefix: /workspace-archive
           workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
+          description: "Long-term object storage (S3)"
+          order: 1
     approval_request_service:
       staging_file_store_name: archive
+    openid_connect_provider:
+      enabled: true
+      issuer_url: "https://backend.int.chorus-tre.ch/openid-connect"
+      frontend_interactions_url: "https://backend.int.chorus-tre.ch/auth-ui"
+      scopes:
+        - openid
+        - profile
+        - email
+        - roles
+      jwks: "{}" # set in secret
+      clients: [] # set in secret
 
   clients:
     docker_client:
       enabled: true
     k8s_client:
       enabled: true
+      api_server: "" # set in secret
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
-      api_server: ""
-      add_user_details: true
       server_version: "latest"
+      add_user_details: true
+      image_pull_secret: [] # set in secret
+      is_watcher: true
     harbor_client:
       enabled: true
       url: "https://harbor.int.chorus-tre.ch"
-      username: "robot$backend-apps-client"
+      project: apps
+      username: "robot$chorus-int"
       password: "" # set in secret
 
   log:

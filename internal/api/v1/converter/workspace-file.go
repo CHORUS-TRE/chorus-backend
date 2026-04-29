@@ -5,6 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/model"
 )
 
 func WorkspaceFileToBusiness(file *chorus.WorkspaceFile) (*filestore.File, error) {
@@ -59,6 +60,15 @@ func WorkspaceFilePartToBusiness(part *chorus.WorkspaceFilePart) (*filestore.Fil
 		Data:       part.Data,
 		ETag:       part.Etag,
 	}, nil
+}
+
+func WorkspaceFileStoreInfoFromBusiness(info *model.WorkspaceFileStoreInfo) *chorus.WorkspaceFileStoreInfo {
+	return &chorus.WorkspaceFileStoreInfo{
+		Name:        info.Name,
+		Type:        info.Type,
+		Description: info.Description,
+		Status:      string(info.Status),
+	}
 }
 
 func WorkspaceFilePartFromBusiness(part *filestore.FilePart) (*chorus.WorkspaceFilePart, error) {

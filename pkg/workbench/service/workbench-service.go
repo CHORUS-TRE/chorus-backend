@@ -52,6 +52,10 @@ type NotificationStore interface {
 	CreateNotification(ctx context.Context, notification *notification_model.Notification, userIDs []uint64) error
 }
 
+type WorkspaceReader interface {
+	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
+}
+
 type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
 }
@@ -120,6 +124,7 @@ type WorkbenchService struct {
 	userer            user_service.Userer
 	authenticator     authentication_service.Authenticator
 	notificationStore NotificationStore
+	workspaceReader   WorkspaceReader
 	auditWriter       audit_service.AuditWriter
 
 	proxyRWMutex     sync.RWMutex
@@ -129,7 +134,7 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore, auditWriter audit_service.AuditWriter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore, workspaceReader WorkspaceReader, auditWriter audit_service.AuditWriter) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
@@ -139,6 +144,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		userer:            userer,
 		authenticator:     authenticator,
 		notificationStore: notificationStore,
+		workspaceReader:   workspaceReader,
 		auditWriter:       auditWriter,
 
 		proxyCache:       make(map[proxyID]*proxy),
@@ -234,7 +240,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 
 		// Build app instances to update with correct status and K8sState
 		appInstancesToUpdate := make([]*model.AppInstance, 0, len(k8sWorkbench.Apps))
-		appInstancesToDelete := make([]uint64, 0)
+		appInstancesToDelete := make([]k8s.AppInstance, 0)
 		appsNeedingK8sUpdate := make([]k8s.AppInstance, 0)
 
 		for _, app := range k8sWorkbench.Apps {
@@ -259,7 +265,7 @@ func (s *WorkbenchService) SetClientWatchers() {
 			case model.K8sAppInstanceStatusStopped:
 				// App stopped - delete from DB
 				logger.TechLog.Info(ctx, "app instance stopped", zap.Uint64("appInstanceID", app.ID), zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name))
-				appInstancesToDelete = append(appInstancesToDelete, app.ID)
+				appInstancesToDelete = append(appInstancesToDelete, app)
 
 			case model.K8sAppInstanceStatusFailed:
 				// App failed - update status but keep K8sState as Running
@@ -303,25 +309,26 @@ func (s *WorkbenchService) SetClientWatchers() {
 		}
 
 		// Delete stopped app instances from store
-		if len(appInstancesToDelete) > 0 {
-			err = s.store.DeleteAppInstances(ctx, k8sWorkbench.TenantID, appInstancesToDelete)
-			if err != nil {
-				logger.TechLog.Error(ctx, "unable to delete app instances", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("appInstanceIDs", appInstancesToDelete), zap.Error(err))
-				return err
+		for _, ai := range appInstancesToDelete {
+			if err := s.store.DeleteAppInstance(ctx, k8sWorkbench.TenantID, ai.ID); err != nil {
+				logger.TechLog.Error(ctx, "unable to delete app instance", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Uint64("appInstanceID", ai.ID), zap.Error(err))
+				continue
 			}
 
-			for _, appInstanceID := range appInstancesToDelete {
-				audit.Record(ctx, s.auditWriter, audit_model.AuditActionAppInstanceDelete,
-					audit.WithTenantID(k8sWorkbench.TenantID),
-					audit.WithActorID(k8sWorkbench.UserID),
-					audit.WithActorUsername(k8sWorkbench.Username),
-					audit.WithWorkspaceID(workspaceID),
-					audit.WithWorkbenchID(workbenchID),
-					audit.WithDescription(fmt.Sprintf("Deleted app instance with ID %d.", appInstanceID)),
-					audit.WithDetail("app_instance_id", appInstanceID),
-					audit.WithDetail("trigger", "k8s_watcher"),
-				)
-			}
+			audit.Record(ctx, s.auditWriter, audit_model.AuditActionAppInstanceDelete,
+				audit.WithTenantID(k8sWorkbench.TenantID),
+				audit.WithActorID(k8sWorkbench.UserID),
+				audit.WithActorUsername(k8sWorkbench.Username),
+				audit.WithWorkspaceID(workspaceID),
+				audit.WithWorkbenchID(workbenchID),
+				audit.WithDescription(fmt.Sprintf("Terminated instance of '%s' (version %s).", ai.AppName, ai.AppTag)),
+				audit.WithDetail("app_instance_id", ai.ID),
+				audit.WithDetail("app_name", ai.AppName),
+				audit.WithDetail("app_image_registry", ai.AppRegistry),
+				audit.WithDetail("app_image_name", ai.AppImage),
+				audit.WithDetail("app_image_tag", ai.AppTag),
+				audit.WithDetail("trigger", "k8s_watcher"),
+			)
 		}
 
 		return nil
@@ -423,6 +430,14 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 
 		namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbench.ID)
 
+		clipboard := ""
+		ws, wsErr := s.workspaceReader.GetWorkspace(ctx, workbench.TenantID, workbench.WorkspaceID)
+		if wsErr != nil {
+			logger.TechLog.Warn(ctx, "unable to get workspace for clipboard", zap.Error(wsErr), zap.Uint64("workspaceID", workbench.WorkspaceID))
+		} else {
+			clipboard = string(ws.Clipboard)
+		}
+
 		err = s.client.UpdateWorkbench(k8s.Workbench{
 			TenantID:                workbench.TenantID,
 			Namespace:               namespace,
@@ -430,6 +445,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 			UserID:                  user.ID,
 			Name:                    workbenchName,
 			Apps:                    clientApps,
+			Clipboard:               clipboard,
 			InitialResolutionWidth:  workbench.InitialResolutionWidth,
 			InitialResolutionHeight: workbench.InitialResolutionHeight,
 		})
@@ -539,12 +555,21 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(newWorkbench.ID)
 
+	clipboard := ""
+	ws, wsErr := s.workspaceReader.GetWorkspace(ctx, workbench.TenantID, workbench.WorkspaceID)
+	if wsErr != nil {
+		logger.TechLog.Warn(ctx, "unable to get workspace for clipboard", zap.Error(wsErr), zap.Uint64("workspaceID", workbench.WorkspaceID))
+	} else {
+		clipboard = string(ws.Clipboard)
+	}
+
 	err = s.client.CreateWorkbench(k8s.Workbench{
 		TenantID:                workbench.TenantID,
 		Namespace:               namespace,
 		Username:                username,
 		UserID:                  user.ID,
 		Name:                    workbenchName,
+		Clipboard:               clipboard,
 		InitialResolutionWidth:  workbench.InitialResolutionWidth,
 		InitialResolutionHeight: workbench.InitialResolutionHeight,
 	})
@@ -842,7 +867,10 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 		audit.Record(ctx, s.auditWriter, audit_model.AuditActionWorkbenchStream,
 			audit.WithWorkbenchID(workbenchID),
 			audit.WithWorkspaceID(workbench.WorkspaceID),
-			audit.WithDescription(fmt.Sprintf("Accessed workbench stream with ID %d.", workbenchID)),
+			audit.WithDescription(fmt.Sprintf("Accessed stream of session '%s' (ID %d) in workspace %d.", workbench.Name, workbenchID, workbench.WorkspaceID)),
+			audit.WithDetail("workbench_id", workbenchID),
+			audit.WithDetail("workbench_name", workbench.Name),
+			audit.WithDetail("workspace_id", workbench.WorkspaceID),
 		)
 	}
 

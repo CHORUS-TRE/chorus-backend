@@ -35,6 +35,16 @@ type Workspaceer interface {
 	ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
+
+	GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error)
+	ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error)
+	CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
+	UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
+	DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error
+}
+
+type WorkspaceServiceInstanceFilter struct {
+	WorkspaceIDsIn *[]uint64
 }
 
 type Workbencher interface {
@@ -48,6 +58,15 @@ type WorkspaceStore interface {
 	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
+	UpdateWorkspaceStatus(ctx context.Context, tenantID uint64, workspaceID uint64, networkPolicyStatus, networkPolicyMessage string) error
+
+	GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error)
+	ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, workspaceIDsIn *[]uint64) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error)
+	ListWorkspaceServiceInstancesByWorkspace(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceServiceInstance, error)
+	CreateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
+	UpdateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
+	DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error
+	UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[string]model.WorkspaceServiceInstanceStatusUpdate) error
 }
 
 type Userer interface {
@@ -77,6 +96,8 @@ func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8s
 		notificationStore: notificationStore,
 		auditWriter:       auditWriter,
 	}
+
+	ws.SetClientWatchers()
 
 	go func() {
 		if err := ws.updateAllWorkspaces(context.Background()); err != nil {
@@ -118,7 +139,13 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 			}()
 		} else {
 			go func() {
-				if err := s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(workspace.ID)); err != nil {
+				svcs, err := s.store.ListWorkspaceServiceInstancesByWorkspace(context.Background(), workspace.ID)
+				if err != nil {
+					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to list workspace service instances for workspace %v: %v", workspace.ID, err))
+					return
+				}
+				input := workspaceToK8sInput(workspace, svcs)
+				if err := s.k8sClient.CreateWorkspace(input); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to create workspace %v: %v", workspace.ID, err))
 				}
 			}()
@@ -140,7 +167,7 @@ func (s *WorkspaceService) cleanOldWorkspaces(ctx context.Context) {
 			audit.WithTenantID(workspace.TenantID),
 			audit.WithActorUsername("system"),
 			audit.WithWorkspaceID(workspace.ID),
-			audit.WithDescription(fmt.Sprintf("Workspace with ID %d auto-deleted due to fixed timeout.", workspace.ID)),
+			audit.WithDescription(fmt.Sprintf("Workspace '%s' (ID %d) auto-deleted due to fixed timeout.", workspace.Name, workspace.ID)),
 			audit.WithDetail("trigger", "auto_cleanup_timeout"),
 		)
 	}
@@ -201,6 +228,16 @@ func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model
 		return nil, fmt.Errorf("unable to update workspace %v: %w", workspace.ID, err)
 	}
 
+	svcs, err := s.store.ListWorkspaceServiceInstancesByWorkspace(ctx, updatedWorkspace.ID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to list workspace service instances for workspace %v: %w", updatedWorkspace.ID, err)
+	}
+
+	input := workspaceToK8sInput(updatedWorkspace, svcs)
+	if err := s.k8sClient.UpdateWorkspace(input); err != nil {
+		return nil, fmt.Errorf("unable to sync workspace %v to K8s: %w", workspace.ID, err)
+	}
+
 	return updatedWorkspace, nil
 }
 
@@ -227,7 +264,8 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 		}
 	}
 
-	err = s.k8sClient.CreateWorkspace(workspace.TenantID, model.GetWorkspaceClusterName(newWorkspace.ID))
+	input := workspaceToK8sInput(newWorkspace, nil)
+	err = s.k8sClient.CreateWorkspace(input)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workbench %v: %w", workspace.ID, err)
 	}
@@ -339,4 +377,175 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	}
 
 	return nil
+}
+
+func (s *WorkspaceService) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
+	svc, err := s.store.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get workspace service instance %v: %w", workspaceServiceInstanceID, err)
+	}
+	return svc, nil
+}
+
+func (s *WorkspaceService) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
+	svcs, paginationRes, err := s.store.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to list workspace service instances: %w", err)
+	}
+	return svcs, paginationRes, nil
+}
+
+func (s *WorkspaceService) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	created, err := s.store.CreateWorkspaceServiceInstance(ctx, svc.TenantID, svc)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create workspace service instance: %w", err)
+	}
+
+	if err := s.syncWorkspaceToK8s(ctx, created.WorkspaceID, created.TenantID); err != nil {
+		return nil, err
+	}
+
+	return created, nil
+}
+
+func (s *WorkspaceService) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	updated, err := s.store.UpdateWorkspaceServiceInstance(ctx, svc.TenantID, svc)
+	if err != nil {
+		return nil, fmt.Errorf("unable to update workspace service instance %v: %w", svc.ID, err)
+	}
+
+	if err := s.syncWorkspaceToK8s(ctx, updated.WorkspaceID, updated.TenantID); err != nil {
+		return nil, err
+	}
+
+	return updated, nil
+}
+
+func (s *WorkspaceService) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error {
+	svc, err := s.store.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		return fmt.Errorf("unable to get workspace service instance %v: %w", workspaceServiceInstanceID, err)
+	}
+
+	err = s.store.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		return fmt.Errorf("unable to delete workspace service instance %v: %w", workspaceServiceInstanceID, err)
+	}
+
+	if err := s.syncWorkspaceToK8s(ctx, svc.WorkspaceID, svc.TenantID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *WorkspaceService) syncWorkspaceToK8s(ctx context.Context, workspaceID, tenantID uint64) error {
+	workspace, err := s.store.GetWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		return fmt.Errorf("unable to get workspace %v for K8s sync: %w", workspaceID, err)
+	}
+
+	svcs, err := s.store.ListWorkspaceServiceInstancesByWorkspace(ctx, workspaceID)
+	if err != nil {
+		return fmt.Errorf("unable to list workspace service instances for workspace %v: %w", workspaceID, err)
+	}
+
+	input := workspaceToK8sInput(workspace, svcs)
+	if err := s.k8sClient.UpdateWorkspace(input); err != nil {
+		return fmt.Errorf("unable to sync workspace %v to K8s: %w", workspaceID, err)
+	}
+
+	return nil
+}
+
+// SetClientWatchers registers a handler for Workspace CRD status updates from K8s.
+func (s *WorkspaceService) SetClientWatchers() {
+	watcher := func(wsOutput k8s.WorkspaceOutput) error {
+		ctx := context.Background()
+		logger.TechLog.Debug(ctx, "workspace watcher received update",
+			zap.String("namespace", wsOutput.Namespace),
+			zap.Int64("currentGeneration", wsOutput.CurrentGeneration),
+			zap.Int64("observedGeneration", wsOutput.ObservedGeneration),
+		)
+
+		// Skip updates if operator has not reconciled yet
+		if wsOutput.ObservedGeneration != wsOutput.CurrentGeneration {
+			logger.TechLog.Debug(ctx, "skipping workspace update - operator has not reconciled",
+				zap.String("namespace", wsOutput.Namespace),
+				zap.Int64("currentGeneration", wsOutput.CurrentGeneration),
+				zap.Int64("observedGeneration", wsOutput.ObservedGeneration),
+			)
+			return nil
+		}
+
+		workspaceID, err := model.GetIDFromClusterName(wsOutput.Namespace)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to get workspace ID from namespace", zap.String("namespace", wsOutput.Namespace), zap.Error(err))
+			return fmt.Errorf("unable to get workspace ID from namespace %s: %w", wsOutput.Namespace, err)
+		}
+
+		serviceStatuses := map[string]model.WorkspaceServiceInstanceStatusUpdate{}
+		for name, ss := range wsOutput.ServiceStatuses {
+			serviceStatuses[name] = model.WorkspaceServiceInstanceStatusUpdate{
+				Status:         ss.Status,
+				StatusMessage:  ss.Message,
+				ConnectionInfo: ss.ConnectionInfo,
+				SecretName:     ss.SecretName,
+			}
+		}
+
+		err = s.store.UpdateWorkspaceStatus(ctx, wsOutput.TenantID, workspaceID, wsOutput.NetworkPolicyStatus, wsOutput.NetworkPolicyMessage)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to update workspace status from watcher",
+				zap.Uint64("workspaceID", workspaceID), zap.Error(err))
+			return fmt.Errorf("unable to update workspace status %v: %w", workspaceID, err)
+		}
+
+		if len(serviceStatuses) > 0 {
+			err = s.store.UpdateWorkspaceServiceInstanceStatuses(ctx, workspaceID, serviceStatuses)
+			if err != nil {
+				logger.TechLog.Error(ctx, "unable to update workspace service instance statuses from watcher",
+					zap.Uint64("workspaceID", workspaceID), zap.Error(err))
+				return fmt.Errorf("unable to update workspace service instance statuses %v: %w", workspaceID, err)
+			}
+		}
+
+		return nil
+	}
+
+	s.k8sClient.RegisterOnUpdateWorkspaceHandler(watcher)
+}
+
+// workspaceToK8sInput converts a workspace model and its services to a K8s WorkspaceInput.
+func workspaceToK8sInput(ws *model.Workspace, svcs []*model.WorkspaceServiceInstance) k8s.WorkspaceInput {
+	services := make(map[string]k8s.WorkspaceInputService, len(svcs))
+	for _, svc := range svcs {
+		var creds *k8s.WorkspaceServiceCredentials
+		if svc.CredentialsSecretName != "" {
+			creds = &k8s.WorkspaceServiceCredentials{
+				SecretName: svc.CredentialsSecretName,
+				Paths:      []string(svc.CredentialsPaths),
+			}
+		}
+		services[svc.Name] = k8s.WorkspaceInputService{
+			Chart: k8s.WorkspaceServiceChart{
+				Registry:   svc.ChartRegistry,
+				Repository: svc.ChartRepository,
+				Tag:        svc.ChartTag,
+			},
+			Values:                 svc.Values,
+			Credentials:            creds,
+			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
+			ComputedValues:         map[string]string(svc.ComputedValues),
+		}
+	}
+
+	return k8s.WorkspaceInput{
+		TenantID:      ws.TenantID,
+		Namespace:     model.GetWorkspaceClusterName(ws.ID),
+		NetworkPolicy: string(ws.NetworkPolicy),
+		AllowedFQDNs:  []string(ws.AllowedFQDNs),
+		Clipboard:     string(ws.Clipboard),
+		Services:      services,
+	}
 }

@@ -63,6 +63,9 @@ func PrivateJWKSFunc(cfg config.Config) goidc.JWKSFunc {
 	var jwks goidc.JSONWebKeySet
 	err := json.Unmarshal([]byte(cfg.Services.OpenIDConnectProvider.JWKS.PlainText()), &jwks)
 	if err != nil {
+		if len(cfg.Services.OpenIDConnectProvider.JWKS.PlainText()) == 0 {
+			logger.TechLog.Error(context.Background(), "jwks is an empty string, please provide a valid jwks in the config")
+		}
 		logger.TechLog.Fatal(context.Background(), "unable to unmarshal private test server key", zap.Error(err))
 	}
 
