@@ -273,6 +273,10 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	sourceStore := s.stores[sourceStoreName].store
 	destinationStore := s.stores[destinationStoreName].store
 
+	if strings.HasSuffix(sourcePath, "/") {
+		return nil, cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Workspace file at path %s is a directory", sourcePath))
+	}
+
 	if !isCopy && sourceStoreName == destinationStoreName {
 		// Same-store move
 		_, err = sourceStore.StatFile(ctx, sourceStorePath)
