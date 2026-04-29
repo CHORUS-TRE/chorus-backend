@@ -95,6 +95,10 @@ func (s *minioFileStorage) GetFile(ctx context.Context, path string) (*filestore
 }
 
 func (s *minioFileStorage) GetFileStream(ctx context.Context, path string) (io.ReadCloser, *filestore.File, error) {
+	if strings.HasSuffix(path, "/") {
+		return nil, nil, fmt.Errorf("path %s is a directory, cannot get file stream for directories", path)
+	}
+
 	reader, objectInfo, err := s.minioClient.GetObjectStream(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to get file stream at %s: %w", path, err)
