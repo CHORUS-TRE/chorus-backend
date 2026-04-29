@@ -123,6 +123,12 @@ func TestToStorePath(t *testing.T) {
 			globalPath:  "/test-client/data.json",
 			expected:    "workspaces/workspace42/data.json",
 		},
+		{
+			name:        "strips double slash after store name",
+			workspaceID: 1,
+			globalPath:  "/test-client//nested/file.txt",
+			expected:    "workspaces/workspace1/nested/file.txt",
+		},
 	}
 
 	for _, tt := range tests {
@@ -660,7 +666,7 @@ func TestUpdateWorkspaceFile_FailsIfDestinationExists(t *testing.T) {
 	assert.Equal(t, originalContent, dstFile.Content, "destination content should be unchanged")
 }
 
-func TestUpdateWorkspaceFile_AbortOnMissingSource(t *testing.T) {
+func TestUpdateWorkspaceFile_FailsOnMissingSource(t *testing.T) {
 	unit.InitTestLogger()
 
 	s := createTestServiceWithTwoStores()
@@ -675,7 +681,7 @@ func TestUpdateWorkspaceFile_AbortOnMissingSource(t *testing.T) {
 	assert.Error(t, err)
 
 	_, err = dstStorage.StatFile(context.Background(), s.toStorePath(testStoreName2, workspaceID, "/"+testStoreName2+"/abort-dst.txt"))
-	assert.Error(t, err, "destination should not exist after aborted transfer")
+	assert.Error(t, err, "destination should not exist when source was not found")
 }
 
 func TestFileUploadPartSizeCalculation(t *testing.T) {
