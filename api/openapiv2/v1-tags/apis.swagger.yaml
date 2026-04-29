@@ -4423,7 +4423,7 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
-        - name: copy
+        - name: isCopy
           description: When true, preserve the source file after transfer
           in: query
           required: false

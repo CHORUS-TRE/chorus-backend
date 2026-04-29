@@ -64,14 +64,14 @@ WorkspaceFileServiceUpdateWorkspaceFileParams contains all the parameters to sen
 */
 type WorkspaceFileServiceUpdateWorkspaceFileParams struct {
 
-	/* Copy.
+	// File.
+	File *models.ChorusWorkspaceFile
+
+	/* IsCopy.
 
 	   When true, preserve the source file after transfer
 	*/
-	Copy *bool
-
-	// File.
-	File *models.ChorusWorkspaceFile
+	IsCopy *bool
 
 	/* OldPath.
 
@@ -137,17 +137,6 @@ func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) SetHTTPClient(client *ht
 	o.HTTPClient = client
 }
 
-// WithCopy adds the copy to the workspace file service update workspace file params
-func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WithCopy(copy *bool) *WorkspaceFileServiceUpdateWorkspaceFileParams {
-	o.SetCopy(copy)
-	return o
-}
-
-// SetCopy adds the copy to the workspace file service update workspace file params
-func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) SetCopy(copy *bool) {
-	o.Copy = copy
-}
-
 // WithFile adds the file to the workspace file service update workspace file params
 func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WithFile(file *models.ChorusWorkspaceFile) *WorkspaceFileServiceUpdateWorkspaceFileParams {
 	o.SetFile(file)
@@ -157,6 +146,17 @@ func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WithFile(file *models.Ch
 // SetFile adds the file to the workspace file service update workspace file params
 func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) SetFile(file *models.ChorusWorkspaceFile) {
 	o.File = file
+}
+
+// WithIsCopy adds the isCopy to the workspace file service update workspace file params
+func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WithIsCopy(isCopy *bool) *WorkspaceFileServiceUpdateWorkspaceFileParams {
+	o.SetIsCopy(isCopy)
+	return o
+}
+
+// SetIsCopy adds the isCopy to the workspace file service update workspace file params
+func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) SetIsCopy(isCopy *bool) {
+	o.IsCopy = isCopy
 }
 
 // WithOldPath adds the oldPath to the workspace file service update workspace file params
@@ -188,26 +188,26 @@ func (o *WorkspaceFileServiceUpdateWorkspaceFileParams) WriteToRequest(r runtime
 		return err
 	}
 	var res []error
-
-	if o.Copy != nil {
-
-		// query param copy
-		var qrCopy bool
-
-		if o.Copy != nil {
-			qrCopy = *o.Copy
-		}
-		qCopy := swag.FormatBool(qrCopy)
-		if qCopy != "" {
-
-			if err := r.SetQueryParam("copy", qCopy); err != nil {
-				return err
-			}
-		}
-	}
 	if o.File != nil {
 		if err := r.SetBodyParam(o.File); err != nil {
 			return err
+		}
+	}
+
+	if o.IsCopy != nil {
+
+		// query param isCopy
+		var qrIsCopy bool
+
+		if o.IsCopy != nil {
+			qrIsCopy = *o.IsCopy
+		}
+		qIsCopy := swag.FormatBool(qrIsCopy)
+		if qIsCopy != "" {
+
+			if err := r.SetQueryParam("isCopy", qIsCopy); err != nil {
+				return err
+			}
 		}
 	}
 

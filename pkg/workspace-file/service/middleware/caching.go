@@ -52,8 +52,8 @@ func (c *Caching) CreateWorkspaceFile(ctx context.Context, workspaceID uint64, f
 	return c.next.CreateWorkspaceFile(ctx, workspaceID, file)
 }
 
-func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, copy bool) (*filestore.File, error) {
-	return c.next.UpdateWorkspaceFile(ctx, workspaceID, sourcePath, file, copy)
+func (c *Caching) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, isCopy bool) (*filestore.File, error) {
+	return c.next.UpdateWorkspaceFile(ctx, workspaceID, sourcePath, file, isCopy)
 }
 
 func (c *Caching) DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error {

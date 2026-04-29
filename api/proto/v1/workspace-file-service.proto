@@ -71,7 +71,7 @@ message UpdateWorkspaceFileRequest {
     uint64 workspaceId = 1;
     string oldPath = 2; // For renaming or moving files
     WorkspaceFile file = 3;
-    bool copy = 4; // When true, preserve the source file after transfer
+    bool isCopy = 4; // When true, preserve the source file after transfer
 }
 message UpdateWorkspaceFileReply {
     UpdateWorkspaceFileResult result = 1;

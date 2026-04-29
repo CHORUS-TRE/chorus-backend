@@ -21,7 +21,7 @@ type WorkspaceFiler interface {
 	GetWorkspaceFileWithContent(ctx context.Context, workspaceID uint64, filePath string) (*filestore.File, error)
 	ListWorkspaceFiles(ctx context.Context, workspaceID uint64, filePath string) ([]*filestore.File, error)
 	CreateWorkspaceFile(ctx context.Context, workspaceID uint64, file *filestore.File) (*filestore.File, error)
-	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File, copy bool) (*filestore.File, error)
+	UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File, isCopy bool) (*filestore.File, error)
 	DeleteWorkspaceFile(ctx context.Context, workspaceID uint64, filePath string) error
 	InitiateWorkspaceFileUpload(ctx context.Context, workspaceID uint64, filePath string, file *filestore.File) (*filestore.FileUploadInfo, error)
 	UploadWorkspaceFilePart(ctx context.Context, workspaceID uint64, filePath string, uploadID string, part *filestore.FilePart) (*filestore.FilePart, error)
@@ -256,7 +256,7 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	}, nil
 }
 
-func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, copy bool) (*filestore.File, error) {
+func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, isCopy bool) (*filestore.File, error) {
 	sourceStoreName, err := s.selectFileStore(sourcePath)
 	if err != nil {
 		return nil, err
@@ -273,7 +273,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	sourceStore := s.stores[sourceStoreName].store
 	destinationStore := s.stores[destinationStoreName].store
 
-	if !copy && sourceStoreName == destinationStoreName {
+	if !isCopy && sourceStoreName == destinationStoreName {
 		// Same-store move
 		_, err = sourceStore.StatFile(ctx, sourceStorePath)
 		if err != nil {
@@ -349,7 +349,7 @@ func (s *WorkspaceFileService) UpdateWorkspaceFile(ctx context.Context, workspac
 	completed = true
 
 	// Delete source file if this is a move operation (not copy)
-	if !copy {
+	if !isCopy {
 		if err := sourceStore.DeleteFile(ctx, sourceStorePath); err != nil {
 			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete source workspace file at path %s after move", sourceStorePath))
 		}
