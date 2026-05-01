@@ -84,7 +84,7 @@ type ClientService interface {
 /*
 UserServiceCreateUser creates a user
 
-This endpoint creates a user
+Creates a new user. When called by an authenticated administrator (with the createUser permission), the full user payload is honored. When called anonymously, the endpoint behaves as a self-service public registration: only firstName, lastName, username, password and email are taken from the request, every other field is enforced server-side, and the call is rejected unless internal public registration is enabled in the configuration.
 */
 func (a *Client) UserServiceCreateUser(params *UserServiceCreateUserParams, opts ...ClientOption) (*UserServiceCreateUserOK, error) {
 	// TODO: Validate the params before sending
