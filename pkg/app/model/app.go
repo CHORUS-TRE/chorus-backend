@@ -32,6 +32,7 @@ type App struct {
 	KioskConfigJWTOIDCClientID string
 	IconURL                    string
 	IconBackgroundColor        string
+	StabilityStatus            AppStabilityStatus
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -61,6 +62,35 @@ func ToAppStatus(status string) (AppStatus, error) {
 		return AppDeleted, nil
 	default:
 		return "", errors.New("unexpected AppStatus: " + status)
+	}
+}
+
+// AppStabilityStatus represents the stability status of an app (technical field).
+type AppStabilityStatus string
+
+const (
+	AppStabilityStatusReady AppStabilityStatus = "ready"
+	AppStabilityStatusBeta  AppStabilityStatus = "beta"
+	AppStabilityStatusAlpha AppStabilityStatus = "alpha"
+	AppStabilityStatusOff   AppStabilityStatus = "off"
+)
+
+func (s AppStabilityStatus) String() string {
+	return string(s)
+}
+
+func ToAppStabilityStatus(status string) AppStabilityStatus {
+	switch status {
+	case AppStabilityStatusReady.String():
+		return AppStabilityStatusReady
+	case AppStabilityStatusBeta.String():
+		return AppStabilityStatusBeta
+	case AppStabilityStatusAlpha.String():
+		return AppStabilityStatusAlpha
+	case AppStabilityStatusOff.String():
+		return AppStabilityStatusOff
+	default:
+		return AppStabilityStatusOff
 	}
 }
 

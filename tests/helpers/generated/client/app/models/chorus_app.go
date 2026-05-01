@@ -81,6 +81,9 @@ type ChorusApp struct {
 	// shm size
 	ShmSize string `json:"shmSize,omitempty"`
 
+	// stability status
+	StabilityStatus string `json:"stabilityStatus,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 
