@@ -501,7 +501,10 @@ func (a *AuthenticationService) GetShortLivedTokenForClient(ctx context.Context,
 		return "", 0, cerr.ErrUnauthenticated.WithMessage("Session expired, please authenticate again")
 	}
 
-	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0), "")
+	// Bind the token to the OIDC client so that the OIDC provider's
+	// `OnlyPreLoggedForClient` check can verify the user was pre-logged
+	// specifically for this client.
+	token, err := createJWTToken(a.signingKey, user, a.jwtExpirationTime, time.Unix(issuedAt, 0), oidcClientID)
 	if err != nil {
 		return "", 0, cerr.ErrInternal.Wrap(err, "Could not create token")
 	}

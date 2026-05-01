@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Chorus kiosk sign-in</title>
+    <meta name="robots" content="noindex,nofollow">
+    <style>
+        body { font-family: sans-serif; background: #111; color: #ddd; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #status { font-size: 14px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div id="status">Signing in&hellip;</div>
+    <script>
+        (function () {
+            var statusEl = document.getElementById('status');
+
+            function fail(msg) {
+                statusEl.textContent = 'Sign-in failed: ' + msg;
+                console.error('[kiosk-jwt]', msg);
+            }
+
+            // The JWT is delivered in the URL fragment so that it never reaches
+            // the server in a regular GET (avoids it being logged in access logs)
+            // and is not sent as Referer to subsequent navigations.
+            var hash = window.location.hash || '';
+            if (hash.charAt(0) === '#') {
+                hash = hash.substring(1);
+            }
+            var params = new URLSearchParams(hash);
+            var token = params.get('jwt');
+
+            // Wipe the fragment from the URL/history immediately.
+            try {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            } catch (e) { /* ignore */ }
+
+            if (!token) {
+                fail('missing jwt fragment');
+                return;
+            }
+
+            fetch(window.location.pathname, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            }).then(function (resp) {
+                if (!resp.ok) {
+                    return resp.text().then(function (t) { throw new Error(resp.status + ' ' + t); });
+                }
+                statusEl.textContent = 'Signed in.';
+                // Close the (typically headless) browser window once the
+                // session cookie has been set. window.close() only works for
+                // windows opened by script, but headless Chrome will exit
+                // anyway via its virtual-time-budget / external SIGTERM.
+                try { window.close(); } catch (e) { /* ignore */ }
+            }).catch(function (err) {
+                fail(err.message || String(err));
+            });
+        })();
+    </script>
+</body>
+</html>
