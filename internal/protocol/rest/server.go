@@ -49,6 +49,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	if cfg.Services.AuthenticationService.AuthUIEnabled {
 		handler = middleware.AddAuthUI(handler)
 	}
+	handler = middleware.AddKioskJWT(handler, cfg, keyFunc, claimsFactory)
 	handler = middleware.AddJWTFromCookie(handler, keyFunc, claimsFactory)
 
 	//nolint: staticcheck

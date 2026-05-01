@@ -10,3 +10,6 @@ var APIEmbed embed.FS
 
 //go:embed auth-ui/*
 var AuthUIEmbed embed.FS
+
+//go:embed kiosk-jwt/*
+var KioskJWTEmbed embed.FS
