@@ -5,6 +5,8 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
@@ -77,23 +79,34 @@ func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.Ge
 }
 
 func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
-	modes := c.cfg.Services.AuthenticationService.Modes
-	internalModePublicRegistration := false
-	for _, mode := range modes {
-		if mode.Type == "internal" && mode.Enabled && mode.PublicRegistrationEnabled {
-			internalModePublicRegistration = true
-			break
-		}
-	}
-
-	if !internalModePublicRegistration {
-		err := c.IsAuthorized(ctx, authorization.PermissionCreateUser)
-		if err != nil {
+	// CreateUser serves both administrative creation and anonymous
+	// self-service registration on the same route. The two cases are
+	// distinguished here by the presence of valid JWT claims:
+	//
+	//   - authenticated caller: must hold the createUser permission;
+	//   - anonymous caller:     allowed only when the internal authentication
+	//                           mode has public registration enabled.
+	//
+	// The actual payload sanitization (only safe fields used for self-service)
+	// is performed in the controller.
+	if _, authenticated := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); authenticated {
+		if err := c.IsAuthorized(ctx, authorization.PermissionCreateUser); err != nil {
 			return nil, err
 		}
+	} else if !isInternalPublicRegistrationEnabled(c.cfg) {
+		return nil, cerr.ErrPermissionDenied.WithMessage("Public user registration is disabled")
 	}
 
 	return c.next.CreateUser(ctx, req)
+}
+
+func isInternalPublicRegistrationEnabled(cfg config.Config) bool {
+	for _, mode := range cfg.Services.AuthenticationService.Modes {
+		if mode.Type == "internal" && mode.Enabled && mode.PublicRegistrationEnabled {
+			return true
+		}
+	}
+	return false
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {

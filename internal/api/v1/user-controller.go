@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
@@ -222,19 +223,34 @@ func UserFilterToBusiness(aFilter *chorus.UserFilter, cfg config.Config) *servic
 	return f
 }
 
-// CreateUser extracts the user from the request and passes it to the user service.
+// CreateUser handles both administrative user creation and anonymous
+// self-service registration on the same REST route. The two cases are
+// dispatched here based on the presence of valid JWT claims in the
+// context. The companion authorization middleware enforces:
+//
+//   - the createUser permission for authenticated callers, and
+//   - that public registration is enabled for anonymous callers,
+//
+// so by the time the request reaches this method we only need to pick the
+// right payload-handling strategy.
 func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
 	if req == nil {
 		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
+	if _, authenticated := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); authenticated {
+		return c.createUserAsAdmin(ctx, req)
+	}
+	return c.registerUserSelfService(ctx, req)
+}
+
+// createUserAsAdmin is the privileged path: the caller must already have
+// the createUser permission (enforced by the authorization middleware) and
+// the full chorus.User payload is honored.
+func (c UserController) createUserAsAdmin(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		if c.cfg.Daemon.TenantID != 0 {
-			tenantID = c.cfg.Daemon.TenantID
-		} else {
-			tenantID = 1
-		}
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	user, err := userToServiceRequest(req)
@@ -249,13 +265,7 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 		return nil, err
 	}
 
-	err = c.user.CreateUserRoles(ctx, tenantID, res.ID, []model.UserRole{{
-		Role: authorization_model.NewRole(
-			authorization_model.RoleAuthenticated,
-			authorization_model.WithUser(res.ID),
-		),
-	}})
-	if err != nil {
+	if err := c.assignDefaultAuthenticatedRole(ctx, tenantID, res.ID); err != nil {
 		return nil, err
 	}
 
@@ -265,6 +275,61 @@ func (c UserController) CreateUser(ctx context.Context, req *chorus.User) (*chor
 	}
 
 	return &chorus.CreateUserReply{Result: &chorus.CreateUserResult{User: tgUser}}, nil
+}
+
+// registerUserSelfService is the anonymous self-registration path. Only a
+// curated subset of fields is read from the request; everything else
+// (status, source, roles, totp, ids, timestamps, ...) is enforced
+// server-side to prevent privilege escalation or misconfiguration.
+func (c UserController) registerUserSelfService(ctx context.Context, req *chorus.User) (*chorus.CreateUserReply, error) {
+	username := strings.TrimSpace(req.Username)
+	firstName := strings.TrimSpace(req.FirstName)
+	lastName := strings.TrimSpace(req.LastName)
+	email := strings.TrimSpace(req.Email)
+
+	if username == "" || firstName == "" || lastName == "" || req.Password == "" {
+		return nil, cerr.ErrInvalidRequest.WithMessage("firstName, lastName, username and password are required")
+	}
+
+	tenantID := c.cfg.Daemon.TenantID
+	if tenantID == 0 {
+		tenantID = 1
+	}
+
+	user := &service.UserReq{
+		FirstName: firstName,
+		LastName:  lastName,
+		Username:  username,
+		Email:     email,
+		Password:  req.Password,
+		Source:    "internal",
+		Status:    model.UserActive,
+	}
+
+	res, err := c.user.CreateUser(ctx, service.CreateUserReq{TenantID: tenantID, User: user})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.assignDefaultAuthenticatedRole(ctx, tenantID, res.ID); err != nil {
+		return nil, err
+	}
+
+	tgUser, err := converter.UserFromBusiness(res)
+	if err != nil {
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
+	}
+
+	return &chorus.CreateUserReply{Result: &chorus.CreateUserResult{User: tgUser}}, nil
+}
+
+func (c UserController) assignDefaultAuthenticatedRole(ctx context.Context, tenantID, userID uint64) error {
+	return c.user.CreateUserRoles(ctx, tenantID, userID, []model.UserRole{{
+		Role: authorization_model.NewRole(
+			authorization_model.RoleAuthenticated,
+			authorization_model.WithUser(userID),
+		),
+	}})
 }
 
 func (c UserController) CreateUserRole(ctx context.Context, req *chorus.CreateUserRoleRequest) (*chorus.CreateUserRoleReply, error) {
