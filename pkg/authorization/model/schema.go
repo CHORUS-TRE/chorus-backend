@@ -21,9 +21,38 @@ type AuthorizationSchema struct {
 	Permissions []PermissionDefinition
 }
 
+type RoleScope string
+
+const (
+	RoleScopeSystem    RoleScope = "system"
+	RoleScopePlatform  RoleScope = "platform"
+	RoleScopeWorkspace RoleScope = "workspace"
+	RoleScopeWorkbench RoleScope = "workbench"
+)
+
+func (s RoleScope) String() string {
+	return string(s)
+}
+
+func ToRoleScope(scope string) (RoleScope, error) {
+	switch scope {
+	case string(RoleScopeSystem):
+		return RoleScopeSystem, nil
+	case string(RoleScopePlatform):
+		return RoleScopePlatform, nil
+	case string(RoleScopeWorkspace):
+		return RoleScopeWorkspace, nil
+	case string(RoleScopeWorkbench):
+		return RoleScopeWorkbench, nil
+	}
+	return "", fmt.Errorf("unknown role scope: %s", scope)
+}
+
 type RoleDefinition struct {
 	Name        RoleName
 	Description string
+	Scope       RoleScope
+	Dynamic     bool
 
 	RequiredContextDimensions map[ContextDimension]ContextQuantifier
 	Permissions               []PermissionName

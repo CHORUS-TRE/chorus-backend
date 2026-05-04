@@ -127,12 +127,20 @@ func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.
 		return nil, fmt.Errorf("invalid role name: %w", err)
 	}
 
-	if !authorization.RoleIn(roleName, authorization.GetWorkbenchRoles()) {
+	if !c.IsRoleInScope(roleName, authorization.RoleScopeWorkbench) {
 		return nil, fmt.Errorf("role %q is not a workbench role", roleName)
 	}
 
 	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
 	if err != nil {
+		return nil, err
+	}
+
+	assignmentContext := authorization.Context{
+		authorization.RoleContextWorkbench: fmt.Sprintf("%d", req.Id),
+		authorization.RoleContextUser:      fmt.Sprintf("%d", req.UserId),
+	}
+	if err := c.CanAssignRole(ctx, roleName, assignmentContext); err != nil {
 		return nil, err
 	}
 

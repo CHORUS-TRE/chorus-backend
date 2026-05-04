@@ -148,6 +148,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionCreateUser,
 			PermissionUpdateUser,
 			PermissionManageUserRoles,
+			PermissionManageDynamicRoles,
 			PermissionGetUser,
 			PermissionDeleteUser,
 			PermissionResetPassword,
@@ -240,6 +241,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionGetPlatformSettings, "Allow the user to get platform settings", nil),
 			permissionDefinition(PermissionSetPlatformSettings, "Allow the user to set platform settings", nil),
 			permissionDefinition(PermissionAuditPlatform, "Allow the user to audit the platform", nil),
+			permissionDefinition(PermissionManageDynamicRoles, "Allow the user to create dynamic roles", nil),
 
 			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", oneContext(RoleContextWorkbench)),
 			permissionDefinition(PermissionCreateAppInstance, "Allow the user to create an app instance", oneContext(RoleContextWorkbench)),
@@ -411,9 +413,23 @@ func roleDefinition(name RoleName, description string, context map[ContextDimens
 	return &RoleDefinition{
 		Name:                      name,
 		Description:               description,
+		Scope:                     inferRoleScope(context),
 		RequiredContextDimensions: context,
 		Permissions:               append([]PermissionName(nil), permissions...),
 	}
+}
+
+func inferRoleScope(context map[ContextDimension]ContextQuantifier) RoleScope {
+	if _, ok := context[RoleContextWorkbench]; ok {
+		return RoleScopeWorkbench
+	}
+	if _, ok := context[RoleContextWorkspace]; ok {
+		return RoleScopeWorkspace
+	}
+	if _, ok := context[RoleContextUser]; ok {
+		return RoleScopePlatform
+	}
+	return RoleScopePlatform
 }
 
 func permissionList(permissionGroups ...[]PermissionName) []PermissionName {

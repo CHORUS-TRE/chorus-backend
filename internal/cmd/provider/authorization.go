@@ -43,11 +43,19 @@ func ProvideAuthorizationPolicy() authorization_service.AuthorizationServiceInte
 			}
 		}
 
+		dynamicRoleStore := authorization_store.NewDynamicRoleStorage(ProvideMainDB().GetSqlxDB())
+		dynamicRoles, loadErr := dynamicRoleStore.ListDynamicRoles(context.Background())
+		if loadErr != nil {
+			logger.TechLog.Fatal(context.Background(), "failed to load dynamic authorization roles", zap.Error(loadErr))
+		}
+		schema.Roles = append(schema.Roles, dynamicRoles...)
+
 		var err error
 		authorizationPolicy, err = authorization_service.NewAuthorizationService(&schema)
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create authorization policy", zap.Error(err))
 		}
+		authorizationPolicy.SetDynamicRoleStore(dynamicRoleStore)
 	})
 	return authorizationPolicy
 }

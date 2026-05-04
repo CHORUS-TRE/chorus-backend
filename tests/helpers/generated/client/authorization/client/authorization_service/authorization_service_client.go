@@ -54,11 +54,52 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	AuthorizationServiceCreateDynamicRole(params *AuthorizationServiceCreateDynamicRoleParams, opts ...ClientOption) (*AuthorizationServiceCreateDynamicRoleOK, error)
+
 	AuthorizationServiceListPermissions(params *AuthorizationServiceListPermissionsParams, opts ...ClientOption) (*AuthorizationServiceListPermissionsOK, error)
 
 	AuthorizationServiceListRoles(params *AuthorizationServiceListRolesParams, opts ...ClientOption) (*AuthorizationServiceListRolesOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+AuthorizationServiceCreateDynamicRole creates dynamic role
+
+This endpoint creates a platform-scoped or workspace-scoped dynamic role
+*/
+func (a *Client) AuthorizationServiceCreateDynamicRole(params *AuthorizationServiceCreateDynamicRoleParams, opts ...ClientOption) (*AuthorizationServiceCreateDynamicRoleOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAuthorizationServiceCreateDynamicRoleParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "AuthorizationService_CreateDynamicRole",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/authorization/roles",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AuthorizationServiceCreateDynamicRoleReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AuthorizationServiceCreateDynamicRoleOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*AuthorizationServiceCreateDynamicRoleDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*

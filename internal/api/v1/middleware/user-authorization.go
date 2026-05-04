@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
@@ -140,6 +141,25 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *chorus.CreateUserRoleRequest) (*chorus.CreateUserRoleReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionManageUserRoles, authorization.WithUser(req.UserId))
 	if err != nil {
+		return nil, err
+	}
+
+	roleName, err := authorization.ToRoleName(req.Role.Name)
+	if err != nil {
+		return nil, fmt.Errorf("invalid role name: %w", err)
+	}
+	if c.IsRoleInScope(roleName, authorization.RoleScopeWorkspace, authorization.RoleScopeWorkbench) {
+		return nil, fmt.Errorf("role %q must be assigned through its scoped endpoint", roleName)
+	}
+	assignmentContext := authorization.Context{authorization.RoleContextUser: fmt.Sprintf("%d", req.UserId)}
+	for key, value := range req.Role.Context {
+		dimension, err := authorization.ToRoleContext(key)
+		if err != nil {
+			return nil, fmt.Errorf("invalid role context: %w", err)
+		}
+		assignmentContext[dimension] = value
+	}
+	if err := c.CanAssignRole(ctx, roleName, assignmentContext); err != nil {
 		return nil, err
 	}
 
