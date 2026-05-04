@@ -8,8 +8,8 @@ info:
     url: https://www.chorus-tre.ch
 tags:
   - name: AppInstanceService
-  - name: ApprovalRequestService
   - name: AppService
+  - name: ApprovalRequestService
   - name: AuditService
   - name: AuthenticationService
   - name: AuthorizationService
@@ -1802,6 +1802,45 @@ paths:
       tags:
         - AuthorizationService
       security: []
+    post:
+      summary: Create dynamic role
+      description: This endpoint creates a platform-scoped or workspace-scoped dynamic role
+      operationId: AuthorizationService_CreateDynamicRole
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateDynamicRoleReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateDynamicRoleRequest'
+      tags:
+        - AuthorizationService
   /api/rest/v1/devstore/global:
     get:
       summary: List all key/value entries in the global store
@@ -5231,6 +5270,14 @@ definitions:
         type: array
         items:
           type: string
+      permissions:
+        type: array
+        items:
+          type: string
+      scope:
+        type: string
+      dynamic:
+        type: boolean
   chorusBulkCreateAppsReply:
     type: object
     properties:
@@ -5363,6 +5410,25 @@ definitions:
     properties:
       approvalRequest:
         $ref: '#/definitions/chorusApprovalRequest'
+  chorusCreateDynamicRoleReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateDynamicRoleResult'
+  chorusCreateDynamicRoleRequest:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusAuthorizationRole'
+      validationContext:
+        type: object
+        additionalProperties:
+          type: string
+  chorusCreateDynamicRoleResult:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusAuthorizationRole'
   chorusCreateUserReply:
     type: object
     properties:

@@ -117,6 +117,28 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 	return contextList, nil
 }
 
+func (c Authorization) IsRoleInScope(roleName authorization.RoleName, scopes ...authorization.RoleScope) bool {
+	return c.authorizer.IsRoleInScope(roleName, scopes...)
+}
+
+func (c Authorization) CanAssignRole(ctx context.Context, roleName authorization.RoleName, assignmentContext authorization.Context) error {
+	aRoles, _, err := c.getRolesAndClaims(ctx)
+	if err != nil {
+		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
+		return status.Error(codes.Internal, "failed to get roles and claims")
+	}
+
+	allowed, err := c.authorizer.CanAssignRole(aRoles, roleName, assignmentContext)
+	if err != nil {
+		c.logger.Error(ctx, "role assignment authorization error", zap.Error(err))
+		return status.Error(codes.PermissionDenied, err.Error())
+	}
+	if !allowed {
+		return status.Errorf(codes.PermissionDenied, "caller cannot assign role %s", roleName)
+	}
+	return nil
+}
+
 func (c Authorization) TriggerRefreshToken(ctx context.Context) error {
 	res, t, err := c.refresher.RefreshToken(ctx)
 	if err != nil {

@@ -1,12 +1,10 @@
 module github.com/CHORUS-TRE/chorus-backend
 
-// replace github.com/CHORUS-TRE/chorus-gatekeeper => /home/localadmin/chuv/chorus/chorus-gatekeeper
 // replace github.com/luikyv/go-oidc => /home/localadmin/go-oidc
 
 go 1.24.3
 
 require (
-	github.com/CHORUS-TRE/chorus-gatekeeper v0.0.0-20260316163116-4511dbc9dfb7
 	github.com/coocood/freecache v1.2.4
 	github.com/evanphx/json-patch v5.9.11+incompatible
 	github.com/fergusstrange/embedded-postgres v1.33.0
@@ -69,6 +67,7 @@ require (
 	github.com/minio/crc64nvme v1.0.2 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect

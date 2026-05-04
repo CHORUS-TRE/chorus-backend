@@ -23,8 +23,17 @@ type ChorusAuthorizationRole struct {
 	// description
 	Description string `json:"description,omitempty"`
 
+	// dynamic
+	Dynamic bool `json:"dynamic,omitempty"`
+
 	// name
 	Name string `json:"name,omitempty"`
+
+	// permissions
+	Permissions []string `json:"permissions"`
+
+	// scope
+	Scope string `json:"scope,omitempty"`
 }
 
 // Validate validates this chorus authorization role
