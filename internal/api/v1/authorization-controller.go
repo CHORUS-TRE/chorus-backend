@@ -4,23 +4,23 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
-	gatekeeper_service "github.com/CHORUS-TRE/chorus-gatekeeper/pkg/authorization/service"
+	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
 var _ chorus.AuthorizationServiceServer = (*AuthorizationController)(nil)
 
 type AuthorizationController struct {
-	gatekeeper gatekeeper_service.AuthorizationServiceInterface
+	authorization authorization_service.AuthorizationServiceInterface
 }
 
-func NewAuthorizationController(gatekeeper gatekeeper_service.AuthorizationServiceInterface) chorus.AuthorizationServiceServer {
+func NewAuthorizationController(authorization authorization_service.AuthorizationServiceInterface) chorus.AuthorizationServiceServer {
 	return &AuthorizationController{
-		gatekeeper: gatekeeper,
+		authorization: authorization,
 	}
 }
 
 func (c AuthorizationController) ListRoles(ctx context.Context, req *chorus.ListRolesRequest) (*chorus.ListRolesReply, error) {
-	schema := c.gatekeeper.GetAuthorizationSchema()
+	schema := c.authorization.GetAuthorizationSchema()
 	if schema == nil {
 		return &chorus.ListRolesReply{
 			Result: &chorus.ListRolesResult{
@@ -31,13 +31,13 @@ func (c AuthorizationController) ListRoles(ctx context.Context, req *chorus.List
 
 	roles := make([]*chorus.AuthorizationRole, 0, len(schema.Roles))
 	for _, role := range schema.Roles {
-		contextDimensions := make([]string, 0, len(role.Attributes))
-		for dim := range role.Attributes {
+		contextDimensions := make([]string, 0, len(role.RequiredContextDimensions))
+		for dim := range role.RequiredContextDimensions {
 			contextDimensions = append(contextDimensions, string(dim))
 		}
 
 		roles = append(roles, &chorus.AuthorizationRole{
-			Name:        role.Name,
+			Name:        role.Name.String(),
 			Description: role.Description,
 			Context:     contextDimensions,
 		})
@@ -51,7 +51,7 @@ func (c AuthorizationController) ListRoles(ctx context.Context, req *chorus.List
 }
 
 func (c AuthorizationController) ListPermissions(ctx context.Context, req *chorus.ListPermissionsRequest) (*chorus.ListPermissionsReply, error) {
-	schema := c.gatekeeper.GetAuthorizationSchema()
+	schema := c.authorization.GetAuthorizationSchema()
 	if schema == nil {
 		return &chorus.ListPermissionsReply{
 			Result: &chorus.ListPermissionsResult{
@@ -62,13 +62,13 @@ func (c AuthorizationController) ListPermissions(ctx context.Context, req *choru
 
 	permissions := make([]*chorus.AuthorizationPermission, 0, len(schema.Permissions))
 	for _, perm := range schema.Permissions {
-		contextDimensions := make([]string, 0, len(perm.Context))
-		for dim := range perm.Context {
+		contextDimensions := make([]string, 0, len(perm.RequiredContextDimensions))
+		for _, dim := range perm.RequiredContextDimensions {
 			contextDimensions = append(contextDimensions, string(dim))
 		}
 
 		permissions = append(permissions, &chorus.AuthorizationPermission{
-			Name:        perm.Name,
+			Name:        perm.Name.String(),
 			Description: perm.Description,
 			Context:     contextDimensions,
 		})
