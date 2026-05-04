@@ -126,10 +126,10 @@ func (c workspaceServiceLogging) CreateWorkspaceFile(ctx context.Context, worksp
 	return newFile, nil
 }
 
-func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, oldPath string, file *filestore.File) (*filestore.File, error) {
+func (c workspaceServiceLogging) UpdateWorkspaceFile(ctx context.Context, workspaceID uint64, sourcePath string, file *filestore.File, isCopy bool) (*filestore.File, error) {
 	now := time.Now()
 
-	updatedFile, err := c.next.UpdateWorkspaceFile(ctx, workspaceID, oldPath, file)
+	updatedFile, err := c.next.UpdateWorkspaceFile(ctx, workspaceID, sourcePath, file, isCopy)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			logger.WithWorkspaceIDField(workspaceID),

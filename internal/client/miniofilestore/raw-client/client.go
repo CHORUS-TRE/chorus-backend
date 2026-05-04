@@ -17,6 +17,7 @@ type MinioClienter interface {
 	Ping() error
 	StatObject(objectKey string) (*MinioObjectInfo, error)
 	GetObject(objectKey string) (*MinioObject, error)
+	GetObjectStream(objectKey string) (io.ReadCloser, *MinioObjectInfo, error)
 	ListObjects(objectKey string, recursive bool) ([]*MinioObjectInfo, error)
 	PutObject(objectKey string, object *MinioObject) (*MinioObjectInfo, error)
 	MoveObject(oldObjectKey string, newObjectKey string) error
@@ -112,6 +113,26 @@ func (c *client) GetObject(objectKey string) (*MinioObject, error) {
 			MimeType:     stat.ContentType,
 		},
 		Content: content,
+	}, nil
+}
+
+func (c *client) GetObjectStream(objectKey string) (io.ReadCloser, *MinioObjectInfo, error) {
+	reader, err := c.minioClient.GetObject(context.Background(), c.minioClientCfg.BucketName, objectKey, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to get object stream %s: %w", objectKey, err)
+	}
+
+	stat, err := reader.Stat()
+	if err != nil {
+		reader.Close()
+		return nil, nil, fmt.Errorf("unable to stat object %s: %w", objectKey, err)
+	}
+
+	return reader, &MinioObjectInfo{
+		Key:          stat.Key,
+		Size:         uint64(stat.Size),
+		LastModified: stat.LastModified,
+		MimeType:     stat.ContentType,
 	}, nil
 }
 

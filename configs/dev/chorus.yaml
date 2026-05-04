@@ -252,12 +252,12 @@ services:
       archive:
         file_store_name: s3
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
-        description: "Long-term object storage (MinIO)"
+        description: "Long-term object storage (MinIO)."
         order: 1
       scratch:
         file_store_name: s3-copy
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
-        description: "Copy of long-term storage for testing purposes (MinIO)"
+        description: "Copy of long-term storage for testing purposes (MinIO)."
         order: 2
       disk:
         file_store_name: disk

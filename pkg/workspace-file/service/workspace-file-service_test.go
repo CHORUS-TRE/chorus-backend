@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/miniofilestore"
@@ -15,6 +17,7 @@ import (
 
 const (
 	testStoreName       = "test-client"
+	testStoreName2      = "test-client-2"
 	testWorkspacePrefix = "workspaces/%s"
 )
 
@@ -43,6 +46,42 @@ func createTestService() *WorkspaceFileService {
 	}
 
 	service, _ := NewWorkspaceFileService(cfg, fileStores)
+	return service
+}
+
+func createTestServiceWithTwoStores() *WorkspaceFileService {
+	client1 := miniorawclient.NewTestClient()
+	fileStore1, _ := miniofilestore.NewMinioFileStorage(client1)
+
+	client2 := miniorawclient.NewTestClient()
+	fileStore2, _ := miniofilestore.NewMinioFileStorage(client2)
+
+	cfg := config.Config{}
+	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
+		testStoreName: {
+			FileStoreName:   testStoreName,
+			WorkspacePrefix: testWorkspacePrefix,
+		},
+		testStoreName2: {
+			FileStoreName:   testStoreName2,
+			WorkspacePrefix: testWorkspacePrefix,
+		},
+	}
+	cfg.Storage.FileStores = map[string]config.FileStore{
+		testStoreName: {
+			Type:        "minio",
+			MinioConfig: config.FileStoreMinioConfig{Enabled: true},
+		},
+		testStoreName2: {
+			Type:        "minio",
+			MinioConfig: config.FileStoreMinioConfig{Enabled: true},
+		},
+	}
+
+	service, _ := NewWorkspaceFileService(cfg, map[string]filestore.FileStore{
+		testStoreName:  fileStore1,
+		testStoreName2: fileStore2,
+	})
 	return service
 }
 
@@ -83,6 +122,12 @@ func TestToStorePath(t *testing.T) {
 			workspaceID: 42,
 			globalPath:  "/test-client/data.json",
 			expected:    "workspaces/workspace42/data.json",
+		},
+		{
+			name:        "strips double slash after store name",
+			workspaceID: 1,
+			globalPath:  "/test-client//nested/file.txt",
+			expected:    "workspaces/workspace1/nested/file.txt",
 		},
 	}
 
@@ -439,6 +484,204 @@ func TestAbortFileUpload(t *testing.T) {
 	// Abort multipart upload
 	err = storage.AbortMultipartUpload(context.Background(), storePath, uploadInfo.UploadID)
 	assert.NoError(t, err, "aborting multipart upload should not error: %v", err)
+}
+
+func TestGetFileStream(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+	storage := s.stores[testStoreName].store
+	storePath := s.toStorePath(testStoreName, 1, "/test-client/stream.txt")
+	content := []byte("streaming content for test")
+
+	_, err := storage.CreateFile(context.Background(), &filestore.File{Path: storePath, Content: content})
+	require.NoError(t, err)
+
+	reader, meta, err := storage.GetFileStream(context.Background(), storePath)
+	require.NoError(t, err)
+	require.NotNil(t, reader)
+	defer reader.Close()
+
+	data, err := io.ReadAll(reader)
+	assert.NoError(t, err)
+	assert.Equal(t, content, data)
+	assert.Equal(t, uint64(len(content)), meta.Size)
+}
+
+func TestUpdateWorkspaceFile_SameStoreMove(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+	storage := s.stores[testStoreName].store
+	workspaceID := uint64(1)
+	sourcePath := "/test-client/move-src.txt"
+	destPath := "/test-client/move-dst.txt"
+
+	_, err := storage.CreateFile(context.Background(), &filestore.File{
+		Path:    s.toStorePath(testStoreName, workspaceID, sourcePath),
+		Content: []byte("move me"),
+	})
+	require.NoError(t, err)
+
+	result, err := s.UpdateWorkspaceFile(context.Background(), workspaceID, sourcePath, &filestore.File{
+		Path: destPath,
+		Name: "move-dst.txt",
+	}, false)
+	require.NoError(t, err)
+	assert.Equal(t, destPath, result.Path)
+
+	_, err = storage.StatFile(context.Background(), s.toStorePath(testStoreName, workspaceID, destPath))
+	assert.NoError(t, err, "destination should exist after move")
+
+	_, err = storage.StatFile(context.Background(), s.toStorePath(testStoreName, workspaceID, sourcePath))
+	assert.Error(t, err, "source should be gone after move")
+}
+
+func TestUpdateWorkspaceFile_SameStoreCopy(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestService()
+	storage := s.stores[testStoreName].store
+	workspaceID := uint64(1)
+	sourcePath := "/test-client/copy-src.txt"
+	destPath := "/test-client/copy-dst.txt"
+	content := []byte("copy me")
+
+	_, err := storage.CreateFile(context.Background(), &filestore.File{
+		Path:    s.toStorePath(testStoreName, workspaceID, sourcePath),
+		Content: content,
+	})
+	require.NoError(t, err)
+
+	result, err := s.UpdateWorkspaceFile(context.Background(), workspaceID, sourcePath, &filestore.File{
+		Path: destPath,
+		Name: "copy-dst.txt",
+	}, true)
+	require.NoError(t, err)
+	assert.Equal(t, destPath, result.Path)
+
+	_, err = storage.StatFile(context.Background(), s.toStorePath(testStoreName, workspaceID, sourcePath))
+	assert.NoError(t, err, "source should be preserved after copy")
+
+	dstFile, err := storage.GetFile(context.Background(), s.toStorePath(testStoreName, workspaceID, destPath))
+	require.NoError(t, err)
+	assert.Equal(t, content, dstFile.Content, "destination content should match source")
+}
+
+func TestUpdateWorkspaceFile_CrossStoreMove(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestServiceWithTwoStores()
+	srcStorage := s.stores[testStoreName].store
+	dstStorage := s.stores[testStoreName2].store
+	workspaceID := uint64(1)
+	sourcePath := "/" + testStoreName + "/xmove-src.txt"
+	destPath := "/" + testStoreName2 + "/xmove-dst.txt"
+	content := []byte("cross-store move content")
+
+	_, err := srcStorage.CreateFile(context.Background(), &filestore.File{
+		Path:    s.toStorePath(testStoreName, workspaceID, sourcePath),
+		Content: content,
+	})
+	require.NoError(t, err)
+
+	result, err := s.UpdateWorkspaceFile(context.Background(), workspaceID, sourcePath, &filestore.File{
+		Path: destPath,
+		Name: "xmove-dst.txt",
+	}, false)
+	require.NoError(t, err)
+	assert.Equal(t, destPath, result.Path)
+
+	_, err = srcStorage.StatFile(context.Background(), s.toStorePath(testStoreName, workspaceID, sourcePath))
+	assert.Error(t, err, "source should be gone after cross-store move")
+
+	dstFile, err := dstStorage.GetFile(context.Background(), s.toStorePath(testStoreName2, workspaceID, destPath))
+	require.NoError(t, err)
+	assert.Equal(t, content, dstFile.Content, "destination content should match source")
+}
+
+func TestUpdateWorkspaceFile_CrossStoreCopy(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestServiceWithTwoStores()
+	srcStorage := s.stores[testStoreName].store
+	dstStorage := s.stores[testStoreName2].store
+	workspaceID := uint64(1)
+	sourcePath := "/" + testStoreName + "/xcopy-src.txt"
+	destPath := "/" + testStoreName2 + "/xcopy-dst.txt"
+	content := []byte("cross-store copy content")
+
+	_, err := srcStorage.CreateFile(context.Background(), &filestore.File{
+		Path:    s.toStorePath(testStoreName, workspaceID, sourcePath),
+		Content: content,
+	})
+	require.NoError(t, err)
+
+	result, err := s.UpdateWorkspaceFile(context.Background(), workspaceID, sourcePath, &filestore.File{
+		Path: destPath,
+		Name: "xcopy-dst.txt",
+	}, true)
+	require.NoError(t, err)
+	assert.Equal(t, destPath, result.Path)
+
+	_, err = srcStorage.StatFile(context.Background(), s.toStorePath(testStoreName, workspaceID, sourcePath))
+	assert.NoError(t, err, "source should be preserved after cross-store copy")
+
+	dstFile, err := dstStorage.GetFile(context.Background(), s.toStorePath(testStoreName2, workspaceID, destPath))
+	require.NoError(t, err)
+	assert.Equal(t, content, dstFile.Content, "destination content should match source")
+}
+
+func TestUpdateWorkspaceFile_FailsIfDestinationExists(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestServiceWithTwoStores()
+	srcStorage := s.stores[testStoreName].store
+	dstStorage := s.stores[testStoreName2].store
+	workspaceID := uint64(1)
+	sourcePath := "/" + testStoreName + "/overwrite-src.txt"
+	destPath := "/" + testStoreName2 + "/overwrite-dst.txt"
+	originalContent := []byte("old content")
+
+	_, err := srcStorage.CreateFile(context.Background(), &filestore.File{
+		Path:    s.toStorePath(testStoreName, workspaceID, sourcePath),
+		Content: []byte("new content"),
+	})
+	require.NoError(t, err)
+
+	_, err = dstStorage.CreateFile(context.Background(), &filestore.File{
+		Path:    s.toStorePath(testStoreName2, workspaceID, destPath),
+		Content: originalContent,
+	})
+	require.NoError(t, err)
+
+	_, err = s.UpdateWorkspaceFile(context.Background(), workspaceID, sourcePath, &filestore.File{
+		Path: destPath,
+		Name: "overwrite-dst.txt",
+	}, true)
+	assert.Error(t, err, "should fail when destination already exists")
+
+	dstFile, err := dstStorage.GetFile(context.Background(), s.toStorePath(testStoreName2, workspaceID, destPath))
+	require.NoError(t, err)
+	assert.Equal(t, originalContent, dstFile.Content, "destination content should be unchanged")
+}
+
+func TestUpdateWorkspaceFile_FailsOnMissingSource(t *testing.T) {
+	unit.InitTestLogger()
+
+	s := createTestServiceWithTwoStores()
+	dstStorage := s.stores[testStoreName2].store
+	workspaceID := uint64(1)
+
+	_, err := s.UpdateWorkspaceFile(context.Background(), workspaceID,
+		"/"+testStoreName+"/missing.txt",
+		&filestore.File{Path: "/" + testStoreName2 + "/abort-dst.txt", Name: "abort-dst.txt"},
+		false,
+	)
+	assert.Error(t, err)
+
+	_, err = dstStorage.StatFile(context.Background(), s.toStorePath(testStoreName2, workspaceID, "/"+testStoreName2+"/abort-dst.txt"))
+	assert.Error(t, err, "destination should not exist when source was not found")
 }
 
 func TestFileUploadPartSizeCalculation(t *testing.T) {

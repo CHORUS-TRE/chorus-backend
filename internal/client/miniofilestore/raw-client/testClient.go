@@ -1,7 +1,9 @@
 package miniorawclient
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"path"
 	"strings"
 	"sync"
@@ -11,15 +13,17 @@ import (
 var _ MinioClienter = &testClient{}
 
 type testClient struct {
-	objects map[string]*MinioObject
-	uploads map[string][]*MinioObjectPartInfo
-	mutex   sync.RWMutex
+	objects   map[string]*MinioObject
+	uploads   map[string][]*MinioObjectPartInfo
+	partData  map[string]map[int][]byte
+	mutex     sync.RWMutex
 }
 
 func NewTestClient() *testClient {
 	return &testClient{
-		objects: make(map[string]*MinioObject),
-		uploads: make(map[string][]*MinioObjectPartInfo),
+		objects:  make(map[string]*MinioObject),
+		uploads:  make(map[string][]*MinioObjectPartInfo),
+		partData: make(map[string]map[int][]byte),
 	}
 }
 
@@ -39,6 +43,16 @@ func (c *testClient) GetClientConfig() MinioClientConfig {
 
 func (c *testClient) Ping() error {
 	return nil
+}
+
+func (c *testClient) GetObjectStream(objectKey string) (io.ReadCloser, *MinioObjectInfo, error) {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	object, ok := c.objects[objectKey]
+	if !ok {
+		return nil, nil, fmt.Errorf("object not found: %s", objectKey)
+	}
+	return io.NopCloser(bytes.NewReader(object.Content)), &object.MinioObjectInfo, nil
 }
 
 func (c *testClient) GetObject(objectKey string) (*MinioObject, error) {
@@ -133,6 +147,7 @@ func (c *testClient) NewMultipartUpload(objectKey string, objectSize uint64) (st
 	defer c.mutex.Unlock()
 	uploadID := fmt.Sprintf("upload-%d", time.Now().UnixNano())
 	c.uploads[uploadID] = []*MinioObjectPartInfo{}
+	c.partData[uploadID] = make(map[int][]byte)
 	return uploadID, nil
 }
 
@@ -150,6 +165,10 @@ func (c *testClient) PutObjectPart(objectKey string, uploadId string, partNumber
 	}
 	c.uploads[uploadId] = append(parts, partInfo)
 
+	dataCopy := make([]byte, len(data))
+	copy(dataCopy, data)
+	c.partData[uploadId][partNumber] = dataCopy
+
 	return &MinioObjectPartInfo{
 		PartNumber: partInfo.PartNumber,
 		ETag:       partInfo.ETag,
@@ -164,20 +183,23 @@ func (c *testClient) CompleteMultipartUpload(objectKey string, uploadId string, 
 		return nil, fmt.Errorf("upload ID not found: %s", uploadId)
 	}
 
-	// For testing purposes, we just create an empty object
+	var content []byte
+	for _, part := range parts {
+		content = append(content, c.partData[uploadId][part.PartNumber]...)
+	}
+
 	object := &MinioObject{
 		MinioObjectInfo: MinioObjectInfo{
 			Key:          objectKey,
-			Size:         0,
+			Size:         uint64(len(content)),
 			LastModified: time.Now(),
-			MimeType:     "",
 		},
-		Content: []byte{},
+		Content: content,
 	}
 
-	// Store the completed object
 	c.objects[object.Key] = object
 	delete(c.uploads, uploadId)
+	delete(c.partData, uploadId)
 	return object, nil
 }
 
@@ -189,5 +211,6 @@ func (c *testClient) AbortMultipartUpload(objectKey string, uploadId string) err
 		return fmt.Errorf("upload ID not found: %s", uploadId)
 	}
 	delete(c.uploads, uploadId)
+	delete(c.partData, uploadId)
 	return nil
 }

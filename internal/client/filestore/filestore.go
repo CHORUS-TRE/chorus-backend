@@ -2,6 +2,7 @@ package filestore
 
 import (
 	"context"
+	"io"
 	"time"
 )
 
@@ -44,6 +45,9 @@ type FileStore interface {
 
 	// Get the file at the specified path, including its content.
 	GetFile(ctx context.Context, path string) (*File, error)
+
+	// Get a streaming reader for the file at the specified path, alongside its metadata.
+	GetFileStream(ctx context.Context, path string) (io.ReadCloser, *File, error)
 
 	// List files and directories at the specified path.
 	ListFiles(ctx context.Context, path string) ([]*File, error)

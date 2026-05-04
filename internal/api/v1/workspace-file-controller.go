@@ -113,7 +113,7 @@ func (c WorkspaceFileController) UpdateWorkspaceFile(ctx context.Context, req *c
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
 	}
 
-	updatedFile, err := c.workspaceFile.UpdateWorkspaceFile(ctx, req.WorkspaceId, req.OldPath, file)
+	updatedFile, err := c.workspaceFile.UpdateWorkspaceFile(ctx, req.WorkspaceId, req.OldPath, file, req.IsCopy)
 	if err != nil {
 		return nil, err
 	}
