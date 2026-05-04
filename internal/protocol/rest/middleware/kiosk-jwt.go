@@ -53,6 +53,7 @@ func AddKioskJWT(h http.Handler, cfg config.Config, keyFunc jwt_go.Keyfunc, clai
 }
 
 func serveKioskJWTPage(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
 	page, err := embed.KioskJWTEmbed.ReadFile("kiosk-jwt/index.html")
 	if err != nil {
 		logger.TechLog.Error(r.Context(), "unable to read embedded kiosk-jwt page", zap.Error(err))
@@ -70,6 +71,14 @@ func serveKioskJWTPage(w http.ResponseWriter, r *http.Request) {
 	h.Set("Referrer-Policy", "no-referrer")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(page)
+}
+
+func logRequest(r *http.Request) {
+	logger.SecLog.Info(r.Context(), "kiosk-jwt: request received",
+		zap.String("method", r.Method),
+		zap.String("remote_addr", r.RemoteAddr),
+		zap.String("user_agent", r.UserAgent()),
+	)
 }
 
 type kioskJWTRequest struct {
