@@ -28,6 +28,7 @@ func UserAuthorizing(cfg config.Config, logger *logger.ContextLogger, authorizer
 				logger:     logger,
 				authorizer: authorizer,
 			},
+			cfg:  cfg,
 			next: next,
 		}
 	}
