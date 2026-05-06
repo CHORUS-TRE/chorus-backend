@@ -79,6 +79,7 @@ type CustomClaims struct {
 	Roles     []authorization_model.Role `json:"roles"`
 	R         string                     `json:"r"` // Roles gz compressed and base64-encoded
 	Username  string                     `json:"username"`
+	Email     string                     `json:"email"`
 	ForClient string                     `json:"forClient"`
 	Source    string                     `json:"source"`
 
@@ -562,6 +563,7 @@ func createJWTToken(signingKey string, user *userModel.User, expirationTime time
 		// Roles:     user.Roles,
 		R:         r,
 		Username:  user.Username,
+		Email:     user.Email,
 		ForClient: clientID,
 		Source:    user.Source,
 		StandardClaims: jwt.StandardClaims{
