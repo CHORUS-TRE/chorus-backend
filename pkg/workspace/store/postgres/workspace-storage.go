@@ -522,19 +522,21 @@ func (s *WorkspaceStorage) encryptSensitiveFields(svc *model.WorkspaceServiceIns
 
 func (s *WorkspaceStorage) decryptServiceInstance(svc *model.WorkspaceServiceInstance) error {
 	// Values are stored encrypted as {"_enc": "<ciphertext>"} in the JSONB column.
-	if enc, ok := svc.Values["_enc"]; ok {
-		encStr, _ := enc.(string)
-		decValues, err := crypto.DecryptField(encStr, s.daemonKey)
-		if err != nil {
-			return fmt.Errorf("unable to decrypt values: %w", err)
-		}
-		m := make(model.JSONMap[any])
-		if decValues != "" {
-			if err := json.Unmarshal([]byte(decValues), &m); err != nil {
-				return fmt.Errorf("unable to unmarshal decrypted values: %w", err)
+	if s.daemonKey != nil {
+		if enc, ok := svc.Values["_enc"]; ok {
+			encStr, _ := enc.(string)
+			decValues, err := crypto.DecryptField(encStr, s.daemonKey)
+			if err != nil {
+				return fmt.Errorf("unable to decrypt values: %w", err)
 			}
+			m := make(model.JSONMap[any])
+			if decValues != "" {
+				if err := json.Unmarshal([]byte(decValues), &m); err != nil {
+					return fmt.Errorf("unable to unmarshal decrypted values: %w", err)
+				}
+			}
+			svc.Values = m
 		}
-		svc.Values = m
 	}
 
 	if s.daemonKey != nil && svc.CredentialsSecretName != "" {
