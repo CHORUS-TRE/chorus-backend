@@ -352,10 +352,10 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 
 	logger.TechLog.Info(context.Background(), "finishing OIDC auth flow", zap.String("subject", as.Subject), zap.Int("auth_time", authTime), zap.Any("claims", as.Claims), zap.String("scopes", as.Scopes), zap.Any("response_type", as.ResponseType))
 
-	// Add claims based on scope.
-	setClaimFunc := as.SetUserInfoClaim
-	if as.ResponseType == goidc.ResponseTypeIDToken {
-		setClaimFunc = as.SetIDTokenClaim
+	// Set standard claims based on scopes and user info.
+	setClaimFunc := func(claim string, value any) {
+		as.SetIDTokenClaim(claim, value)
+		as.SetUserInfoClaim(claim, value)
 	}
 
 	if strings.Contains(as.Scopes, goidc.ScopeEmail.ID) || strings.Contains(as.Scopes, goidc.ScopeProfile.ID) || strings.Contains(as.Scopes, "roles") {
