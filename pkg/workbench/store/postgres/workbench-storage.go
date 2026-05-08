@@ -224,14 +224,14 @@ func (s *WorkbenchStorage) CreateWorkbench(ctx context.Context, tenantID uint64,
 func (s *WorkbenchStorage) UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	const workbenchUpdateQuery = `
 		UPDATE workbenches
-		SET status = $3, serverpodstatus = $4, serverpodmessage = $5, k8sstatus = $6, description = $7, updatedat = NOW()
+		SET name = $3, shortname = $4, description = $5, status = $6, serverpodstatus = $7, serverpodmessage = $8, k8sstatus = $9, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
 		RETURNING id, tenantid, userid, workspaceid, name, shortname, description, status, serverpodstatus, serverpodmessage, k8sstatus, initialresolutionwidth, initialresolutionheight, createdat, updatedat;
 	`
 
 	// Update workbench
 	var updatedWorkbench model.Workbench
-	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Status, workbench.ServerPodStatus, workbench.ServerPodMessage, workbench.K8sStatus, workbench.Description)
+	err := s.db.GetContext(ctx, &updatedWorkbench, workbenchUpdateQuery, tenantID, workbench.ID, workbench.Name, workbench.ShortName, workbench.Description, workbench.Status, workbench.ServerPodStatus, workbench.ServerPodMessage, workbench.K8sStatus)
 	if err != nil {
 		return nil, err
 	}
