@@ -114,20 +114,20 @@ func (c *client) syncResource(spec interface{}, kind, name, namespace, specField
 
 	if len(patch) > 0 && string(patch) != "{}" {
 		updatedSpec := map[string]interface{}{
-			specFieldName: json.RawMessage(desiredSpecBytes),
+			specFieldName: json.RawMessage(patch),
 		}
 
-		patch, err := json.Marshal(updatedSpec)
+		patchBytes, err := json.Marshal(updatedSpec)
 		if err != nil {
 			return fmt.Errorf("error marshalling patch: %w", err)
 		}
 
 		logger.TechLog.Info(context.Background(), "Resource not in the correct state, applying patch",
 			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
-			zap.String("patch", string(patch)),
+			zap.String("patch", string(patchBytes)),
 		)
 
-		_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patch, v1.PatchOptions{})
+		_, err = c.dynamicClient.Resource(gvr).Namespace(namespace).Patch(context.Background(), name, types.MergePatchType, patchBytes, v1.PatchOptions{})
 		if err != nil {
 			return fmt.Errorf("error applying patch: %w", err)
 		}

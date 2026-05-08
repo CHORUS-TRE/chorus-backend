@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -490,10 +489,17 @@ func (s *WorkspaceStorage) encryptSensitiveFields(svc *model.WorkspaceServiceIns
 	}
 	valuesStr, _ := valuesVal.(string)
 
-	encValues, err = crypto.EncryptField(valuesStr, s.daemonKey)
+	enc, err := crypto.EncryptField(valuesStr, s.daemonKey)
 	if err != nil {
 		return "", "", nil, fmt.Errorf("unable to encrypt values: %w", err)
 	}
+	// Wrap in a JSON object so the JSONB column receives valid JSON.
+	// The "_enc" sentinel lets decryptServiceInstance detect the encrypted case after scanning.
+	b, err := json.Marshal(map[string]string{"_enc": enc})
+	if err != nil {
+		return "", "", nil, fmt.Errorf("unable to marshal encrypted values: %w", err)
+	}
+	encValues = string(b)
 
 	encCredName, err = crypto.EncryptField(svc.CredentialsSecretName, s.daemonKey)
 	if err != nil {
@@ -515,25 +521,14 @@ func (s *WorkspaceStorage) encryptSensitiveFields(svc *model.WorkspaceServiceIns
 }
 
 func (s *WorkspaceStorage) decryptServiceInstance(svc *model.WorkspaceServiceInstance) error {
-	// Decrypt valuesoverride (stored as encrypted JSON string)
-	var rawValues string
-	if svc.Values != nil {
-		b, err := json.Marshal(svc.Values)
-		if err != nil {
-			return fmt.Errorf("unable to marshal values for decryption: %w", err)
-		}
-		rawValues = string(b)
-	}
-	// The DB stores the encrypted form as a plain string in a JSONB column.
-	// After scanning, the JSONMap contains a single string. We need to check
-	// if the raw value is an encrypted string (starts with a quote in the JSON).
-	// If the daemon key is nil, we skip decryption (unencrypted data).
-	if s.daemonKey != nil && rawValues != "" && rawValues != "{}" {
-		// Try to extract the raw string from the JSONB (it may be stored as a quoted encrypted string)
-		rawValues = strings.TrimSpace(rawValues)
-		if len(rawValues) > 0 && rawValues[0] != '{' {
-			// It's an encrypted string, not a JSON object
-			decValues, err := crypto.DecryptField(strings.Trim(rawValues, "\""), s.daemonKey)
+	// Values are stored encrypted as {"_enc": "<ciphertext>"} in the JSONB column.
+	if s.daemonKey != nil {
+		if enc, ok := svc.Values["_enc"]; ok {
+			encStr, ok := enc.(string)
+			if !ok {
+				return fmt.Errorf("unexpected type for _enc field: %T", enc)
+			}
+			decValues, err := crypto.DecryptField(encStr, s.daemonKey)
 			if err != nil {
 				return fmt.Errorf("unable to decrypt values: %w", err)
 			}
