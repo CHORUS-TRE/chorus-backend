@@ -524,7 +524,10 @@ func (s *WorkspaceStorage) decryptServiceInstance(svc *model.WorkspaceServiceIns
 	// Values are stored encrypted as {"_enc": "<ciphertext>"} in the JSONB column.
 	if s.daemonKey != nil {
 		if enc, ok := svc.Values["_enc"]; ok {
-			encStr, _ := enc.(string)
+			encStr, ok := enc.(string)
+			if !ok {
+				return fmt.Errorf("unexpected type for _enc field: %T", enc)
+			}
 			decValues, err := crypto.DecryptField(encStr, s.daemonKey)
 			if err != nil {
 				return fmt.Errorf("unable to decrypt values: %w", err)
