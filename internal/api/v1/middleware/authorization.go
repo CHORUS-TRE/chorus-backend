@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	chorus_errors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -13,9 +14,7 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 type Refresher interface {
@@ -45,13 +44,13 @@ func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authorization.R
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token", zap.Any("content", ctx.Value(jwt_model.JWTClaimsContextKey)))
-		return nil, nil, status.Error(codes.Unauthenticated, "malformed jwt-token")
+		return nil, nil, chorus_errors.ErrUnauthenticated.WithMessage("malformed jwt-token")
 	}
 
 	aRoles, err := claimRolesToAuthRoles(claims)
 	if err != nil {
 		c.logger.Error(ctx, "failed to convert claim roles to auth roles", zap.Error(err))
-		return nil, nil, status.Error(codes.Internal, "failed to convert claim roles to auth roles")
+		return nil, nil, chorus_errors.ErrInternal.Wrap(err, "failed to convert claim roles to auth roles")
 	}
 
 	return aRoles, claims, nil
@@ -61,7 +60,7 @@ func (c Authorization) getUserID(ctx context.Context) (uint64, error) {
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
 		c.logger.Warn(ctx, "malformed JWT token")
-		return 0, status.Error(codes.Unauthenticated, "malformed jwt-token")
+		return 0, chorus_errors.ErrUnauthenticated.WithMessage("malformed jwt-token")
 	}
 
 	return claims.ID, nil
@@ -73,13 +72,13 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 	aRoles, claims, err := c.getRolesAndClaims(ctx)
 	if err != nil {
 		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
-		return status.Error(codes.Internal, "failed to get roles and claims")
+		return err
 	}
 
 	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
 	if err != nil {
 		c.logger.Error(ctx, "authorization error", zap.Error(err))
-		return status.Error(codes.Internal, "authorization error")
+		return chorus_errors.ErrInternal.Wrap(err, "authorization error")
 	}
 
 	if !isAuthorized {
@@ -105,13 +104,13 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 	aRoles, _, err := c.getRolesAndClaims(ctx)
 	if err != nil {
 		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
-		return nil, status.Error(codes.Internal, "failed to get roles and claims")
+		return nil, err
 	}
 
 	contextList, err := c.authorizer.GetContextListForPermission(aRoles, permissionName)
 	if err != nil {
 		c.logger.Error(ctx, "authorization error", zap.Error(err))
-		return nil, status.Error(codes.Internal, "authorization error")
+		return nil, chorus_errors.ErrInternal.Wrap(err, "authorization error")
 	}
 
 	return contextList, nil
@@ -120,7 +119,7 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 func (c Authorization) TriggerRefreshToken(ctx context.Context) error {
 	res, t, err := c.refresher.RefreshToken(ctx)
 	if err != nil {
-		return status.Errorf(codes.Unauthenticated, "%v", err)
+		return chorus_errors.ErrUnauthenticated.Wrap(err, "unable to refresh token")
 	}
 
 	expiresDate := time.Now().Add(t)
@@ -128,7 +127,7 @@ func (c Authorization) TriggerRefreshToken(ctx context.Context) error {
 
 	header := c.getSetCookieHeader(res, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
-		return status.Errorf(codes.Internal, "%v", err)
+		return chorus_errors.ErrInternal.Wrap(err, "unable to set grpc set-cookie header")
 	}
 
 	return nil
@@ -151,7 +150,7 @@ func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.J
 		zap.String("required_permission", string(p.Name)),
 		zap.Strings("user_permissions", authorization.UniquePermissionNames(permissions)),
 		zap.Strings("user_roles", authorization.UniqueRoleNames(claims.Roles)))
-	return status.Errorf(codes.PermissionDenied, "required permission: %v", p)
+	return chorus_errors.ErrPermissionDenied.WithMessage(fmt.Sprintf("required permission: %v", p))
 }
 
 func claimRolesToAuthRoles(claims *jwt_model.JWTClaims) ([]authorization.Role, error) {
