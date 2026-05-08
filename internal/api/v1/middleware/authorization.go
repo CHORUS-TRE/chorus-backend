@@ -119,7 +119,7 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 func (c Authorization) TriggerRefreshToken(ctx context.Context) error {
 	res, t, err := c.refresher.RefreshToken(ctx)
 	if err != nil {
-		return chorus_errors.ErrUnauthenticated.Wrap(err, err.Error())
+		return chorus_errors.ErrUnauthenticated.Wrap(err, "unable to refresh token")
 	}
 
 	expiresDate := time.Now().Add(t)
@@ -127,7 +127,7 @@ func (c Authorization) TriggerRefreshToken(ctx context.Context) error {
 
 	header := c.getSetCookieHeader(res, expires)
 	if err := grpc.SetHeader(ctx, header); err != nil {
-		return chorus_errors.ErrInternal.Wrap(err, err.Error())
+		return chorus_errors.ErrInternal.Wrap(err, "unable to set grpc set-cookie header")
 	}
 
 	return nil
