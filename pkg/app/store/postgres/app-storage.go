@@ -154,8 +154,7 @@ func (s *AppStorage) BulkCreateApps(ctx context.Context, tenantID uint64, apps [
 func (s *AppStorage) UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	const appUpdateQuery = `
 		UPDATE apps
-		SET name = $3, description = $4, status = $5, dockerimagename = $6, dockerimagetag = $7, dockerimageregistry = $8, shmsize = $9, kioskconfigurl = $10, kioskconfigjwturl = $11, kioskconfigjwtoidcclientid = $12, maxcpu = $13, mincpu = $14, maxmemory = $15, minmemory = $16, maxephemeralstorage = $17, minephemeralstorage = $18, iconurl = $19, iconbackgroundcolor = $20, stabilitystatus = $21
-		updatedat = NOW()
+		SET name = $3, description = $4, status = $5, dockerimagename = $6, dockerimagetag = $7, dockerimageregistry = $8, shmsize = $9, kioskconfigurl = $10, kioskconfigjwturl = $11, kioskconfigjwtoidcclientid = $12, maxcpu = $13, mincpu = $14, maxmemory = $15, minmemory = $16, maxephemeralstorage = $17, minephemeralstorage = $18, iconurl = $19, iconbackgroundcolor = $20, stabilitystatus = $21, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
 		RETURNING id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "kioskconfigurl", "kioskconfigjwturl", "kioskconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", createdat, updatedat;
 	`
