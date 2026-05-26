@@ -73,12 +73,12 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 		return nil, fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
 	}
 
-	if app.KioskConfigJWTOIDCClientID != "" {
-		token, _, err := s.authenticator.GetShortLivedTokenForClient(ctx, app.KioskConfigJWTOIDCClientID, appInstance.WorkspaceID)
+	if app.BrowserConfigJWTOIDCClientID != "" {
+		token, _, err := s.authenticator.GetShortLivedTokenForClient(ctx, app.BrowserConfigJWTOIDCClientID, appInstance.WorkspaceID)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get short lived token for app %v: %w", appInstance.AppID, err)
 		}
-		appInstance.KioskConfigJWTToken = token
+		appInstance.BrowserConfigJWTToken = token
 	}
 
 	newAppInstance, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
@@ -118,9 +118,9 @@ func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *m
 
 		K8sState: appInstance.K8sState.String(),
 
-		KioskConfigURL:      app.KioskConfigURL,
-		KioskConfigJWTURL:   app.KioskConfigJWTURL,
-		KioskConfigJWTToken: appInstance.KioskConfigJWTToken,
+		BrowserConfigURL:      app.BrowserConfigURL,
+		BrowserConfigJWTURL:   app.BrowserConfigJWTURL,
+		BrowserConfigJWTToken: appInstance.BrowserConfigJWTToken,
 
 		ShmSize:             app.ShmSize,
 		MaxCPU:              app.MaxCPU,
