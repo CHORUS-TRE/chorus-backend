@@ -40,6 +40,6 @@ local-doc/**/*
 # Sonar local setup
 sonar-local-project.properties
 
-# Chatmodes
+# Chatmode
 CLAUDE.md
 .github/chatmodes/*
