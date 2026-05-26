@@ -27,9 +27,9 @@ message App {
     string minMemory = 15;
     string maxEphemeralStorage = 16;
     string minEphemeralStorage = 17;
-    string kioskConfigURL = 18;
-    string kioskConfigJWTURL = 19;
-    string kioskConfigJWTOIDCClientID = 20;
+    string browserConfigURL = 18;
+    string browserConfigJWTURL = 19;
+    string browserConfigJWTOIDCClientID = 20;
     string iconURL = 21;
     string iconBackgroundColor = 22;
     string stabilityStatus = 23;

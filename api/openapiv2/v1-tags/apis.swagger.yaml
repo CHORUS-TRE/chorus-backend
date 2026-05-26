@@ -8,8 +8,8 @@ info:
     url: https://www.chorus-tre.ch
 tags:
   - name: AppInstanceService
-  - name: ApprovalRequestService
   - name: AppService
+  - name: ApprovalRequestService
   - name: AuditService
   - name: AuthenticationService
   - name: AuthorizationService
@@ -4905,11 +4905,11 @@ definitions:
         type: string
       minEphemeralStorage:
         type: string
-      kioskConfigURL:
+      browserConfigURL:
         type: string
-      kioskConfigJWTURL:
+      browserConfigJWTURL:
         type: string
-      kioskConfigJWTOIDCClientID:
+      browserConfigJWTOIDCClientID:
         type: string
       iconURL:
         type: string
