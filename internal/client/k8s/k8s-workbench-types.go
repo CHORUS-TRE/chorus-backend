@@ -27,7 +27,7 @@ type Image struct {
 	Repository string `json:"repository,omitempty"`
 	Tag        string `json:"tag,omitempty"`
 }
-type KioskConfig struct {
+type BrowserConfig struct {
 	URL      string `json:"url"`
 	JWTURL   string `json:"jwtUrl,omitempty"`
 	JWTToken string `json:"jwtToken,omitempty"`
@@ -36,12 +36,12 @@ type InitContainerConfig struct {
 	Version string `json:"version,omitempty"`
 }
 type WorkbenchApp struct {
-	Name        string                       `json:"name"`
-	State       WorkbenchAppState            `json:"state,omitempty"`
-	Image       Image                        `json:"image"`
-	ShmSize     *resource.Quantity           `json:"shmSize,omitempty"`
-	Resources   *corev1.ResourceRequirements `json:"resources,omitempty"`
-	KioskConfig *KioskConfig                 `json:"kioskConfig,omitempty"`
+	Name          string                       `json:"name"`
+	State         WorkbenchAppState            `json:"state,omitempty"`
+	Image         Image                        `json:"image"`
+	ShmSize       *resource.Quantity           `json:"shmSize,omitempty"`
+	Resources     *corev1.ResourceRequirements `json:"resources,omitempty"`
+	BrowserConfig *BrowserConfig               `json:"browserConfig,omitempty"`
 }
 type WorkbenchSpec struct {
 	Server           WorkbenchServer         `json:"server,omitempty"`
