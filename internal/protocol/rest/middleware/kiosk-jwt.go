@@ -17,8 +17,8 @@ import (
 
 // KioskJWTPath is the URL path served for the kiosk JWT-to-cookie exchange.
 //
-// A kiosk app pod is started with KIOSK_JWT_URL pointing here. The pod's
-// headless Chrome navigates to "<KIOSK_JWT_URL>#jwt=<short-lived-jwt>".
+// A kiosk app pod is started with BROWSER_JWT_URL pointing here. The pod's
+// headless Chrome navigates to "<BROWSER_JWT_URL>#jwt=<short-lived-jwt>".
 // The embedded HTML page reads the JWT from the URL fragment and POSTs it
 // back to this same path, where it is validated and exchanged for the
 // regular `jwttoken` HttpOnly session cookie. The kiosk's main browser then
