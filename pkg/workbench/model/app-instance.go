@@ -26,7 +26,7 @@ type AppInstance struct {
 	InitialResolutionWidth  uint32
 	InitialResolutionHeight uint32
 
-	BrowserConfigJWTToken string
+	KioskConfigJWTToken string
 
 	AppName                *string
 	AppDockerImageRegistry *string
@@ -34,8 +34,8 @@ type AppInstance struct {
 	AppDockerImageTag      *string
 
 	AppShmSize             *string
-	AppBrowserConfigURL    *string
-	AppBrowserConfigJWTURL *string
+	AppKioskConfigURL      *string
+	AppKioskConfigJWTURL   *string
 	AppMaxCPU              *string
 	AppMinCPU              *string
 	AppMaxMemory           *string
@@ -60,9 +60,9 @@ func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
 
 		K8sState: a.K8sState.String(),
 
-		BrowserConfigURL:      utils.ToString(a.AppBrowserConfigURL),
-		BrowserConfigJWTURL:   utils.ToString(a.AppBrowserConfigJWTURL),
-		BrowserConfigJWTToken: a.BrowserConfigJWTToken,
+		KioskConfigURL:      utils.ToString(a.AppKioskConfigURL),
+		KioskConfigJWTURL:   utils.ToString(a.AppKioskConfigJWTURL),
+		KioskConfigJWTToken: a.KioskConfigJWTToken,
 
 		ShmSize:             utils.ToString(a.AppShmSize),
 		MaxCPU:              utils.ToString(a.AppMaxCPU),

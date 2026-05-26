@@ -20,19 +20,19 @@ type App struct {
 	DockerImageName     string
 	DockerImageTag      string
 
-	ShmSize                      string
-	MaxCPU                       string
-	MinCPU                       string
-	MaxMemory                    string
-	MinMemory                    string
-	MaxEphemeralStorage          string
-	MinEphemeralStorage          string
-	BrowserConfigURL             string
-	BrowserConfigJWTURL          string
-	BrowserConfigJWTOIDCClientID string
-	IconURL                      string
-	IconBackgroundColor          string
-	StabilityStatus              AppStabilityStatus
+	ShmSize                    string
+	MaxCPU                     string
+	MinCPU                     string
+	MaxMemory                  string
+	MinMemory                  string
+	MaxEphemeralStorage        string
+	MinEphemeralStorage        string
+	KioskConfigURL             string
+	KioskConfigJWTURL          string
+	KioskConfigJWTOIDCClientID string
+	IconURL                    string
+	IconBackgroundColor        string
+	StabilityStatus            AppStabilityStatus
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

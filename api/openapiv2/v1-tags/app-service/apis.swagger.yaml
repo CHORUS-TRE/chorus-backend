@@ -218,11 +218,11 @@ definitions:
         type: string
       minEphemeralStorage:
         type: string
-      browserConfigURL:
+      kioskConfigURL:
         type: string
-      browserConfigJWTURL:
+      kioskConfigJWTURL:
         type: string
-      browserConfigJWTOIDCClientID:
+      kioskConfigJWTOIDCClientID:
         type: string
       iconURL:
         type: string
