@@ -108,22 +108,22 @@ func (c *client) appInstanceToK8sWorkbenchApp(app AppInstance) WorkbenchApp {
 		shmSize := resource.MustParse(app.ShmSize)
 		w.ShmSize = &shmSize
 	}
-	if app.KioskConfigURL != "" {
-		w.KioskConfig = &KioskConfig{
-			URL: app.KioskConfigURL,
+	if app.BrowserConfigURL != "" {
+		w.BrowserConfig = &BrowserConfig{
+			URL: app.BrowserConfigURL,
 		}
 	}
-	if app.KioskConfigJWTURL != "" {
-		if w.KioskConfig == nil {
-			w.KioskConfig = &KioskConfig{}
+	if app.BrowserConfigJWTURL != "" {
+		if w.BrowserConfig == nil {
+			w.BrowserConfig = &BrowserConfig{}
 		}
-		w.KioskConfig.JWTURL = app.KioskConfigJWTURL
+		w.BrowserConfig.JWTURL = app.BrowserConfigJWTURL
 	}
-	if app.KioskConfigJWTToken != "" {
-		if w.KioskConfig == nil {
-			w.KioskConfig = &KioskConfig{}
+	if app.BrowserConfigJWTToken != "" {
+		if w.BrowserConfig == nil {
+			w.BrowserConfig = &BrowserConfig{}
 		}
-		w.KioskConfig.JWTToken = app.KioskConfigJWTToken
+		w.BrowserConfig.JWTToken = app.BrowserConfigJWTToken
 	}
 
 	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" || app.MaxEphemeralStorage != "" || app.MinEphemeralStorage != "" {
@@ -267,8 +267,8 @@ func (c *client) k8sWorkbenchAppToAppInstance(w WorkbenchApp) (AppInstance, erro
 	if w.ShmSize != nil {
 		app.ShmSize = w.ShmSize.String()
 	}
-	if w.KioskConfig != nil {
-		app.KioskConfigURL = w.KioskConfig.URL
+	if w.BrowserConfig != nil {
+		app.BrowserConfigURL = w.BrowserConfig.URL
 	}
 
 	if w.Resources != nil {
