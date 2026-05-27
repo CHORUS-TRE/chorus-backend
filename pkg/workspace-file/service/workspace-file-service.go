@@ -223,6 +223,10 @@ func (s *WorkspaceFileService) CreateWorkspaceFile(ctx context.Context, workspac
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
 	store := s.stores[storeName].store
 
+	if _, statErr := store.StatFile(ctx, storePath); statErr == nil {
+		return nil, cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("Workspace file already exists at path %s", file.Path))
+	}
+
 	var createdFile *filestore.File
 	if file.IsDirectory {
 		createdFile, err = store.CreateDirectory(ctx, &filestore.File{
@@ -379,6 +383,11 @@ func (s *WorkspaceFileService) DeleteWorkspaceFile(ctx context.Context, workspac
 
 	store := s.stores[storeName].store
 	storePath := s.toStorePath(storeName, workspaceID, filePath)
+
+	if _, statErr := store.StatFile(ctx, storePath); statErr != nil {
+		return cerr.ErrNotFound.Wrap(statErr, fmt.Sprintf("Workspace file at path %s does not exist", filePath))
+	}
+
 	if strings.HasSuffix(storePath, "/") {
 		err = store.DeleteDirectory(ctx, storePath)
 		if err != nil {
@@ -402,6 +411,10 @@ func (s *WorkspaceFileService) InitiateWorkspaceFileUpload(ctx context.Context, 
 
 	store := s.stores[storeName].store
 	storePath := s.toStorePath(storeName, workspaceID, file.Path)
+
+	if _, statErr := store.StatFile(ctx, storePath); statErr == nil {
+		return nil, cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("Workspace file already exists at path %s", file.Path))
+	}
 
 	uploadInfo, err := store.InitiateMultipartUpload(ctx, &filestore.File{
 		Path:        storePath,
