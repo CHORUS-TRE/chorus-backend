@@ -62,16 +62,16 @@ type AppInstance struct {
 	K8sStatus  string
 	K8sMessage string
 
-	ShmSize             string
-	KioskConfigURL      string
-	KioskConfigJWTURL   string
-	KioskConfigJWTToken string
-	MaxCPU              string
-	MinCPU              string
-	MaxMemory           string
-	MinMemory           string
-	MaxEphemeralStorage string
-	MinEphemeralStorage string
+	ShmSize               string
+	BrowserConfigURL      string
+	BrowserConfigJWTURL   string
+	BrowserConfigJWTToken string
+	MaxCPU                string
+	MinCPU                string
+	MaxMemory             string
+	MinMemory             string
+	MaxEphemeralStorage   string
+	MinEphemeralStorage   string
 }
 
 func (a AppInstance) UID() string {

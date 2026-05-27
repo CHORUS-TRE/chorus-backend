@@ -20,6 +20,15 @@ import (
 // swagger:model chorusApp
 type ChorusApp struct {
 
+	// browser config j w t o ID c client ID
+	BrowserConfigJWTOIDCClientID string `json:"browserConfigJWTOIDCClientID,omitempty"`
+
+	// browser config j w t URL
+	BrowserConfigJWTURL string `json:"browserConfigJWTURL,omitempty"`
+
+	// browser config URL
+	BrowserConfigURL string `json:"browserConfigURL,omitempty"`
+
 	// created at
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
@@ -47,15 +56,6 @@ type ChorusApp struct {
 
 	// id
 	ID string `json:"id,omitempty"`
-
-	// kiosk config j w t o ID c client ID
-	KioskConfigJWTOIDCClientID string `json:"kioskConfigJWTOIDCClientID,omitempty"`
-
-	// kiosk config j w t URL
-	KioskConfigJWTURL string `json:"kioskConfigJWTURL,omitempty"`
-
-	// kiosk config URL
-	KioskConfigURL string `json:"kioskConfigURL,omitempty"`
 
 	// max CPU
 	MaxCPU string `json:"maxCPU,omitempty"`
