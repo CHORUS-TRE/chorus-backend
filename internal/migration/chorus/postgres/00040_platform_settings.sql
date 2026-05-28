@@ -23,3 +23,7 @@ CREATE TABLE IF NOT EXISTS public.platform_settings (
     CONSTRAINT tenantcon FOREIGN KEY (tenantid) REFERENCES tenants(id),
     UNIQUE (tenantid)
 );
+
+-- +migrate Down
+DROP TABLE IF EXISTS public.platform_settings;
+DROP SEQUENCE IF EXISTS public.platform_settings_seq;
