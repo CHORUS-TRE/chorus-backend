@@ -11,14 +11,14 @@ CREATE TABLE IF NOT EXISTS public.platform_settings (
     tagline     TEXT NOT NULL DEFAULT '',
     websiteurl TEXT NOT NULL DEFAULT '',
 
-    touversioid BIGINT NOT NULL DEFAULT 0,
+    touversionid BIGINT NOT NULL DEFAULT 0,
 
     maxworkspacesperuser    BIGINT NOT NULL DEFAULT 0,
     maxsessionsperuser      BIGINT NOT NULL DEFAULT 0,
     maxappinstancesperuser BIGINT NOT NULL DEFAULT 0,
     
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    createdat TIMESTAMP NOT NULL DEFAULT NOW(),
+    updatedat TIMESTAMP NOT NULL DEFAULT NOW(),
 
     CONSTRAINT tenantcon FOREIGN KEY (tenantid) REFERENCES tenants(id),
     UNIQUE (tenantid)
