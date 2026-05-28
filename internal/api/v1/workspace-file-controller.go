@@ -52,7 +52,7 @@ func (c WorkspaceFileController) GetWorkspaceFile(ctx context.Context, req *chor
 
 	tgFile, err := converter.WorkspaceFileFromBusiness(file)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	return &chorus.GetWorkspaceFileReply{Result: &chorus.GetWorkspaceFileResult{File: tgFile}}, nil
@@ -72,7 +72,7 @@ func (c WorkspaceFileController) ListWorkspaceFiles(ctx context.Context, req *ch
 	for _, file := range files {
 		tgFile, err := converter.WorkspaceFileFromBusiness(file)
 		if err != nil {
-			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+			return nil, err
 		}
 		tgFiles = append(tgFiles, tgFile)
 	}
@@ -87,7 +87,7 @@ func (c WorkspaceFileController) CreateWorkspaceFile(ctx context.Context, req *c
 
 	file, err := converter.WorkspaceFileToBusiness(req.File)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	newFile, err := c.workspaceFile.CreateWorkspaceFile(ctx, req.WorkspaceId, file)
@@ -97,7 +97,7 @@ func (c WorkspaceFileController) CreateWorkspaceFile(ctx context.Context, req *c
 
 	tgFile, err := converter.WorkspaceFileFromBusiness(newFile)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	return &chorus.CreateWorkspaceFileReply{Result: &chorus.CreateWorkspaceFileResult{File: tgFile}}, nil
@@ -110,7 +110,7 @@ func (c WorkspaceFileController) UpdateWorkspaceFile(ctx context.Context, req *c
 
 	file, err := converter.WorkspaceFileToBusiness(req.File)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	updatedFile, err := c.workspaceFile.UpdateWorkspaceFile(ctx, req.WorkspaceId, req.OldPath, file, req.IsCopy)
@@ -120,7 +120,7 @@ func (c WorkspaceFileController) UpdateWorkspaceFile(ctx context.Context, req *c
 
 	tgFile, err := converter.WorkspaceFileFromBusiness(updatedFile)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	return &chorus.UpdateWorkspaceFileReply{Result: &chorus.UpdateWorkspaceFileResult{File: tgFile}}, nil
@@ -146,7 +146,7 @@ func (c WorkspaceFileController) InitiateWorkspaceFileUpload(ctx context.Context
 
 	file, err := converter.WorkspaceFileToBusiness(req.File)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	uploadInfo, err := c.workspaceFile.InitiateWorkspaceFileUpload(ctx, req.WorkspaceId, req.Path, file)
@@ -168,7 +168,7 @@ func (c WorkspaceFileController) UploadWorkspaceFilePart(ctx context.Context, re
 
 	filePart, err := converter.WorkspaceFilePartToBusiness(req.Part)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file part")
+		return nil, err
 	}
 
 	uploadedPart, err := c.workspaceFile.UploadWorkspaceFilePart(ctx, req.WorkspaceId, req.Path, req.UploadId, filePart)
@@ -178,7 +178,7 @@ func (c WorkspaceFileController) UploadWorkspaceFilePart(ctx context.Context, re
 
 	part, err := converter.WorkspaceFilePartFromBusiness(uploadedPart)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file part")
+		return nil, err
 	}
 
 	return &chorus.UploadWorkspaceFilePartReply{Result: &chorus.UploadWorkspaceFilePartResult{Part: part}}, nil
@@ -193,7 +193,7 @@ func (c WorkspaceFileController) CompleteWorkspaceFileUpload(ctx context.Context
 	for _, tgPart := range req.Parts {
 		part, err := converter.WorkspaceFilePartToBusiness(tgPart)
 		if err != nil {
-			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file part")
+			return nil, err
 		}
 		parts = append(parts, part)
 	}
@@ -205,7 +205,7 @@ func (c WorkspaceFileController) CompleteWorkspaceFileUpload(ctx context.Context
 
 	tgFile, err := converter.WorkspaceFileFromBusiness(uploadedFile)
 	if err != nil {
-		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace file")
+		return nil, err
 	}
 
 	return &chorus.CompleteWorkspaceFileUploadReply{Result: &chorus.CompleteWorkspaceFileUploadResult{File: tgFile}}, nil
