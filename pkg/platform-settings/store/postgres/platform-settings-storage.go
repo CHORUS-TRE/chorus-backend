@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -30,7 +31,7 @@ func (s *PlatformSettingsStorage) GetPlatformSettings(ctx context.Context, tenan
 
 	var settings model.PlatformSettings
 	if err := s.db.GetContext(ctx, &settings, query, tenantID); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return &model.PlatformSettings{TenantID: tenantID}, nil
 		}
 		return nil, fmt.Errorf("unable to get platform settings for tenant %d: %w", tenantID, err)
