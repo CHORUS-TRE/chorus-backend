@@ -209,17 +209,17 @@ func (s *WorkbenchService) SetClientWatchers() {
 			return fmt.Errorf("unable to get namespace ID from cluster name %s: %w", k8sWorkbench.Namespace, err)
 		}
 
-		// Build workbench model from received K8s workbench
-		workbench := &model.Workbench{
-			ID:                      workbenchID,
-			TenantID:                k8sWorkbench.TenantID,
-			WorkspaceID:             workspaceID,
-			InitialResolutionWidth:  k8sWorkbench.InitialResolutionWidth,
-			InitialResolutionHeight: k8sWorkbench.InitialResolutionHeight,
-			ServerPodStatus:         model.WorkbenchServerPodStatus(k8sWorkbench.ServerPodStatus),
-			ServerPodMessage:        model.WorbenchServerPodMessage(k8sWorkbench.ServerPodMessage),
-			K8sStatus:               model.K8sWorkbenchStatus(k8sWorkbench.Status),
+		// Fetch existing workbench
+		workbench, err := s.store.GetWorkbench(ctx, k8sWorkbench.TenantID, workbenchID)
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to get workbench for k8s status update", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
+			return fmt.Errorf("unable to get workbench %d: %w", workbenchID, err)
 		}
+
+		// Overwrite k8s-derived statuses
+		workbench.ServerPodStatus = model.WorkbenchServerPodStatus(k8sWorkbench.ServerPodStatus)
+		workbench.ServerPodMessage = model.WorbenchServerPodMessage(k8sWorkbench.ServerPodMessage)
+		workbench.K8sStatus = model.K8sWorkbenchStatus(k8sWorkbench.Status)
 
 		switch k8sWorkbench.Status {
 		case string(k8s.WorkbenchStatusServerStatusRunning):
