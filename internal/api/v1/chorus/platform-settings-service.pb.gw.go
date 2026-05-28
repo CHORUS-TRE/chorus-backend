@@ -90,7 +90,7 @@ func RegisterPlatformSettingsServiceHandlerServer(ctx context.Context, mux *runt
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.PlatformSettingsService/GetPlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform/settings"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.PlatformSettingsService/GetPlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform-settings"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -110,7 +110,7 @@ func RegisterPlatformSettingsServiceHandlerServer(ctx context.Context, mux *runt
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.PlatformSettingsService/UpdatePlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform/settings"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.PlatformSettingsService/UpdatePlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform-settings"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -168,7 +168,7 @@ func RegisterPlatformSettingsServiceHandlerClient(ctx context.Context, mux *runt
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.PlatformSettingsService/GetPlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform/settings"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.PlatformSettingsService/GetPlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform-settings"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -185,7 +185,7 @@ func RegisterPlatformSettingsServiceHandlerClient(ctx context.Context, mux *runt
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.PlatformSettingsService/UpdatePlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform/settings"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.PlatformSettingsService/UpdatePlatformSettings", runtime.WithHTTPPathPattern("/api/rest/v1/platform-settings"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -202,8 +202,8 @@ func RegisterPlatformSettingsServiceHandlerClient(ctx context.Context, mux *runt
 }
 
 var (
-	pattern_PlatformSettingsService_GetPlatformSettings_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "rest", "v1", "platform", "settings"}, ""))
-	pattern_PlatformSettingsService_UpdatePlatformSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "rest", "v1", "platform", "settings"}, ""))
+	pattern_PlatformSettingsService_GetPlatformSettings_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "platform-settings"}, ""))
+	pattern_PlatformSettingsService_UpdatePlatformSettings_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "platform-settings"}, ""))
 )
 
 var (

@@ -88,12 +88,12 @@ func (o *PlatformSettingsServiceUpdatePlatformSettingsOK) Code() int {
 
 func (o *PlatformSettingsServiceUpdatePlatformSettingsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/platform/settings][%d] platformSettingsServiceUpdatePlatformSettingsOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/platform-settings][%d] platformSettingsServiceUpdatePlatformSettingsOK %s", 200, payload)
 }
 
 func (o *PlatformSettingsServiceUpdatePlatformSettingsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/platform/settings][%d] platformSettingsServiceUpdatePlatformSettingsOK %s", 200, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/platform-settings][%d] platformSettingsServiceUpdatePlatformSettingsOK %s", 200, payload)
 }
 
 func (o *PlatformSettingsServiceUpdatePlatformSettingsOK) GetPayload() *models.ChorusUpdatePlatformSettingsReply {
@@ -162,12 +162,12 @@ func (o *PlatformSettingsServiceUpdatePlatformSettingsDefault) Code() int {
 
 func (o *PlatformSettingsServiceUpdatePlatformSettingsDefault) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/platform/settings][%d] PlatformSettingsService_UpdatePlatformSettings default %s", o._statusCode, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/platform-settings][%d] PlatformSettingsService_UpdatePlatformSettings default %s", o._statusCode, payload)
 }
 
 func (o *PlatformSettingsServiceUpdatePlatformSettingsDefault) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/platform/settings][%d] PlatformSettingsService_UpdatePlatformSettings default %s", o._statusCode, payload)
+	return fmt.Sprintf("[PUT /api/rest/v1/platform-settings][%d] PlatformSettingsService_UpdatePlatformSettings default %s", o._statusCode, payload)
 }
 
 func (o *PlatformSettingsServiceUpdatePlatformSettingsDefault) GetPayload() *models.RPCStatus {

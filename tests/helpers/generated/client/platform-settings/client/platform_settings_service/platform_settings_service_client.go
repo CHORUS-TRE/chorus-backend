@@ -74,7 +74,7 @@ func (a *Client) PlatformSettingsServiceGetPlatformSettings(params *PlatformSett
 	op := &runtime.ClientOperation{
 		ID:                 "PlatformSettingsService_GetPlatformSettings",
 		Method:             "GET",
-		PathPattern:        "/api/rest/v1/platform/settings",
+		PathPattern:        "/api/rest/v1/platform-settings",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -113,7 +113,7 @@ func (a *Client) PlatformSettingsServiceUpdatePlatformSettings(params *PlatformS
 	op := &runtime.ClientOperation{
 		ID:                 "PlatformSettingsService_UpdatePlatformSettings",
 		Method:             "PUT",
-		PathPattern:        "/api/rest/v1/platform/settings",
+		PathPattern:        "/api/rest/v1/platform-settings",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

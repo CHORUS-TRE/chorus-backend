@@ -15,7 +15,7 @@ consumes:
 produces:
   - application/json
 paths:
-  /api/rest/v1/platform/settings:
+  /api/rest/v1/platform-settings:
     get:
       summary: Get platform settings
       description: Returns platform-wide settings including instance title, tagline, resource limits, and current terms of use version. Public endpoint.
