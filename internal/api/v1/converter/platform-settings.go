@@ -33,7 +33,7 @@ func PlatformSettingsFromBusiness(s *model.PlatformSettings) (*chorus.PlatformSe
 	}, nil
 }
 
-func PlatformSettingsToBusinessModel(p *chorus.PlatformSettings) *model.PlatformSettings {
+func PlatformSettingsToBusiness(p *chorus.PlatformSettings) *model.PlatformSettings {
 	return &model.PlatformSettings{
 		Title:                  p.Title,
 		Headline:               p.Headline,

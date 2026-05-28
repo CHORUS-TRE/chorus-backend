@@ -41,7 +41,7 @@ func (c PlatformSettingsController) UpdatePlatformSettings(ctx context.Context, 
 		return nil, cerr.ErrInvalidRequest.WithMessage("platform settings payload is required")
 	}
 
-	settings, err := c.platformSettings.UpdatePlatformSettings(ctx, converter.PlatformSettingsToBusinessModel(req.PlatformSettings))
+	settings, err := c.platformSettings.UpdatePlatformSettings(ctx, converter.PlatformSettingsToBusiness(req.PlatformSettings))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "unable to call 'UpdatePlatformSettings': %v", err.Error())
 	}
