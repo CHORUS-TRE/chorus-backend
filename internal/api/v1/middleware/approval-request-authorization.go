@@ -128,27 +128,36 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 		return nil, status.Error(codes.NotFound, "approval request not found")
 	}
 
+	// A user may approve a request if they hold the permission of at least
+	// one arm that is still pending. Approvers responsible for the remaining
+	// arms must approve those separately.
+	var canApprove bool
+
 	switch approvalRequest.Type {
 	case approval_request_model.ApprovalRequestTypeDataExtraction:
 		workspaceID := approvalRequest.GetSourceWorkspaceID()
-		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
-		if err != nil {
-			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		if err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID)); err == nil {
+			canApprove = true
 		}
 	case approval_request_model.ApprovalRequestTypeDataTransfer:
-		workspaceID := approvalRequest.GetSourceWorkspaceID()
-		err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
-		if err != nil {
-			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		sourceWorkspaceID := approvalRequest.GetSourceWorkspaceID()
+		if _, decided := approvalRequest.ArmApprovals[approval_request_model.ApprovalRequestArmDownload]; !decided {
+			if err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(sourceWorkspaceID)); err == nil {
+				canApprove = true
+			}
 		}
-
 		targetWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
-		err = c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(targetWorkspaceID))
-		if err != nil {
-			return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve requests for this workspace")
+		if _, decided := approvalRequest.ArmApprovals[approval_request_model.ApprovalRequestArmUpload]; !decided {
+			if err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(targetWorkspaceID)); err == nil {
+				canApprove = true
+			}
 		}
 	default:
 		return nil, status.Error(codes.Internal, "unable to determine source workspace for approval request")
+	}
+
+	if !canApprove {
+		return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve any pending arm of this request")
 	}
 
 	return c.next.ApproveApprovalRequest(ctx, req)

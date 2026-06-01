@@ -71,12 +71,14 @@ func setupApprovalRequestFixtures(t *testing.T, db *sqlx.DB) approvalRequestFixt
 
 func newExtractionRequest(requesterID uint64, approverIDs []uint64, status approval_request_model.ApprovalRequestStatus, sourceWorkspaceID uint64, title string) *approval_request_model.ApprovalRequest {
 	return &approval_request_model.ApprovalRequest{
-		RequesterID:     requesterID,
-		Type:            approval_request_model.ApprovalRequestTypeDataExtraction,
-		Status:          status,
-		Title:           title,
-		Description:     title + " description",
-		ApproverIDs:     approverIDs,
+		RequesterID: requesterID,
+		Type:        approval_request_model.ApprovalRequestTypeDataExtraction,
+		Status:      status,
+		Title:       title,
+		Description: title + " description",
+		ApproverIDs: map[string][]uint64{
+			approval_request_model.ApprovalRequestArmDownload: approverIDs,
+		},
 		CreatedAt:       time.Now().UTC(),
 		UpdatedAt:       time.Now().UTC(),
 		ApprovalMessage: "",
@@ -95,12 +97,15 @@ func newExtractionRequest(requesterID uint64, approverIDs []uint64, status appro
 
 func newTransferRequest(requesterID uint64, approverIDs []uint64, status approval_request_model.ApprovalRequestStatus, sourceWorkspaceID, destinationWorkspaceID uint64, title string) *approval_request_model.ApprovalRequest {
 	return &approval_request_model.ApprovalRequest{
-		RequesterID:     requesterID,
-		Type:            approval_request_model.ApprovalRequestTypeDataTransfer,
-		Status:          status,
-		Title:           title,
-		Description:     title + " description",
-		ApproverIDs:     approverIDs,
+		RequesterID: requesterID,
+		Type:        approval_request_model.ApprovalRequestTypeDataTransfer,
+		Status:      status,
+		Title:       title,
+		Description: title + " description",
+		ApproverIDs: map[string][]uint64{
+			approval_request_model.ApprovalRequestArmDownload: approverIDs,
+			approval_request_model.ApprovalRequestArmUpload:   approverIDs,
+		},
 		CreatedAt:       time.Now().UTC(),
 		UpdatedAt:       time.Now().UTC(),
 		ApprovalMessage: "",
@@ -133,7 +138,9 @@ func TestApprovalRequestStorage_CreateGetAndUpdateApprovalRequest(t *testing.T) 
 	require.NoError(t, err)
 	require.NotZero(t, created.ID)
 	require.Equal(t, fixtures.userIDs["alice"], created.RequesterID)
-	require.Equal(t, []uint64{fixtures.userIDs["bob"]}, created.ApproverIDs)
+	require.Equal(t, map[string][]uint64{
+		approval_request_model.ApprovalRequestArmDownload: {fixtures.userIDs["bob"]},
+	}, created.ApproverIDs)
 	require.Equal(t, uint64(101), created.Details.DataExtractionDetails.SourceWorkspaceID)
 
 	approvedByID := fixtures.userIDs["bob"]
