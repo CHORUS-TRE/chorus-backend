@@ -83,6 +83,10 @@ const (
 	AuditActionDataTransferRequestCreate   AuditAction = "CreateDataTransferRequest"
 	AuditActionApprovalRequestFileDownload AuditAction = "DownloadApprovalRequestFile"
 
+	// Platform Settings
+	AuditActionPlatformSettingsRead   AuditAction = "ReadPlatformSettings"
+	AuditActionPlatformSettingsUpdate AuditAction = "UpdatePlatformSettings"
+
 	// Admin
 	AuditActionTenantInitialize AuditAction = "InitializeTenant"
 

@@ -16,6 +16,7 @@ tags:
   - name: DevstoreService
   - name: HealthService
   - name: NotificationService
+  - name: PlatformSettingsService
   - name: StewardService
   - name: UserService
   - name: WorkbenchService
@@ -2481,6 +2482,80 @@ paths:
             $ref: '#/definitions/chorusMarkNotificationsAsReadRequest'
       tags:
         - NotificationService
+  /api/rest/v1/platform-settings:
+    get:
+      summary: Get platform settings
+      description: Returns platform-wide settings including instance title, tagline, resource limits, and current terms of use version. Public endpoint.
+      operationId: PlatformSettingsService_GetPlatformSettings
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetPlatformSettingsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - PlatformSettingsService
+      security: []
+    put:
+      summary: Update platform settings
+      description: Updates platform-wide settings. Requires the PlatformSettingsManager role.
+      operationId: PlatformSettingsService_UpdatePlatformSettings
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdatePlatformSettingsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdatePlatformSettingsRequest'
+      tags:
+        - PlatformSettingsService
   /api/rest/v1/steward/tenants/initialize:
     post:
       summary: Initialize a tenant
@@ -5634,6 +5709,16 @@ definitions:
       totalItems:
         type: integer
         format: int64
+  chorusGetPlatformSettingsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetPlatformSettingsResult'
+  chorusGetPlatformSettingsResult:
+    type: object
+    properties:
+      platformSettings:
+        $ref: '#/definitions/chorusPlatformSettings'
   chorusGetUserMeReply:
     type: object
     properties:
@@ -6014,6 +6099,38 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusPlatformSettings:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      title:
+        type: string
+      headline:
+        type: string
+      tagline:
+        type: string
+      websiteURL:
+        type: string
+      maxWorkspacesPerUser:
+        type: integer
+        format: int64
+      maxSessionsPerUser:
+        type: integer
+        format: int64
+      maxAppInstancesPerUser:
+        type: integer
+        format: int64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusPutEntryReply:
     type: object
     properties:
@@ -6160,6 +6277,21 @@ definitions:
       newPassword:
         type: string
     title: Update User Password
+  chorusUpdatePlatformSettingsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdatePlatformSettingsResult'
+  chorusUpdatePlatformSettingsRequest:
+    type: object
+    properties:
+      platformSettings:
+        $ref: '#/definitions/chorusPlatformSettings'
+  chorusUpdatePlatformSettingsResult:
+    type: object
+    properties:
+      platformSettings:
+        $ref: '#/definitions/chorusPlatformSettings'
   chorusUpdateUserReply:
     type: object
     properties:

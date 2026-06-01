@@ -1,0 +1,23 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message PlatformSettings {
+    uint64 id = 1;
+
+    uint64 tenantId = 2;
+
+    string title = 3;
+    string headline = 4;
+    string tagline = 5;
+    string websiteURL = 6;
+
+    uint32 maxWorkspacesPerUser = 8;
+    uint32 maxSessionsPerUser = 9;
+    uint32 maxAppInstancesPerUser = 10;
+
+    google.protobuf.Timestamp createdAt = 11;
+    google.protobuf.Timestamp updatedAt = 12;
+}

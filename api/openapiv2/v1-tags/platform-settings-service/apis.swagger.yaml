@@ -1,0 +1,132 @@
+swagger: "2.0"
+info:
+  title: chorus platform settings service
+  version: "1.0"
+  contact:
+    name: chorus platform settings service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: PlatformSettingsService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/platform-settings:
+    get:
+      summary: Get platform settings
+      description: Returns platform-wide settings including instance title, tagline, resource limits, and current terms of use version. Public endpoint.
+      operationId: PlatformSettingsService_GetPlatformSettings
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetPlatformSettingsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - PlatformSettingsService
+      security: []
+    put:
+      summary: Update platform settings
+      description: Updates platform-wide settings. Requires the PlatformSettingsManager role.
+      operationId: PlatformSettingsService_UpdatePlatformSettings
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdatePlatformSettingsReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusUpdatePlatformSettingsRequest'
+      tags:
+        - PlatformSettingsService
+definitions:
+  chorusGetPlatformSettingsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetPlatformSettingsResult'
+  chorusGetPlatformSettingsResult:
+    type: object
+    properties:
+      platformSettings:
+        $ref: '#/definitions/chorusPlatformSettings'
+  chorusPlatformSettings:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      title:
+        type: string
+      headline:
+        type: string
+      tagline:
+        type: string
+      websiteURL:
+        type: string
+      maxWorkspacesPerUser:
+        type: integer
+        format: int64
+      maxSessionsPerUser:
+        type: integer
+        format: int64
+      maxAppInstancesPerUser:
+        type: integer
+        format: int64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusUpdatePlatformSettingsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdatePlatformSettingsResult'
+  chorusUpdatePlatformSettingsRequest:
+    type: object
+    properties:
+      platformSettings:
+        $ref: '#/definitions/chorusPlatformSettings'
+  chorusUpdatePlatformSettingsResult:
+    type: object
+    properties:
+      platformSettings:
+        $ref: '#/definitions/chorusPlatformSettings'
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+    additionalProperties: {}
+  rpcStatus:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'

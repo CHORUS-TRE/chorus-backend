@@ -1,0 +1,69 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "platform-settings.proto";
+import "public_endpoint.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus platform settings service";
+        version: "1.0";
+        contact: {
+            name: "chorus platform settings service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message GetPlatformSettingsRequest {}
+message GetPlatformSettingsReply {
+    GetPlatformSettingsResult result = 1;
+}
+message GetPlatformSettingsResult {
+    PlatformSettings platformSettings = 1;
+}
+
+message UpdatePlatformSettingsRequest {
+    PlatformSettings platformSettings = 1;
+}
+message UpdatePlatformSettingsReply {
+    UpdatePlatformSettingsResult result = 1;
+}
+message UpdatePlatformSettingsResult {
+    PlatformSettings platformSettings = 1;
+}
+
+service PlatformSettingsService {
+    rpc GetPlatformSettings(GetPlatformSettingsRequest) returns (GetPlatformSettingsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/platform-settings"
+        };
+        option (public_endpoint) = true;
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get platform settings";
+            description: "Returns platform-wide settings including instance title, tagline, resource limits, and current terms of use version. Public endpoint.";
+            tags: "PlatformSettingsService";
+            security: {}
+        };
+    };
+
+    rpc UpdatePlatformSettings(UpdatePlatformSettingsRequest) returns (UpdatePlatformSettingsReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/platform-settings"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update platform settings";
+            description: "Updates platform-wide settings. Requires the PlatformSettingsManager role.";
+            tags: "PlatformSettingsService";
+        };
+    };
+}
