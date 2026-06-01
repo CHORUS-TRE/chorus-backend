@@ -8,47 +8,42 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
-	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 )
 
-var _ authorization_service.UserPermissionStore = (*UserPermissionStorage)(nil)
-
 type UserPermissionStorage struct {
-	db                       *sqlx.DB
-	rolesGrantingPermissions map[authorization_model.PermissionName][]authorization_model.RoleName
+	db *sqlx.DB
 }
 
-func NewUserPermissionStorage(db *sqlx.DB, rolesGrantingPermissions map[authorization_model.PermissionName][]authorization_model.RoleName) *UserPermissionStorage {
-	return &UserPermissionStorage{
-		db:                       db,
-		rolesGrantingPermissions: rolesGrantingPermissions,
-	}
+func NewUserPermissionStorage(db *sqlx.DB) *UserPermissionStorage {
+	return &UserPermissionStorage{db: db}
 }
 
-func (s *UserPermissionStorage) FindUsersWithPermission(ctx context.Context, tenantID uint64, filter authorization_model.FindUsersWithPermissionFilter) ([]uint64, error) {
-	rolesGranting, ok := s.rolesGrantingPermissions[filter.PermissionName]
-	if !ok || len(rolesGranting) == 0 {
+// FindUsersWithPermission returns user ids that hold the requested permission,
+// computed from the provided list of roles known to grant it.
+func (s *UserPermissionStorage) FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter, rolesGranting []model.RoleName) ([]uint64, error) {
+	if len(rolesGranting) == 0 {
 		return nil, fmt.Errorf("no roles grant permission %s", filter.PermissionName)
 	}
 
-	rolesToCheck := make([]string, len(rolesGranting))
-	for i, r := range rolesGranting {
-		rolesToCheck[i] = r.String()
-	}
+	var rolesToCheck []string
 	if len(filter.ViaRoles) > 0 {
-		rolesToCheck = make([]string, 0)
-		viaRolesSet := make(map[string]bool)
+		viaRolesSet := make(map[string]bool, len(filter.ViaRoles))
 		for _, r := range filter.ViaRoles {
 			viaRolesSet[string(r)] = true
 		}
-		for _, rg := range rolesGranting {
-			if viaRolesSet[rg.String()] {
-				rolesToCheck = append(rolesToCheck, rg.String())
+		for _, r := range rolesGranting {
+			if viaRolesSet[r.String()] {
+				rolesToCheck = append(rolesToCheck, r.String())
 			}
 		}
 		if len(rolesToCheck) == 0 {
 			return nil, nil
+		}
+	} else {
+		rolesToCheck = make([]string, 0, len(rolesGranting))
+		for _, r := range rolesGranting {
+			rolesToCheck = append(rolesToCheck, r.String())
 		}
 	}
 
@@ -86,7 +81,7 @@ WHERE u.tenantid = $1
 	return userIDs, nil
 }
 
-func (s *UserPermissionStorage) findUsersWithExactContext(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext authorization_model.Context) ([]uint64, error) {
+func (s *UserPermissionStorage) findUsersWithExactContext(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext model.Context) ([]uint64, error) {
 	args := []interface{}{tenantID, pq.Array(rolesToCheck)}
 
 	conditions := make([]string, 0, len(filterContext))
@@ -116,7 +111,7 @@ WHERE u.tenantid = $1
 	return userIDs, nil
 }
 
-func (s *UserPermissionStorage) findUsersWithContextMatch(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext authorization_model.Context) ([]uint64, error) {
+func (s *UserPermissionStorage) findUsersWithContextMatch(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext model.Context) ([]uint64, error) {
 	args := []interface{}{tenantID, pq.Array(rolesToCheck)}
 
 	conditions := make([]string, 0, len(filterContext))

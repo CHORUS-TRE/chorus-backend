@@ -7,6 +7,11 @@ const (
 	AuditActionUserLogin  AuditAction = "LoginUser"
 	AuditActionUserLogout AuditAction = "LogoutUser"
 
+	// Authorization
+	AuditActionRoleList       AuditAction = "ListRoles"
+	AuditActionPermissionList AuditAction = "ListPermissions"
+	AuditActionRoleCreate     AuditAction = "CreateRole"
+
 	// User CRUD
 	AuditActionUserCreate         AuditAction = "CreateUser"
 	AuditActionUserRead           AuditAction = "ReadUser"

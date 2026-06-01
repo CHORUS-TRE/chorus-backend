@@ -30,6 +30,7 @@ var TruncateTablesBlacklist = map[string]struct{}{
 	"chorus_migrations":                  {},
 	"role_definitions":                   {},
 	"role_definitions_required_contexts": {},
+	"role_definition_permissions":        {},
 }
 
 const (
