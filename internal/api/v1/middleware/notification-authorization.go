@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	jwt "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
@@ -30,7 +31,7 @@ func NotificationAuthorizing(logger *logger.ContextLogger, authorizer authorizat
 }
 
 func (c notificationControllerAuthorization) CountUnreadNotifications(ctx context.Context, empty *empty.Empty) (*chorus.CountUnreadNotificationsReply, error) {
-	userID, err := c.getUserID(ctx)
+	userID, err := jwt.ExtractUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,7 @@ func (c notificationControllerAuthorization) CountUnreadNotifications(ctx contex
 	return c.next.CountUnreadNotifications(ctx, empty)
 }
 func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context.Context, req *chorus.MarkNotificationsAsReadRequest) (*empty.Empty, error) {
-	userID, err := c.getUserID(ctx)
+	userID, err := jwt.ExtractUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context
 	return c.next.MarkNotificationsAsRead(ctx, req)
 }
 func (c notificationControllerAuthorization) GetNotifications(ctx context.Context, req *chorus.GetNotificationsRequest) (*chorus.GetNotificationsReply, error) {
-	userID, err := c.getUserID(ctx)
+	userID, err := jwt.ExtractUserID(ctx)
 	if err != nil {
 		return nil, err
 	}

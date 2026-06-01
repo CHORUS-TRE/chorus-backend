@@ -20,7 +20,7 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 	roles := make([]*chorus.Role, len(user.Roles))
 	rs := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
-		role := RoleFromBusiness(r)
+		role := UserRoleFromBusiness(r)
 		roles[i] = &role
 		rs[i] = role.Name
 	}
@@ -44,7 +44,7 @@ func UserFromBusiness(user *model.User) (*chorus.User, error) {
 	}, nil
 }
 
-func RoleFromBusiness(role model.UserRole) chorus.Role {
+func UserRoleFromBusiness(role model.UserRole) chorus.Role {
 	c := make(map[string]string, len(role.Context))
 	for k, v := range role.Context {
 		c[k.String()] = v

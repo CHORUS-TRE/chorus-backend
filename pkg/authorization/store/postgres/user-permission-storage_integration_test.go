@@ -13,6 +13,10 @@ import (
 	integration "github.com/CHORUS-TRE/chorus-backend/tests/integration/postgres"
 )
 
+func findUsers(ctx context.Context, store *UserPermissionStorage, tenantID uint64, filter authorization_model.FindUsersWithPermissionFilter) ([]uint64, error) {
+	return store.FindUsersWithPermission(ctx, tenantID, filter, testRolesGrantingPermissions()[filter.PermissionName])
+}
+
 func testRolesGrantingPermissions() map[authorization_model.PermissionName][]authorization_model.RoleName {
 	return map[authorization_model.PermissionName][]authorization_model.RoleName{
 		authorization_model.PermissionListWorkspaces: {
@@ -131,9 +135,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_NoRolesGrant(t *testing.T
 	fixtures := setupTestFixtures(t, db)
 	assignRole(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["Authenticated"])
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionDeleteApp,
 	})
 	require.Error(t, err)
@@ -154,9 +158,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_NoContext(t *testing.T) {
 	assignRole(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["Authenticated"])
 	assignRole(t, db, &fixtures, fixtures.userIDs["inactive_user"], fixtures.roleIDs["Authenticated"])
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionCreateWorkspace,
 	})
 	require.NoError(t, err)
@@ -176,9 +180,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_WithContext(t *testing.T)
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["WorkspaceMember"], "workspace", "100")
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["charlie"], fixtures.roleIDs["WorkspaceMember"], "workspace", "200")
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "100",
@@ -200,9 +204,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_WithWildcardContext(t *te
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "*")
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["WorkspaceMember"], "workspace", "100")
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "999",
@@ -225,9 +229,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_ViaRolesFilter(t *testing
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "100")
 	assignRole(t, db, &fixtures, fixtures.userIDs["charlie"], fixtures.roleIDs["SuperAdmin"])
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionApproveRequest,
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "100",
@@ -250,9 +254,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_PreferExactContextMatch(t
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "100")
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "*")
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "100",
@@ -274,9 +278,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_PreferExactContextMatch_F
 
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "*")
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "999",
@@ -298,9 +302,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_NoMatchingViaRoles(t *tes
 
 	assignRoleWithContext(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["WorkspaceAdmin"], "workspace", "100")
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionApproveRequest,
 		Context: authorization_model.Context{
 			authorization_model.RoleContextWorkspace: "100",
@@ -332,15 +336,15 @@ func TestUserPermissionStorage_FindUsersWithPermission_MultiTenant(t *testing.T)
 	assignRole(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["Authenticated"])
 	assignRole(t, db, &fixtures, testUserOtherID, fixtures.roleIDs["Authenticated"])
 
-	store := NewUserPermissionStorage(db, testRolesGrantingPermissions())
+	store := NewUserPermissionStorage(db)
 
-	userIDs, err := store.FindUsersWithPermission(context.Background(), fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionCreateWorkspace,
 	})
 	require.NoError(t, err)
 	require.ElementsMatch(t, []uint64{fixtures.userIDs["alice"]}, userIDs)
 
-	userIDs2, err := store.FindUsersWithPermission(context.Background(), testTenant2ID, authorization_model.FindUsersWithPermissionFilter{
+	userIDs2, err := findUsers(context.Background(), store, testTenant2ID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionCreateWorkspace,
 	})
 	require.NoError(t, err)

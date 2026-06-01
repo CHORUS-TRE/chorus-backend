@@ -49,6 +49,27 @@ paths:
       tags:
         - AuthorizationService
       security: []
+    post:
+      summary: Create dynamic role
+      description: This endpoint creates a platform-scoped or workspace-scoped dynamic role
+      operationId: AuthorizationService_CreateDynamicRole
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateDynamicRoleReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateDynamicRoleRequest'
+      tags:
+        - AuthorizationService
 definitions:
   chorusAuthorizationPermission:
     type: object
@@ -72,6 +93,33 @@ definitions:
         type: array
         items:
           type: string
+      permissions:
+        type: array
+        items:
+          type: string
+      scope:
+        type: string
+      dynamic:
+        type: boolean
+  chorusCreateDynamicRoleReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateDynamicRoleResult'
+  chorusCreateDynamicRoleRequest:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusAuthorizationRole'
+      validationContext:
+        type: object
+        additionalProperties:
+          type: string
+  chorusCreateDynamicRoleResult:
+    type: object
+    properties:
+      role:
+        $ref: '#/definitions/chorusAuthorizationRole'
   chorusListPermissionsReply:
     type: object
     properties:
