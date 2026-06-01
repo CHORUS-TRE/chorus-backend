@@ -29,8 +29,14 @@ type ChorusApprovalRequest struct {
 	// approved by Id
 	ApprovedByID string `json:"approvedById,omitempty"`
 
-	// approver ids
-	ApproverIds []string `json:"approverIds"`
+	// approverIdsByArm lists the user ids allowed to approve each arm of the
+	// request, keyed by arm name (e.g. "download", "upload"). A user that
+	// appears in every arm can approve the whole request in one step;
+	// otherwise each arm must be approved separately.
+	ApproverIdsByArm map[string]ChorusApproverIds `json:"approverIdsByArm,omitempty"`
+
+	// armApprovals records the per-arm approval decisions made so far.
+	ArmApprovals map[string]ChorusArmApproval `json:"armApprovals,omitempty"`
 
 	// auto approved
 	AutoApproved bool `json:"autoApproved,omitempty"`
@@ -79,6 +85,14 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateApproverIdsByArm(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateArmApprovals(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateCreatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -116,6 +130,58 @@ func (m *ChorusApprovalRequest) validateApprovedAt(formats strfmt.Registry) erro
 
 	if err := validate.FormatOf("approvedAt", "body", "date-time", m.ApprovedAt.String(), formats); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *ChorusApprovalRequest) validateApproverIdsByArm(formats strfmt.Registry) error {
+	if swag.IsZero(m.ApproverIdsByArm) { // not required
+		return nil
+	}
+
+	for k := range m.ApproverIdsByArm {
+
+		if err := validate.Required("approverIdsByArm"+"."+k, "body", m.ApproverIdsByArm[k]); err != nil {
+			return err
+		}
+		if val, ok := m.ApproverIdsByArm[k]; ok {
+			if err := val.Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("approverIdsByArm" + "." + k)
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("approverIdsByArm" + "." + k)
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *ChorusApprovalRequest) validateArmApprovals(formats strfmt.Registry) error {
+	if swag.IsZero(m.ArmApprovals) { // not required
+		return nil
+	}
+
+	for k := range m.ArmApprovals {
+
+		if err := validate.Required("armApprovals"+"."+k, "body", m.ArmApprovals[k]); err != nil {
+			return err
+		}
+		if val, ok := m.ArmApprovals[k]; ok {
+			if err := val.Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("armApprovals" + "." + k)
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("armApprovals" + "." + k)
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -225,6 +291,14 @@ func (m *ChorusApprovalRequest) validateUpdatedAt(formats strfmt.Registry) error
 func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateApproverIdsByArm(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateArmApprovals(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateDataExtraction(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -244,6 +318,36 @@ func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats str
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusApprovalRequest) contextValidateApproverIdsByArm(ctx context.Context, formats strfmt.Registry) error {
+
+	for k := range m.ApproverIdsByArm {
+
+		if val, ok := m.ApproverIdsByArm[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *ChorusApprovalRequest) contextValidateArmApprovals(ctx context.Context, formats strfmt.Registry) error {
+
+	for k := range m.ArmApprovals {
+
+		if val, ok := m.ArmApprovals[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 

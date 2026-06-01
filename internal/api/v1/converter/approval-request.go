@@ -27,19 +27,20 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 	}
 
 	protoRequest := &chorus.ApprovalRequest{
-		Id:              request.ID,
-		TenantId:        request.TenantID,
-		RequesterId:     request.RequesterID,
-		Type:            ApprovalRequestTypeFromBusiness(request.Type),
-		Status:          ApprovalRequestStatusFromBusiness(request.Status),
-		Title:           request.Title,
-		Description:     request.Description,
-		ApproverIds:     request.ApproverIDs,
-		CreatedAt:       ca,
-		UpdatedAt:       ua,
-		ApprovedAt:      aa,
-		AutoApproved:    request.AutoApproved,
-		ApprovalMessage: request.ApprovalMessage,
+		Id:               request.ID,
+		TenantId:         request.TenantID,
+		RequesterId:      request.RequesterID,
+		Type:             ApprovalRequestTypeFromBusiness(request.Type),
+		Status:           ApprovalRequestStatusFromBusiness(request.Status),
+		Title:            request.Title,
+		Description:      request.Description,
+		ApproverIdsByArm: ApproverIDsByArmFromBusiness(request.ApproverIDs),
+		ArmApprovals:     ArmApprovalsFromBusiness(request.ArmApprovals),
+		CreatedAt:        ca,
+		UpdatedAt:        ua,
+		ApprovedAt:       aa,
+		AutoApproved:     request.AutoApproved,
+		ApprovalMessage:  request.ApprovalMessage,
 	}
 
 	if request.ApprovedByID != nil {
@@ -130,7 +131,8 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 		Status:       ApprovalRequestStatusToBusiness(request.Status),
 		Title:        request.Title,
 		Description:  request.Description,
-		ApproverIDs:  request.ApproverIds,
+		ApproverIDs:  ApproverIDsByArmToBusiness(request.ApproverIdsByArm),
+		ArmApprovals: ArmApprovalsToBusiness(request.ArmApprovals),
 		ApprovedByID: request.ApprovedById,
 		CreatedAt:    ca,
 		UpdatedAt:    ua,
@@ -212,4 +214,75 @@ func ApprovalRequestStatusToBusiness(s chorus.ApprovalRequestStatus) model.Appro
 	default:
 		return model.ApprovalRequestStatusUnspecified
 	}
+}
+
+func ApproverIDsByArmFromBusiness(m map[string][]uint64) map[string]*chorus.ApproverIds {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]*chorus.ApproverIds, len(m))
+	for arm, ids := range m {
+		copied := make([]uint64, len(ids))
+		copy(copied, ids)
+		out[arm] = &chorus.ApproverIds{Ids: copied}
+	}
+	return out
+}
+
+func ApproverIDsByArmToBusiness(m map[string]*chorus.ApproverIds) map[string][]uint64 {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string][]uint64, len(m))
+	for arm, ids := range m {
+		if ids == nil {
+			out[arm] = nil
+			continue
+		}
+		copied := make([]uint64, len(ids.Ids))
+		copy(copied, ids.Ids)
+		out[arm] = copied
+	}
+	return out
+}
+
+func ArmApprovalsFromBusiness(m map[string]model.ArmApproval) map[string]*chorus.ArmApproval {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]*chorus.ArmApproval, len(m))
+	for arm, a := range m {
+		ts, err := ToProtoTimestamp(a.ApprovedAt)
+		if err != nil {
+			ts = nil
+		}
+		out[arm] = &chorus.ArmApproval{
+			ApproverId: a.ApproverID,
+			ApprovedAt: ts,
+			Approve:    a.Approve,
+		}
+	}
+	return out
+}
+
+func ArmApprovalsToBusiness(m map[string]*chorus.ArmApproval) map[string]model.ArmApproval {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]model.ArmApproval, len(m))
+	for arm, a := range m {
+		if a == nil {
+			continue
+		}
+		ts, err := FromProtoTimestamp(a.ApprovedAt)
+		if err != nil {
+			continue
+		}
+		out[arm] = model.ArmApproval{
+			ApproverID: a.ApproverId,
+			ApprovedAt: ts,
+			Approve:    a.Approve,
+		}
+	}
+	return out
 }

@@ -295,11 +295,15 @@ definitions:
         $ref: '#/definitions/chorusDataExtractionDetails'
       dataTransfer:
         $ref: '#/definitions/chorusDataTransferDetails'
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
+      approverIdsByArm:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusApproverIds'
+        description: |-
+          approverIdsByArm lists the user ids allowed to approve each arm of the
+          request, keyed by arm name (e.g. "download", "upload"). A user that
+          appears in every arm can approve the whole request in one step;
+          otherwise each arm must be approved separately.
       approvedById:
         type: string
         format: uint64
@@ -316,6 +320,11 @@ definitions:
         type: boolean
       approvalMessage:
         type: string
+      armApprovals:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusArmApproval'
+        description: armApprovals records the per-arm approval decisions made so far.
   chorusApprovalRequestFile:
     type: object
     properties:
@@ -374,6 +383,29 @@ definitions:
     properties:
       approvalRequest:
         $ref: '#/definitions/chorusApprovalRequest'
+  chorusApproverIds:
+    type: object
+    properties:
+      ids:
+        type: array
+        items:
+          type: string
+          format: uint64
+    description: |-
+      ApproverIds wraps a repeated list of user ids so it can be used as the
+      value type of a proto3 map (which does not allow `repeated` values).
+  chorusArmApproval:
+    type: object
+    properties:
+      approverId:
+        type: string
+        format: uint64
+      approvedAt:
+        type: string
+        format: date-time
+      approve:
+        type: boolean
+    description: ArmApproval records a single per-arm approval decision.
   chorusCountMyApprovalRequestsReply:
     type: object
     properties:

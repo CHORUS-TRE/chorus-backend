@@ -115,7 +115,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		return nil, fmt.Errorf("invalid details type for data extraction request")
 	}
 
-	approvers, canAutoApprove, err := s.findApproversForDataExtractionRequest(ctx, request.TenantID, request.RequesterID, details.SourceWorkspaceID)
+	approversByArm, canAutoApprove, err := s.findApproversForDataExtractionRequest(ctx, request.TenantID, request.RequesterID, details.SourceWorkspaceID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to find approvers: %w", err)
 	}
@@ -129,7 +129,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		request.ApprovedAt = &now
 	} else {
 		request.Status = model.ApprovalRequestStatusPending
-		request.ApproverIDs = approvers
+		request.ApproverIDs = approversByArm
 	}
 
 	createdRequest, err := s.store.CreateApprovalRequest(ctx, request.TenantID, request)
@@ -156,7 +156,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		return nil, fmt.Errorf("unable to update request with files: %w", err)
 	}
 
-	for _, approverID := range approvers {
+	for _, approverID := range uniqueApproverIDs(approversByArm) {
 		err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 			TenantID: request.TenantID,
 			UserID:   approverID,
@@ -177,7 +177,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 	return updatedRequest, nil
 }
 
-func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx context.Context, tenantID, requesterID, workspaceID uint64) ([]uint64, bool, error) {
+func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx context.Context, tenantID, requesterID, workspaceID uint64) (map[string][]uint64, bool, error) {
 	workspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(workspaceID))
 
 	filter := authorization_model.FindUsersWithPermissionFilter{
@@ -195,14 +195,6 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 		return nil, false, fmt.Errorf("unable to find approvers: %w", err)
 	}
 
-	requesterCanApprove := false
-	for _, approverID := range approvers {
-		if approverID == requesterID {
-			requesterCanApprove = true
-			break
-		}
-	}
-
 	if len(approvers) == 0 {
 		if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
 			return nil, false, fmt.Errorf("no workspace data manager found for this workspace; please assign a data manager before creating approval requests")
@@ -210,7 +202,11 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 		return nil, false, fmt.Errorf("no users with approval permission found for this workspace")
 	}
 
-	return approvers, requesterCanApprove, nil
+	requesterCanApprove := containsID(approvers, requesterID)
+
+	return map[string][]uint64{
+		model.ApprovalRequestArmDownload: approvers,
+	}, requesterCanApprove, nil
 }
 
 // CreateDataTransferRequest creates an approval request to transfer files between workspaces.
@@ -235,7 +231,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		return nil, fmt.Errorf("destination workspace ID is required for data transfer requests")
 	}
 
-	approvers, canAutoApprove, err := s.findApproversForDataTransferRequest(ctx, request.TenantID, request.RequesterID, details.SourceWorkspaceID, details.DestinationWorkspaceID)
+	approversByArm, canAutoApprove, err := s.findApproversForDataTransferRequest(ctx, request.TenantID, request.RequesterID, details.SourceWorkspaceID, details.DestinationWorkspaceID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to find approvers: %w", err)
 	}
@@ -249,7 +245,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		request.ApprovedAt = &now
 	} else {
 		request.Status = model.ApprovalRequestStatusPending
-		request.ApproverIDs = approvers
+		request.ApproverIDs = approversByArm
 	}
 
 	createdRequest, err := s.store.CreateApprovalRequest(ctx, request.TenantID, request)
@@ -282,7 +278,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		}
 	}
 
-	for _, approverID := range approvers {
+	for _, approverID := range uniqueApproverIDs(approversByArm) {
 		err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 			TenantID: request.TenantID,
 			UserID:   approverID,
@@ -303,7 +299,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 	return updatedRequest, nil
 }
 
-func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context.Context, tenantID, requesterID, sourceWorkspaceID, targetWorkspaceID uint64) ([]uint64, bool, error) {
+func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context.Context, tenantID, requesterID, sourceWorkspaceID, targetWorkspaceID uint64) (map[string][]uint64, bool, error) {
 	downloadWorkspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(sourceWorkspaceID))
 	uploadWorkspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(targetWorkspaceID))
 
@@ -331,41 +327,49 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 		return nil, false, fmt.Errorf("unable to find approvers: %w", err)
 	}
 
-	requesterCanDownloadApprove := false
-	for _, approverID := range downloadApprovers {
-		if approverID == requesterID {
-			requesterCanDownloadApprove = true
-			break
+	if len(downloadApprovers) == 0 {
+		if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
+			return nil, false, fmt.Errorf("no workspace data manager found for the source workspace; please assign a data manager before creating approval requests")
 		}
+		return nil, false, fmt.Errorf("no users with download approval permission found for the source workspace")
 	}
-	requesterCanUploadApprove := false
-	for _, approverID := range uploadApprovers {
-		if approverID == requesterID {
-			requesterCanUploadApprove = true
-			break
-		}
-	}
-	requesterCanApprove := requesterCanDownloadApprove && requesterCanUploadApprove
-
-	approvers := make([]uint64, 0)
-	downloadApproversMap := make(map[uint64]struct{})
-	for _, approverID := range downloadApprovers {
-		downloadApproversMap[approverID] = struct{}{}
-	}
-	for _, approverID := range uploadApprovers {
-		if _, ok := downloadApproversMap[approverID]; ok {
-			approvers = append(approvers, approverID)
-		}
+	if len(uploadApprovers) == 0 {
+		return nil, false, fmt.Errorf("no users with upload approval permission found for the destination workspace")
 	}
 
-	if len(approvers) == 0 {
-		if len(downloadApprovers) == 0 && s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-			return nil, false, fmt.Errorf("no workspace data manager found for this workspace; please assign a data manager before creating approval requests")
-		}
-		return nil, false, fmt.Errorf("no users with approval permission found for this workspace")
-	}
+	// The requester may self-approve only if they are authorized for every arm.
+	requesterCanApprove := containsID(downloadApprovers, requesterID) && containsID(uploadApprovers, requesterID)
 
-	return approvers, requesterCanApprove, nil
+	return map[string][]uint64{
+		model.ApprovalRequestArmDownload: downloadApprovers,
+		model.ApprovalRequestArmUpload:   uploadApprovers,
+	}, requesterCanApprove, nil
+}
+
+// containsID reports whether ids contains target.
+func containsID(ids []uint64, target uint64) bool {
+	for _, id := range ids {
+		if id == target {
+			return true
+		}
+	}
+	return false
+}
+
+// uniqueApproverIDs returns the deduplicated union of approver ids across all arms.
+func uniqueApproverIDs(approversByArm map[string][]uint64) []uint64 {
+	seen := make(map[uint64]struct{})
+	var ids []uint64
+	for _, approvers := range approversByArm {
+		for _, id := range approvers {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
 
 func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64, approve bool) (*model.ApprovalRequest, error) {
@@ -378,39 +382,72 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 		return nil, fmt.Errorf("request is not pending approval")
 	}
 
-	if approve {
-		request.Status = model.ApprovalRequestStatusApproved
-	} else {
-		request.Status = model.ApprovalRequestStatusRejected
+	// Determine which arms this user is entitled to decide on (and that have
+	// not already been decided). If empty, the user cannot act on this request.
+	armsToDecide := request.ArmsToApprove(userID)
+	if len(armsToDecide) == 0 {
+		return nil, fmt.Errorf("user is not authorized to approve any pending arm of this request")
 	}
-	request.ApprovedByID = &userID
+
+	if request.ArmApprovals == nil {
+		request.ArmApprovals = make(map[string]model.ArmApproval)
+	}
 	now := time.Now()
-	request.ApprovedAt = &now
+	for _, arm := range armsToDecide {
+		request.ArmApprovals[arm] = model.ArmApproval{
+			ApproverID: userID,
+			ApprovedAt: now,
+			Approve:    approve,
+		}
+		if !approve {
+			// A single rejection rejects the whole request; record only that arm.
+			break
+		}
+	}
+
+	// Compute the resulting request status.
+	switch {
+	case !approve:
+		request.Status = model.ApprovalRequestStatusRejected
+		request.ApprovedByID = &userID
+		request.ApprovedAt = &now
+	case request.IsFullyApproved():
+		request.Status = model.ApprovalRequestStatusApproved
+		request.ApprovedByID = &userID
+		request.ApprovedAt = &now
+	default:
+		// Still waiting on other arms; stay pending.
+		request.Status = model.ApprovalRequestStatusPending
+	}
 
 	updatedRequest, err := s.store.UpdateApprovalRequest(ctx, tenantID, request)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update request: %w", err)
 	}
 
-	if approve {
+	if updatedRequest.Status == model.ApprovalRequestStatusApproved {
 		if err := s.executeApprovedRequest(ctx, updatedRequest); err != nil {
 			return nil, fmt.Errorf("unable to execute approved request: %w", err)
 		}
 	}
 
-	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
-		TenantID: request.TenantID,
-		UserID:   request.RequesterID,
-		Message:  fmt.Sprintf("Approval request '%s' has been %s.", request.Title, map[bool]string{true: "approved", false: "rejected"}[approve]),
-		Content: notification_model.NotificationContent{
-			Type: "ApprovalRequestNotification",
-			ApprovalRequest: &notification_model.ApprovalRequestNotification{
-				ApprovalRequestID: updatedRequest.ID,
+	// Only notify the requester once the request reaches a terminal state.
+	if updatedRequest.IsFinalState() {
+		notifyMessage := fmt.Sprintf("Approval request '%s' has been %s.", request.Title, map[bool]string{true: "approved", false: "rejected"}[approve])
+		err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+			TenantID: request.TenantID,
+			UserID:   request.RequesterID,
+			Message:  notifyMessage,
+			Content: notification_model.NotificationContent{
+				Type: "ApprovalRequestNotification",
+				ApprovalRequest: &notification_model.ApprovalRequestNotification{
+					ApprovalRequestID: updatedRequest.ID,
+				},
 			},
-		},
-	}, []uint64{request.RequesterID})
-	if err != nil {
-		logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", request.RequesterID))
+		}, []uint64{request.RequesterID})
+		if err != nil {
+			logger.TechLog.Error(ctx, "Unable to create notification", zap.Uint64("tenant_id", request.TenantID), zap.Uint64("request_id", request.ID), zap.Uint64("user_id", request.RequesterID))
+		}
 	}
 
 	return updatedRequest, nil
