@@ -18,6 +18,7 @@ tags:
   - name: NotificationService
   - name: PlatformSettingsService
   - name: StewardService
+  - name: TermsOfUseService
   - name: UserService
   - name: WorkbenchService
   - name: WorkspaceFileService
@@ -2636,6 +2637,382 @@ paths:
             $ref: '#/definitions/chorusInitializeTenantRequest'
       tags:
         - StewardService
+  /api/rest/v1/terms-of-use/acceptances:
+    get:
+      summary: List terms of use acceptances
+      description: Returns the acceptance history for the current user.
+      operationId: TermsOfUseService_ListTermsOfUseAcceptances
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListTermsOfUseAcceptancesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - TermsOfUseService
+    post:
+      summary: Accept the current terms of use
+      description: Records the authenticated user's acceptance of the currently published terms of use version.
+      operationId: TermsOfUseService_AcceptTermsOfUse
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAcceptTermsOfUseReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusAcceptTermsOfUseRequest'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/acceptances/status:
+    get:
+      summary: Get my terms of use status
+      description: Returns whether the authenticated user has accepted the currently published terms of use version.
+      operationId: TermsOfUseService_GetMyTermsOfUseStatus
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetMyTermsOfUseStatusReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions:
+    get:
+      summary: List terms of use versions
+      description: Returns all terms of use versions for the tenant.
+      operationId: TermsOfUseService_ListTermsOfUseVersions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListTermsOfUseVersionsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - TermsOfUseService
+    post:
+      summary: Create a terms of use version
+      description: Creates a new terms of use version in draft status.
+      operationId: TermsOfUseService_CreateTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateTermsOfUseVersionReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateTermsOfUseVersionRequest'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions/current:
+    get:
+      summary: Get the current terms of use version
+      description: Returns the currently published terms of use version.
+      operationId: TermsOfUseService_GetCurrentTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetCurrentTermsOfUseVersionReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions/{id}:
+    get:
+      summary: Get a terms of use version
+      description: Returns a specific terms of use version by ID. Public endpoint.
+      operationId: TermsOfUseService_GetTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetTermsOfUseVersionReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - TermsOfUseService
+      security: []
+    put:
+      summary: Update a terms of use version
+      description: Updates the content of a draft terms of use version. Published versions cannot be edited.
+      operationId: TermsOfUseService_UpdateTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateTermsOfUseVersionReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TermsOfUseServiceUpdateTermsOfUseVersionBody'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions/{id}/publish:
+    post:
+      summary: Publish a terms of use version
+      description: Publishes a draft version, archiving any previously published version and updating platform settings.
+      operationId: TermsOfUseService_PublishTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPublishTermsOfUseVersionReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TermsOfUseServicePublishTermsOfUseVersionBody'
+      tags:
+        - TermsOfUseService
   /api/rest/v1/users:
     get:
       summary: List users
@@ -4951,6 +5328,13 @@ definitions:
         type: string
       value:
         type: string
+  TermsOfUseServicePublishTermsOfUseVersionBody:
+    type: object
+  TermsOfUseServiceUpdateTermsOfUseVersionBody:
+    type: object
+    properties:
+      content:
+        type: string
   UserServiceCreateUserRoleBody:
     type: object
     properties:
@@ -4976,6 +5360,18 @@ definitions:
         $ref: '#/definitions/chorusAbortWorkspaceFileUploadResult'
   chorusAbortWorkspaceFileUploadResult:
     type: object
+  chorusAcceptTermsOfUseReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAcceptTermsOfUseResult'
+  chorusAcceptTermsOfUseRequest:
+    type: object
+  chorusAcceptTermsOfUseResult:
+    type: object
+    properties:
+      termsOfUseAcceptance:
+        $ref: '#/definitions/chorusTermsOfUseAcceptance'
   chorusApp:
     type: object
     properties:
@@ -5504,6 +5900,21 @@ definitions:
     properties:
       role:
         $ref: '#/definitions/chorusAuthorizationRole'
+  chorusCreateTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateTermsOfUseVersionResult'
+  chorusCreateTermsOfUseVersionRequest:
+    type: object
+    properties:
+      content:
+        type: string
+  chorusCreateTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
   chorusCreateUserReply:
     type: object
     properties:
@@ -5750,6 +6161,16 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusAuthenticationMode'
+  chorusGetCurrentTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetCurrentTermsOfUseVersionResult'
+  chorusGetCurrentTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
   chorusGetEntryReply:
     type: object
     properties:
@@ -5764,6 +6185,16 @@ definitions:
         type: string
   chorusGetHealthCheckReply:
     type: object
+  chorusGetMyTermsOfUseStatusReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetMyTermsOfUseStatusResult'
+  chorusGetMyTermsOfUseStatusResult:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/chorusTermsOfUseUserStatus'
   chorusGetNotificationsReply:
     type: object
     properties:
@@ -5785,6 +6216,16 @@ definitions:
     properties:
       platformSettings:
         $ref: '#/definitions/chorusPlatformSettings'
+  chorusGetTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetTermsOfUseVersionResult'
+  chorusGetTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
   chorusGetUserMeReply:
     type: object
     properties:
@@ -5970,6 +6411,34 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusAuthorizationRole'
+  chorusListTermsOfUseAcceptancesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListTermsOfUseAcceptancesResult'
+  chorusListTermsOfUseAcceptancesResult:
+    type: object
+    properties:
+      termsOfUseAcceptances:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusTermsOfUseAcceptance'
+  chorusListTermsOfUseVersionsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListTermsOfUseVersionsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListTermsOfUseVersionsResult:
+    type: object
+    properties:
+      termsOfUseVersions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusTermsOfUseVersion'
   chorusListUsersReply:
     type: object
     properties:
@@ -6197,6 +6666,16 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+  chorusPublishTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusPublishTermsOfUseVersionResult'
+  chorusPublishTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
   chorusPutEntryReply:
     type: object
     properties:
@@ -6309,6 +6788,55 @@ definitions:
     properties:
       refreshJWTRequired:
         type: boolean
+  chorusTermsOfUseAcceptance:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      termsOfUseVersionId:
+        type: string
+        format: uint64
+      acceptedAt:
+        type: string
+        format: date-time
+  chorusTermsOfUseUserStatus:
+    type: object
+    properties:
+      accepted:
+        type: boolean
+  chorusTermsOfUseVersion:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      content:
+        type: string
+      status:
+        $ref: '#/definitions/chorusTermsOfUseVersionStatus'
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusTermsOfUseVersionStatus:
+    type: string
+    enum:
+      - TERMS_OF_USE_VERSION_STATUS_DRAFT
+      - TERMS_OF_USE_VERSION_STATUS_PUBLISHED
+      - TERMS_OF_USE_VERSION_STATUS_ARCHIVED
+    default: TERMS_OF_USE_VERSION_STATUS_DRAFT
   chorusUpdateAppInstanceReply:
     type: object
     properties:
@@ -6358,6 +6886,16 @@ definitions:
     properties:
       platformSettings:
         $ref: '#/definitions/chorusPlatformSettings'
+  chorusUpdateTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateTermsOfUseVersionResult'
+  chorusUpdateTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
   chorusUpdateUserReply:
     type: object
     properties:
