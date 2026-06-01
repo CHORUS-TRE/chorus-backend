@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 )
@@ -96,6 +97,7 @@ const (
 	PermissionGetPlatformSettings PermissionName = "getPlatformSettings"
 	PermissionSetPlatformSettings PermissionName = "setPlatformSettings"
 	PermissionAuditPlatform       PermissionName = "auditPlatform"
+	PermissionManageDynamicRoles  PermissionName = "manageDynamicRoles"
 
 	PermissionListRequests   PermissionName = "listRequests"
 	PermissionListMyRequests PermissionName = "listMyRequests"
@@ -245,6 +247,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionSetPlatformSettings, nil
 	case string(PermissionAuditPlatform):
 		return PermissionAuditPlatform, nil
+	case string(PermissionManageDynamicRoles):
+		return PermissionManageDynamicRoles, nil
 
 	case string(PermissionListRequests):
 		return PermissionListRequests, nil
@@ -430,7 +434,15 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleSuperAdmin, nil
 	}
 
-	return "", fmt.Errorf("unknown role type: %s", r)
+	if strings.TrimSpace(r) == "" {
+		return "", fmt.Errorf("empty role type")
+	}
+
+	return RoleName(r), nil
+}
+
+func IsSystemRole(role RoleName) bool {
+	return RoleIn(role, GetAllRoles())
 }
 
 func GetAllRoles() []RoleName {

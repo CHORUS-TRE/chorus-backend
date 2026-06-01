@@ -6,6 +6,9 @@ message AuthorizationRole {
     string name = 1;
     string description = 2;
     repeated string context = 3;
+    repeated string permissions = 4;
+    string scope = 5;
+    bool dynamic = 6;
 }
 
 message AuthorizationPermission {

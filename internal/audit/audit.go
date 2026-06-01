@@ -129,6 +129,14 @@ func WithDetail(key string, value any) Option {
 	}
 }
 
+func WithOptions(opts ...Option) Option {
+	return func(entry *model.AuditEntry) {
+		for _, opt := range opts {
+			opt(entry)
+		}
+	}
+}
+
 // WithError sets error message and gRPC status code from an error
 func WithError(err error) Option {
 	return func(entry *model.AuditEntry) {

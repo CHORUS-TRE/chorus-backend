@@ -135,7 +135,7 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 		return nil, fmt.Errorf("invalid role name: %w", err)
 	}
 
-	if !authorization.RoleIn(roleName, authorization.GetWorkspaceRoles()) {
+	if !c.IsRoleInScope(roleName, authorization.RoleScopeWorkspace) {
 		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
 	}
 
@@ -151,6 +151,14 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 		}
 	}
 
+	assignmentContext := authorization.Context{
+		authorization.RoleContextWorkspace: fmt.Sprintf("%d", req.Id),
+		authorization.RoleContextUser:      fmt.Sprintf("%d", req.UserId),
+	}
+	if err := c.CanAssignRole(ctx, roleName, assignmentContext); err != nil {
+		return nil, err
+	}
+
 	return c.next.ManageUserRoleInWorkspace(ctx, req)
 }
 
@@ -160,7 +168,7 @@ func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.
 		return nil, fmt.Errorf("invalid role name: %w", err)
 	}
 
-	if !authorization.RoleIn(roleName, authorization.GetWorkspaceRoles()) {
+	if !c.IsRoleInScope(roleName, authorization.RoleScopeWorkspace) {
 		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
 	}
 

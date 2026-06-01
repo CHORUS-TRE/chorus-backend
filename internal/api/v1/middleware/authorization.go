@@ -56,16 +56,6 @@ func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authorization.R
 	return aRoles, claims, nil
 }
 
-func (c Authorization) getUserID(ctx context.Context) (uint64, error) {
-	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
-	if !ok {
-		c.logger.Warn(ctx, "malformed JWT token")
-		return 0, chorus_errors.ErrUnauthenticated.WithMessage("malformed jwt-token")
-	}
-
-	return claims.ID, nil
-}
-
 func (c Authorization) IsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) error {
 	permission := authorization.NewPermission(permissionName, opts...)
 
@@ -114,6 +104,28 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 	}
 
 	return contextList, nil
+}
+
+func (c Authorization) IsRoleInScope(roleName authorization.RoleName, scopes ...authorization.RoleScope) bool {
+	return c.authorizer.IsRoleInScope(roleName, scopes...)
+}
+
+func (c Authorization) CanAssignRole(ctx context.Context, roleName authorization.RoleName, assignmentContext authorization.Context) error {
+	aRoles, _, err := c.getRolesAndClaims(ctx)
+	if err != nil {
+		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
+		return chorus_errors.ErrInvalidRequest.Wrap(err, "failed to get roles and claims")
+	}
+
+	allowed, err := c.authorizer.CanAssignRole(aRoles, roleName, assignmentContext)
+	if err != nil {
+		c.logger.Error(ctx, "role assignment authorization error", zap.Error(err))
+		return chorus_errors.ErrPermissionDenied.Wrap(err, "role assignment authorization error")
+	}
+	if !allowed {
+		return chorus_errors.ErrPermissionDenied.WithMessage(fmt.Sprintf("caller cannot assign role %s", roleName))
+	}
+	return nil
 }
 
 func (c Authorization) TriggerRefreshToken(ctx context.Context) error {
