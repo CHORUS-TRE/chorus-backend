@@ -24,7 +24,7 @@ func NewPlatformSettingsStorage(db *sqlx.DB) *PlatformSettingsStorage {
 
 func (s *PlatformSettingsStorage) GetPlatformSettings(ctx context.Context, tenantID uint64) (*model.PlatformSettings, error) {
 	const query = `
-		SELECT id, tenantid, title, headline, tagline, websiteurl, touversionid, maxworkspacesperuser, maxsessionsperuser, maxappinstancesperuser, createdat, updatedat
+		SELECT id, tenantid, title, headline, tagline, websiteurl, maxworkspacesperuser, maxsessionsperuser, maxappinstancesperuser, createdat, updatedat
 		FROM platform_settings
 		WHERE tenantid = $1
 	`
@@ -42,19 +42,18 @@ func (s *PlatformSettingsStorage) GetPlatformSettings(ctx context.Context, tenan
 
 func (s *PlatformSettingsStorage) UpsertPlatformSettings(ctx context.Context, settings *model.PlatformSettings) (*model.PlatformSettings, error) {
 	const query = `
-		INSERT INTO public.platform_settings (tenantid, title, headline, tagline, websiteurl, touversionid, maxworkspacesperuser, maxsessionsperuser, maxappinstancesperuser, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+		INSERT INTO public.platform_settings (tenantid, title, headline, tagline, websiteurl, maxworkspacesperuser, maxsessionsperuser, maxappinstancesperuser, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
 		ON CONFLICT (tenantid) DO UPDATE SET
 		    title                  = EXCLUDED.title,
 		    headline               = EXCLUDED.headline,
 		    tagline                = EXCLUDED.tagline,
 		    websiteurl             = EXCLUDED.websiteurl,
-		    touversionid           = EXCLUDED.touversionid,
 		    maxworkspacesperuser   = EXCLUDED.maxworkspacesperuser,
 		    maxsessionsperuser     = EXCLUDED.maxsessionsperuser,
 		    maxappinstancesperuser = EXCLUDED.maxappinstancesperuser,
 		    updatedat              = EXCLUDED.updatedat
-		RETURNING id, tenantid, title, headline, tagline, websiteurl, touversionid, maxworkspacesperuser, maxsessionsperuser, maxappinstancesperuser, createdat, updatedat
+		RETURNING id, tenantid, title, headline, tagline, websiteurl, maxworkspacesperuser, maxsessionsperuser, maxappinstancesperuser, createdat, updatedat
 	`
 
 	var result model.PlatformSettings
@@ -64,7 +63,6 @@ func (s *PlatformSettingsStorage) UpsertPlatformSettings(ctx context.Context, se
 		settings.Headline,
 		settings.Tagline,
 		settings.WebsiteURL,
-		settings.TouVersionID,
 		settings.MaxWorkspacesPerUser,
 		settings.MaxSessionsPerUser,
 		settings.MaxAppInstancesPerUser,

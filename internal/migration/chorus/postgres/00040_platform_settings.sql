@@ -11,8 +11,6 @@ CREATE TABLE IF NOT EXISTS public.platform_settings (
     tagline     TEXT NOT NULL DEFAULT '',
     websiteurl TEXT NOT NULL DEFAULT '',
 
-    termsofuseversionid BIGINT NULL,
-
     maxworkspacesperuser    BIGINT NOT NULL DEFAULT 0,
     maxsessionsperuser      BIGINT NOT NULL DEFAULT 0,
     maxappinstancesperuser BIGINT NOT NULL DEFAULT 0,

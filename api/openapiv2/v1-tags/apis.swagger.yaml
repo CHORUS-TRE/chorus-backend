@@ -6116,10 +6116,6 @@ definitions:
         type: string
       websiteURL:
         type: string
-      touVersionId:
-        type: string
-        format: uint64
-        title: Terms of Use version ID
       maxWorkspacesPerUser:
         type: integer
         format: int64

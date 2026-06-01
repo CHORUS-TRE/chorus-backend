@@ -47,9 +47,6 @@ type ChorusPlatformSettings struct {
 	// title
 	Title string `json:"title,omitempty"`
 
-	// Terms of Use version ID
-	TouVersionID string `json:"touVersionId,omitempty"`
-
 	// updated at
 	// Format: date-time
 	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`

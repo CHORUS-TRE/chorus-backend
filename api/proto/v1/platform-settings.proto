@@ -14,8 +14,6 @@ message PlatformSettings {
     string tagline = 5;
     string websiteURL = 6;
 
-    uint64 touVersionId = 7; // Terms of Use version ID
-
     uint32 maxWorkspacesPerUser = 8;
     uint32 maxSessionsPerUser = 9;
     uint32 maxAppInstancesPerUser = 10;

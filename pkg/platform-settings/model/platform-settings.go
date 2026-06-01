@@ -12,8 +12,6 @@ type PlatformSettings struct {
 	Tagline    string
 	WebsiteURL string
 
-	TouVersionID uint64
-
 	MaxWorkspacesPerUser   uint32
 	MaxSessionsPerUser     uint32
 	MaxAppInstancesPerUser uint32
