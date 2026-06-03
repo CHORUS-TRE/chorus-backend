@@ -63,6 +63,7 @@ func (s *TermsOfUseStorage) PublishTermsOfUseVersion(ctx context.Context, tenant
 	if err != nil {
 		return nil, fmt.Errorf("unable to begin transaction: %w", err)
 	}
+	defer tx.Rollback()
 
 	const archiveQuery = `
 		UPDATE terms_of_use_versions
