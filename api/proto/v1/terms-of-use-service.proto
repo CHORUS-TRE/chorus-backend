@@ -7,7 +7,6 @@ import "protoc-gen-openapiv2/options/annotations.proto";
 
 import "common.proto";
 import "terms-of-use.proto";
-import "public_endpoint.proto";
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     info: {
@@ -151,12 +150,10 @@ service TermsOfUseService {
         option (google.api.http) = {
             get: "/api/rest/v1/terms-of-use/versions/{id}"
         };
-        option (public_endpoint) = true;
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a terms of use version";
-            description: "Returns a specific terms of use version by ID. Public endpoint.";
+            description: "Returns a specific terms of use version by ID.";
             tags: "TermsOfUseService";
-            security: {}
         };
     };
 

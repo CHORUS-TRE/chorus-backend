@@ -234,7 +234,7 @@ func (a *Client) TermsOfUseServiceGetMyTermsOfUseStatus(params *TermsOfUseServic
 /*
 TermsOfUseServiceGetTermsOfUseVersion gets a terms of use version
 
-Returns a specific terms of use version by ID. Public endpoint.
+Returns a specific terms of use version by ID.
 */
 func (a *Client) TermsOfUseServiceGetTermsOfUseVersion(params *TermsOfUseServiceGetTermsOfUseVersionParams, opts ...ClientOption) (*TermsOfUseServiceGetTermsOfUseVersionOK, error) {
 	// TODO: Validate the params before sending
