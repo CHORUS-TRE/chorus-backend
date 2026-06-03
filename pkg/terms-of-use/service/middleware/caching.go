@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	termsOfUseCacheSize       = 10 * 1024 * 1024 // 10MiB
-	termsOfUseCacheExpiration = 5                 // seconds
+	termsOfUseCacheSize    = 10 * 1024 * 1024 // 10MiB
+	defaultCacheExpiration = 5                // seconds
+	shortCacheExpiration   = 1                // seconds
 )
 
 func TermsOfUseCaching(log *logger.ContextLogger) func(service.TermsOfUseer) *Caching {
@@ -50,7 +51,7 @@ func (c *Caching) GetTermsOfUseVersion(ctx context.Context, tenantID, versionID 
 	if ok := entry.Get(ctx, &reply); !ok {
 		reply, err = c.next.GetTermsOfUseVersion(ctx, tenantID, versionID)
 		if err == nil {
-			entry.Set(ctx, termsOfUseCacheExpiration, reply)
+			entry.Set(ctx, defaultCacheExpiration, reply)
 		}
 	}
 
@@ -68,7 +69,7 @@ func (c *Caching) GetCurrentTermsOfUseVersion(ctx context.Context, tenantID uint
 	if ok := entry.Get(ctx, &reply); !ok {
 		reply, err = c.next.GetCurrentTermsOfUseVersion(ctx, tenantID)
 		if err == nil {
-			entry.Set(ctx, termsOfUseCacheExpiration, reply)
+			entry.Set(ctx, shortCacheExpiration, reply)
 		}
 	}
 
@@ -85,7 +86,7 @@ func (c *Caching) GetMyTermsOfUseStatus(ctx context.Context, tenantID, userID ui
 	if ok := entry.Get(ctx, &reply); !ok {
 		reply, err = c.next.GetMyTermsOfUseStatus(ctx, tenantID, userID)
 		if err == nil {
-			entry.Set(ctx, termsOfUseCacheExpiration, reply)
+			entry.Set(ctx, shortCacheExpiration, reply)
 		}
 	}
 
