@@ -99,6 +99,16 @@ const (
 	PermissionAuditPlatform       PermissionName = "auditPlatform"
 	PermissionManageDynamicRoles  PermissionName = "manageDynamicRoles"
 
+	PermissionCreateTermsOfUseVersion     PermissionName = "createTermsOfUseVersion"
+	PermissionUpdateTermsOfUseVersion     PermissionName = "updateTermsOfUseVersion"
+	PermissionPublishTermsOfUseVersion    PermissionName = "publishTermsOfUseVersion"
+	PermissionGetTermsOfUseVersion        PermissionName = "getTermsOfUseVersion"
+	PermissionListTermsOfUseVersions      PermissionName = "listTermsOfUseVersions"
+	PermissionGetCurrentTermsOfUseVersion PermissionName = "getCurrentTermsOfUseVersion"
+	PermissionListTermsOfUseAcceptances   PermissionName = "listTermsOfUseAcceptances"
+	PermissionGetMyTermsOfUseStatus       PermissionName = "getMyTermsOfUseStatus"
+	PermissionAcceptTermsOfUse            PermissionName = "acceptTermsOfUse"
+
 	PermissionListRequests   PermissionName = "listRequests"
 	PermissionListMyRequests PermissionName = "listMyRequests"
 	PermissionGetRequest     PermissionName = "getRequest"
@@ -249,6 +259,25 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionAuditPlatform, nil
 	case string(PermissionManageDynamicRoles):
 		return PermissionManageDynamicRoles, nil
+
+	case string(PermissionCreateTermsOfUseVersion):
+		return PermissionCreateTermsOfUseVersion, nil
+	case string(PermissionUpdateTermsOfUseVersion):
+		return PermissionUpdateTermsOfUseVersion, nil
+	case string(PermissionPublishTermsOfUseVersion):
+		return PermissionPublishTermsOfUseVersion, nil
+	case string(PermissionGetTermsOfUseVersion):
+		return PermissionGetTermsOfUseVersion, nil
+	case string(PermissionListTermsOfUseVersions):
+		return PermissionListTermsOfUseVersions, nil
+	case string(PermissionGetCurrentTermsOfUseVersion):
+		return PermissionGetCurrentTermsOfUseVersion, nil
+	case string(PermissionListTermsOfUseAcceptances):
+		return PermissionListTermsOfUseAcceptances, nil
+	case string(PermissionGetMyTermsOfUseStatus):
+		return PermissionGetMyTermsOfUseStatus, nil
+	case string(PermissionAcceptTermsOfUse):
+		return PermissionAcceptTermsOfUse, nil
 
 	case string(PermissionListRequests):
 		return PermissionListRequests, nil

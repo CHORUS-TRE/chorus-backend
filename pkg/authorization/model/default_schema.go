@@ -32,6 +32,9 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionListAppInstances,
 			PermissionListMyRequests,
 			PermissionAuditUser,
+			PermissionGetCurrentTermsOfUseVersion,
+			PermissionGetMyTermsOfUseStatus,
+			PermissionAcceptTermsOfUse,
 		},
 	)
 
@@ -138,6 +141,11 @@ func GetDefaultSchema() AuthorizationSchema {
 		authenticatedPermissions,
 		[]PermissionName{
 			PermissionSetPlatformSettings,
+			PermissionListTermsOfUseVersions,
+			PermissionGetTermsOfUseVersion,
+			PermissionCreateTermsOfUseVersion,
+			PermissionUpdateTermsOfUseVersion,
+			PermissionPublishTermsOfUseVersion,
 		},
 	)
 
@@ -152,6 +160,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionGetUser,
 			PermissionDeleteUser,
 			PermissionResetPassword,
+			PermissionListTermsOfUseAcceptances,
 		},
 	)
 
@@ -289,6 +298,16 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionCreateRequest, "Allow the user to create a request", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionApproveRequest, "Allow the user to approve a request", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionDeleteRequest, "Allow the user to delete a request", oneContext(RoleContextWorkspace)),
+
+			permissionDefinition(PermissionCreateTermsOfUseVersion, "Allow the user to create a terms of use version", nil),
+			permissionDefinition(PermissionUpdateTermsOfUseVersion, "Allow the user to update a terms of use version", nil),
+			permissionDefinition(PermissionPublishTermsOfUseVersion, "Allow the user to publish a terms of use version", nil),
+			permissionDefinition(PermissionGetTermsOfUseVersion, "Allow the user to get a terms of use version", nil),
+			permissionDefinition(PermissionListTermsOfUseVersions, "Allow the user to list terms of use versions", nil),
+			permissionDefinition(PermissionGetCurrentTermsOfUseVersion, "Allow the user to get the current terms of use version", nil),
+			permissionDefinition(PermissionListTermsOfUseAcceptances, "Allow the user to list terms of use acceptances", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionGetMyTermsOfUseStatus, "Allow the user to get his terms of use acceptance status", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionAcceptTermsOfUse, "Allow the user to accept the terms of use", oneContext(RoleContextUser)),
 		},
 		Roles: []*RoleDefinition{
 			roleDefinition(
