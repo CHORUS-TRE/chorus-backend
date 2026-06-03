@@ -68,7 +68,7 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
 	if err != nil {
 		c.logger.Error(ctx, "failed to evaluate permission", zap.String("permission", string(permissionName)), zap.Error(err))
-		return chorus_errors.ErrInternal.Wrap(err, fmt.Sprintf("failed to evaluate permission %s", permissionName))
+		return chorus_errors.ErrInternal.Wrap(err, fmt.Sprintf("failed to evaluate permission %s: %v", permissionName, err))
 	}
 
 	if !isAuthorized {
@@ -100,7 +100,7 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 	contextList, err := c.authorizer.GetContextListForPermission(aRoles, permissionName)
 	if err != nil {
 		c.logger.Error(ctx, "failed to get context list for permission", zap.String("permission", string(permissionName)), zap.Error(err))
-		return nil, chorus_errors.ErrInternal.Wrap(err, fmt.Sprintf("failed to get context list for permission %s", permissionName))
+		return nil, chorus_errors.ErrInternal.Wrap(err, fmt.Sprintf("failed to get context list for permission %s: %v", permissionName, err))
 	}
 
 	return contextList, nil
