@@ -92,6 +92,12 @@ const (
 	AuditActionPlatformSettingsRead   AuditAction = "ReadPlatformSettings"
 	AuditActionPlatformSettingsUpdate AuditAction = "UpdatePlatformSettings"
 
+	// Terms of Use
+	AuditActionTermsOfUseVersionCreate  AuditAction = "CreateTermsOfUseVersion"
+	AuditActionTermsOfUseVersionUpdate  AuditAction = "UpdateTermsOfUseVersion"
+	AuditActionTermsOfUseVersionPublish AuditAction = "PublishTermsOfUseVersion"
+	AuditActionTermsOfUseAccept         AuditAction = "AcceptTermsOfUse"
+
 	// Admin
 	AuditActionTenantInitialize AuditAction = "InitializeTenant"
 

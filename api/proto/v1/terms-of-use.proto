@@ -1,0 +1,38 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+enum TermsOfUseVersionStatus {
+    TERMS_OF_USE_VERSION_STATUS_DRAFT = 0;
+    TERMS_OF_USE_VERSION_STATUS_PUBLISHED = 1;
+    TERMS_OF_USE_VERSION_STATUS_ARCHIVED = 2;
+}
+
+message TermsOfUseVersion {
+    uint64 id = 1;
+
+    uint64 tenantId = 2;
+
+    string content = 3;
+    TermsOfUseVersionStatus status = 4;
+
+    google.protobuf.Timestamp createdAt = 5;
+    google.protobuf.Timestamp updatedAt = 6;
+}
+
+message TermsOfUseAcceptance {
+    uint64 id = 1;
+
+    uint64 tenantId = 2;
+
+    uint64 userId = 3;
+    uint64 termsOfUseVersionId = 4;
+
+    google.protobuf.Timestamp acceptedAt = 5;
+}
+
+message TermsOfUseUserStatus {
+    bool accepted = 1;
+}
