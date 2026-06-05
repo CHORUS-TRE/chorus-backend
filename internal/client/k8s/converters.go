@@ -126,6 +126,13 @@ func (c *client) appInstanceToK8sWorkbenchApp(app AppInstance) WorkbenchApp {
 		w.BrowserConfig.JWTToken = app.BrowserConfigJWTToken
 	}
 
+	if len(app.EnvVarsToInject) > 0 {
+		w.EnvVarsToInject = make(map[string]string, len(app.EnvVarsToInject))
+		for k, v := range app.EnvVarsToInject {
+			w.EnvVarsToInject[k] = v
+		}
+	}
+
 	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" || app.MaxEphemeralStorage != "" || app.MinEphemeralStorage != "" {
 		w.Resources = &corev1.ResourceRequirements{}
 		if app.MaxCPU != "" {

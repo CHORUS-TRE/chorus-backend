@@ -30,12 +30,13 @@ message App {
     string browserConfigURL = 18;
     string browserConfigJWTURL = 19;
     string browserConfigJWTOIDCClientID = 20;
-    string iconURL = 21;
-    string iconBackgroundColor = 22;
-    string stabilityStatus = 23;
+    string injectOIDCJWTClientID = 21;
+    string iconURL = 22;
+    string iconBackgroundColor = 23;
+    string stabilityStatus = 24;
 
-    google.protobuf.Timestamp createdAt = 24;
-    google.protobuf.Timestamp updatedAt = 25;
+    google.protobuf.Timestamp createdAt = 25;
+    google.protobuf.Timestamp updatedAt = 26;
 }
 
 message AppVersion {

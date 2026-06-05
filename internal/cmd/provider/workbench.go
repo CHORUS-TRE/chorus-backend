@@ -27,6 +27,7 @@ func ProvideWorkbench() service.Workbencher {
 			ProvideAppService(),
 			ProvideUser(),
 			ProvideAuthenticator(),
+			ProvideOIDCIDPService(),
 			ProvideNotificationStore(),
 			ProvideWorkspaceStore(),
 			ProvideAuditWriter(),
