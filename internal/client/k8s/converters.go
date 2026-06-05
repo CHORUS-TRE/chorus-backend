@@ -71,7 +71,7 @@ func (c *client) workbenchToK8sWorkbench(workbench Workbench) (K8sWorkbench, err
 	username := workbench.SanitizedUsername()
 	if c.cfg.Clients.K8sClient.AddUserDetails && username != "" {
 		k8sWorkbench.Spec.Server.User = username
-		k8sWorkbench.Spec.Server.UserID = int(workbench.UserID + workbenchUserIDOffset)
+		k8sWorkbench.Spec.Server.UserID = int(workbench.UserID + c.cfg.Services.WorkspaceService.GIDOffset)
 	}
 
 	return k8sWorkbench, nil
@@ -229,7 +229,7 @@ func (c *client) k8sWorkbenchToWorkbench(wb K8sWorkbench) (Workbench, error) {
 		TenantID:                tenantID,
 		Name:                    wb.Name,
 		Username:                wb.Spec.Server.User,
-		UserID:                  uint64(wb.Spec.Server.UserID) - workbenchUserIDOffset,
+		UserID:                  uint64(wb.Spec.Server.UserID) - c.cfg.Services.WorkspaceService.GIDOffset,
 		InitialResolutionWidth:  uint32(wb.Spec.Server.InitialResolutionWidth),
 		InitialResolutionHeight: uint32(wb.Spec.Server.InitialResolutionHeight),
 		Status:                  string(wb.Status.ServerDeployment.Status),

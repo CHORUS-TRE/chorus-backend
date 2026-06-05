@@ -7,11 +7,10 @@ import (
 )
 
 const (
-	workbenchUserIDOffset uint64 = 1001
-	defaultImageTag              = "latest"
-	appInstanceNamePrefix        = "app-instance-"
-	maxAppInstanceNameLen        = 15
-	defaultAppName               = "unknown"
+	defaultImageTag       = "latest"
+	appInstanceNamePrefix = "app-instance-"
+	maxAppInstanceNameLen = 15
+	defaultAppName        = "unknown"
 )
 
 var appInstanceNameRegex = regexp.MustCompile("[^a-z0-9]+")
