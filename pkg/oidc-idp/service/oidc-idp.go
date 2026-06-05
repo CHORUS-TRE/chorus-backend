@@ -17,10 +17,6 @@ import (
 
 type OIDCProviderService interface {
 	AddOIDCMiddleware(h http.Handler) http.Handler
-	// IssueIDTokenForClient mints a signed OIDC ID token (RS256) for the given
-	// client and user, as if the user had completed an interactive flow with
-	// that client. The token is signed with the provider's private JWKS so it
-	// can be verified against the published JWKS endpoint.
 	IssueIDTokenForClient(ctx context.Context, clientID string, user *user_model.User, ttl time.Duration) (string, error)
 }
 
