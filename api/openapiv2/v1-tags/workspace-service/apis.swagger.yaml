@@ -445,6 +445,9 @@ definitions:
         type: string
       clipboard:
         type: string
+      gid:
+        type: string
+        format: uint64
   chorusWorkspaceFilter:
     type: object
     properties:

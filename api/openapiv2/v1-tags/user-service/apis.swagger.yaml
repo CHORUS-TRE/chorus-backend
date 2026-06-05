@@ -596,6 +596,14 @@ definitions:
         type: array
         items:
           type: string
+      uid:
+        type: string
+        format: uint64
+      gids:
+        type: array
+        items:
+          type: string
+          format: uint64
   chorusUserFilter:
     type: object
     properties:

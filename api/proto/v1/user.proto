@@ -25,6 +25,9 @@ message User {
 
     string email = 14;
     repeated string namespaces = 15;
+
+    uint64 uid = 16;
+    repeated uint64 gids = 17;
 }
 
 message Role {

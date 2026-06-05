@@ -325,6 +325,7 @@ type (
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
 			CreatorIsAdmin         bool          `yaml:"creator_is_admin"`
 			CreatorIsDataManager   bool          `yaml:"creator_is_data_manager"`
+			GIDOffset              uint64        `yaml:"gid_offset"`
 		} `yaml:"workspace_service"`
 
 		WorkspaceFileService struct {
@@ -341,7 +342,8 @@ type (
 		} `yaml:"approval_request_service"`
 
 		UserService struct {
-			RequireEmail bool `yaml:"require_email"`
+			RequireEmail bool   `yaml:"require_email"`
+			UIDOffset    uint64 `yaml:"uid_offset"`
 		} `yaml:"user_service"`
 
 		Steward struct {

@@ -29,4 +29,6 @@ message Workspace {
     string networkPolicyStatus = 16;
     string networkPolicyMessage = 17;
     string clipboard = 18;
+
+    uint64 gid = 19;
 }

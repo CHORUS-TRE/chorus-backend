@@ -38,7 +38,7 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 	}, nil
 }
 
-func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error) {
+func WorkspaceFromBusiness(workspace *model.Workspace, gidOffset uint64) (*chorus.Workspace, error) {
 	ca, err := ToProtoTimestamp(workspace.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
@@ -72,5 +72,7 @@ func WorkspaceFromBusiness(workspace *model.Workspace) (*chorus.Workspace, error
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
+
+		Gid: workspace.ID + gidOffset,
 	}, nil
 }

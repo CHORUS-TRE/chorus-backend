@@ -6,6 +6,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
@@ -34,11 +35,12 @@ var _ chorus.WorkspaceServiceServer = (*WorkspaceController)(nil)
 // WorkspaceController is the workspace service controller handler.
 type WorkspaceController struct {
 	workspace service.Workspaceer
+	cfg       config.Config
 }
 
 // NewWorkspaceController returns a fresh admin service controller instance.
-func NewWorkspaceController(workspace service.Workspaceer) WorkspaceController {
-	return WorkspaceController{workspace: workspace}
+func NewWorkspaceController(workspace service.Workspaceer, cfg config.Config) WorkspaceController {
+	return WorkspaceController{workspace: workspace, cfg: cfg}
 }
 
 func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
@@ -56,7 +58,7 @@ func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWo
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -86,7 +88,7 @@ func (c WorkspaceController) UpdateWorkspace(ctx context.Context, req *chorus.Wo
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkspace': %v", err.Error())
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(updatedWorkspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(updatedWorkspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -139,7 +141,7 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	var workspaces []*chorus.Workspace
 	for _, r := range res {
-		workspace, err := converter.WorkspaceFromBusiness(r)
+		workspace, err := converter.WorkspaceFromBusiness(r, c.cfg.Services.WorkspaceService.GIDOffset)
 		if err != nil {
 			logger.TechLog.Error(ctx, fmt.Sprintf("conversion error: %v", err.Error()))
 			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
@@ -181,7 +183,7 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateWorkspace': %v", err.Error())
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(newWorkspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(newWorkspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -214,7 +216,7 @@ func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req 
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -248,7 +250,7 @@ func (c WorkspaceController) RemoveUserRoleInWorkspace(ctx context.Context, req 
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}
@@ -277,7 +279,7 @@ func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *c
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
 	}

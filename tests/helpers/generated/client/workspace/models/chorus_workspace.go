@@ -38,6 +38,9 @@ type ChorusWorkspace struct {
 	// description
 	Description string `json:"description,omitempty"`
 
+	// gid
+	Gid string `json:"gid,omitempty"`
+
 	// id
 	ID string `json:"id,omitempty"`
 
