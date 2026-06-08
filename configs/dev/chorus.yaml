@@ -9,13 +9,13 @@ daemon:
     max_call_recv_msg_size: 1073741824 # 1GB
     max_call_send_msg_size: 1073741824 # 1GB
     headers:
-      access_control_allow_origins: 
+      access_control_allow_origins:
         - "http://localhost:3000"
       access_control_allow_origin_wildcard: true
       access_control_max_age: "600"
       cookie_domain: "localhost"
   jwt:
-    secret: eREH6oV#&6bX&zadL%
+    secret: eREH6oV#&6bX&zadL% # local setup only
     expiration_time: 72h
     max_refresh_time: 4320h #180d
   private_key_file: ./configs/dev/files/keys/chorus_privkey.pem
@@ -30,7 +30,7 @@ daemon:
 storage:
   datastores:
     chorus:
-      type: postgres 
+      type: postgres
       host: 127.0.0.1
       port: 5432
       username: admin
@@ -55,18 +55,6 @@ storage:
         enabled: false
   file_stores:
     s3:
-      type: minio
-      minio_config:
-        enabled: true
-        endpoint: localhost:9000
-        access_key_id: minioadmin
-        secret_access_key: minioadmin
-        bucket_name: chorus-data
-        use_ssl: false
-        multipart_min_part_size: 5242880 # 5MB
-        multipart_max_part_size: 5368709120 # 5GB
-        multipart_max_total_parts: 10000
-    s3-copy:
       type: minio
       minio_config:
         enabled: true
@@ -118,9 +106,8 @@ services:
           user_info_url: "http://localhost:8080/realms/chorus/protocol/openid-connect/userinfo"
           logout_url: "http://localhost:8080/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
           user_name_claim: "preferred_username"
-          # final_url_format: "http://localhost:3000/login?token=%s"
           client_id: chorus
-          client_secret: "kIakn3wsHHpwxzY5vYicvIqMOyAQeBZv"
+          client_secret: ""  # set in local.yaml
           scopes:
             - openid
             - profile
@@ -142,9 +129,8 @@ services:
           user_info_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
           logout_url: "https://auth.dev.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
           user_name_claim: "preferred_username"
-          # final_url_format: "http://localhost:3000/login?token=%s"
           client_id: chorus
-          client_secret: "73JeNqH0iMSi9UEcuydEpIgW2CoX5ABz"
+          client_secret: ""  # set in local.yaml
           scopes:
             - openid
             - profile
@@ -154,12 +140,12 @@ services:
     enabled: true
     issuer_url: "http://localhost:5000/openid-connect"
     frontend_interactions_url: "http://localhost:5000/auth-ui"
-    scopes: 
+    scopes:
       - openid
       - profile
       - email
       - roles
-    jwks: |
+    jwks: | # local setup only
       {
         "keys": [
           {
@@ -254,29 +240,44 @@ services:
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
         description: "Long-term object storage (MinIO)."
         order: 1
-      scratch:
-        file_store_name: s3-copy
-        workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
-        description: "Copy of long-term storage for testing purposes (MinIO)."
-        order: 2
       disk:
         file_store_name: disk
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
         description: "Local disk storage."
-        order: 3
+        order: 2
 
   approval_request_service:
     staging_file_store_name: disk
-        
-# Client configurations added using the create-local-cluster.sh script
-# clients:
-#   docker_client:
-#     enabled: true
-#   harbor_client:
-#     enabled: true
-#     url: ""
-#     username: ""
-#     password: "" # set in secret
+
+clients:
+  docker_client:
+    enabled: true
+  harbor_client:
+    enabled: true
+    url: https://harbor.int.chorus-tre.ch
+    username: robot$backend-apps-client
+    password: ""  # set in local.yaml
+  minio_clients:
+    archive:
+      enabled: true
+      endpoint: localhost:9000
+      access_key_id: minioadmin
+      secret_access_key: minioadmin
+      bucket_name: chorus-data
+      use_ssl: false
+      multipart_min_part_size: 5242880 # 5MB
+      multipart_max_part_size: 5368709120 # 5GB
+      multipart_max_total_parts: 10000
+  k8s_client:
+    enabled: true
+    is_watcher: true
+    insecure_tls: true
+    server_version: "6.3.6-r0-3"
+    init_container_version: "0.0.2-4"
+    ca: ""  # set in local.yaml
+    token: ""  # set in local.yaml (generate with: kubectl create token admin-sa --duration 525600m -n kube-system)
+    api_server: "" # set in local.yaml
+    image_pull_secrets: []  # set in local.yaml
 
 log:
   loggers:
@@ -286,4 +287,3 @@ log:
       level: debug
     stdout_business:
       level: debug
-

@@ -43,3 +43,6 @@ sonar-local-project.properties
 # Chatmode
 CLAUDE.md
 .github/chatmodes/*
+
+# Local secrets files
+configs/dev/local.yaml

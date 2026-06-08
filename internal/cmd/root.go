@@ -28,7 +28,7 @@ const (
 
 var configDevOverridePaths = []string{
 	"./configs/dev/files/kind.yaml",
-	"./configs/dev/secrets.dec.yaml",
+	"./configs/dev/local.yaml",
 }
 
 var configFilename = ""
