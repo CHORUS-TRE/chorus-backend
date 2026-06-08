@@ -244,7 +244,7 @@ services:
         file_store_name: disk
         workspace_prefix: "workspaces/%s" # %s will be replaced by the namespace name (workspace+id)
         description: "Local disk storage."
-        order: 32
+        order: 2
 
   approval_request_service:
     staging_file_store_name: disk
