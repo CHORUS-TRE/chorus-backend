@@ -40,6 +40,18 @@ message WorkspaceFilter {
     repeated uint64 workspace_ids_in = 1;
 }
 
+message ListPublicWorkspacesRequest {
+    PaginationQuery pagination = 1;
+    optional WorkspaceFilter filter = 2;
+}
+message ListPublicWorkspacesReply {
+    ListPublicWorkspacesResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListPublicWorkspacesResult {
+    repeated PublicWorkspace public_workspaces = 1;
+}
+
 message GetWorkspaceRequest {
     uint64 id = 1;
 }
@@ -127,6 +139,17 @@ service WorkspaceService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "List workspaces";
             description: "This endpoint returns a list of workspaces";
+            tags: "WorkspaceService";
+        };
+    };
+
+    rpc ListPublicWorkspaces(ListPublicWorkspacesRequest) returns (ListPublicWorkspacesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspaces/public"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List public workspaces";
+            description: "This endpoint returns a list of public workspaces";
             tags: "WorkspaceService";
         };
     };
