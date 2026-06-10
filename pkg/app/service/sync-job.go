@@ -85,8 +85,7 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		existing[appIdentity(a)] = struct{}{}
 	}
 
-	// No pre-filter, so multi-app images are always re-evaluated.
-	harborApps, err := j.harborClient.ListApps(nil)
+	harborApps, err := j.harborClient.ListApps()
 	if err != nil {
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
