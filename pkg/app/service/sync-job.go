@@ -91,28 +91,7 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
 
-	// Oldest-first, so ids follow the Harbor push order.
-	sort.SliceStable(harborApps, func(i, k int) bool {
-		return harborApps[i].PushTime.Before(harborApps[k].PushTime)
-	})
-
-	var toCreate []*model.App
-	for _, ha := range harborApps {
-		for _, app := range j.harborAppToModels(ha, tenantID, userID) {
-			// Skip internal CHORUS apps that should not be synced
-			if app.Category == categoryChorus {
-				continue
-			}
-
-			id := appIdentity(app)
-			if _, exists := existing[id]; exists {
-				continue
-			}
-			existing[id] = struct{}{}
-			toCreate = append(toCreate, app)
-		}
-	}
-
+	toCreate := j.appsToCreate(harborApps, existing, tenantID, userID)
 	if len(toCreate) == 0 {
 		return "all apps already exist", nil
 	}
@@ -125,6 +104,31 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 	j.log.Info(ctx, "synced apps from harbor", zap.Int("created", len(created)))
 
 	return fmt.Sprintf("created %d new apps", len(created)), nil
+}
+
+// appsToCreate converts harbor apps into the models to insert, oldest-first so
+// ids follow the Harbor push order, skipping internal apps and ones in existing.
+func (j *AppSyncJob) appsToCreate(harborApps []harbor.App, existing map[string]struct{}, tenantID, userID uint64) []*model.App {
+	sort.SliceStable(harborApps, func(i, k int) bool {
+		return harborApps[i].PushTime.Before(harborApps[k].PushTime)
+	})
+
+	var toCreate []*model.App
+	for _, ha := range harborApps {
+		for _, app := range j.harborAppToModels(ha, tenantID, userID) {
+			if app.Category == categoryChorus {
+				continue
+			}
+
+			id := appIdentity(app)
+			if _, exists := existing[id]; exists {
+				continue
+			}
+			existing[id] = struct{}{}
+			toCreate = append(toCreate, app)
+		}
+	}
+	return toCreate
 }
 
 func (j *AppSyncJob) harborAppToModels(ha harbor.App, tenantID, userID uint64) []*model.App {
