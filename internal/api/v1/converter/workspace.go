@@ -92,6 +92,7 @@ func PublicWorkspaceFromBusiness(workspace *model.PublicWorkspace, gidOffset uin
 		TenantId: workspace.TenantID,
 
 		Name:        workspace.Name,
+		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
 		Status:      workspace.Status.String(),
 

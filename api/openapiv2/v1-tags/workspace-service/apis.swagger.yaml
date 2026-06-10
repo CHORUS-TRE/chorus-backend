@@ -426,6 +426,8 @@ definitions:
         format: uint64
       name:
         type: string
+      shortName:
+        type: string
       description:
         type: string
       status:

@@ -44,6 +44,9 @@ type ChorusPublicWorkspace struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// short name
+	ShortName string `json:"shortName,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 
