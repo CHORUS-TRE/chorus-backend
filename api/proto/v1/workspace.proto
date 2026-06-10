@@ -36,7 +36,7 @@ message Workspace {
     string clipboard = 18;
 
     uint64 gid = 19;
-    optional WorkspaceVisibility visibility = 20;
+    WorkspaceVisibility visibility = 20;
 }
 
 message PublicWorkspace {
@@ -47,10 +47,10 @@ message PublicWorkspace {
     string description = 4;
     string status = 5;
 
-    optional string contact_username = 6;
-    optional string contact_first_name = 7;
-    optional string contact_last_name = 8;
-    optional string contact_email = 9;
+    string contact_username = 6;
+    string contact_first_name = 7;
+    string contact_last_name = 8;
+    string contact_email = 9;
 
     google.protobuf.Timestamp created_at = 10;
     google.protobuf.Timestamp updated_at = 11;
