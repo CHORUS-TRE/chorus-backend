@@ -33,6 +33,7 @@ type App struct {
 	IconURL                      string
 	IconBackgroundColor          string
 	StabilityStatus              AppStabilityStatus
+	Category                     string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
