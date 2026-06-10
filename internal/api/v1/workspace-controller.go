@@ -154,6 +154,39 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 	return &chorus.ListWorkspacesReply{Result: &chorus.ListWorkspacesResult{Workspaces: workspaces}, Pagination: paginationResult}, nil
 }
 
+// ListPublicWorkspaces extracts the public information for the retrieved workspaces from the service and inserts them into a reply object.
+func (c WorkspaceController) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
+	if req == nil {
+		logger.TechLog.Error(ctx, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("could not extract tenant id from jwt-token: %v", err.Error()))
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	pagination := converter.PaginationToBusiness(req.Pagination)
+
+	filter := workspace_model.WorkspaceFilter{}
+	if req.Filter != nil {
+		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
+	}
+
+	res, paginationRes, err := c.workspace.ListPublicWorkspaces(ctx, tenantID, &pagination, filter)
+	if err != nil {
+		logger.TechLog.Error(ctx, fmt.Sprintf("unable to call 'ListPublicWorkspaces': %v", err.Error()))
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListPublicWorkspaces': %v", err.Error())
+	}
+
+	// TODO: filter public workspaces
+
+	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
+
+	return &chorus.ListPublicWorkspacesReply{Result: &chorus.ListPublicWorkspacesResult{PublicWorkspaces: TODO}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
+}
+
 // CreateWorkspace extracts the workspace from the request and passes it to the workspace service.
 func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	if req == nil {

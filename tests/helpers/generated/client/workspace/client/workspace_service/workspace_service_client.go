@@ -60,6 +60,8 @@ type ClientService interface {
 
 	WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceOK, error)
 
+	WorkspaceServiceListPublicWorkspaces(params *WorkspaceServiceListPublicWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListPublicWorkspacesOK, error)
+
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
 	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
@@ -187,6 +189,45 @@ func (a *Client) WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspa
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceGetWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkspaceServiceListPublicWorkspaces lists public workspaces
+
+This endpoint returns a list of public workspaces
+*/
+func (a *Client) WorkspaceServiceListPublicWorkspaces(params *WorkspaceServiceListPublicWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListPublicWorkspacesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceListPublicWorkspacesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_ListPublicWorkspaces",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workspaces/public",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceListPublicWorkspacesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceListPublicWorkspacesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceListPublicWorkspacesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

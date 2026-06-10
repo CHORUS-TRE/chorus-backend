@@ -77,6 +77,9 @@ type ChorusWorkspace struct {
 
 	// user Id
 	UserID string `json:"userId,omitempty"`
+
+	// visibility
+	Visibility *ChorusWorkspaceVisibility `json:"visibility,omitempty"`
 }
 
 // Validate validates this chorus workspace
@@ -88,6 +91,10 @@ func (m *ChorusWorkspace) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateUpdatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateVisibility(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -121,8 +128,57 @@ func (m *ChorusWorkspace) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus workspace based on context it is used
+func (m *ChorusWorkspace) validateVisibility(formats strfmt.Registry) error {
+	if swag.IsZero(m.Visibility) { // not required
+		return nil
+	}
+
+	if m.Visibility != nil {
+		if err := m.Visibility.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("visibility")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("visibility")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ContextValidate validate this chorus workspace based on the context it is used
 func (m *ChorusWorkspace) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateVisibility(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusWorkspace) contextValidateVisibility(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Visibility != nil {
+
+		if swag.IsZero(m.Visibility) { // not required
+			return nil
+		}
+
+		if err := m.Visibility.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("visibility")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("visibility")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

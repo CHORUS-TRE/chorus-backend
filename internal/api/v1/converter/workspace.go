@@ -76,3 +76,31 @@ func WorkspaceFromBusiness(workspace *model.Workspace, gidOffset uint64) (*choru
 		Gid: workspace.ID + gidOffset,
 	}, nil
 }
+
+func PublicWorkspaceFromBusiness(workspace *model.PublicWorkspace, gidOffset uint64) (*chorus.PublicWorkspace, error) {
+	ca, err := ToProtoTimestamp(workspace.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
+	}
+	ua, err := ToProtoTimestamp(workspace.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
+	}
+
+	return &chorus.PublicWorkspace{
+		Id:       workspace.ID,
+		TenantId: workspace.TenantID,
+
+		Name:        workspace.Name,
+		Description: workspace.Description,
+		Status:      workspace.Status.String(),
+
+		ContactUsername:  workspace.ContactUsername,
+		ContactFirstName: workspace.ContactFirstName,
+		ContactLastName:  workspace.ContactLastName,
+		ContactEmail:     workspace.ContactEmail,
+
+		CreatedAt: ca,
+		UpdatedAt: ua,
+	}, nil
+}

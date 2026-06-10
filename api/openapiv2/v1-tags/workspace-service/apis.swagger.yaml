@@ -113,6 +113,62 @@ paths:
             $ref: '#/definitions/chorusWorkspace'
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/public:
+    get:
+      summary: List public workspaces
+      description: This endpoint returns a list of public workspaces
+      operationId: WorkspaceService_ListPublicWorkspaces
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListPublicWorkspacesReply'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+        - name: filter.workspaceIdsIn
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: uint64
+          collectionFormat: multi
+      tags:
+        - WorkspaceService
   /api/rest/v1/workspaces/{id}:
     get:
       summary: Get a workspace
@@ -279,6 +335,21 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusListPublicWorkspacesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListPublicWorkspacesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListPublicWorkspacesResult:
+    type: object
+    properties:
+      publicWorkspaces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusPublicWorkspace'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -344,6 +415,35 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusPublicWorkspace:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      description:
+        type: string
+      status:
+        type: string
+      contactUsername:
+        type: string
+      contactFirstName:
+        type: string
+      contactLastName:
+        type: string
+      contactEmail:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusRemoveUserFromWorkspaceReply:
     type: object
     properties:
@@ -448,6 +548,8 @@ definitions:
       gid:
         type: string
         format: uint64
+      visibility:
+        $ref: '#/definitions/chorusWorkspaceVisibility'
   chorusWorkspaceFilter:
     type: object
     properties:
@@ -456,6 +558,12 @@ definitions:
         items:
           type: string
           format: uint64
+  chorusWorkspaceVisibility:
+    type: string
+    enum:
+      - WORKSPACE_VISIBILITY_PRIVATE
+      - WORKSPACE_VISIBILITY_PUBLIC
+    default: WORKSPACE_VISIBILITY_PRIVATE
   protobufAny:
     type: object
     properties:
