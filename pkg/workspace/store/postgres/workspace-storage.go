@@ -109,6 +109,52 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	return workspaces, paginationRes, nil
 }
 
+// ListPublicWorkspaces lists workspaces with public visibility.
+func (s *WorkspaceStorage) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
+
+	// Look at example from workbench store to handle args
+	countQuery := `SELECT COUNT(*) FROM workspaces WHERE tenantid = $1 AND visibility = $2 AND deletedat IS NULL`
+
+	var totalCount int
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID, model.WorkspaceVisibilityPublic); err != nil {
+		return nil, nil, err
+	}
+
+	// Get public workspaces query
+	// note: this is the same query as in ListWorkspaces above
+	// except for the filters on visibility and deletedat
+	query := `
+		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
+		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		       clipboard,
+		       createdat, updatedat
+		FROM workspaces
+		WHERE tenantid = $1 AND visibility = $2 AND deletedat IS NULL
+	`
+
+	// Add pagination
+	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.Workspace{})
+	query += clause
+
+	// Build pagination result
+	paginationRes := &common_model.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	var workspaces []*model.Workspace
+	if err := s.db.SelectContext(ctx, &workspaces, query, tenantID, model.WorkspaceVisibilityPublic); err != nil {
+		return nil, nil, err
+	}
+
+	return workspaces, paginationRes, nil
+}
+
 // CreateWorkspace saves the provided workspace object in the database 'workspaces' table.
 func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
 	const workspaceQuery = `

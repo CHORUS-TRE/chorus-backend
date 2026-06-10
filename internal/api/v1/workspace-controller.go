@@ -180,11 +180,18 @@ func (c WorkspaceController) ListPublicWorkspaces(ctx context.Context, req *chor
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListPublicWorkspaces': %v", err.Error())
 	}
 
-	// TODO: filter public workspaces
-
 	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
+	var publicWorkspaces []*chorus.PublicWorkspace
+	for _, r := range res {
+		publicWorkspace, err := converter.PublicWorkspaceFromBusiness(r, c.cfg.Services.WorkspaceService.GIDOffset)
+		if err != nil {
+			logger.TechLog.Error(ctx, fmt.Sprintf("conversion error: %v", err.Error()))
+			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		}
+		publicWorkspaces = append(publicWorkspaces, publicWorkspace)
+	}
 
-	return &chorus.ListPublicWorkspacesReply{Result: &chorus.ListPublicWorkspacesResult{PublicWorkspaces: TODO}, Pagination: converter.PaginationResultFromBusiness(paginationRes)}, nil
+	return &chorus.ListPublicWorkspacesReply{Result: &chorus.ListPublicWorkspacesResult{PublicWorkspaces: publicWorkspaces}, Pagination: paginationResult}, nil
 }
 
 // CreateWorkspace extracts the workspace from the request and passes it to the workspace service.
