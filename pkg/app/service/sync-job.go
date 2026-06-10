@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/harbor"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -17,8 +19,6 @@ const (
 	labelAppIcon        = "ch.chorus-tre.app.icon"
 	labelAppCategory    = "ch.chorus-tre.app.category"
 	labelAppStability   = "ch.chorus-tre.app.stability"
-	labelImageName      = "ch.chorus-tre.image.name"
-	labelImageTag       = "ch.chorus-tre.image.tag"
 	labelMaxCPU         = "ch.chorus-tre.resources.max-cpu"
 	labelMinCPU         = "ch.chorus-tre.resources.min-cpu"
 	labelMaxMemory      = "ch.chorus-tre.resources.max-memory"
@@ -28,6 +28,25 @@ const (
 	labelShmSize        = "ch.chorus-tre.resources.shared-memory-size"
 	labelOCITitle       = "org.opencontainers.image.title"
 	labelOCIDescription = "org.opencontainers.image.description"
+
+	// categoryChorus tags internal apps that should not be synced.
+	categoryChorus = "chorus"
+
+	// labelKioskConfigPrefix marks an image bundling several apps. Labels look like
+	// "ch.chorus-tre.app.kiosk-config-url.<sub-app>.<field>"; each <sub-app> becomes
+	// its own app sharing the image.
+	labelKioskConfigPrefix = "ch.chorus-tre.app.kiosk-config-url."
+
+	kioskFieldPrettyName   = "prettyname"
+	kioskFieldCategory     = "category"
+	kioskFieldURL          = "url"
+	kioskFieldMaxCPU       = "resources.max-cpu"
+	kioskFieldMinCPU       = "resources.min-cpu"
+	kioskFieldMaxMemory    = "resources.max-memory"
+	kioskFieldMinMemory    = "resources.min-memory"
+	kioskFieldMaxEphemeral = "resources.max-ephemeral-storage"
+	kioskFieldMinEphemeral = "resources.min-ephemeral-storage"
+	kioskFieldSharedMemory = "resources.shared-memory-size"
 )
 
 type AppSyncJob struct {
@@ -47,36 +66,13 @@ func NewAppSyncJob(store AppStore, harborClient harbor.HarborClient, registry st
 }
 
 func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (string, error) {
-	tenantID := uint64(1)
-	if v, ok := options["tenant_id"]; ok {
-		switch tid := v.(type) {
-		case float64:
-			tenantID = uint64(tid)
-		case int:
-			tenantID = uint64(tid)
-		case string:
-			parsed, err := strconv.ParseUint(tid, 10, 64)
-			if err != nil {
-				return "", fmt.Errorf("invalid tenant_id option: %w", err)
-			}
-			tenantID = parsed
-		}
+	tenantID, err := uint64Option(options, "tenant_id", 1)
+	if err != nil {
+		return "", err
 	}
-
-	userID := uint64(1)
-	if v, ok := options["user_id"]; ok {
-		switch uid := v.(type) {
-		case float64:
-			userID = uint64(uid)
-		case int:
-			userID = uint64(uid)
-		case string:
-			parsed, err := strconv.ParseUint(uid, 10, 64)
-			if err != nil {
-				return "", fmt.Errorf("invalid user_id option: %w", err)
-			}
-			userID = parsed
-		}
+	userID, err := uint64Option(options, "user_id", 1)
+	if err != nil {
+		return "", err
 	}
 
 	existingApps, _, err := j.store.ListApps(ctx, tenantID, nil)
@@ -84,40 +80,37 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "", fmt.Errorf("listing existing apps: %w", err)
 	}
 
-	existingSet := make(map[string]struct{}, len(existingApps))
+	existing := make(map[string]struct{}, len(existingApps))
 	for _, a := range existingApps {
-		key := a.DockerImageName + ":" + a.DockerImageTag
-		existingSet[key] = struct{}{}
+		existing[appIdentity(a)] = struct{}{}
 	}
 
-	allHarborApps, err := j.harborClient.ListApps(existingSet)
+	// No pre-filter, so multi-app images are always re-evaluated.
+	harborApps, err := j.harborClient.ListApps(nil)
 	if err != nil {
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
 
-	// reverse order and filter, keep only apps with app category label
-	var harborApps []harbor.App
-	for i := len(allHarborApps) - 1; i >= 0; i-- {
-		ha := allHarborApps[i]
-		if _, exists := ha.Labels[labelAppCategory]; !exists {
-			continue
-		}
-		harborApps = append(harborApps, ha)
-	}
-
-	if len(harborApps) == 0 {
-		return "no new apps found in harbor", nil
-	}
+	// Oldest-first, so ids follow the Harbor push order.
+	sort.SliceStable(harborApps, func(i, k int) bool {
+		return harborApps[i].PushTime.Before(harborApps[k].PushTime)
+	})
 
 	var toCreate []*model.App
 	for _, ha := range harborApps {
-		app := j.harborAppToModel(ha, tenantID, userID)
-		key := app.DockerImageName + ":" + app.DockerImageTag
-		if _, exists := existingSet[key]; exists {
-			continue
+		for _, app := range j.harborAppToModels(ha, tenantID, userID) {
+			// Skip internal CHORUS apps that should not be synced
+			if app.Category == categoryChorus {
+				continue
+			}
+
+			id := appIdentity(app)
+			if _, exists := existing[id]; exists {
+				continue
+			}
+			existing[id] = struct{}{}
+			toCreate = append(toCreate, app)
 		}
-		existingSet[key] = struct{}{}
-		toCreate = append(toCreate, app)
 	}
 
 	if len(toCreate) == 0 {
@@ -129,37 +122,128 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "", fmt.Errorf("bulk creating apps: %w", err)
 	}
 
-	j.log.Info(ctx, "synced apps from harbor",
-		zap.Int("created", len(created)),
-		zap.Int("harbor_total", len(harborApps)))
+	j.log.Info(ctx, "synced apps from harbor", zap.Int("created", len(created)))
 
 	return fmt.Sprintf("created %d new apps", len(created)), nil
 }
 
-func (j *AppSyncJob) harborAppToModel(ha harbor.App, tenantID, userID uint64) *model.App {
+func (j *AppSyncJob) harborAppToModels(ha harbor.App, tenantID, userID uint64) []*model.App {
 	labels := ha.Labels
+	if _, ok := labels[labelAppName]; !ok {
+		return nil
+	}
 
-	app := &model.App{
+	// base carries everything shared by every app built from this image.
+	base := model.App{
 		TenantID:            tenantID,
 		UserID:              userID,
-		Name:                labelOrDefault(labels, labelOCITitle, labelOrDefault(labels, labelAppName, ha.Repository)),
 		Description:         labels[labelOCIDescription],
 		Status:              model.AppActive,
 		DockerImageRegistry: j.registry,
 		DockerImageName:     ha.Repository,
 		DockerImageTag:      ha.Tag,
-		ShmSize:             labels[labelShmSize],
-		MaxCPU:              labels[labelMaxCPU],
-		MinCPU:              labels[labelMinCPU],
-		MaxMemory:           labels[labelMaxMemory],
-		MinMemory:           labels[labelMinMemory],
-		MaxEphemeralStorage: labels[labelMaxEphemeral],
-		MinEphemeralStorage: labels[labelMinEphemeral],
 		IconURL:             labels[labelAppIcon],
 		StabilityStatus:     model.AppStabilityStatus(labels[labelAppStability]),
 	}
 
-	return app
+	if subApps := parseKioskSubApps(labels); len(subApps) > 0 {
+		return kioskApps(base, subApps)
+	}
+
+	app := base
+	app.Name = labelOrDefault(labels, labelOCITitle, labels[labelAppName])
+	app.Category = labels[labelAppCategory]
+	app.ShmSize = labels[labelShmSize]
+	app.MaxCPU = labels[labelMaxCPU]
+	app.MinCPU = labels[labelMinCPU]
+	app.MaxMemory = labels[labelMaxMemory]
+	app.MinMemory = labels[labelMinMemory]
+	app.MaxEphemeralStorage = labels[labelMaxEphemeral]
+	app.MinEphemeralStorage = labels[labelMinEphemeral]
+	return []*model.App{&app}
+}
+
+// kioskApps expands the parsed kiosk sub-apps into one app each, sorted by
+// sub-app key for deterministic output.
+func kioskApps(base model.App, subApps map[string]map[string]string) []*model.App {
+	keys := make([]string, 0, len(subApps))
+	for k := range subApps {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	apps := make([]*model.App, 0, len(keys))
+	for _, key := range keys {
+		fields := subApps[key]
+
+		app := base
+		app.Name = labelOrDefault(fields, kioskFieldPrettyName, key)
+		app.Category = fields[kioskFieldCategory]
+		app.BrowserConfigURL = fields[kioskFieldURL]
+		app.ShmSize = fields[kioskFieldSharedMemory]
+		app.MaxCPU = fields[kioskFieldMaxCPU]
+		app.MinCPU = fields[kioskFieldMinCPU]
+		app.MaxMemory = fields[kioskFieldMaxMemory]
+		app.MinMemory = fields[kioskFieldMinMemory]
+		app.MaxEphemeralStorage = fields[kioskFieldMaxEphemeral]
+		app.MinEphemeralStorage = fields[kioskFieldMinEphemeral]
+		apps = append(apps, &app)
+	}
+	return apps
+}
+
+// parseKioskSubApps groups kiosk-config-url labels by sub-app name, returning
+// sub-app name -> field -> value (e.g. "gitlab" -> "url" -> "https://...").
+func parseKioskSubApps(labels map[string]string) map[string]map[string]string {
+	var subApps map[string]map[string]string
+	for k, v := range labels {
+		rest, ok := strings.CutPrefix(k, labelKioskConfigPrefix)
+		if !ok {
+			continue
+		}
+		name, field, ok := strings.Cut(rest, ".")
+		if !ok {
+			continue
+		}
+		if subApps == nil {
+			subApps = make(map[string]map[string]string)
+		}
+		if subApps[name] == nil {
+			subApps[name] = make(map[string]string)
+		}
+		subApps[name][field] = v
+	}
+	return subApps
+}
+
+// appIdentity uniquely identifies an app
+func appIdentity(a *model.App) string {
+	return a.DockerImageName + "\x00" + a.DockerImageTag + "\x00" + a.Name
+}
+
+func uint64Option(options map[string]interface{}, key string, def uint64) (uint64, error) {
+	v, ok := options[key]
+	if !ok {
+		return def, nil
+	}
+	switch n := v.(type) {
+	case float64:
+		return uint64(n), nil
+	case int:
+		return uint64(n), nil
+	case int64:
+		return uint64(n), nil
+	case uint64:
+		return n, nil
+	case string:
+		parsed, err := strconv.ParseUint(n, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid %s option: %w", key, err)
+		}
+		return parsed, nil
+	default:
+		return def, nil
+	}
 }
 
 func labelOrDefault(labels map[string]string, key, fallback string) string {
