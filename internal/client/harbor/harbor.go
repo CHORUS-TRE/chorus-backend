@@ -17,6 +17,7 @@ type App struct {
 	Repository string            `json:"repository"`
 	Tag        string            `json:"tag"`
 	Labels     map[string]string `json:"labels"`
+	PushTime   time.Time         `json:"push_time"`
 }
 
 type HarborClient interface {
@@ -66,7 +67,8 @@ type harborArtifact struct {
 }
 
 type harborTag struct {
-	Name string `json:"name"`
+	Name     string    `json:"name"`
+	PushTime time.Time `json:"push_time"`
 }
 
 func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error) {
@@ -98,11 +100,12 @@ func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error)
 				return nil, fmt.Errorf("fetching labels for %s@%s: %w", strippedName, artifact.Digest, err)
 			}
 
-			for _, tag := range tags {
+			for _, tag := range artifact.Tags {
 				apps = append(apps, App{
 					Repository: repo.Name,
-					Tag:        tag,
+					Tag:        tag.Name,
 					Labels:     labels,
+					PushTime:   tag.PushTime,
 				})
 			}
 		}
