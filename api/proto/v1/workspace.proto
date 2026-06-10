@@ -44,14 +44,15 @@ message PublicWorkspace {
     uint64 tenant_id = 2;
 
     string name = 3;
-    string description = 4;
-    string status = 5;
+    string short_name = 4;
+    string description = 5;
+    string status = 6;
 
-    string contact_username = 6;
-    string contact_first_name = 7;
-    string contact_last_name = 8;
-    string contact_email = 9;
+    string contact_username = 7;
+    string contact_first_name = 8;
+    string contact_last_name = 9;
+    string contact_email = 10;
 
-    google.protobuf.Timestamp created_at = 10;
-    google.protobuf.Timestamp updated_at = 11;
+    google.protobuf.Timestamp created_at = 11;
+    google.protobuf.Timestamp updated_at = 12;
 }
