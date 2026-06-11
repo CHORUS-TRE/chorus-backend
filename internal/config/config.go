@@ -8,13 +8,12 @@ type (
 	// Config is main structure holding configurations for different components.
 	// All the parameters are parsed through a YAML file residing in the build path.
 	Config struct {
-		Daemon    Daemon              `yaml:"daemon"`
-		Log       Log                 `yaml:"log"`
-		Storage   Storage             `yaml:"storage"`
-		Clients   Clients             `yaml:"clients"`
-		Tenants   map[uint64]Tenant   `yaml:"tenants"`
-		Workflows map[string]Workflow `yaml:"workflows,omitempty"`
-		Services  Services            `yaml:"services"`
+		Daemon   Daemon            `yaml:"daemon"`
+		Log      Log               `yaml:"log"`
+		Storage  Storage           `yaml:"storage"`
+		Clients  Clients           `yaml:"clients"`
+		Tenants  map[uint64]Tenant `yaml:"tenants"`
+		Services Services          `yaml:"services"`
 	}
 
 	// Daemon holds the GRPC and HTTP server settings.
@@ -114,11 +113,6 @@ type (
 		BufferSize      int  `yaml:"buffersize,omitempty"`
 		RateLimit       int  `yaml:"ratelimit,omitempty"`
 		DisallowDropLog bool `yaml:"disallow_drop_log,omitempty"`
-	}
-
-	Workflow struct {
-		Job                    Job           `yaml:"job,omitempty"`
-		DefaultStepTryDuration time.Duration `yaml:"step_try_duration"`
 	}
 
 	Clients struct {
