@@ -28,6 +28,7 @@ type NotificationStore interface {
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.PublicWorkspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
@@ -54,6 +55,7 @@ type Workbencher interface {
 type WorkspaceStore interface {
 	GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, IDIn *[]uint64, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
 	DeleteOldWorkspaces(ctx context.Context, duration time.Duration) ([]*model.Workspace, error)
 	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
@@ -187,6 +189,54 @@ func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, 
 		return nil, nil, fmt.Errorf("unable to query workspaces: %w", err)
 	}
 	return workspaces, paginationRes, nil
+}
+
+func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+	workspaces, paginationRes, err := s.store.ListPublicWorkspaces(ctx, tenantID, pagination)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to query public workspaces: %w", err)
+	}
+
+	var publicWorkspaces []*model.PublicWorkspace
+	for _, workspace := range workspaces {
+		if workspace.ContactUserID == nil || *workspace.ContactUserID == 0 {
+			// The workspace does not have any contact user
+			publicWorkspaces = append(publicWorkspaces, &model.PublicWorkspace{
+				ID:               workspace.ID,
+				TenantID:         workspace.TenantID,
+				Name:             workspace.Name,
+				ShortName:        workspace.ShortName,
+				Description:      workspace.Description,
+				Status:           workspace.Status,
+				ContactUsername:  "",
+				ContactFirstName: "",
+				ContactLastName:  "",
+				ContactEmail:     "",
+			})
+			continue
+		}
+		// The workspace does have a contact user
+		contactUser, err := s.userer.GetUser(ctx, user_service.GetUserReq{
+			TenantID: tenantID,
+			ID:       *workspace.ContactUserID,
+		})
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get user: %w", err)
+		}
+		publicWorkspaces = append(publicWorkspaces, &model.PublicWorkspace{
+			ID:               workspace.ID,
+			TenantID:         workspace.TenantID,
+			Name:             workspace.Name,
+			ShortName:        workspace.ShortName,
+			Description:      workspace.Description,
+			Status:           workspace.Status,
+			ContactUsername:  contactUser.Username,
+			ContactFirstName: contactUser.FirstName,
+			ContactLastName:  contactUser.LastName,
+			ContactEmail:     contactUser.Email,
+		})
+	}
+	return publicWorkspaces, paginationRes, nil
 }
 
 func (s *WorkspaceService) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {

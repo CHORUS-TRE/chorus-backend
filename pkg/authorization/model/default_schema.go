@@ -27,6 +27,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionResetPassword,
 			PermissionCreateWorkspace,
 			PermissionListWorkspaces,
+			PermissionListPublicWorkspaces,
 			PermissionListWorkbenchs,
 			PermissionListApps,
 			PermissionListAppInstances,
@@ -268,6 +269,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", oneContext(RoleContextWorkbench)),
 
 			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListPublicWorkspaces, "Allow the user to list public workspaces", nil),
 			permissionDefinition(PermissionCreateWorkspace, "Allow the user to create a workspace", nil),
 			permissionDefinition(PermissionUpdateWorkspace, "Allow the user to update a workspace", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionGetWorkspace, "Allow the user to get a workspace", oneContext(RoleContextWorkspace)),

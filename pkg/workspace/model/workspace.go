@@ -33,6 +33,18 @@ func (c ClipboardMode) String() string {
 	return string(c)
 }
 
+// VisibilityMode defines the visibility for a workspace.
+type WorkspaceVisibility string
+
+const (
+	WorkspaceVisibilityPrivate WorkspaceVisibility = "private"
+	WorkspaceVisibilityPublic  WorkspaceVisibility = "public"
+)
+
+func (v WorkspaceVisibility) String() string {
+	return string(v)
+}
+
 // Workspace maps an entry in the 'workspaces' database table.
 type Workspace struct {
 	ID uint64
@@ -57,9 +69,34 @@ type Workspace struct {
 	// Clipboard (workspace-wide default for workbenches)
 	Clipboard ClipboardMode
 
+	// Visibility defines whether the workspace is private or public.
+	// Public workspaces expose certain information (e.g., name, description, contact information) to users outside the workspace and can be listed in a public catalog.
+	Visibility WorkspaceVisibility
+	// ContactUserID defines the user to list as contact point when the workspace is public
+	ContactUserID *uint64
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+}
+
+// PublicWorkspace represents information made available to users when a workspace is marked as public.
+type PublicWorkspace struct {
+	ID       uint64
+	TenantID uint64
+
+	Name        string
+	ShortName   string
+	Description string
+	Status      WorkspaceStatus
+
+	ContactUsername  string
+	ContactFirstName string
+	ContactLastName  string
+	ContactEmail     string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // JSONMap is a generic map type that handles JSONB serialization for sqlx.
@@ -182,6 +219,13 @@ func GetIDFromClusterName(clusterName string) (uint64, error) {
 		return 0, fmt.Errorf("unable to get workspace ID from cluster name %s: %w", clusterName, err)
 	}
 	return id, nil
+}
+
+func (s Workspace) GetContactUserID() uint64 {
+	if s.ContactUserID != nil {
+		return *s.ContactUserID
+	}
+	return 0
 }
 
 // WorkspaceStatus represents the status of a workspace.

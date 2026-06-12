@@ -27,11 +27,18 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
 
+		Status: model.WorkspaceStatus(workspace.Status),
 		IsMain: workspace.IsMain,
 
-		NetworkPolicy: model.NetworkPolicyMode(workspace.NetworkPolicy),
-		AllowedFQDNs:  model.StringSlice(workspace.AllowedFqdns),
-		Clipboard:     model.ClipboardMode(workspace.Clipboard),
+		NetworkPolicy:        model.NetworkPolicyMode(workspace.NetworkPolicy),
+		NetworkPolicyStatus:  workspace.NetworkPolicyStatus,
+		NetworkPolicyMessage: workspace.NetworkPolicyMessage,
+		AllowedFQDNs:         model.StringSlice(workspace.AllowedFqdns),
+		Clipboard:            model.ClipboardMode(workspace.Clipboard),
+
+		Visibility: WorkspaceVisibilityToBusiness(workspace.Visibility),
+		// TODO: double check if this is ok to pass pointer
+		ContactUserID: &workspace.ContactUserId,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
@@ -73,6 +80,55 @@ func WorkspaceFromBusiness(workspace *model.Workspace, gidOffset uint64) (*choru
 		CreatedAt: ca,
 		UpdatedAt: ua,
 
-		Gid: workspace.ID + gidOffset,
+		Gid:           workspace.ID + gidOffset,
+		Visibility:    WorkspaceVisibilityFromBusiness(workspace.Visibility),
+		ContactUserId: workspace.GetContactUserID(),
 	}, nil
+}
+
+func PublicWorkspaceFromBusiness(workspace *model.PublicWorkspace, gidOffset uint64) (*chorus.PublicWorkspace, error) {
+	ca, err := ToProtoTimestamp(workspace.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
+	}
+	ua, err := ToProtoTimestamp(workspace.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
+	}
+
+	return &chorus.PublicWorkspace{
+		Id:       workspace.ID,
+		TenantId: workspace.TenantID,
+
+		Name:        workspace.Name,
+		ShortName:   workspace.ShortName,
+		Description: workspace.Description,
+		Status:      workspace.Status.String(),
+
+		ContactUsername:  workspace.ContactUsername,
+		ContactFirstName: workspace.ContactFirstName,
+		ContactLastName:  workspace.ContactLastName,
+		ContactEmail:     workspace.ContactEmail,
+
+		CreatedAt: ca,
+		UpdatedAt: ua,
+	}, nil
+}
+
+func WorkspaceVisibilityToBusiness(v chorus.WorkspaceVisibility) model.WorkspaceVisibility {
+	switch v {
+	case chorus.WorkspaceVisibility_WORKSPACE_VISIBILITY_PUBLIC:
+		return model.WorkspaceVisibilityPublic
+	default:
+		return model.WorkspaceVisibilityPrivate
+	}
+}
+
+func WorkspaceVisibilityFromBusiness(v model.WorkspaceVisibility) chorus.WorkspaceVisibility {
+	switch v {
+	case model.WorkspaceVisibilityPublic:
+		return chorus.WorkspaceVisibility_WORKSPACE_VISIBILITY_PUBLIC
+	default:
+		return chorus.WorkspaceVisibility_WORKSPACE_VISIBILITY_PRIVATE
+	}
 }
