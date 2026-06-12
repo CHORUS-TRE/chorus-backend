@@ -27,11 +27,14 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
 
+		Status: model.WorkspaceStatus(workspace.Status),
 		IsMain: workspace.IsMain,
 
-		NetworkPolicy: model.NetworkPolicyMode(workspace.NetworkPolicy),
-		AllowedFQDNs:  model.StringSlice(workspace.AllowedFqdns),
-		Clipboard:     model.ClipboardMode(workspace.Clipboard),
+		NetworkPolicy:        model.NetworkPolicyMode(workspace.NetworkPolicy),
+		NetworkPolicyStatus:  workspace.NetworkPolicyStatus,
+		NetworkPolicyMessage: workspace.NetworkPolicyMessage,
+		AllowedFQDNs:         model.StringSlice(workspace.AllowedFqdns),
+		Clipboard:            model.ClipboardMode(workspace.Clipboard),
 
 		Visibility: WorkspaceVisibilityToBusiness(workspace.Visibility),
 		// TODO: double check if this is ok to pass pointer
