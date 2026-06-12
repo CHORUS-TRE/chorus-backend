@@ -38,8 +38,10 @@ const (
 	labelKioskConfigPrefix = "ch.chorus-tre.app.kiosk-config-url."
 
 	kioskFieldPrettyName   = "prettyname"
+	kioskFieldDescription  = "description"
 	kioskFieldCategory     = "category"
 	kioskFieldURL          = "url"
+	kioskFieldIcon         = "icon"
 	kioskFieldMaxCPU       = "resources.max-cpu"
 	kioskFieldMinCPU       = "resources.min-cpu"
 	kioskFieldMaxMemory    = "resources.max-memory"
@@ -75,6 +77,7 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "", err
 	}
 
+	// List existing apps in store
 	existingApps, _, err := j.store.ListApps(ctx, tenantID, nil)
 	if err != nil {
 		return "", fmt.Errorf("listing existing apps: %w", err)
@@ -84,11 +87,14 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 	for _, a := range existingApps {
 		existing[appIdentity(a)] = struct{}{}
 	}
+	logger.TechLog.Debug(ctx, fmt.Sprintf("app-sync: listed %d existing apps", len(existingApps)))
 
+	// List apps and versions in Harbor
 	harborApps, err := j.harborClient.ListApps()
 	if err != nil {
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
+	logger.TechLog.Debug(ctx, fmt.Sprintf("app-sync: listed %d apps from harbor", len(harborApps)))
 
 	toCreate := j.appsToCreate(harborApps, existing, tenantID, userID)
 	if len(toCreate) == 0 {
@@ -105,9 +111,8 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 	return fmt.Sprintf("created %d new apps", len(created)), nil
 }
 
-// appsToCreate converts harbor apps into the models to insert, oldest-first so
-// ids follow the Harbor push order, skipping internal apps and ones in existing.
 func (j *AppSyncJob) appsToCreate(harborApps []harbor.App, existing map[string]struct{}, tenantID, userID uint64) []*model.App {
+	// Sort Harbor apps by push time, oldest first
 	sort.SliceStable(harborApps, func(i, k int) bool {
 		return harborApps[i].PushTime.Before(harborApps[k].PushTime)
 	})
@@ -136,7 +141,7 @@ func (j *AppSyncJob) harborAppToModels(ha harbor.App, tenantID, userID uint64) [
 		return nil
 	}
 
-	// base carries everything shared by every app built from this image.
+	// base carries everything shared by every app built from this image
 	base := model.App{
 		TenantID:            tenantID,
 		UserID:              userID,
@@ -181,7 +186,9 @@ func kioskApps(base model.App, subApps map[string]map[string]string) []*model.Ap
 
 		app := base
 		app.Name = labelOrDefault(fields, kioskFieldPrettyName, key)
+		app.Description = labelOrDefault(fields, kioskFieldDescription, base.Description)
 		app.Category = fields[kioskFieldCategory]
+		app.IconURL = labelOrDefault(fields, kioskFieldIcon, base.IconURL)
 		app.BrowserConfigURL = fields[kioskFieldURL]
 		app.ShmSize = fields[kioskFieldSharedMemory]
 		app.MaxCPU = fields[kioskFieldMaxCPU]
