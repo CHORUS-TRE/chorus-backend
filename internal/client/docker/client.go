@@ -90,7 +90,7 @@ func (c *client) GetLabels(imageRef string, username, password string) (map[stri
 		return nil, fmt.Errorf("failed to get image config: %w", err)
 	}
 
-	logger.TechLog.Debug(context.Background(), "retrieved image labels", zap.String("image", imageRef))
+	logger.TechLog.Debug(context.Background(), "fetched image config labels", zap.String("imageRef", imageRef), zap.Int64("nb_labels", int64(len(cfgFile.Config.Labels))))
 
 	return cfgFile.Config.Labels, nil
 }

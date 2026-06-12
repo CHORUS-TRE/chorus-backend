@@ -25,7 +25,7 @@ func NewAppStorage(db *sqlx.DB) *AppStorage {
 
 func (s *AppStorage) GetApp(ctx context.Context, tenantID uint64, appID uint64) (*model.App, error) {
 	const query = `
-		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", createdat, updatedat
+		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", "category", createdat, updatedat
 		FROM apps
 		WHERE tenantid = $1 AND id = $2;
 	`
@@ -48,7 +48,7 @@ func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination *
 
 	// Get apps query
 	query := `
-		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", createdat, updatedat
+		SELECT id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", "category", createdat, updatedat
 		FROM apps
 		WHERE tenantid = $1 AND status != 'deleted'
 	`
@@ -82,14 +82,14 @@ func (s *AppStorage) ListApps(ctx context.Context, tenantID uint64, pagination *
 // CreateApp saves the provided app object in the database 'apps' table.
 func (s *AppStorage) CreateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	const appQuery = `
-		INSERT INTO apps (tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW(), NOW()) 
-		RETURNING id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", createdat, updatedat;
+		INSERT INTO apps (tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", "category", createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, NOW(), NOW()) 
+		RETURNING id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", "category", createdat, updatedat;
 	`
 
 	var newApp model.App
 	err := s.db.GetContext(ctx, &newApp, appQuery,
-		tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.BrowserConfigURL, app.BrowserConfigJWTURL, app.BrowserConfigJWTOIDCClientID, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.MaxEphemeralStorage, app.MinEphemeralStorage, app.IconURL, app.IconBackgroundColor, app.StabilityStatus,
+		tenantID, app.UserID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.BrowserConfigURL, app.BrowserConfigJWTURL, app.BrowserConfigJWTOIDCClientID, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.MaxEphemeralStorage, app.MinEphemeralStorage, app.IconURL, app.IconBackgroundColor, app.StabilityStatus, app.Category,
 	)
 	if err != nil {
 		return nil, err
@@ -114,9 +114,9 @@ func (s *AppStorage) BulkCreateApps(ctx context.Context, tenantID uint64, apps [
 	}()
 
 	const appQuery = `
-		INSERT INTO apps (tenantid, userid, name, description, status, dockerimagename, dockerimagetag, dockerimageregistry, shmsize, browserconfigurl, browserconfigjwturl, browserconfigjwtoidcclientid, maxcpu, mincpu, maxmemory, minmemory, maxephemeralstorage, minephemeralstorage, iconurl, iconbackgroundcolor, stabilitystatus, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, NOW(), NOW()) 
-		RETURNING id, tenantid, userid, name, description, status, dockerimagename, dockerimagetag, dockerimageregistry, shmsize, browserconfigurl, browserconfigjwturl, browserconfigjwtoidcclientid, maxcpu, mincpu, maxmemory, minmemory, maxephemeralstorage, minephemeralstorage, iconurl, iconbackgroundcolor, stabilitystatus, createdat, updatedat;
+		INSERT INTO apps (tenantid, userid, name, description, status, dockerimagename, dockerimagetag, dockerimageregistry, shmsize, browserconfigurl, browserconfigjwturl, browserconfigjwtoidcclientid, maxcpu, mincpu, maxmemory, minmemory, maxephemeralstorage, minephemeralstorage, iconurl, iconbackgroundcolor, stabilitystatus, category, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, NOW(), NOW()) 
+		RETURNING id, tenantid, userid, name, description, status, dockerimagename, dockerimagetag, dockerimageregistry, shmsize, browserconfigurl, browserconfigjwturl, browserconfigjwtoidcclientid, maxcpu, mincpu, maxmemory, minmemory, maxephemeralstorage, minephemeralstorage, iconurl, iconbackgroundcolor, stabilitystatus, category, createdat, updatedat;
 	`
 
 	var newApps []*model.App
@@ -137,6 +137,7 @@ func (s *AppStorage) BulkCreateApps(ctx context.Context, tenantID uint64, apps [
 			app.IconURL,
 			app.IconBackgroundColor,
 			app.StabilityStatus,
+			app.Category,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("unable to exec bulk insert: %w", err)
@@ -154,14 +155,14 @@ func (s *AppStorage) BulkCreateApps(ctx context.Context, tenantID uint64, apps [
 func (s *AppStorage) UpdateApp(ctx context.Context, tenantID uint64, app *model.App) (*model.App, error) {
 	const appUpdateQuery = `
 		UPDATE apps
-		SET name = $3, description = $4, status = $5, dockerimagename = $6, dockerimagetag = $7, dockerimageregistry = $8, shmsize = $9, browserconfigurl = $10, browserconfigjwturl = $11, browserconfigjwtoidcclientid = $12, maxcpu = $13, mincpu = $14, maxmemory = $15, minmemory = $16, maxephemeralstorage = $17, minephemeralstorage = $18, iconurl = $19, iconbackgroundcolor = $20, stabilitystatus = $21, updatedat = NOW()
+		SET name = $3, description = $4, status = $5, dockerimagename = $6, dockerimagetag = $7, dockerimageregistry = $8, shmsize = $9, browserconfigurl = $10, browserconfigjwturl = $11, browserconfigjwtoidcclientid = $12, maxcpu = $13, mincpu = $14, maxmemory = $15, minmemory = $16, maxephemeralstorage = $17, minephemeralstorage = $18, iconurl = $19, iconbackgroundcolor = $20, stabilitystatus = $21, category = $22, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", createdat, updatedat;
+		RETURNING id, tenantid, userid, "name", "description", "status", "dockerimagename", "dockerimagetag", "dockerimageregistry", "shmsize", "browserconfigurl", "browserconfigjwturl", "browserconfigjwtoidcclientid", "maxcpu", "mincpu", "maxmemory", "minmemory", "maxephemeralstorage", "minephemeralstorage", "iconurl", "iconbackgroundcolor", "stabilitystatus", "category", createdat, updatedat;
 	`
 
 	// Update app
 	var updatedApp model.App
-	err := s.db.GetContext(ctx, &updatedApp, appUpdateQuery, tenantID, app.ID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.BrowserConfigURL, app.BrowserConfigJWTURL, app.BrowserConfigJWTOIDCClientID, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.MaxEphemeralStorage, app.MinEphemeralStorage, app.IconURL, app.IconBackgroundColor, app.StabilityStatus)
+	err := s.db.GetContext(ctx, &updatedApp, appUpdateQuery, tenantID, app.ID, app.Name, app.Description, app.Status, app.DockerImageName, app.DockerImageTag, app.DockerImageRegistry, app.ShmSize, app.BrowserConfigURL, app.BrowserConfigJWTURL, app.BrowserConfigJWTOIDCClientID, app.MaxCPU, app.MinCPU, app.MaxMemory, app.MinMemory, app.MaxEphemeralStorage, app.MinEphemeralStorage, app.IconURL, app.IconBackgroundColor, app.StabilityStatus, app.Category)
 	if err != nil {
 		return nil, err
 	}
