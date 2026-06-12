@@ -572,9 +572,6 @@ func (s *WorkspaceStorage) encryptSensitiveFields(svc *model.WorkspaceServiceIns
 			return "", "", nil, fmt.Errorf("unable to encrypt credentials path: %w", err)
 		}
 	}
-	if encCredPaths == nil {
-		encCredPaths = model.StringSlice{}
-	}
 
 	return encValues, encCredName, encCredPaths, nil
 }
