@@ -37,7 +37,7 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 	const query = `
 		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
 		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		       clipboard,
+		       clipboard, visibility, contactuserid,
 		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
@@ -73,7 +73,7 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	query := `
 		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
 		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		       clipboard,
+		       clipboard, visibility, contactuserid,
 		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1
@@ -126,7 +126,7 @@ func (s *WorkspaceStorage) ListPublicWorkspaces(ctx context.Context, tenantID ui
 	query := `
 		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
 		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		       clipboard,
+		       clipboard, contactuserid,
 		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1 AND visibility = $2 AND deletedat IS NULL
@@ -160,11 +160,12 @@ func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64,
 	const workspaceQuery = `
 		INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, ismain,
 		                        networkpolicy, allowedfqdns, clipboard,
+								visibility, contactuserid,
 		                        createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
 		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
 		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		          clipboard,
+		          clipboard, visibility, contactuserid,
 		          createdat, updatedat;
 	`
 
@@ -180,11 +181,15 @@ func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64,
 	if allowedFQDNs == nil {
 		allowedFQDNs = model.StringSlice{}
 	}
+	visibility := workspace.Visibility
+	if visibility == "" {
+		visibility = model.WorkspaceVisibilityPrivate
+	}
 
 	var createdWorkspace model.Workspace
 	err := s.db.GetContext(ctx, &createdWorkspace, workspaceQuery,
 		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-		networkPolicy, pqStringArray(allowedFQDNs), clipboard,
+		networkPolicy, pqStringArray(allowedFQDNs), clipboard, visibility, workspace.ContactUserID,
 	)
 	if err != nil {
 		return nil, err
@@ -197,12 +202,12 @@ func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64,
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
 		SET name = $3, shortname = $4, description = $5, status = $6, isMain = $7,
-		    networkpolicy = $8, allowedfqdns = $9, clipboard = $10,
+		    networkpolicy = $8, allowedfqdns = $9, clipboard = $10, visibility = $11, contactuserid = $12,
 		    updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
 		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
 		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		          clipboard,
+		          clipboard, visibility, contactuserid,
 		          createdat, updatedat;
 	`
 
@@ -218,11 +223,15 @@ func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64,
 	if allowedFQDNs == nil {
 		allowedFQDNs = model.StringSlice{}
 	}
+	visibility := workspace.Visibility
+	if visibility == "" {
+		visibility = model.WorkspaceVisibilityPrivate
+	}
 
 	var updatedWorkspace model.Workspace
 	err := s.db.GetContext(ctx, &updatedWorkspace, workspaceUpdateQuery,
 		tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-		networkPolicy, pqStringArray(allowedFQDNs), clipboard,
+		networkPolicy, pqStringArray(allowedFQDNs), clipboard, visibility, workspace.ContactUserID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update workspace: %w", err)

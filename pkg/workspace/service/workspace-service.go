@@ -199,7 +199,7 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 
 	var publicWorkspaces []*model.PublicWorkspace
 	for _, workspace := range workspaces {
-		if workspace.ContactUserID == 0 {
+		if workspace.ContactUserID == nil || *workspace.ContactUserID == 0 {
 			// The workspace does not have any contact user
 			publicWorkspaces = append(publicWorkspaces, &model.PublicWorkspace{
 				ID:               workspace.ID,
@@ -218,7 +218,7 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 		// The workspace does have a contact user
 		contactUser, err := s.userer.GetUser(ctx, user_service.GetUserReq{
 			TenantID: tenantID,
-			ID:       workspace.ContactUserID,
+			ID:       *workspace.ContactUserID,
 		})
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to get user: %w", err)

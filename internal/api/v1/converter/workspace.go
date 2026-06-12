@@ -33,6 +33,10 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		AllowedFQDNs:  model.StringSlice(workspace.AllowedFqdns),
 		Clipboard:     model.ClipboardMode(workspace.Clipboard),
 
+		Visibility: WorkspaceVisibilityToBusiness(workspace.Visibility),
+		// TODO: double check if this is ok to pass pointer
+		ContactUserID: &workspace.ContactUserId,
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
@@ -73,7 +77,9 @@ func WorkspaceFromBusiness(workspace *model.Workspace, gidOffset uint64) (*choru
 		CreatedAt: ca,
 		UpdatedAt: ua,
 
-		Gid: workspace.ID + gidOffset,
+		Gid:           workspace.ID + gidOffset,
+		Visibility:    WorkspaceVisibilityFromBusiness(workspace.Visibility),
+		ContactUserId: workspace.GetContactUserID(),
 	}, nil
 }
 
@@ -104,4 +110,22 @@ func PublicWorkspaceFromBusiness(workspace *model.PublicWorkspace, gidOffset uin
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
+}
+
+func WorkspaceVisibilityToBusiness(v chorus.WorkspaceVisibility) model.WorkspaceVisibility {
+	switch v {
+	case chorus.WorkspaceVisibility_WORKSPACE_VISIBILITY_PUBLIC:
+		return model.WorkspaceVisibilityPublic
+	default:
+		return model.WorkspaceVisibilityPrivate
+	}
+}
+
+func WorkspaceVisibilityFromBusiness(v model.WorkspaceVisibility) chorus.WorkspaceVisibility {
+	switch v {
+	case model.WorkspaceVisibilityPublic:
+		return chorus.WorkspaceVisibility_WORKSPACE_VISIBILITY_PUBLIC
+	default:
+		return chorus.WorkspaceVisibility_WORKSPACE_VISIBILITY_PRIVATE
+	}
 }

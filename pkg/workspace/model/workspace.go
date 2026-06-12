@@ -71,8 +71,9 @@ type Workspace struct {
 
 	// Visibility defines whether the workspace is private or public.
 	// Public workspaces expose certain information (e.g., name, description, contact information) to users outside the workspace and can be listed in a public catalog.
-	Visibility    WorkspaceVisibility
-	ContactUserID uint64
+	Visibility WorkspaceVisibility
+	// ContactUserID defines the user to list as contact point when the workspace is public
+	ContactUserID *uint64
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -218,6 +219,13 @@ func GetIDFromClusterName(clusterName string) (uint64, error) {
 		return 0, fmt.Errorf("unable to get workspace ID from cluster name %s: %w", clusterName, err)
 	}
 	return id, nil
+}
+
+func (s Workspace) GetContactUserID() uint64 {
+	if s.ContactUserID != nil {
+		return *s.ContactUserID
+	}
+	return 0
 }
 
 // WorkspaceStatus represents the status of a workspace.

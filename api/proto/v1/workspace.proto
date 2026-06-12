@@ -27,6 +27,8 @@ message Workspace {
     google.protobuf.Timestamp createdAt = 11;
     google.protobuf.Timestamp updatedAt = 12;
 
+    // TODO: check if we want to keep the timestamps last
+
     string namespace = 13;
 
     string networkPolicy = 14;
@@ -37,6 +39,7 @@ message Workspace {
 
     uint64 gid = 19;
     WorkspaceVisibility visibility = 20;
+    uint64 contactUserId = 21;
 }
 
 message PublicWorkspace {

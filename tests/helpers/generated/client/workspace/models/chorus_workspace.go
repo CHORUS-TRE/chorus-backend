@@ -31,6 +31,9 @@ type ChorusWorkspace struct {
 	// clipboard
 	Clipboard string `json:"clipboard,omitempty"`
 
+	// contact user Id
+	ContactUserID string `json:"contactUserId,omitempty"`
+
 	// created at
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`

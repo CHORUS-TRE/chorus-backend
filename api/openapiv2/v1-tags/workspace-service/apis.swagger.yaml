@@ -552,6 +552,9 @@ definitions:
         format: uint64
       visibility:
         $ref: '#/definitions/chorusWorkspaceVisibility'
+      contactUserId:
+        type: string
+        format: uint64
   chorusWorkspaceFilter:
     type: object
     properties:
