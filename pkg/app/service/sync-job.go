@@ -52,15 +52,17 @@ const (
 )
 
 type AppSyncJob struct {
-	store        AppStore
+	appStore     AppStore
+	appService   Apper
 	harborClient harbor.HarborClient
 	registry     string
 	log          *logger.ContextLogger
 }
 
-func NewAppSyncJob(store AppStore, harborClient harbor.HarborClient, registry string, log *logger.ContextLogger) *AppSyncJob {
+func NewAppSyncJob(appStore AppStore, appService Apper, harborClient harbor.HarborClient, registry string, log *logger.ContextLogger) *AppSyncJob {
 	return &AppSyncJob{
-		store:        store,
+		appStore:     appStore,
+		appService:   appService,
 		harborClient: harborClient,
 		registry:     registry,
 		log:          log,
@@ -78,7 +80,7 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 	}
 
 	// List existing apps in store
-	existingApps, _, err := j.store.ListApps(ctx, tenantID, nil)
+	existingApps, _, err := j.appStore.ListApps(ctx, tenantID, nil)
 	if err != nil {
 		return "", fmt.Errorf("listing existing apps: %w", err)
 	}
@@ -101,7 +103,7 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 		return "all apps already exist", nil
 	}
 
-	created, err := j.store.BulkCreateApps(ctx, tenantID, toCreate)
+	created, err := j.appService.BulkCreateApps(ctx, toCreate)
 	if err != nil {
 		return "", fmt.Errorf("bulk creating apps: %w", err)
 	}
