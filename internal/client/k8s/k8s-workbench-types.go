@@ -36,12 +36,13 @@ type InitContainerConfig struct {
 	Version string `json:"version,omitempty"`
 }
 type WorkbenchApp struct {
-	Name          string                       `json:"name"`
-	State         WorkbenchAppState            `json:"state,omitempty"`
-	Image         Image                        `json:"image"`
-	ShmSize       *resource.Quantity           `json:"shmSize,omitempty"`
-	Resources     *corev1.ResourceRequirements `json:"resources,omitempty"`
-	BrowserConfig *BrowserConfig               `json:"browserConfig,omitempty"`
+	Name            string                       `json:"name"`
+	State           WorkbenchAppState            `json:"state,omitempty"`
+	Image           Image                        `json:"image"`
+	ShmSize         *resource.Quantity           `json:"shmSize,omitempty"`
+	Resources       *corev1.ResourceRequirements `json:"resources,omitempty"`
+	BrowserConfig   *BrowserConfig               `json:"browserConfig,omitempty"`
+	EnvVarsToInject map[string]string            `json:"envVarsToInject,omitempty"`
 }
 type WorkbenchSpec struct {
 	Server           WorkbenchServer         `json:"server,omitempty"`

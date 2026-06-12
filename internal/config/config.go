@@ -291,6 +291,12 @@ type (
 			IssuerURL               string                        `yaml:"issuer_url"`
 			Scopes                  []string                      `yaml:"scopes"`
 			Clients                 []OpenIDConnectProviderClient `yaml:"clients"`
+			// IDTokenInjectionTTL is how long an ID token minted for the
+			// `inject_oidc_jwt_client_id` mechanism (i.e. tokens pushed into
+			// the workbench app container as JWT_TOKEN) stays valid. It must
+			// outlive a typical workbench session, since the token is minted
+			// once at app-instance creation time and never refreshed.
+			IDTokenInjectionTTL time.Duration `yaml:"id_token_injection_ttl"`
 		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {

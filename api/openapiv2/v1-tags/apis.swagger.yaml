@@ -5432,6 +5432,13 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+      injectOIDCJWTClientID:
+        type: string
+        description: |-
+          injectOIDCJWTClientID, when set, makes the backend mint a long-lived
+          OIDC ID token for this client (as if the user had completed the full
+          OIDC flow) and inject it as the JWT_TOKEN env var into the workbench
+          app container.
   chorusAppInstance:
     type: object
     properties:

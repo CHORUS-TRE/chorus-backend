@@ -57,6 +57,12 @@ type ChorusApp struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// injectOIDCJWTClientID, when set, makes the backend mint a long-lived
+	// OIDC ID token for this client (as if the user had completed the full
+	// OIDC flow) and inject it as the JWT_TOKEN env var into the workbench
+	// app container.
+	InjectOIDCJWTClientID string `json:"injectOIDCJWTClientID,omitempty"`
+
 	// max CPU
 	MaxCPU string `json:"maxCPU,omitempty"`
 

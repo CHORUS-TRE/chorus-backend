@@ -30,6 +30,7 @@ type App struct {
 	BrowserConfigURL             string
 	BrowserConfigJWTURL          string
 	BrowserConfigJWTOIDCClientID string
+	InjectOIDCJWTClientID        string
 	IconURL                      string
 	IconBackgroundColor          string
 	StabilityStatus              AppStabilityStatus

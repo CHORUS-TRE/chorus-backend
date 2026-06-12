@@ -125,6 +125,7 @@ func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbe
 			ai.createdat,
 			ai.updatedat,
 			ai.browserconfigjwttoken,
+			ai.injectoidcjwttoken,
 
 			a.name as AppName,
 			a.dockerimageregistry as AppDockerImageRegistry,
@@ -133,6 +134,7 @@ func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbe
 			a.shmsize as AppShmSize,
 			a.browserconfigurl as AppBrowserConfigURL,
 			a.browserconfigjwturl as AppBrowserConfigJWTUrl,
+			a.injectoidcjwtclientid as AppInjectOIDCJWTClientID,
 			a.maxcpu as AppMaxCPU,
 			a.mincpu as AppMinCPU,
 			a.maxmemory as AppMaxMemory,
@@ -291,7 +293,7 @@ func (s *WorkbenchStorage) DeleteWorkbenchesInWorkspace(ctx context.Context, ten
 
 func (s *WorkbenchStorage) GetAppInstance(ctx context.Context, tenantID uint64, appInstanceID uint64) (*model.AppInstance, error) {
 	const query = `
-		SELECT ai.id, ai.tenantid, ai.userid, ai.appid, ai.workspaceid, ai.workbenchid, ai.status, ai.k8sstate, ai.k8sstatus, ai.k8smessage, ai.initialresolutionwidth, ai.initialresolutionheight, ai.browserconfigjwttoken, ai.createdat, ai.updatedat,
+		SELECT ai.id, ai.tenantid, ai.userid, ai.appid, ai.workspaceid, ai.workbenchid, ai.status, ai.k8sstate, ai.k8sstatus, ai.k8smessage, ai.initialresolutionwidth, ai.initialresolutionheight, ai.browserconfigjwttoken, ai.injectoidcjwttoken, ai.createdat, ai.updatedat,
 			a.name as appname, a.dockerimageregistry as appdockerimageregistry, a.dockerimagename as appdockerimagename, a.dockerimagetag as appdockerimagetag
 		FROM app_instances ai
 		JOIN apps a ON ai.tenantid = a.tenantid AND ai.appid = a.id
@@ -321,7 +323,7 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 
 	// Get app instances query
 	query := `
-		SELECT ai.id, ai.tenantid, ai.userid, ai.appid, ai.workspaceid, ai.workbenchid, ai.status, ai.k8sstate, ai.k8sstatus, ai.k8smessage, ai.initialresolutionwidth, ai.initialresolutionheight, ai.browserconfigjwttoken, ai.createdat, ai.updatedat,
+		SELECT ai.id, ai.tenantid, ai.userid, ai.appid, ai.workspaceid, ai.workbenchid, ai.status, ai.k8sstate, ai.k8sstatus, ai.k8smessage, ai.initialresolutionwidth, ai.initialresolutionheight, ai.browserconfigjwttoken, ai.injectoidcjwttoken, ai.createdat, ai.updatedat,
 			a.name as appname, a.dockerimageregistry as appdockerimageregistry, a.dockerimagename as appdockerimagename, a.dockerimagetag as appdockerimagetag
 		FROM app_instances ai
 		JOIN apps a ON ai.tenantid = a.tenantid AND ai.appid = a.id
@@ -357,14 +359,14 @@ func (s *WorkbenchStorage) ListAppInstances(ctx context.Context, tenantID uint64
 // CreateAppInstance saves the provided appInstance object in the database 'appInstances' table.
 func (s *WorkbenchStorage) CreateAppInstance(ctx context.Context, tenantID uint64, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	const appInstanceQuery = `
-		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, browserconfigjwttoken, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, browserconfigjwttoken, createdat, updatedat;
+		INSERT INTO app_instances (tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, browserconfigjwttoken, injectoidcjwttoken, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, browserconfigjwttoken, injectoidcjwttoken, createdat, updatedat;
 	`
 
 	var newAppInstance model.AppInstance
 	err := s.db.GetContext(ctx, &newAppInstance, appInstanceQuery,
-		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceUnknown, model.K8sAppInstanceStateRunning, model.K8sAppInstanceStatusUnknown, appInstance.K8sMessage, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.BrowserConfigJWTToken,
+		tenantID, appInstance.UserID, appInstance.AppID, appInstance.WorkspaceID, appInstance.WorkbenchID, model.AppInstanceUnknown, model.K8sAppInstanceStateRunning, model.K8sAppInstanceStatusUnknown, appInstance.K8sMessage, appInstance.InitialResolutionWidth, appInstance.InitialResolutionHeight, appInstance.BrowserConfigJWTToken, appInstance.InjectOIDCJWTToken,
 	)
 	if err != nil {
 		return nil, err
@@ -379,7 +381,7 @@ func (s *WorkbenchStorage) UpdateAppInstance(ctx context.Context, tenantID uint6
 		UPDATE app_instances
 		SET status = $3, k8sstate = $4, k8sstatus = $5, k8smessage = $6, updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2
-		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, browserconfigjwttoken, createdat, updatedat;
+		RETURNING id, tenantid, userid, appid, workspaceid, workbenchid, status, k8sstate, k8sstatus, k8smessage, initialresolutionwidth, initialresolutionheight, browserconfigjwttoken, injectoidcjwttoken, createdat, updatedat;
 	`
 
 	var updatedAppInstance model.AppInstance

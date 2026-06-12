@@ -27,22 +27,24 @@ type AppInstance struct {
 	InitialResolutionHeight uint32
 
 	BrowserConfigJWTToken string
+	InjectOIDCJWTToken    string
 
 	AppName                *string
 	AppDockerImageRegistry *string
 	AppDockerImageName     *string
 	AppDockerImageTag      *string
 
-	AppShmSize             *string
-	AppBrowserConfigURL    *string
-	AppBrowserConfigJWTURL *string
-	AppMaxCPU              *string
-	AppMinCPU              *string
-	AppMaxMemory           *string
-	AppMinMemory           *string
-	AppMaxEphemeralStorage *string
-	AppMinEphemeralStorage *string
-	AppIconURL             *string
+	AppShmSize               *string
+	AppBrowserConfigURL      *string
+	AppBrowserConfigJWTURL   *string
+	AppInjectOIDCJWTClientID *string
+	AppMaxCPU                *string
+	AppMinCPU                *string
+	AppMaxMemory             *string
+	AppMinMemory             *string
+	AppMaxEphemeralStorage   *string
+	AppMinEphemeralStorage   *string
+	AppIconURL               *string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -50,7 +52,7 @@ type AppInstance struct {
 }
 
 func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
-	return k8s.AppInstance{
+	instance := k8s.AppInstance{
 		ID:      a.ID,
 		AppName: utils.ToString(a.AppName),
 
@@ -72,6 +74,10 @@ func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
 		MaxEphemeralStorage: utils.ToString(a.AppMaxEphemeralStorage),
 		MinEphemeralStorage: utils.ToString(a.AppMinEphemeralStorage),
 	}
+	if a.InjectOIDCJWTToken != "" {
+		instance.EnvVarsToInject = map[string]string{"JWT_TOKEN": a.InjectOIDCJWTToken}
+	}
+	return instance
 }
 
 type K8sAppInstanceState string

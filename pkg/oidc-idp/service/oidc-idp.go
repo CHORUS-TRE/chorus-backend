@@ -1,19 +1,23 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service/authutil"
+	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/luikyv/go-oidc/pkg/goidc"
 	"github.com/luikyv/go-oidc/pkg/provider"
 )
 
 type OIDCProviderService interface {
 	AddOIDCMiddleware(h http.Handler) http.Handler
+	IssueIDTokenForClient(ctx context.Context, clientID string, user *user_model.User, ttl time.Duration) (string, error)
 }
 
 type oidcProviderService struct {
@@ -125,4 +129,14 @@ func (s *oidcProviderService) AddOIDCMiddleware(h http.Handler) http.Handler {
 		// If not "/openid-connect", passing to the next middleware
 		h.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (s *oidcProviderService) IssueIDTokenForClient(ctx context.Context, clientID string, user *user_model.User, ttl time.Duration) (string, error) {
+	if !s.cfg.Services.OpenIDConnectProvider.Enabled {
+		return "", fmt.Errorf("OIDC provider is disabled")
+	}
+	if _, err := s.clientManager.Client(ctx, clientID); err != nil {
+		return "", fmt.Errorf("unknown OIDC client %q: %w", clientID, err)
+	}
+	return authutil.IssueIDToken(ctx, s.cfg, clientID, user, ttl)
 }

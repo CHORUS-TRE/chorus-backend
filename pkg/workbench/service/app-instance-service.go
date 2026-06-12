@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
+	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
@@ -81,6 +83,26 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 		appInstance.BrowserConfigJWTToken = token
 	}
 
+	if app.InjectOIDCJWTClientID != "" {
+		tenantID, err := jwt_model.ExtractTenantID(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("unable to extract tenant ID from context: %w", err)
+		}
+		userID, err := jwt_model.ExtractUserID(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("unable to extract user ID from context: %w", err)
+		}
+		user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+		if err != nil {
+			return nil, fmt.Errorf("unable to load user %d for ID token issuance: %w", userID, err)
+		}
+		token, err := s.oidcIDTokenIssuer.IssueIDTokenForClient(ctx, app.InjectOIDCJWTClientID, user, s.cfg.Services.OpenIDConnectProvider.IDTokenInjectionTTL)
+		if err != nil {
+			return nil, fmt.Errorf("unable to issue OIDC ID token for app %v (client %q): %w", appInstance.AppID, app.InjectOIDCJWTClientID, err)
+		}
+		appInstance.InjectOIDCJWTToken = token
+	}
+
 	newAppInstance, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
@@ -129,6 +151,10 @@ func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *m
 		MinMemory:           app.MinMemory,
 		MaxEphemeralStorage: app.MaxEphemeralStorage,
 		MinEphemeralStorage: app.MinEphemeralStorage,
+	}
+
+	if appInstance.InjectOIDCJWTToken != "" {
+		clientApp.EnvVarsToInject = map[string]string{"JWT_TOKEN": appInstance.InjectOIDCJWTToken}
 	}
 
 	return clientApp, nil

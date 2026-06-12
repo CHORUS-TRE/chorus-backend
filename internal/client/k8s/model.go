@@ -72,6 +72,10 @@ type AppInstance struct {
 	MinMemory             string
 	MaxEphemeralStorage   string
 	MinEphemeralStorage   string
+
+	// EnvVarsToInject is a free-form map of additional env vars that the
+	// workbench-operator should inject into the app container.
+	EnvVarsToInject map[string]string
 }
 
 func (a AppInstance) UID() string {

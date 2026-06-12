@@ -56,6 +56,14 @@ type WorkspaceReader interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
 }
 
+// OIDCIDTokenIssuer issues a signed OIDC ID token on behalf of a given client
+// for a given user (as if the user had completed the interactive flow with
+// that client). Implemented by the OIDC provider service; declared locally to
+// avoid importing the OIDC service package and introducing a cycle.
+type OIDCIDTokenIssuer interface {
+	IssueIDTokenForClient(ctx context.Context, clientID string, user *user_model.User, ttl time.Duration) (string, error)
+}
+
 type WorkbenchFilter struct {
 	WorkspaceIDsIn *[]uint64
 }
@@ -123,6 +131,7 @@ type WorkbenchService struct {
 	apper             app_service.Apper
 	userer            user_service.Userer
 	authenticator     authentication_service.Authenticator
+	oidcIDTokenIssuer OIDCIDTokenIssuer
 	notificationStore NotificationStore
 	workspaceReader   WorkspaceReader
 	auditWriter       audit_service.AuditWriter
@@ -134,7 +143,7 @@ type WorkbenchService struct {
 	proxyHitDateMap  map[uint64]time.Time
 }
 
-func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, notificationStore NotificationStore, workspaceReader WorkspaceReader, auditWriter audit_service.AuditWriter) *WorkbenchService {
+func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8sClienter, apper app_service.Apper, userer user_service.Userer, authenticator authentication_service.Authenticator, oidcIDTokenIssuer OIDCIDTokenIssuer, notificationStore NotificationStore, workspaceReader WorkspaceReader, auditWriter audit_service.AuditWriter) *WorkbenchService {
 	s := &WorkbenchService{
 		cfg:    cfg,
 		store:  store,
@@ -143,6 +152,7 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		apper:             apper,
 		userer:            userer,
 		authenticator:     authenticator,
+		oidcIDTokenIssuer: oidcIDTokenIssuer,
 		notificationStore: notificationStore,
 		workspaceReader:   workspaceReader,
 		auditWriter:       auditWriter,
