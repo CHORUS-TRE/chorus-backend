@@ -57,6 +57,7 @@ func InitDaemonJobs() {
 			}
 			j = appservice.NewAppSyncJob(
 				ProvideAppStore(),
+				ProvideAppService(),
 				ProvideHarborClient(),
 				registry,
 				logger.TechLog,

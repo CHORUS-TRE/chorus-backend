@@ -17,15 +17,16 @@ type App struct {
 	Repository string            `json:"repository"`
 	Tag        string            `json:"tag"`
 	Labels     map[string]string `json:"labels"`
+	PushTime   time.Time         `json:"push_time"`
 }
 
 type HarborClient interface {
-	ListApps(existingApps map[string]struct{}) ([]App, error)
+	ListApps() ([]App, error)
 }
 
 type HarborNoopClient struct{}
 
-func (c *HarborNoopClient) ListApps(existingApps map[string]struct{}) ([]App, error) {
+func (c *HarborNoopClient) ListApps() ([]App, error) {
 	return nil, nil
 }
 
@@ -66,10 +67,11 @@ type harborArtifact struct {
 }
 
 type harborTag struct {
-	Name string `json:"name"`
+	Name     string    `json:"name"`
+	PushTime time.Time `json:"push_time"`
 }
 
-func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error) {
+func (c *harborClient) ListApps() ([]App, error) {
 	repos, err := c.listRepositories()
 	if err != nil {
 		return nil, fmt.Errorf("listing repositories: %w", err)
@@ -84,12 +86,7 @@ func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error)
 		}
 
 		for _, artifact := range artifacts {
-			tags := extractTagNames(artifact.Tags)
-			if len(tags) == 0 {
-				continue
-			}
-
-			if allTagsExist(existingApps, repo.Name, tags) {
+			if len(artifact.Tags) == 0 {
 				continue
 			}
 
@@ -98,11 +95,12 @@ func (c *harborClient) ListApps(existingApps map[string]struct{}) ([]App, error)
 				return nil, fmt.Errorf("fetching labels for %s@%s: %w", strippedName, artifact.Digest, err)
 			}
 
-			for _, tag := range tags {
+			for _, tag := range artifact.Tags {
 				apps = append(apps, App{
 					Repository: repo.Name,
-					Tag:        tag,
+					Tag:        tag.Name,
 					Labels:     labels,
+					PushTime:   tag.PushTime,
 				})
 			}
 		}
@@ -235,24 +233,4 @@ func (c *harborClient) pageSize() int {
 		return c.cfg.PageSize
 	}
 	return 100
-}
-
-func allTagsExist(existing map[string]struct{}, repo string, tags []string) bool {
-	if len(existing) == 0 {
-		return false
-	}
-	for _, tag := range tags {
-		if _, ok := existing[repo+":"+tag]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
-func extractTagNames(tags []harborTag) []string {
-	names := make([]string, 0, len(tags))
-	for _, t := range tags {
-		names = append(names, t.Name)
-	}
-	return names
 }
