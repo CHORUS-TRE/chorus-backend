@@ -33,9 +33,10 @@ message App {
     string iconURL = 21;
     string iconBackgroundColor = 22;
     string stabilityStatus = 23;
+    string category = 24;
 
-    google.protobuf.Timestamp createdAt = 24;
-    google.protobuf.Timestamp updatedAt = 25;
+    google.protobuf.Timestamp createdAt = 25;
+    google.protobuf.Timestamp updatedAt = 26;
 }
 
 message AppVersion {
