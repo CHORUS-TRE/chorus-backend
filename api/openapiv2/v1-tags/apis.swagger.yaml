@@ -7232,12 +7232,6 @@ definitions:
         items:
           type: string
           format: uint64
-      createdAt:
-        type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
       namespace:
         type: string
       networkPolicy:
@@ -7260,6 +7254,12 @@ definitions:
       contactUserId:
         type: string
         format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusWorkspaceFile:
     type: object
     properties:

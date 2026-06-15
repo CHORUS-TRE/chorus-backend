@@ -45,3 +45,7 @@ func HealthServiceHTTPClient() *health_client.ChorusHealthService {
 func StewardServiceHTTPClient() *steward_client.ChorusStewardService {
 	return steward_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
 }
+
+func WorkspaceServiceHTTPClient() *workspace_client.ChorusWorkspaceService {
+	return workspace_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
+}
