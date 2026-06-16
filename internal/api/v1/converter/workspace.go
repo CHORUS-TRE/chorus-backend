@@ -36,9 +36,8 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		AllowedFQDNs:         model.StringSlice(workspace.AllowedFqdns),
 		Clipboard:            model.ClipboardMode(workspace.Clipboard),
 
-		Visibility: WorkspaceVisibilityToBusiness(workspace.Visibility),
-		// TODO: double check if this is ok to pass pointer
-		ContactUserID: &workspace.ContactUserId,
+		Visibility:    WorkspaceVisibilityToBusiness(workspace.Visibility),
+		ContactUserID: nonZeroUint64(workspace.ContactUserId),
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
