@@ -13,6 +13,7 @@ import (
 	notification_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/client"
 	steward_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/steward/client"
 	user_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/client"
+	workspace_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace/client"
 	"github.com/go-openapi/strfmt"
 )
 
