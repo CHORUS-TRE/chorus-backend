@@ -42,7 +42,6 @@ message WorkspaceFilter {
 
 message ListPublicWorkspacesRequest {
     PaginationQuery pagination = 1;
-    optional WorkspaceFilter filter = 2;
 }
 message ListPublicWorkspacesReply {
     ListPublicWorkspacesResult result = 1;

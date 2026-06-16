@@ -169,12 +169,7 @@ func (c WorkspaceController) ListPublicWorkspaces(ctx context.Context, req *chor
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	filter := workspace_model.WorkspaceFilter{}
-	if req.Filter != nil {
-		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
-	}
-
-	res, paginationRes, err := c.workspace.ListPublicWorkspaces(ctx, tenantID, &pagination, filter)
+	res, paginationRes, err := c.workspace.ListPublicWorkspaces(ctx, tenantID, &pagination)
 	if err != nil {
 		logger.TechLog.Error(ctx, fmt.Sprintf("unable to call 'ListPublicWorkspaces': %v", err.Error()))
 		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListPublicWorkspaces': %v", err.Error())

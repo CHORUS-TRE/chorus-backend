@@ -62,9 +62,6 @@ WorkspaceServiceListPublicWorkspacesParams contains all the parameters to send t
 */
 type WorkspaceServiceListPublicWorkspacesParams struct {
 
-	// FilterWorkspaceIdsIn.
-	FilterWorkspaceIdsIn []string
-
 	/* PaginationLimit.
 
 	   Optionally limit the number of results (between 1 and 500)
@@ -146,17 +143,6 @@ func (o *WorkspaceServiceListPublicWorkspacesParams) SetHTTPClient(client *http.
 	o.HTTPClient = client
 }
 
-// WithFilterWorkspaceIdsIn adds the filterWorkspaceIdsIn to the workspace service list public workspaces params
-func (o *WorkspaceServiceListPublicWorkspacesParams) WithFilterWorkspaceIdsIn(filterWorkspaceIdsIn []string) *WorkspaceServiceListPublicWorkspacesParams {
-	o.SetFilterWorkspaceIdsIn(filterWorkspaceIdsIn)
-	return o
-}
-
-// SetFilterWorkspaceIdsIn adds the filterWorkspaceIdsIn to the workspace service list public workspaces params
-func (o *WorkspaceServiceListPublicWorkspacesParams) SetFilterWorkspaceIdsIn(filterWorkspaceIdsIn []string) {
-	o.FilterWorkspaceIdsIn = filterWorkspaceIdsIn
-}
-
 // WithPaginationLimit adds the paginationLimit to the workspace service list public workspaces params
 func (o *WorkspaceServiceListPublicWorkspacesParams) WithPaginationLimit(paginationLimit *int64) *WorkspaceServiceListPublicWorkspacesParams {
 	o.SetPaginationLimit(paginationLimit)
@@ -219,17 +205,6 @@ func (o *WorkspaceServiceListPublicWorkspacesParams) WriteToRequest(r runtime.Cl
 		return err
 	}
 	var res []error
-
-	if o.FilterWorkspaceIdsIn != nil {
-
-		// binding items for filter.workspaceIdsIn
-		joinedFilterWorkspaceIdsIn := o.bindParamFilterWorkspaceIdsIn(reg)
-
-		// query array param filter.workspaceIdsIn
-		if err := r.SetQueryParam("filter.workspaceIdsIn", joinedFilterWorkspaceIdsIn...); err != nil {
-			return err
-		}
-	}
 
 	if o.PaginationLimit != nil {
 
@@ -314,23 +289,6 @@ func (o *WorkspaceServiceListPublicWorkspacesParams) WriteToRequest(r runtime.Cl
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
-}
-
-// bindParamWorkspaceServiceListPublicWorkspaces binds the parameter filter.workspaceIdsIn
-func (o *WorkspaceServiceListPublicWorkspacesParams) bindParamFilterWorkspaceIdsIn(formats strfmt.Registry) []string {
-	filterWorkspaceIdsInIR := o.FilterWorkspaceIdsIn
-
-	var filterWorkspaceIdsInIC []string
-	for _, filterWorkspaceIdsInIIR := range filterWorkspaceIdsInIR { // explode []string
-
-		filterWorkspaceIdsInIIV := filterWorkspaceIdsInIIR // string as string
-		filterWorkspaceIdsInIC = append(filterWorkspaceIdsInIC, filterWorkspaceIdsInIIV)
-	}
-
-	// items.CollectionFormat: "multi"
-	filterWorkspaceIdsInIS := swag.JoinByFormat(filterWorkspaceIdsInIC, "multi")
-
-	return filterWorkspaceIdsInIS
 }
 
 // bindParamWorkspaceServiceListPublicWorkspaces binds the parameter pagination.query

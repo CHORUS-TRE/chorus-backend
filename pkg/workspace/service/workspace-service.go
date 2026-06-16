@@ -28,7 +28,7 @@ type NotificationStore interface {
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
-	ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.PublicWorkspace, *common_model.PaginationResult, error)
+	ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
@@ -191,7 +191,7 @@ func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	return workspaces, paginationRes, nil
 }
 
-func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
 	workspaces, paginationRes, err := s.store.ListPublicWorkspaces(ctx, tenantID, pagination)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to query public workspaces: %w", err)

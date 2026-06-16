@@ -300,7 +300,7 @@ func TestListPublicWorkspaces_EmptyContactWhenNoContactUserID(t *testing.T) {
 	userer := &mockUserer{}
 
 	svc := newSvc(config.Config{}, store, &mockK8s{}, userer)
-	result, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{}, model.WorkspaceFilter{})
+	result, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{})
 
 	require.NoError(t, err)
 	require.Len(t, result, 1)
@@ -324,7 +324,7 @@ func TestListPublicWorkspaces_PopulatesContactFromUser(t *testing.T) {
 	}
 
 	svc := newSvc(config.Config{}, store, &mockK8s{}, userer)
-	result, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{}, model.WorkspaceFilter{})
+	result, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{})
 
 	require.NoError(t, err)
 	require.Len(t, result, 1)
@@ -342,7 +342,7 @@ func TestListPublicWorkspaces_PropagatesStoreError(t *testing.T) {
 	}
 
 	svc := newSvc(config.Config{}, store, &mockK8s{}, &mockUserer{})
-	_, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{}, model.WorkspaceFilter{})
+	_, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "db down")
@@ -363,7 +363,7 @@ func TestListPublicWorkspaces_PropagatesGetUserError(t *testing.T) {
 	}
 
 	svc := newSvc(config.Config{}, store, &mockK8s{}, userer)
-	_, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{}, model.WorkspaceFilter{})
+	_, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "user not found")

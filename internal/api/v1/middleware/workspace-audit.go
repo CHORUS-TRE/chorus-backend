@@ -52,7 +52,6 @@ func (c workspaceControllerAudit) ListPublicWorkspaces(ctx context.Context, req 
 
 	if err != nil {
 		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList,
-			audit.WithDetail("filter", req.Filter),
 			audit.WithDescription("Failed to list public workspaces."),
 			audit.WithError(err),
 		)

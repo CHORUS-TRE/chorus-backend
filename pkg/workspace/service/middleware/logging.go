@@ -49,10 +49,10 @@ func (c workspaceServiceLogging) ListWorkspaces(ctx context.Context, tenantID ui
 	return res, paginationRes, nil
 }
 
-func (c workspaceServiceLogging) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+func (c workspaceServiceLogging) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
 	now := time.Now()
 
-	res, paginationRes, err := c.next.ListPublicWorkspaces(ctx, tenantID, pagination, filter)
+	res, paginationRes, err := c.next.ListPublicWorkspaces(ctx, tenantID, pagination)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
