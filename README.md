@@ -78,14 +78,41 @@ Create a complete service (here the workbench service)
 
     **Unit Tests**
 
-    - todo
+    Run all unit tests
+    ```bash
+    ./scripts/run_unit_test.sh
+    ```
+
+    Run unit tests for a specific package
+    ```bash
+    ./scripts/run_unit_test.sh workspace
+    ```
 
     **Acceptance Tests**
 
-    - log in to your postgres db
-    - ```CREATE DATABASE chorus_ci;```
-    - ```./scripts/run_backend_ci.sh```
-    - ```./scripts/run_acceptance_test.sh```
+    Log in to your postgres db
+    ```bash
+    docker exec -it chorus-backend-dev-container-postgres-1 psql -U admin chorus
+    ```
+
+    Create dedicated database
+    ```bash
+    CREATE DATABASE chorus_ci;
+    ```
+
+    In a shell, launch the backend (CI flavour)
+    ```bash
+    ./scripts/run_backend_ci.sh
+    ```
+
+    In another shell, run the all the acceptance tests
+    ```bash
+    ./scripts/run_acceptance_test.sh
+    ```
+    Or, run the acceptance tests for a specific package
+    ```bash
+    ./scripts/run_acceptance_test.sh workspace
+    ```
 
 ## License and Usage Restrictions
 
