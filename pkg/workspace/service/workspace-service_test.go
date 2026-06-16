@@ -95,6 +95,7 @@ type mockUserer struct {
 	createUserRolesErr error
 	capturedRoles      []user_model.UserRole
 	getUser            func(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
+	getUsers           func(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*user_model.User, error)
 }
 
 func (m *mockUserer) CreateUserRoles(_ context.Context, _, _ uint64, roles []user_model.UserRole) error {
@@ -113,6 +114,13 @@ func (m *mockUserer) RemoveRolesByContext(_ context.Context, _, _ string) ([]uin
 func (m *mockUserer) GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error) {
 	if m.getUser != nil {
 		return m.getUser(ctx, req)
+	}
+	return nil, nil
+}
+
+func (m *mockUserer) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*user_model.User, error) {
+	if m.getUsers != nil {
+		return m.getUsers(ctx, tenantID, userIDs)
 	}
 	return nil, nil
 }
@@ -317,9 +325,9 @@ func TestListPublicWorkspaces_PopulatesContactFromUser(t *testing.T) {
 		},
 	}
 	userer := &mockUserer{
-		getUser: func(_ context.Context, req user_service.GetUserReq) (*user_model.User, error) {
-			assert.Equal(t, contactID, req.ID)
-			return &user_model.User{Username: "jsmith", FirstName: "Jane", LastName: "Smith", Email: "jane@example.com"}, nil
+		getUsers: func(_ context.Context, _ uint64, ids []uint64) ([]*user_model.User, error) {
+			assert.Equal(t, []uint64{contactID}, ids)
+			return []*user_model.User{{ID: contactID, Username: "jsmith", FirstName: "Jane", LastName: "Smith", Email: "jane@example.com"}}, nil
 		},
 	}
 
@@ -348,7 +356,7 @@ func TestListPublicWorkspaces_PropagatesStoreError(t *testing.T) {
 	assert.Contains(t, err.Error(), "db down")
 }
 
-func TestListPublicWorkspaces_PropagatesGetUserError(t *testing.T) {
+func TestListPublicWorkspaces_PropagatesGetUsersError(t *testing.T) {
 	contactID := uint64(99)
 	ws := &model.Workspace{ID: 1, TenantID: 1, ContactUserID: &contactID}
 	store := &mockWorkspaceStore{
@@ -357,7 +365,7 @@ func TestListPublicWorkspaces_PropagatesGetUserError(t *testing.T) {
 		},
 	}
 	userer := &mockUserer{
-		getUser: func(_ context.Context, _ user_service.GetUserReq) (*user_model.User, error) {
+		getUsers: func(_ context.Context, _ uint64, _ []uint64) ([]*user_model.User, error) {
 			return nil, errors.New("user not found")
 		},
 	}

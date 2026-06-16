@@ -68,6 +68,10 @@ func (v validation) GetUser(ctx context.Context, req service.GetUserReq) (*model
 	return v.next.GetUser(ctx, req)
 }
 
+func (v validation) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error) {
+	return v.next.GetUsers(ctx, tenantID, userIDs)
+}
+
 func (v validation) SoftDeleteUser(ctx context.Context, req service.DeleteUserReq) error {
 	if err := v.validate.Struct(req); err != nil {
 		return cerr.WrapValidationError(err)

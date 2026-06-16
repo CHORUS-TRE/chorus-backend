@@ -68,6 +68,25 @@ func (c userStorageLogging) GetUser(ctx context.Context, tenantID uint64, userID
 	return res, nil
 }
 
+func (c userStorageLogging) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	res, err := c.next.GetUsers(ctx, tenantID, userIDs)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (c userStorageLogging) SoftDeleteUser(ctx context.Context, tenantID, userID uint64) error {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()

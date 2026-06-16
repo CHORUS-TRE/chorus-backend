@@ -65,6 +65,24 @@ func (c userServiceLogging) GetUser(ctx context.Context, req service.GetUserReq)
 	return res, nil
 }
 
+func (c userServiceLogging) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error) {
+	now := time.Now()
+
+	res, err := c.next.GetUsers(ctx, tenantID, userIDs)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return res, err
+	}
+
+	c.logger.Info(ctx, "request completed",
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (c userServiceLogging) SoftDeleteUser(ctx context.Context, req service.DeleteUserReq) error {
 	now := time.Now()
 

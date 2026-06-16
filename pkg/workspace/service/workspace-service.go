@@ -76,6 +76,7 @@ type Userer interface {
 	RemoveUserRoles(ctx context.Context, tenantID, userID uint64, roleIDs []uint64) error
 	RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error)
 	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
+	GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*user_model.User, error)
 }
 
 type WorkspaceService struct {
@@ -197,6 +198,29 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 		return nil, nil, fmt.Errorf("unable to query public workspaces: %w", err)
 	}
 
+	// Collect distinct contact user IDs for a single batch fetch.
+	contactUserIDSet := map[uint64]struct{}{}
+	for _, workspace := range workspaces {
+		if workspace.ContactUserID != nil && *workspace.ContactUserID != 0 {
+			contactUserIDSet[*workspace.ContactUserID] = struct{}{}
+		}
+	}
+
+	contactUsers := map[uint64]*user_model.User{}
+	if len(contactUserIDSet) > 0 {
+		ids := make([]uint64, 0, len(contactUserIDSet))
+		for id := range contactUserIDSet {
+			ids = append(ids, id)
+		}
+		users, err := s.userer.GetUsers(ctx, tenantID, ids)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get contact users: %w", err)
+		}
+		for _, u := range users {
+			contactUsers[u.ID] = u
+		}
+	}
+
 	var publicWorkspaces []*model.PublicWorkspace
 	for _, workspace := range workspaces {
 		pw := &model.PublicWorkspace{
@@ -211,17 +235,12 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 		}
 
 		if workspace.ContactUserID != nil && *workspace.ContactUserID != 0 {
-			contactUser, err := s.userer.GetUser(ctx, user_service.GetUserReq{
-				TenantID: tenantID,
-				ID:       *workspace.ContactUserID,
-			})
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to get user: %w", err)
+			if u, ok := contactUsers[*workspace.ContactUserID]; ok {
+				pw.ContactUsername = u.Username
+				pw.ContactFirstName = u.FirstName
+				pw.ContactLastName = u.LastName
+				pw.ContactEmail = u.Email
 			}
-			pw.ContactUsername = contactUser.Username
-			pw.ContactFirstName = contactUser.FirstName
-			pw.ContactLastName = contactUser.LastName
-			pw.ContactEmail = contactUser.Email
 		}
 
 		publicWorkspaces = append(publicWorkspaces, pw)
