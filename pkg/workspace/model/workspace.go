@@ -241,33 +241,6 @@ func (s Workspace) GetContactUserID() uint64 {
 	return 0
 }
 
-// WorkspaceStatus represents the status of a workspace.
-// Deprecated
-//type WorkspaceStatus string
-//
-//const (
-//	WorkspaceActive   WorkspaceStatus = "active"
-//	WorkspaceInactive WorkspaceStatus = "inactive"
-//	WorkspaceDeleted  WorkspaceStatus = "deleted"
-//)
-//
-//func (s WorkspaceStatus) String() string {
-//	return string(s)
-//}
-//
-//func ToWorkspaceStatus(status string) (WorkspaceStatus, error) {
-//	switch status {
-//	case WorkspaceActive.String():
-//		return WorkspaceActive, nil
-//	case WorkspaceInactive.String():
-//		return WorkspaceInactive, nil
-//	case WorkspaceDeleted.String():
-//		return WorkspaceDeleted, nil
-//	default:
-//		return "", fmt.Errorf("unexpected WorkspaceStatus: %s", status)
-//	}
-//}
-
 func (Workspace) IsValidSortType(sortType string) bool {
 	validSortTypes := map[string]bool{
 		"id":          true,
