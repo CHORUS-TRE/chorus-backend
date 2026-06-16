@@ -62,7 +62,6 @@ var _ = Describe("workspace service", func() {
 		})
 
 		Given("a valid jwt-token with WorkspaceAdmin role on the workspace", func() {
-			// Token fails because role is in "roles" field instead of "r"
 			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleWorkspaceAdmin.String(), map[string]string{"workspace": "80001"}))
 
 			When("GET /api/rest/v1/workspaces/{id} is called", func() {
