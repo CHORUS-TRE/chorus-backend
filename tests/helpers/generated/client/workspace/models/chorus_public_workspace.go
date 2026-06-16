@@ -48,7 +48,7 @@ type ChorusPublicWorkspace struct {
 	ShortName string `json:"shortName,omitempty"`
 
 	// status
-	Status string `json:"status,omitempty"`
+	Status *ChorusWorkspaceStatus `json:"status,omitempty"`
 
 	// tenant Id
 	TenantID string `json:"tenantId,omitempty"`
@@ -63,6 +63,10 @@ func (m *ChorusPublicWorkspace) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCreatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -88,6 +92,25 @@ func (m *ChorusPublicWorkspace) validateCreatedAt(formats strfmt.Registry) error
 	return nil
 }
 
+func (m *ChorusPublicWorkspace) validateStatus(formats strfmt.Registry) error {
+	if swag.IsZero(m.Status) { // not required
+		return nil
+	}
+
+	if m.Status != nil {
+		if err := m.Status.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("status")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("status")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *ChorusPublicWorkspace) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
@@ -100,8 +123,38 @@ func (m *ChorusPublicWorkspace) validateUpdatedAt(formats strfmt.Registry) error
 	return nil
 }
 
-// ContextValidate validates this chorus public workspace based on context it is used
+// ContextValidate validate this chorus public workspace based on the context it is used
 func (m *ChorusPublicWorkspace) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateStatus(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusPublicWorkspace) contextValidateStatus(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Status != nil {
+
+		if swag.IsZero(m.Status) { // not required
+			return nil
+		}
+
+		if err := m.Status.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("status")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("status")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

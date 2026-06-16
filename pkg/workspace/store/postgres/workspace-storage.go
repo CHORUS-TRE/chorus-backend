@@ -503,7 +503,7 @@ func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64,
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
-	rows, err := s.db.ExecContext(ctx, query, tenantID, workspaceID, model.WorkspaceDeleted.String(), "-"+uuid.Next())
+	rows, err := s.db.ExecContext(ctx, query, tenantID, workspaceID, model.WorkspaceStatusDeleted.String(), "-"+uuid.Next())
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
 	}
@@ -533,7 +533,7 @@ func (s *WorkspaceStorage) DeleteOldWorkspaces(ctx context.Context, timeout time
 	`
 
 	var deletedWorkspaces []*model.Workspace
-	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(timeout.Seconds())))
+	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceStatusDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(timeout.Seconds())))
 	if err != nil {
 		return nil, fmt.Errorf("unable to exec: %w", err)
 	}

@@ -157,9 +157,7 @@ var _ = Describe("workspace service", func() {
 					ws := resp.Payload.Result.Workspace
 					Expect(ws.Name).Should(Equal("Default WS"))
 					Expect(ws.UserID).Should(Equal("90000"))
-					// TODO: use actual enum value once backend supports it
-					// and make sure the default status is active
-					// Expect(ws.Status).Should(Equal("active"))
+					Expect(*ws.Status).Should(Equal(workspace_models.ChorusWorkspaceStatusWORKSPACESTATUSACTIVE))
 					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPRIVATE))
 				})
 				cleanTables()

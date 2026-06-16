@@ -162,7 +162,7 @@ func (s *StewardService) InitializeDefaultWorkspace(ctx context.Context) error {
 		Name:        s.conf.Services.Steward.InitWorkspace.Name,
 		ShortName:   fmt.Sprintf("ws-%d", s.conf.Services.Steward.InitWorkspace.WorkspaceID),
 		Description: fmt.Sprintf("Default workspace for user %v", s.conf.Services.Steward.InitUser.Username),
-		Status:      workspace_model.WorkspaceActive,
+		Status:      workspace_model.WorkspaceStatusActive,
 	})
 	if createErr != nil {
 		return fmt.Errorf("unable to create default workspace %v: %w", s.conf.Services.Steward.InitWorkspace.WorkspaceID, createErr)

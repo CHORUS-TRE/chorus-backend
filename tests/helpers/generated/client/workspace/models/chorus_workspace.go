@@ -69,7 +69,7 @@ type ChorusWorkspace struct {
 	ShortName string `json:"shortName,omitempty"`
 
 	// status
-	Status string `json:"status,omitempty"`
+	Status *ChorusWorkspaceStatus `json:"status,omitempty"`
 
 	// tenant Id
 	TenantID string `json:"tenantId,omitempty"`
@@ -90,6 +90,10 @@ func (m *ChorusWorkspace) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCreatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -114,6 +118,25 @@ func (m *ChorusWorkspace) validateCreatedAt(formats strfmt.Registry) error {
 
 	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *ChorusWorkspace) validateStatus(formats strfmt.Registry) error {
+	if swag.IsZero(m.Status) { // not required
+		return nil
+	}
+
+	if m.Status != nil {
+		if err := m.Status.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("status")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("status")
+			}
+			return err
+		}
 	}
 
 	return nil
@@ -154,6 +177,10 @@ func (m *ChorusWorkspace) validateVisibility(formats strfmt.Registry) error {
 func (m *ChorusWorkspace) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateStatus(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateVisibility(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -161,6 +188,27 @@ func (m *ChorusWorkspace) ContextValidate(ctx context.Context, formats strfmt.Re
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusWorkspace) contextValidateStatus(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Status != nil {
+
+		if swag.IsZero(m.Status) { // not required
+			return nil
+		}
+
+		if err := m.Status.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("status")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("status")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -431,7 +431,7 @@ definitions:
       description:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/chorusWorkspaceStatus'
       contactUsername:
         type: string
       contactFirstName:
@@ -514,7 +514,7 @@ definitions:
       description:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/chorusWorkspaceStatus'
       isMain:
         type: boolean
       appInstanceIds:
@@ -563,6 +563,13 @@ definitions:
         items:
           type: string
           format: uint64
+  chorusWorkspaceStatus:
+    type: string
+    enum:
+      - WORKSPACE_STATUS_ACTIVE
+      - WORKSPACE_STATUS_INACTIVE
+      - WORKSPACE_STATUS_DELETED
+    default: WORKSPACE_STATUS_ACTIVE
   chorusWorkspaceVisibility:
     type: string
     enum:

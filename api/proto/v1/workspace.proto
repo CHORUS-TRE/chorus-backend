@@ -4,6 +4,12 @@ option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
 
+enum WorkspaceStatus {
+    WORKSPACE_STATUS_ACTIVE = 0;
+    WORKSPACE_STATUS_INACTIVE = 1;
+    WORKSPACE_STATUS_DELETED = 2;
+}
+
 enum WorkspaceVisibility {
     WORKSPACE_VISIBILITY_PRIVATE = 0;
     WORKSPACE_VISIBILITY_PUBLIC = 1;
@@ -18,7 +24,7 @@ message Workspace {
     string name = 4;
     string short_name = 5;
     string description = 6;
-    string status = 7;
+    WorkspaceStatus status = 7;
     bool is_main = 8;
 
     repeated uint64 app_instance_ids = 9;
@@ -47,7 +53,7 @@ message PublicWorkspace {
     string name = 3;
     string short_name = 4;
     string description = 5;
-    string status = 6;
+    WorkspaceStatus status = 6;
 
     string contact_username = 7;
     string contact_first_name = 8;

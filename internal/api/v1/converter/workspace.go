@@ -27,7 +27,7 @@ func WorkspaceToBusiness(workspace *chorus.Workspace) (*model.Workspace, error) 
 		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
 
-		Status: model.WorkspaceStatus(workspace.Status),
+		Status: WorkspaceStatusToBusiness(workspace.Status),
 		IsMain: workspace.IsMain,
 
 		NetworkPolicy:        model.NetworkPolicyMode(workspace.NetworkPolicy),
@@ -64,7 +64,7 @@ func WorkspaceFromBusiness(workspace *model.Workspace, gidOffset uint64) (*choru
 		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
 
-		Status: workspace.Status.String(),
+		Status: WorkspaceStatusFromBusiness(workspace.Status),
 
 		IsMain: workspace.IsMain,
 
@@ -102,7 +102,7 @@ func PublicWorkspaceFromBusiness(workspace *model.PublicWorkspace, gidOffset uin
 		Name:        workspace.Name,
 		ShortName:   workspace.ShortName,
 		Description: workspace.Description,
-		Status:      workspace.Status.String(),
+		Status:      WorkspaceStatusFromBusiness(workspace.Status),
 
 		ContactUsername:  workspace.ContactUsername,
 		ContactFirstName: workspace.ContactFirstName,
@@ -112,6 +112,32 @@ func PublicWorkspaceFromBusiness(workspace *model.PublicWorkspace, gidOffset uin
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
+}
+
+func WorkspaceStatusToBusiness(s chorus.WorkspaceStatus) model.WorkspaceStatus {
+	switch s {
+	case chorus.WorkspaceStatus_WORKSPACE_STATUS_ACTIVE:
+		return model.WorkspaceStatusActive
+	case chorus.WorkspaceStatus_WORKSPACE_STATUS_INACTIVE:
+		return model.WorkspaceStatusInactive
+	case chorus.WorkspaceStatus_WORKSPACE_STATUS_DELETED:
+		return model.WorkspaceStatusDeleted
+	default:
+		return model.WorkspaceStatusActive
+	}
+}
+
+func WorkspaceStatusFromBusiness(s model.WorkspaceStatus) chorus.WorkspaceStatus {
+	switch s {
+	case model.WorkspaceStatusActive:
+		return chorus.WorkspaceStatus_WORKSPACE_STATUS_ACTIVE
+	case model.WorkspaceStatusInactive:
+		return chorus.WorkspaceStatus_WORKSPACE_STATUS_INACTIVE
+	case model.WorkspaceStatusDeleted:
+		return chorus.WorkspaceStatus_WORKSPACE_STATUS_DELETED
+	default:
+		return chorus.WorkspaceStatus_WORKSPACE_STATUS_ACTIVE
+	}
 }
 
 func WorkspaceVisibilityToBusiness(v chorus.WorkspaceVisibility) model.WorkspaceVisibility {

@@ -133,7 +133,7 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	}
 
 	for _, workspace := range workspaces {
-		if workspace.Status == model.WorkspaceDeleted {
+		if workspace.Status == model.WorkspaceStatusDeleted {
 			go func() {
 				if err := s.k8sClient.DeleteWorkspace(model.GetWorkspaceClusterName(workspace.ID)); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to update workbench %v: %v", workspace.ID, err))
