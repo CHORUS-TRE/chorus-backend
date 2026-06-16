@@ -305,7 +305,12 @@ func TestListPublicWorkspaces_EmptyContactWhenNoContactUserID(t *testing.T) {
 			return []*model.Workspace{ws}, nil, nil
 		},
 	}
-	userer := &mockUserer{}
+	userer := &mockUserer{
+		getUsers: func(_ context.Context, _ uint64, _ []uint64) ([]*user_model.User, error) {
+			t.Fatal("GetUsers should not be called when there is no contact user")
+			return nil, nil
+		},
+	}
 
 	svc := newSvc(config.Config{}, store, &mockK8s{}, userer)
 	result, _, err := svc.ListPublicWorkspaces(context.Background(), 1, &common_model.Pagination{})
@@ -313,7 +318,6 @@ func TestListPublicWorkspaces_EmptyContactWhenNoContactUserID(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	assert.Empty(t, result[0].ContactUsername)
-	assert.Nil(t, userer.capturedRoles, "GetUser should not be called when there is no contact user")
 }
 
 func TestListPublicWorkspaces_PopulatesContactFromUser(t *testing.T) {
