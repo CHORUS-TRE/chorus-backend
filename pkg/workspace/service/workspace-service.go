@@ -199,42 +199,32 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 
 	var publicWorkspaces []*model.PublicWorkspace
 	for _, workspace := range workspaces {
-		if workspace.ContactUserID == nil || *workspace.ContactUserID == 0 {
-			// The workspace does not have any contact user
-			publicWorkspaces = append(publicWorkspaces, &model.PublicWorkspace{
-				ID:               workspace.ID,
-				TenantID:         workspace.TenantID,
-				Name:             workspace.Name,
-				ShortName:        workspace.ShortName,
-				Description:      workspace.Description,
-				Status:           workspace.Status,
-				ContactUsername:  "",
-				ContactFirstName: "",
-				ContactLastName:  "",
-				ContactEmail:     "",
+		pw := &model.PublicWorkspace{
+			ID:          workspace.ID,
+			TenantID:    workspace.TenantID,
+			Name:        workspace.Name,
+			ShortName:   workspace.ShortName,
+			Description: workspace.Description,
+			Status:      workspace.Status,
+			CreatedAt:   workspace.CreatedAt,
+			UpdatedAt:   workspace.UpdatedAt,
+		}
+
+		if workspace.ContactUserID != nil && *workspace.ContactUserID != 0 {
+			contactUser, err := s.userer.GetUser(ctx, user_service.GetUserReq{
+				TenantID: tenantID,
+				ID:       *workspace.ContactUserID,
 			})
-			continue
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to get user: %w", err)
+			}
+			pw.ContactUsername = contactUser.Username
+			pw.ContactFirstName = contactUser.FirstName
+			pw.ContactLastName = contactUser.LastName
+			pw.ContactEmail = contactUser.Email
 		}
-		// The workspace does have a contact user
-		contactUser, err := s.userer.GetUser(ctx, user_service.GetUserReq{
-			TenantID: tenantID,
-			ID:       *workspace.ContactUserID,
-		})
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get user: %w", err)
-		}
-		publicWorkspaces = append(publicWorkspaces, &model.PublicWorkspace{
-			ID:               workspace.ID,
-			TenantID:         workspace.TenantID,
-			Name:             workspace.Name,
-			ShortName:        workspace.ShortName,
-			Description:      workspace.Description,
-			Status:           workspace.Status,
-			ContactUsername:  contactUser.Username,
-			ContactFirstName: contactUser.FirstName,
-			ContactLastName:  contactUser.LastName,
-			ContactEmail:     contactUser.Email,
-		})
+
+		publicWorkspaces = append(publicWorkspaces, pw)
 	}
 	return publicWorkspaces, paginationRes, nil
 }
