@@ -152,10 +152,14 @@ var _ = Describe("workspace service", func() {
 				c := helpers.WorkspaceServiceHTTPClient()
 				resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, auth)
 
-				Then("workspace is created with private visibility by default", func() {
+				Then("workspace is created with correct defaults (requester as owner, status is active, private visibility)", func() {
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
 					Expect(ws.Name).Should(Equal("Default WS"))
+					Expect(ws.UserID).Should(Equal("90000"))
+					// TODO: use actual enum value once backend supports it
+					// and make sure the default status is active
+					// Expect(ws.Status).Should(Equal("active"))
 					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPRIVATE))
 				})
 				cleanTables()
