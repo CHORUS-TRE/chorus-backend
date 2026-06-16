@@ -83,6 +83,128 @@ var _ = Describe("workspace service", func() {
 			})
 		})
 	})
+
+	Describe("list public workspaces", func() {
+
+		Given("no jwt-token", func() {
+			When("GET /api/rest/v1/workspaces/public is called", func() {
+				setupTables()
+				req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
+				c := helpers.WorkspaceServiceHTTPClient()
+				_, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, getAuthAsClientOpts("invalid"))
+
+				Then("an authentication error is returned", func() {
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
+				})
+				cleanTables()
+			})
+		})
+
+		Given("a valid jwt-token with Authenticated role", func() {
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
+
+			When("GET /api/rest/v1/workspaces/public is called", func() {
+				setupTables()
+				req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
+				c := helpers.WorkspaceServiceHTTPClient()
+				resp, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, auth)
+
+				Then("only the public workspace is returned", func() {
+					ExpectAPIErr(err).Should(BeNil())
+					workspaces := resp.Payload.Result.PublicWorkspaces
+					Expect(workspaces).Should(HaveLen(1))
+					Expect(workspaces[0].ID).Should(Equal("80002"))
+					Expect(workspaces[0].Name).Should(Equal("Public WS"))
+					Expect(workspaces[0].ShortName).Should(Equal("public-ws"))
+				})
+				cleanTables()
+			})
+		})
+	})
+
+	Describe("create workspace", func() {
+
+		Given("no jwt-token", func() {
+			When("POST /api/rest/v1/workspaces is called", func() {
+				setupTables()
+				req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+					&workspace_models.ChorusWorkspace{Name: "New WS", ShortName: "new-ws"},
+				)
+				c := helpers.WorkspaceServiceHTTPClient()
+				_, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, getAuthAsClientOpts("invalid"))
+
+				Then("an authentication error is returned", func() {
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
+				})
+				cleanTables()
+			})
+		})
+
+		Given("a valid jwt-token with Authenticated role", func() {
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+
+			When("POST /api/rest/v1/workspaces is called without explicit visibility", func() {
+				setupTables()
+				req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+					&workspace_models.ChorusWorkspace{Name: "Default WS", ShortName: "default-ws", Description: "No explicit visibility"},
+				)
+				c := helpers.WorkspaceServiceHTTPClient()
+				resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, auth)
+
+				Then("workspace is created with private visibility by default", func() {
+					ExpectAPIErr(err).Should(BeNil())
+					ws := resp.Payload.Result.Workspace
+					Expect(ws.Name).Should(Equal("Default WS"))
+					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPRIVATE))
+				})
+				cleanTables()
+			})
+
+			When("POST /api/rest/v1/workspaces is called with visibility=public", func() {
+				setupTables()
+				visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
+				req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+					&workspace_models.ChorusWorkspace{Name: "Public WS 2", ShortName: "public-ws-2", Visibility: &visPublic},
+				)
+				c := helpers.WorkspaceServiceHTTPClient()
+				resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, auth)
+
+				Then("workspace is created with public visibility", func() {
+					ExpectAPIErr(err).Should(BeNil())
+					ws := resp.Payload.Result.Workspace
+					Expect(ws.Name).Should(Equal("Public WS 2"))
+					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC))
+				})
+				cleanTables()
+			})
+		})
+	})
+
+	Describe("update workspace", func() {
+
+		Given("a valid jwt-token with WorkspaceAdmin role on the workspace", func() {
+			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleWorkspaceAdmin.String(), map[string]string{"workspace": "80001"}))
+
+			When("PUT /api/rest/v1/workspaces/{id} changes visibility to public", func() {
+				setupTables()
+				visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
+				req := workspace_svc.NewWorkspaceServiceUpdateWorkspaceParams().WithBody(
+					&workspace_models.ChorusWorkspace{ID: "80001", Name: "Private WS", ShortName: "private-ws", Visibility: &visPublic},
+				)
+				c := helpers.WorkspaceServiceHTTPClient()
+				resp, err := c.WorkspaceService.WorkspaceServiceUpdateWorkspace(req, auth)
+
+				Then("workspace visibility is updated to public", func() {
+					ExpectAPIErr(err).Should(BeNil())
+					ws := resp.Payload.Result.Workspace
+					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC))
+				})
+				cleanTables()
+			})
+		})
+	})
 })
 
 // ---------------------------------------------------------------------------
@@ -122,8 +244,10 @@ func setupTables() {
 
 func cleanTables() {
 	q := `
-	DELETE FROM user_role_context WHERE userroleid IN (92001, 92002, 92003, 92004);
-	DELETE FROM user_role WHERE id IN (92001, 92002, 92003, 92004);
+	DELETE FROM notifications_read_by WHERE userid IN (SELECT id FROM users WHERE tenantid = 88888);
+	DELETE FROM notifications WHERE tenantid = 88888;
+	DELETE FROM user_role_context WHERE userroleid IN (SELECT id FROM user_role WHERE userid IN (SELECT id FROM users WHERE tenantid = 88888));
+	DELETE FROM user_role WHERE userid IN (SELECT id FROM users WHERE tenantid = 88888);
 	DELETE FROM workspaces WHERE tenantid = 88888;
 	DELETE FROM users WHERE tenantid = 88888;
 	DELETE FROM tenants WHERE id = 88888;
