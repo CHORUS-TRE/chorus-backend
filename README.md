@@ -19,7 +19,7 @@ This project is the backend of the chorus platform.
 1. install go
 1. pull repo
 1. requirements
-    * postgres & minio `docker compose -f .devcontainer/docker-compose.yml up -d`
+    * postgres & minio `docker compose -f .devcontainer/compose.yml up -d`
     * kind `./scripts/create-local-cluster.sh`
     * setup minio `mc` client with the following commands:
         ```
@@ -75,7 +75,17 @@ Create a complete service (here the workbench service)
     - implement store logging middleware in pkg/workbench/store/middleware/logging.go
 
 1. Tests
+
+    **Unit Tests**
+
     - todo
+
+    **Acceptance Tests**
+
+    - log in to your postgres db
+    - ```CREATE DATABASE chorus_ci;```
+    - ```./scripts/run_backend_ci.sh```
+    - ```./scripts/run_acceptance_test.sh```
 
 ## License and Usage Restrictions
 
