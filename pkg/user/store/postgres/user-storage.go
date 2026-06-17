@@ -94,7 +94,7 @@ func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint6
 
 	var user model.User
 	if err := s.db.GetContext(ctx, &user, query, tenantID, userID); err != nil {
-		return nil, fmt.Errorf("unable to get user %v", userID)
+		return nil, fmt.Errorf("unable to get user %v: %w", userID, err)
 	}
 
 	roles, err := s.getUserRoles(ctx, userID)
