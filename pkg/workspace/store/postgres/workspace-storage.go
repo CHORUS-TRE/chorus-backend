@@ -169,27 +169,10 @@ func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64,
 		          createdat, updatedat;
 	`
 
-	networkPolicy := workspace.NetworkPolicy
-	if networkPolicy == "" {
-		networkPolicy = "Airgapped"
-	}
-	clipboard := workspace.Clipboard
-	if clipboard == "" {
-		clipboard = "disabled"
-	}
-	allowedFQDNs := workspace.AllowedFQDNs
-	if allowedFQDNs == nil {
-		allowedFQDNs = model.StringSlice{}
-	}
-	visibility := workspace.Visibility
-	if visibility == "" {
-		visibility = model.WorkspaceVisibilityPrivate
-	}
-
 	var createdWorkspace model.Workspace
 	err := s.db.GetContext(ctx, &createdWorkspace, workspaceQuery,
 		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-		networkPolicy, pqStringArray(allowedFQDNs), clipboard, visibility, workspace.ContactUserID,
+		workspace.NetworkPolicy, pqStringArray(workspace.AllowedFQDNs), workspace.Clipboard, workspace.Visibility, workspace.ContactUserID,
 	)
 	if err != nil {
 		return nil, err

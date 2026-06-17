@@ -301,6 +301,18 @@ func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model
 }
 
 func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
+	if workspace.NetworkPolicy == "" {
+		workspace.NetworkPolicy = "Airgapped"
+	}
+	if workspace.Clipboard == "" {
+		workspace.Clipboard = "disabled"
+	}
+	if workspace.AllowedFQDNs == nil {
+		workspace.AllowedFQDNs = model.StringSlice{}
+	}
+	if workspace.Visibility == "" {
+		workspace.Visibility = model.WorkspaceVisibilityPrivate
+	}
 	newWorkspace, err := s.store.CreateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create workspace %v: %w", workspace.ID, err)
