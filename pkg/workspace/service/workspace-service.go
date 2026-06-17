@@ -196,7 +196,7 @@ func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, 
 func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
 	workspaces, paginationRes, err := s.store.ListPublicWorkspaces(ctx, tenantID, pagination)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to query public workspaces: %w", err)
+		return nil, nil, cerr.WrapStoreError(err, "Unable to list public workspaces")
 	}
 
 	// Collect distinct contact user IDs for a single batch fetch.
@@ -215,7 +215,7 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 		}
 		users, err := s.userer.GetUsers(ctx, tenantID, ids)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get contact users: %w", err)
+			return nil, nil, cerr.WrapStoreError(err, "Failed to get contact users")
 		}
 		for _, u := range users {
 			contactUsers[u.ID] = u

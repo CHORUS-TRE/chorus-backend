@@ -57,7 +57,7 @@ func (c workspaceServiceLogging) ListPublicWorkspaces(ctx context.Context, tenan
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to get public workspaces: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
