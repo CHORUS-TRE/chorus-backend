@@ -1,4 +1,3 @@
-version: '3'
 name: chorus-backend-dev-container
 services:
   # chorus:
@@ -11,7 +10,7 @@ services:
   #   command: /bin/sh -c "while sleep 1000; do :; done"
   postgres:
     image: postgres
-    # user: "<UID>:<GID>"  # Replace with your actual UID:GID
+    # user: "<UID>:<GID>" # Replace with your actual UID:GID
     ports:
       - 5432:5432
     environment:

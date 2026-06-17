@@ -29,6 +29,9 @@ type ChorusApp struct {
 	// browser config URL
 	BrowserConfigURL string `json:"browserConfigURL,omitempty"`
 
+	// category
+	Category string `json:"category,omitempty"`
+
 	// created at
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`

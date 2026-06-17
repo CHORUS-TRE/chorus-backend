@@ -41,6 +41,7 @@ const (
 	PermissionAuditWorkbench         PermissionName = "auditWorkbench"
 
 	PermissionListWorkspaces                 PermissionName = "listWorkspaces"
+	PermissionListPublicWorkspaces           PermissionName = "listPublicWorkspaces"
 	PermissionCreateWorkspace                PermissionName = "createWorkspace"
 	PermissionUpdateWorkspace                PermissionName = "updateWorkspace"
 	PermissionGetWorkspace                   PermissionName = "getWorkspace"
@@ -153,6 +154,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 
 	case string(PermissionListWorkspaces):
 		return PermissionListWorkspaces, nil
+	case string(PermissionListPublicWorkspaces):
+		return PermissionListPublicWorkspaces, nil
 	case string(PermissionCreateWorkspace):
 		return PermissionCreateWorkspace, nil
 	case string(PermissionUpdateWorkspace):

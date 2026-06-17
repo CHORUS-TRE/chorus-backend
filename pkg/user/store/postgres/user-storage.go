@@ -106,6 +106,19 @@ func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint6
 	return &user, nil
 }
 
+func (s *UserStorage) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error) {
+	const query = `
+		SELECT id, tenantid, firstname, lastname, username, email, source, status, createdat, updatedat
+		FROM users
+		WHERE tenantid = $1 AND id = ANY($2);
+	`
+	var users []*model.User
+	if err := s.db.SelectContext(ctx, &users, query, tenantID, storage.Uint64ToPqInt64(userIDs)); err != nil {
+		return nil, cerr.WrapStoreError(err, "unable to get users by IDs")
+	}
+	return users, nil
+}
+
 func (s *UserStorage) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID uint64) ([]*model.TotpRecoveryCode, error) {
 	const query = `
 		SELECT id, tenantid, userid, code FROM totp_recovery_codes WHERE tenantid = $1 AND userid = $2;

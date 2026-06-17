@@ -33,6 +33,13 @@ func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, paginat
 	return v.next.ListWorkspaces(ctx, tenantID, pagination, filter)
 }
 
+func (v validation) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+	if err := v.validate.Struct(pagination); err != nil {
+		return nil, nil, err
+	}
+	return v.next.ListPublicWorkspaces(ctx, tenantID, pagination)
+}
+
 func (v validation) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {
 	return v.next.GetWorkspace(ctx, tenantID, workspaceID)
 }

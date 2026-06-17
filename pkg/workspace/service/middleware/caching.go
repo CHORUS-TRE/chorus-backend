@@ -49,6 +49,21 @@ func (c *Caching) ListWorkspaces(ctx context.Context, tenantID uint64, paginatio
 	return
 }
 
+func (c *Caching) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) (reply []*model.PublicWorkspace, paginationRes *common_model.PaginationResult, err error) {
+	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
+	reply = []*model.PublicWorkspace{}
+	paginationRes = &common_model.PaginationResult{}
+
+	if ok := entry.Get(ctx, &reply, &paginationRes); !ok {
+		reply, paginationRes, err = c.next.ListPublicWorkspaces(ctx, tenantID, pagination)
+		if err == nil {
+			entry.Set(ctx, defaultCacheExpiration, reply, paginationRes)
+		}
+	}
+
+	return
+}
+
 func (c *Caching) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (reply *model.Workspace, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithUint64(workspaceID))
 	reply = &model.Workspace{}

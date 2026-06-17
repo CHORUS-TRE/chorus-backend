@@ -4596,6 +4596,72 @@ paths:
             $ref: '#/definitions/chorusWorkspace'
       tags:
         - WorkspaceService
+  /api/rest/v1/workspaces/public:
+    get:
+      summary: List public workspaces
+      description: This endpoint returns a list of public workspaces
+      operationId: WorkspaceService_ListPublicWorkspaces
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListPublicWorkspacesReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema: {}
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema: {}
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema: {}
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema: {}
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema: {}
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema: {}
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - WorkspaceService
   /api/rest/v1/workspaces/{id}:
     get:
       summary: Get a workspace
@@ -5425,6 +5491,8 @@ definitions:
       iconBackgroundColor:
         type: string
       stabilityStatus:
+        type: string
+      category:
         type: string
       createdAt:
         type: string
@@ -6397,6 +6465,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusAuthorizationPermission'
+  chorusListPublicWorkspacesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListPublicWorkspacesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListPublicWorkspacesResult:
+    type: object
+    properties:
+      publicWorkspaces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusPublicWorkspace'
   chorusListRolesReply:
     type: object
     properties:
@@ -6659,6 +6742,37 @@ definitions:
       maxAppInstancesPerUser:
         type: integer
         format: int64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusPublicWorkspace:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      shortName:
+        type: string
+      description:
+        type: string
+      status:
+        $ref: '#/definitions/chorusWorkspaceStatus'
+      contactUsername:
+        type: string
+      contactFirstName:
+        type: string
+      contactLastName:
+        type: string
+      contactEmail:
+        type: string
       createdAt:
         type: string
         format: date-time
@@ -7099,7 +7213,7 @@ definitions:
       description:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/chorusWorkspaceStatus'
       isMain:
         type: boolean
       appInstanceIds:
@@ -7112,12 +7226,6 @@ definitions:
         items:
           type: string
           format: uint64
-      createdAt:
-        type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
       namespace:
         type: string
       networkPolicy:
@@ -7135,6 +7243,17 @@ definitions:
       gid:
         type: string
         format: uint64
+      visibility:
+        $ref: '#/definitions/chorusWorkspaceVisibility'
+      contactUserId:
+        type: string
+        format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusWorkspaceFile:
     type: object
     properties:
@@ -7268,6 +7387,19 @@ definitions:
         items:
           type: string
           format: uint64
+  chorusWorkspaceStatus:
+    type: string
+    enum:
+      - WORKSPACE_STATUS_ACTIVE
+      - WORKSPACE_STATUS_INACTIVE
+      - WORKSPACE_STATUS_DELETED
+    default: WORKSPACE_STATUS_ACTIVE
+  chorusWorkspaceVisibility:
+    type: string
+    enum:
+      - WORKSPACE_VISIBILITY_PRIVATE
+      - WORKSPACE_VISIBILITY_PUBLIC
+    default: WORKSPACE_VISIBILITY_PRIVATE
   protobufAny:
     type: object
     properties:

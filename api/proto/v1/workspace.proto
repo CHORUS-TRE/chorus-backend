@@ -4,31 +4,62 @@ option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
 
+enum WorkspaceStatus {
+    WORKSPACE_STATUS_ACTIVE = 0;
+    WORKSPACE_STATUS_INACTIVE = 1;
+    WORKSPACE_STATUS_DELETED = 2;
+}
+
+enum WorkspaceVisibility {
+    WORKSPACE_VISIBILITY_PRIVATE = 0;
+    WORKSPACE_VISIBILITY_PUBLIC = 1;
+}
+
 message Workspace {
     uint64 id = 1;
 
-    uint64 tenantId = 2;
-    uint64 userId = 3;
+    uint64 tenant_id = 2;
+    uint64 user_id = 3;
 
     string name = 4;
-    string shortName = 5;
+    string short_name = 5;
     string description = 6;
-    string status = 7;
-    bool isMain = 8;
+    WorkspaceStatus status = 7;
+    bool is_main = 8;
 
-    repeated uint64 appInstanceIds = 9;
-    repeated uint64 appInstances = 10;
+    repeated uint64 app_instance_ids = 9;
+    repeated uint64 app_instances = 10;
     
-    google.protobuf.Timestamp createdAt = 11;
-    google.protobuf.Timestamp updatedAt = 12;
+    string namespace = 11;
 
-    string namespace = 13;
+    string network_policy = 12;
+    repeated string allowed_fqdns = 13;
+    string network_policy_status = 14;
+    string network_policy_message = 15;
+    string clipboard = 16;
 
-    string networkPolicy = 14;
-    repeated string allowedFqdns = 15;
-    string networkPolicyStatus = 16;
-    string networkPolicyMessage = 17;
-    string clipboard = 18;
+    uint64 gid = 17;
+    WorkspaceVisibility visibility = 18;
+    uint64 contact_user_id = 19;
 
-    uint64 gid = 19;
+    google.protobuf.Timestamp created_at = 20;
+    google.protobuf.Timestamp updated_at = 21;
+}
+
+message PublicWorkspace {
+    uint64 id = 1;
+    uint64 tenant_id = 2;
+
+    string name = 3;
+    string short_name = 4;
+    string description = 5;
+    WorkspaceStatus status = 6;
+
+    string contact_username = 7;
+    string contact_first_name = 8;
+    string contact_last_name = 9;
+    string contact_email = 10;
+
+    google.protobuf.Timestamp created_at = 11;
+    google.protobuf.Timestamp updated_at = 12;
 }

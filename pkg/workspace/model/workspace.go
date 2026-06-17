@@ -33,6 +33,31 @@ func (c ClipboardMode) String() string {
 	return string(c)
 }
 
+// WorkspaceVisibility defines the visibility for a workspace.
+type WorkspaceVisibility string
+
+const (
+	WorkspaceVisibilityPrivate WorkspaceVisibility = "private"
+	WorkspaceVisibilityPublic  WorkspaceVisibility = "public"
+)
+
+func (v WorkspaceVisibility) String() string {
+	return string(v)
+}
+
+// WorkspaceStatus defines the status for a workspace.
+type WorkspaceStatus string
+
+const (
+	WorkspaceStatusActive   WorkspaceStatus = "active"
+	WorkspaceStatusInactive WorkspaceStatus = "inactive"
+	WorkspaceStatusDeleted  WorkspaceStatus = "deleted"
+)
+
+func (s WorkspaceStatus) String() string {
+	return string(s)
+}
+
 // Workspace maps an entry in the 'workspaces' database table.
 type Workspace struct {
 	ID uint64
@@ -57,9 +82,34 @@ type Workspace struct {
 	// Clipboard (workspace-wide default for workbenches)
 	Clipboard ClipboardMode
 
+	// Visibility defines whether the workspace is private or public.
+	// Public workspaces expose certain information (e.g., name, description, contact information) to users outside the workspace and can be listed in a public catalog.
+	Visibility WorkspaceVisibility
+	// ContactUserID defines the user to list as contact point when the workspace is public
+	ContactUserID *uint64
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+}
+
+// PublicWorkspace represents information made available to users when a workspace is marked as public.
+type PublicWorkspace struct {
+	ID       uint64
+	TenantID uint64
+
+	Name        string
+	ShortName   string
+	Description string
+	Status      WorkspaceStatus
+
+	ContactUsername  string
+	ContactFirstName string
+	ContactLastName  string
+	ContactEmail     string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // JSONMap is a generic map type that handles JSONB serialization for sqlx.
@@ -184,30 +234,11 @@ func GetIDFromClusterName(clusterName string) (uint64, error) {
 	return id, nil
 }
 
-// WorkspaceStatus represents the status of a workspace.
-type WorkspaceStatus string
-
-const (
-	WorkspaceActive   WorkspaceStatus = "active"
-	WorkspaceInactive WorkspaceStatus = "inactive"
-	WorkspaceDeleted  WorkspaceStatus = "deleted"
-)
-
-func (s WorkspaceStatus) String() string {
-	return string(s)
-}
-
-func ToWorkspaceStatus(status string) (WorkspaceStatus, error) {
-	switch status {
-	case WorkspaceActive.String():
-		return WorkspaceActive, nil
-	case WorkspaceInactive.String():
-		return WorkspaceInactive, nil
-	case WorkspaceDeleted.String():
-		return WorkspaceDeleted, nil
-	default:
-		return "", fmt.Errorf("unexpected WorkspaceStatus: %s", status)
+func (s Workspace) GetContactUserID() uint64 {
+	if s.ContactUserID != nil {
+		return *s.ContactUserID
 	}
+	return 0
 }
 
 func (Workspace) IsValidSortType(sortType string) bool {
