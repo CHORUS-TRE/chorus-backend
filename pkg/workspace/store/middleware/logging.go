@@ -47,6 +47,27 @@ func (c workspaceStorageLogging) ListWorkspaces(ctx context.Context, tenantID ui
 	return res, paginationRes, nil
 }
 
+func (c workspaceStorageLogging) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
+	c.logger.Debug(ctx, "request started")
+
+	now := time.Now()
+
+	res, paginationRes, err := c.next.ListPublicWorkspaces(ctx, tenantID, pagination)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, err
+	}
+
+	c.logger.Debug(ctx, "request completed",
+		logger.WithCountField(len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, paginationRes, nil
+}
+
 func (c workspaceStorageLogging) GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error) {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()

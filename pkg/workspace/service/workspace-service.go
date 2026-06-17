@@ -29,6 +29,7 @@ type NotificationStore interface {
 type Workspaceer interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error)
 	CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
@@ -55,6 +56,7 @@ type Workbencher interface {
 type WorkspaceStore interface {
 	GetWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) (*model.Workspace, error)
 	ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, IDIn *[]uint64, allowDeleted bool) ([]*model.Workspace, *common_model.PaginationResult, error)
+	ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
 	DeleteOldWorkspaces(ctx context.Context, duration time.Duration) ([]*model.Workspace, error)
 	CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
 	UpdateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
@@ -75,6 +77,7 @@ type Userer interface {
 	RemoveUserRoles(ctx context.Context, tenantID, userID uint64, roleIDs []uint64) error
 	RemoveRolesByContext(ctx context.Context, contextDimension, contextValue string) ([]uint64, error)
 	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
+	GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*user_model.User, error)
 }
 
 type WorkspaceService struct {
@@ -132,7 +135,7 @@ func (s *WorkspaceService) updateAllWorkspaces(ctx context.Context) error {
 	}
 
 	for _, workspace := range workspaces {
-		if workspace.Status == model.WorkspaceDeleted {
+		if workspace.Status == model.WorkspaceStatusDeleted {
 			go func() {
 				if err := s.k8sClient.DeleteWorkspace(model.GetWorkspaceClusterName(workspace.ID)); err != nil {
 					logger.TechLog.Error(context.Background(), fmt.Sprintf("unable to update workbench %v: %v", workspace.ID, err))
@@ -190,6 +193,62 @@ func (s *WorkspaceService) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	return workspaces, paginationRes, nil
 }
 
+func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+	workspaces, paginationRes, err := s.store.ListPublicWorkspaces(ctx, tenantID, pagination)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to query public workspaces: %w", err)
+	}
+
+	// Collect distinct contact user IDs for a single batch fetch.
+	contactUserIDSet := map[uint64]struct{}{}
+	for _, workspace := range workspaces {
+		if workspace.ContactUserID != nil && *workspace.ContactUserID != 0 {
+			contactUserIDSet[*workspace.ContactUserID] = struct{}{}
+		}
+	}
+
+	contactUsers := map[uint64]*user_model.User{}
+	if len(contactUserIDSet) > 0 {
+		ids := make([]uint64, 0, len(contactUserIDSet))
+		for id := range contactUserIDSet {
+			ids = append(ids, id)
+		}
+		users, err := s.userer.GetUsers(ctx, tenantID, ids)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get contact users: %w", err)
+		}
+		for _, u := range users {
+			contactUsers[u.ID] = u
+		}
+	}
+
+	var publicWorkspaces []*model.PublicWorkspace
+	for _, workspace := range workspaces {
+		pw := &model.PublicWorkspace{
+			ID:          workspace.ID,
+			TenantID:    workspace.TenantID,
+			Name:        workspace.Name,
+			ShortName:   workspace.ShortName,
+			Description: workspace.Description,
+			Status:      workspace.Status,
+			CreatedAt:   workspace.CreatedAt,
+			UpdatedAt:   workspace.UpdatedAt,
+		}
+
+		if workspace.ContactUserID != nil && *workspace.ContactUserID != 0 {
+			if u, ok := contactUsers[*workspace.ContactUserID]; ok {
+				pw.ContactUsername = u.Username
+				pw.ContactFirstName = u.FirstName
+				pw.ContactLastName = u.LastName
+				pw.ContactEmail = u.Email
+			}
+		}
+
+		publicWorkspaces = append(publicWorkspaces, pw)
+	}
+	return publicWorkspaces, paginationRes, nil
+}
+
 func (s *WorkspaceService) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {
 	workspace, err := s.store.GetWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
@@ -224,6 +283,21 @@ func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, worksp
 }
 
 func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
+	if workspace.NetworkPolicy == "" {
+		workspace.NetworkPolicy = "Airgapped"
+	}
+	if workspace.Clipboard == "" {
+		workspace.Clipboard = "disabled"
+	}
+	if workspace.AllowedFQDNs == nil {
+		workspace.AllowedFQDNs = model.StringSlice{}
+	}
+	if workspace.Visibility == "" {
+		workspace.Visibility = model.WorkspaceVisibilityPrivate
+	}
+	if workspace.ContactUserID != nil && *workspace.ContactUserID == 0 {
+		workspace.ContactUserID = nil
+	}
 	updatedWorkspace, err := s.store.UpdateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
 		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to update workspace %v", workspace.ID))
@@ -243,6 +317,18 @@ func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model
 }
 
 func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
+	if workspace.NetworkPolicy == "" {
+		workspace.NetworkPolicy = "Airgapped"
+	}
+	if workspace.Clipboard == "" {
+		workspace.Clipboard = "disabled"
+	}
+	if workspace.AllowedFQDNs == nil {
+		workspace.AllowedFQDNs = model.StringSlice{}
+	}
+	if workspace.Visibility == "" {
+		workspace.Visibility = model.WorkspaceVisibilityPrivate
+	}
 	newWorkspace, err := s.store.CreateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
 		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to create workspace %v", workspace.ID))

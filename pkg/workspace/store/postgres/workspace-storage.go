@@ -37,7 +37,7 @@ func (s *WorkspaceStorage) GetWorkspace(ctx context.Context, tenantID uint64, wo
 	const query = `
 		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
 		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		       clipboard,
+		       clipboard, visibility, contactuserid,
 		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
@@ -73,7 +73,7 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	query := `
 		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
 		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		       clipboard,
+		       clipboard, visibility, contactuserid,
 		       createdat, updatedat
 		FROM workspaces
 		WHERE tenantid = $1
@@ -109,36 +109,70 @@ func (s *WorkspaceStorage) ListWorkspaces(ctx context.Context, tenantID uint64, 
 	return workspaces, paginationRes, nil
 }
 
+// ListPublicWorkspaces lists workspaces with public visibility.
+func (s *WorkspaceStorage) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error) {
+
+	// Look at example from workbench store to handle args
+	countQuery := `SELECT COUNT(*) FROM workspaces WHERE tenantid = $1 AND visibility = $2 AND deletedat IS NULL`
+
+	var totalCount int
+	if err := s.db.GetContext(ctx, &totalCount, countQuery, tenantID, model.WorkspaceVisibilityPublic); err != nil {
+		return nil, nil, err
+	}
+
+	// Get public workspaces query
+	// note: this is the same query as in ListWorkspaces above
+	// except for the filters on visibility and deletedat
+	query := `
+		SELECT id, tenantid, userid, name, shortname, description, status, ismain,
+		       networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
+		       clipboard, contactuserid,
+		       createdat, updatedat
+		FROM workspaces
+		WHERE tenantid = $1 AND visibility = $2 AND deletedat IS NULL
+	`
+
+	// Add pagination
+	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.Workspace{})
+	query += clause
+
+	// Build pagination result
+	paginationRes := &common_model.PaginationResult{
+		Total: uint64(totalCount),
+	}
+
+	if validatedPagination != nil {
+		paginationRes.Limit = validatedPagination.Limit
+		paginationRes.Offset = validatedPagination.Offset
+		paginationRes.Sort = validatedPagination.Sort
+	}
+
+	var workspaces []*model.Workspace
+	if err := s.db.SelectContext(ctx, &workspaces, query, tenantID, model.WorkspaceVisibilityPublic); err != nil {
+		return nil, nil, err
+	}
+
+	return workspaces, paginationRes, nil
+}
+
 // CreateWorkspace saves the provided workspace object in the database 'workspaces' table.
 func (s *WorkspaceStorage) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
 	const workspaceQuery = `
 		INSERT INTO workspaces (tenantid, userid, name, shortname, description, status, ismain,
 		                        networkpolicy, allowedfqdns, clipboard,
+								visibility, contactuserid,
 		                        createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
 		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
 		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		          clipboard,
+		          clipboard, visibility, contactuserid,
 		          createdat, updatedat;
 	`
-
-	networkPolicy := workspace.NetworkPolicy
-	if networkPolicy == "" {
-		networkPolicy = "Airgapped"
-	}
-	clipboard := workspace.Clipboard
-	if clipboard == "" {
-		clipboard = "disabled"
-	}
-	allowedFQDNs := workspace.AllowedFQDNs
-	if allowedFQDNs == nil {
-		allowedFQDNs = model.StringSlice{}
-	}
 
 	var createdWorkspace model.Workspace
 	err := s.db.GetContext(ctx, &createdWorkspace, workspaceQuery,
 		tenantID, workspace.UserID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-		networkPolicy, pqStringArray(allowedFQDNs), clipboard,
+		workspace.NetworkPolicy, pqStringArray(workspace.AllowedFQDNs), workspace.Clipboard, workspace.Visibility, workspace.ContactUserID,
 	)
 	if err != nil {
 		return nil, err
@@ -151,32 +185,19 @@ func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64,
 	const workspaceUpdateQuery = `
 		UPDATE workspaces
 		SET name = $3, shortname = $4, description = $5, status = $6, isMain = $7,
-		    networkpolicy = $8, allowedfqdns = $9, clipboard = $10,
+		    networkpolicy = $8, allowedfqdns = $9, clipboard = $10, visibility = $11, contactuserid = $12,
 		    updatedat = NOW()
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
 		RETURNING id, tenantid, userid, name, shortname, description, status, ismain,
 		          networkpolicy, allowedfqdns, networkpolicystatus, networkpolicymessage,
-		          clipboard,
+		          clipboard, visibility, contactuserid,
 		          createdat, updatedat;
 	`
-
-	networkPolicy := workspace.NetworkPolicy
-	if networkPolicy == "" {
-		networkPolicy = "Airgapped"
-	}
-	clipboard := workspace.Clipboard
-	if clipboard == "" {
-		clipboard = "disabled"
-	}
-	allowedFQDNs := workspace.AllowedFQDNs
-	if allowedFQDNs == nil {
-		allowedFQDNs = model.StringSlice{}
-	}
 
 	var updatedWorkspace model.Workspace
 	err := s.db.GetContext(ctx, &updatedWorkspace, workspaceUpdateQuery,
 		tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-		networkPolicy, pqStringArray(allowedFQDNs), clipboard,
+		workspace.NetworkPolicy, pqStringArray(workspace.AllowedFQDNs), workspace.Clipboard, workspace.Visibility, workspace.ContactUserID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update workspace: %w", err)
@@ -444,7 +465,7 @@ func (s *WorkspaceStorage) DeleteWorkspace(ctx context.Context, tenantID uint64,
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
-	rows, err := s.db.ExecContext(ctx, query, tenantID, workspaceID, model.WorkspaceDeleted.String(), "-"+uuid.Next())
+	rows, err := s.db.ExecContext(ctx, query, tenantID, workspaceID, model.WorkspaceStatusDeleted.String(), "-"+uuid.Next())
 	if err != nil {
 		return fmt.Errorf("unable to exec: %w", err)
 	}
@@ -474,7 +495,7 @@ func (s *WorkspaceStorage) DeleteOldWorkspaces(ctx context.Context, timeout time
 	`
 
 	var deletedWorkspaces []*model.Workspace
-	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(timeout.Seconds())))
+	err := s.db.SelectContext(ctx, &deletedWorkspaces, query, model.WorkspaceStatusDeleted.String(), "-"+uuid.Next(), fmt.Sprintf("%d seconds", int64(timeout.Seconds())))
 	if err != nil {
 		return nil, fmt.Errorf("unable to exec: %w", err)
 	}
@@ -512,9 +533,6 @@ func (s *WorkspaceStorage) encryptSensitiveFields(svc *model.WorkspaceServiceIns
 		if err != nil {
 			return "", "", nil, fmt.Errorf("unable to encrypt credentials path: %w", err)
 		}
-	}
-	if encCredPaths == nil {
-		encCredPaths = model.StringSlice{}
 	}
 
 	return encValues, encCredName, encCredPaths, nil

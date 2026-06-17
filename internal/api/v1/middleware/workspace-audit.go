@@ -47,6 +47,19 @@ func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *choru
 	return res, err
 }
 
+func (c workspaceControllerAudit) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
+	res, err := c.next.ListPublicWorkspaces(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList,
+			audit.WithDescription("Failed to list public workspaces."),
+			audit.WithError(err),
+		)
+	}
+
+	return res, err
+}
+
 func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	res, err := c.next.CreateWorkspace(ctx, req)
 

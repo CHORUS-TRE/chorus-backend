@@ -81,6 +81,15 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 	return c.next.ListWorkspaces(ctx, req)
 }
 
+func (c workspaceControllerAuthorization) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionListPublicWorkspaces)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ListPublicWorkspaces(ctx, req)
+}
+
 func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {

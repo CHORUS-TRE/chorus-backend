@@ -77,6 +77,10 @@ func (c *Caching) ListUsers(ctx context.Context, req service.ListUsersReq) (user
 	return
 }
 
+func (c *Caching) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error) {
+	return c.next.GetUsers(ctx, tenantID, userIDs)
+}
+
 func (c *Caching) GetUser(ctx context.Context, req service.GetUserReq) (reply *model.User, err error) {
 	entry := c.cache.NewEntry(cache.WithInterface(req))
 	reply = &model.User{}

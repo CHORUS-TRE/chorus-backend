@@ -25,6 +25,7 @@ type NotificationStore interface {
 type Userer interface {
 	ListUsers(ctx context.Context, req ListUsersReq) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, req GetUserReq) (*model.User, error)
+	GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error)
 	CreateUser(ctx context.Context, req CreateUserReq) (*model.User, error)
 	CreateRole(ctx context.Context, role string) error
 	CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []model.UserRole) error
@@ -50,6 +51,7 @@ type Userer interface {
 type UserStore interface {
 	ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *UserFilter) ([]*model.User, *common.PaginationResult, error)
 	GetUser(ctx context.Context, tenantID uint64, userID uint64) (*model.User, error)
+	GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error)
 	CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
 	SoftDeleteUser(ctx context.Context, tenantID uint64, userID uint64) error
 	UpdateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error)
@@ -105,6 +107,14 @@ func (u *UserService) GetUser(ctx context.Context, req GetUserReq) (*model.User,
 	user.TotpSecret = nil
 
 	return user, nil
+}
+
+func (u *UserService) GetUsers(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*model.User, error) {
+	users, err := u.store.GetUsers(ctx, tenantID, userIDs)
+	if err != nil {
+		return nil, cerr.WrapStoreError(err, "unable to get users by IDs")
+	}
+	return users, nil
 }
 
 func (u *UserService) UpdateUserPassword(ctx context.Context, req UpdateUserPasswordReq) error {
