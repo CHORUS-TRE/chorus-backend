@@ -33,7 +33,7 @@ func (c ClipboardMode) String() string {
 	return string(c)
 }
 
-// VisibilityMode defines the visibility for a workspace.
+// WorkspaceVisibility defines the visibility for a workspace.
 type WorkspaceVisibility string
 
 const (
