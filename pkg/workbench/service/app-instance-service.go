@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
@@ -14,7 +15,7 @@ import (
 func (s *WorkbenchService) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	appInstances, paginationRes, err := s.store.ListAppInstances(ctx, tenantID, pagination, filter.WorkbenchIDsIn)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to query appInstances: %w", err)
+		return nil, nil, cerr.WrapStoreError(err, "Unable to list appInstances")
 	}
 	return appInstances, paginationRes, nil
 }
@@ -22,7 +23,7 @@ func (s *WorkbenchService) ListAppInstances(ctx context.Context, tenantID uint64
 func (s *WorkbenchService) GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get appInstance %v", appInstanceID))
 	}
 
 	return appInstance, nil
@@ -31,12 +32,12 @@ func (s *WorkbenchService) GetAppInstance(ctx context.Context, tenantID, appInst
 func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error) {
 	appInstance, err := s.store.GetAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get appInstance %v: %w", appInstanceID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get appInstance %v", appInstanceID))
 	}
 
 	err = s.store.DeleteAppInstance(ctx, tenantID, appInstanceID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to delete appInstance %v: %w", appInstanceID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to delete appInstance %v", appInstanceID))
 	}
 
 	// Set appInstance state to Stopped
@@ -47,12 +48,12 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 
 	clientApp, err := s.getK8sAppInstance(ctx, appInstance)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get k8s app instance %v: %w", appInstance.AppID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get k8s app instance %v", appInstance.AppID))
 	}
 
 	err = s.client.UpdateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to delete app instance %v: %w", appInstance.ID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete app instance %v", appInstance.ID))
 	}
 
 	return appInstance, nil
@@ -61,7 +62,7 @@ func (s *WorkbenchService) DeleteAppInstance(ctx context.Context, tenantID, appI
 func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	updatedAppInstance, err := s.store.UpdateAppInstance(ctx, appInstance.TenantID, appInstance)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update appInstance %v: %w", appInstance.ID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to update appInstance %v", appInstance.ID))
 	}
 
 	return updatedAppInstance, nil
@@ -70,20 +71,20 @@ func (s *WorkbenchService) UpdateAppInstance(ctx context.Context, appInstance *m
 func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	app, err := s.apper.GetApp(ctx, appInstance.TenantID, appInstance.AppID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get app %v", appInstance.AppID))
 	}
 
 	if app.BrowserConfigJWTOIDCClientID != "" {
 		token, _, err := s.authenticator.GetShortLivedTokenForClient(ctx, app.BrowserConfigJWTOIDCClientID, appInstance.WorkspaceID)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get short lived token for app %v: %w", appInstance.AppID, err)
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get short lived token for app %v", appInstance.AppID))
 		}
 		appInstance.BrowserConfigJWTToken = token
 	}
 
 	newAppInstance, err := s.store.CreateAppInstance(ctx, appInstance.TenantID, appInstance)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create appInstance %v: %w", appInstance.ID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to create appInstance %v", appInstance.ID))
 	}
 
 	wsName := s.getWorkspaceName(newAppInstance.WorkspaceID)
@@ -91,12 +92,12 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 
 	clientApp, err := s.getK8sAppInstance(ctx, newAppInstance)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get app %v: %w", newAppInstance.ID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get app %v", newAppInstance.ID))
 	}
 
 	err = s.client.CreateAppInstance(wsName, wbName, clientApp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create app instance %v: %w", newAppInstance.ID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create app instance %v", newAppInstance.ID))
 	}
 
 	return newAppInstance, nil
@@ -105,7 +106,7 @@ func (s *WorkbenchService) CreateAppInstance(ctx context.Context, appInstance *m
 func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *model.AppInstance) (k8s.AppInstance, error) {
 	app, err := s.apper.GetApp(ctx, appInstance.TenantID, appInstance.AppID)
 	if err != nil {
-		return k8s.AppInstance{}, fmt.Errorf("unable to get app %v: %w", appInstance.AppID, err)
+		return k8s.AppInstance{}, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get app %v", appInstance.AppID))
 	}
 
 	clientApp := k8s.AppInstance{
@@ -137,17 +138,17 @@ func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *m
 func (s *WorkbenchService) getIDWithPrefix(prefix, name string) (uint64, error) {
 	re, err := regexp.Compile("^" + prefix + "([0-9]+)$")
 	if err != nil {
-		return 0, fmt.Errorf("unable to compile regex: %w", err)
+		return 0, cerr.ErrInternal.Wrap(err, "Unable to compile regex")
 	}
 
 	matches := re.FindStringSubmatch(name)
 	if len(matches) != 2 {
-		return 0, fmt.Errorf("no match found for regex with prefix %q in name %q", prefix, name)
+		return 0, cerr.ErrInternal.WithMessage(fmt.Sprintf("No match found for regex with prefix %q in name %q", prefix, name))
 	}
 
 	id, err := strconv.ParseUint(matches[1], 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("unable to parse id: %w", err)
+		return 0, cerr.ErrInternal.Wrap(err, "Unable to parse id")
 	}
 
 	return id, nil

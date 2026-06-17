@@ -94,12 +94,12 @@ func (s *UserStorage) GetUser(ctx context.Context, tenantID uint64, userID uint6
 
 	var user model.User
 	if err := s.db.GetContext(ctx, &user, query, tenantID, userID); err != nil {
-		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get user %v", userID))
+		return nil, fmt.Errorf("unable to get user %v: %w", userID, err)
 	}
 
 	roles, err := s.getUserRoles(ctx, userID)
 	if err != nil {
-		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get roles for user %v", userID))
+		return nil, fmt.Errorf("unable to get user roles: %w", err)
 	}
 	user.Roles = roles
 
@@ -114,7 +114,7 @@ func (s *UserStorage) GetUsers(ctx context.Context, tenantID uint64, userIDs []u
 	`
 	var users []*model.User
 	if err := s.db.SelectContext(ctx, &users, query, tenantID, storage.Uint64ToPqInt64(userIDs)); err != nil {
-		return nil, cerr.WrapStoreError(err, "unable to get users by IDs")
+		return nil, fmt.Errorf("unable to get users by IDs: %w", err)
 	}
 	return users, nil
 }
@@ -125,7 +125,7 @@ func (s *UserStorage) GetTotpRecoveryCodes(ctx context.Context, tenantID, userID
 	`
 	var codes []*model.TotpRecoveryCode
 	if err := s.db.Select(&codes, query, tenantID, userID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get TOTP recovery codes: %w", err)
 	}
 
 	return codes, nil

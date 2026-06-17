@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -28,7 +29,7 @@ func Validation(validate *val.Validate) func(service.Workspaceer) service.Worksp
 
 func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, nil, err
+		return nil, nil, cerr.WrapValidationError(err)
 	}
 	return v.next.ListWorkspaces(ctx, tenantID, pagination, filter)
 }
@@ -50,14 +51,14 @@ func (v validation) DeleteWorkspace(ctx context.Context, tenantID, workspaceID u
 
 func (v validation) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	if err := v.validate.Struct(workspace); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateWorkspace(ctx, workspace)
 }
 
 func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	if err := v.validate.Struct(workspace); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateWorkspace(ctx, workspace)
 }
@@ -80,21 +81,21 @@ func (v validation) GetWorkspaceServiceInstance(ctx context.Context, tenantID, w
 
 func (v validation) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, nil, err
+		return nil, nil, cerr.WrapValidationError(err)
 	}
 	return v.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
 }
 
 func (v validation) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
 	if err := v.validate.Struct(svc); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateWorkspaceServiceInstance(ctx, svc)
 }
 
 func (v validation) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
 	if err := v.validate.Struct(svc); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateWorkspaceServiceInstance(ctx, svc)
 }
