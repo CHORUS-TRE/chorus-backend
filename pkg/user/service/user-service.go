@@ -114,10 +114,6 @@ func (u *UserService) GetUsers(ctx context.Context, tenantID uint64, userIDs []u
 	if err != nil {
 		return nil, cerr.WrapStoreError(err, "unable to get users by IDs")
 	}
-	for _, user := range users {
-		user.Password = ""
-		user.TotpSecret = nil
-	}
 	return users, nil
 }
 
