@@ -194,31 +194,10 @@ func (s *WorkspaceStorage) UpdateWorkspace(ctx context.Context, tenantID uint64,
 		          createdat, updatedat;
 	`
 
-	networkPolicy := workspace.NetworkPolicy
-	if networkPolicy == "" {
-		networkPolicy = "Airgapped"
-	}
-	clipboard := workspace.Clipboard
-	if clipboard == "" {
-		clipboard = "disabled"
-	}
-	allowedFQDNs := workspace.AllowedFQDNs
-	if allowedFQDNs == nil {
-		allowedFQDNs = model.StringSlice{}
-	}
-	visibility := workspace.Visibility
-	if visibility == "" {
-		visibility = model.WorkspaceVisibilityPrivate
-	}
-	contactUserId := workspace.ContactUserID
-	if contactUserId != nil && *contactUserId == 0 {
-		contactUserId = nil
-	}
-
 	var updatedWorkspace model.Workspace
 	err := s.db.GetContext(ctx, &updatedWorkspace, workspaceUpdateQuery,
 		tenantID, workspace.ID, workspace.Name, workspace.ShortName, workspace.Description, workspace.Status, workspace.IsMain,
-		networkPolicy, pqStringArray(allowedFQDNs), clipboard, visibility, contactUserId,
+		workspace.NetworkPolicy, pqStringArray(workspace.AllowedFQDNs), workspace.Clipboard, workspace.Visibility, workspace.ContactUserID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update workspace: %w", err)

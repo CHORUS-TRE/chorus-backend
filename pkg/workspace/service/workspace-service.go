@@ -282,6 +282,21 @@ func (s *WorkspaceService) DeleteWorkspace(ctx context.Context, tenantID, worksp
 }
 
 func (s *WorkspaceService) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
+	if workspace.NetworkPolicy == "" {
+		workspace.NetworkPolicy = "Airgapped"
+	}
+	if workspace.Clipboard == "" {
+		workspace.Clipboard = "disabled"
+	}
+	if workspace.AllowedFQDNs == nil {
+		workspace.AllowedFQDNs = model.StringSlice{}
+	}
+	if workspace.Visibility == "" {
+		workspace.Visibility = model.WorkspaceVisibilityPrivate
+	}
+	if workspace.ContactUserID != nil && *workspace.ContactUserID == 0 {
+		workspace.ContactUserID = nil
+	}
 	updatedWorkspace, err := s.store.UpdateWorkspace(ctx, workspace.TenantID, workspace)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update workspace %v: %w", workspace.ID, err)
