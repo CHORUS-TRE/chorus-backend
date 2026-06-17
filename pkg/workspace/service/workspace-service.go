@@ -215,7 +215,7 @@ func (s *WorkspaceService) ListPublicWorkspaces(ctx context.Context, tenantID ui
 		}
 		users, err := s.userer.GetUsers(ctx, tenantID, ids)
 		if err != nil {
-			return nil, nil, cerr.WrapStoreError(err, "Failed to get contact users")
+			return nil, nil, cerr.ErrInternal.Wrap(err, "Failed to get contact users")
 		}
 		for _, u := range users {
 			contactUsers[u.ID] = u
