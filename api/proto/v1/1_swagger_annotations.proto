@@ -1,4 +1,4 @@
-// This file must be the first file processed (hence its name '_swagger_annotations.proto') and is used for the merged swagger API file 'apis.swagger.json' .
+// This file must be the first file processed (hence its name '_swagger_annotations.proto') and is used for the merged swagger API file 'apis.swagger.yaml' .
 
 syntax = "proto3";
 package chorus;
