@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkbenchesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -80,10 +76,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -101,10 +93,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -123,10 +111,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -144,10 +128,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -166,10 +146,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusRemoveUserFromWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -193,10 +169,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -225,10 +197,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkbenchesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -280,10 +248,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -301,10 +265,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -323,10 +283,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -344,10 +300,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -366,10 +318,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusRemoveUserFromWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -393,10 +341,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -604,22 +548,3 @@ definitions:
         items:
           type: string
           format: uint64
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

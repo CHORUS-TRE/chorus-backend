@@ -31,14 +31,7 @@ func (o *WorkspaceServiceRemoveUserRoleInWorkspaceReader) ReadResponse(response 
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceServiceRemoveUserRoleInWorkspaceDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[DELETE /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}] WorkspaceService_RemoveUserRoleInWorkspace", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceServiceRemoveUserRoleInWorkspaceOK) GetPayload() *models.Choru
 func (o *WorkspaceServiceRemoveUserRoleInWorkspaceOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusRemoveUserRoleInWorkspaceReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceServiceRemoveUserRoleInWorkspaceDefault creates a WorkspaceServiceRemoveUserRoleInWorkspaceDefault with default headers values
-func NewWorkspaceServiceRemoveUserRoleInWorkspaceDefault(code int) *WorkspaceServiceRemoveUserRoleInWorkspaceDefault {
-	return &WorkspaceServiceRemoveUserRoleInWorkspaceDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceServiceRemoveUserRoleInWorkspaceDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceServiceRemoveUserRoleInWorkspaceDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace service remove user role in workspace default response has a 2xx status code
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace service remove user role in workspace default response has a 3xx status code
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace service remove user role in workspace default response has a 4xx status code
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace service remove user role in workspace default response has a 5xx status code
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace service remove user role in workspace default response a status code equal to that given
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace service remove user role in workspace default response
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}][%d] WorkspaceService_RemoveUserRoleInWorkspace default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}][%d] WorkspaceService_RemoveUserRoleInWorkspace default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceServiceRemoveUserRoleInWorkspaceDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

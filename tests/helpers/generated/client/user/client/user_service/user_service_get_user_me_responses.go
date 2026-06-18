@@ -31,14 +31,7 @@ func (o *UserServiceGetUserMeReader) ReadResponse(response runtime.ClientRespons
 		}
 		return result, nil
 	default:
-		result := NewUserServiceGetUserMeDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/users/me] UserService_GetUserMe", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *UserServiceGetUserMeOK) GetPayload() *models.ChorusGetUserMeReply {
 func (o *UserServiceGetUserMeOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusGetUserMeReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewUserServiceGetUserMeDefault creates a UserServiceGetUserMeDefault with default headers values
-func NewUserServiceGetUserMeDefault(code int) *UserServiceGetUserMeDefault {
-	return &UserServiceGetUserMeDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-UserServiceGetUserMeDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type UserServiceGetUserMeDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this user service get user me default response has a 2xx status code
-func (o *UserServiceGetUserMeDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this user service get user me default response has a 3xx status code
-func (o *UserServiceGetUserMeDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this user service get user me default response has a 4xx status code
-func (o *UserServiceGetUserMeDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this user service get user me default response has a 5xx status code
-func (o *UserServiceGetUserMeDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this user service get user me default response a status code equal to that given
-func (o *UserServiceGetUserMeDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the user service get user me default response
-func (o *UserServiceGetUserMeDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *UserServiceGetUserMeDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/users/me][%d] UserService_GetUserMe default %s", o._statusCode, payload)
-}
-
-func (o *UserServiceGetUserMeDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/users/me][%d] UserService_GetUserMe default %s", o._statusCode, payload)
-}
-
-func (o *UserServiceGetUserMeDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *UserServiceGetUserMeDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

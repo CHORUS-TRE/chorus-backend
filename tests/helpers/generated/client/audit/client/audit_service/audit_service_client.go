@@ -6,6 +6,8 @@ package audit_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -102,8 +104,9 @@ func (a *Client) AuditServiceListActorAudit(params *AuditServiceListActorAuditPa
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceListActorAuditDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuditService_ListActorAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -141,8 +144,9 @@ func (a *Client) AuditServiceListPlatformAudit(params *AuditServiceListPlatformA
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceListPlatformAuditDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuditService_ListPlatformAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -180,8 +184,9 @@ func (a *Client) AuditServiceListUserAudit(params *AuditServiceListUserAuditPara
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceListUserAuditDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuditService_ListUserAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -219,8 +224,9 @@ func (a *Client) AuditServiceListWorkbenchAudit(params *AuditServiceListWorkbenc
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceListWorkbenchAuditDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuditService_ListWorkbenchAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -258,8 +264,9 @@ func (a *Client) AuditServiceListWorkspaceAudit(params *AuditServiceListWorkspac
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuditServiceListWorkspaceAuditDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuditService_ListWorkspaceAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

@@ -31,14 +31,7 @@ func (o *WorkbenchServiceManageUserRoleInWorkbench2Reader) ReadResponse(response
 		}
 		return result, nil
 	default:
-		result := NewWorkbenchServiceManageUserRoleInWorkbench2Default(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role] WorkbenchService_ManageUserRoleInWorkbench2", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkbenchServiceManageUserRoleInWorkbench2OK) GetPayload() *models.Chor
 func (o *WorkbenchServiceManageUserRoleInWorkbench2OK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusManageUserRoleInWorkbenchReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkbenchServiceManageUserRoleInWorkbench2Default creates a WorkbenchServiceManageUserRoleInWorkbench2Default with default headers values
-func NewWorkbenchServiceManageUserRoleInWorkbench2Default(code int) *WorkbenchServiceManageUserRoleInWorkbench2Default {
-	return &WorkbenchServiceManageUserRoleInWorkbench2Default{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkbenchServiceManageUserRoleInWorkbench2Default describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkbenchServiceManageUserRoleInWorkbench2Default struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workbench service manage user role in workbench2 default response has a 2xx status code
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workbench service manage user role in workbench2 default response has a 3xx status code
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workbench service manage user role in workbench2 default response has a 4xx status code
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workbench service manage user role in workbench2 default response has a 5xx status code
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workbench service manage user role in workbench2 default response a status code equal to that given
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workbench service manage user role in workbench2 default response
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role][%d] WorkbenchService_ManageUserRoleInWorkbench2 default %s", o._statusCode, payload)
-}
-
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workbenchs/{id}/user/{userId}/role][%d] WorkbenchService_ManageUserRoleInWorkbench2 default %s", o._statusCode, payload)
-}
-
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkbenchServiceManageUserRoleInWorkbench2Default) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

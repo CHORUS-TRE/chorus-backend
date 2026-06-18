@@ -6,6 +6,8 @@ package notification_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -98,8 +100,9 @@ func (a *Client) NotificationServiceCountUnreadNotifications(params *Notificatio
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*NotificationServiceCountUnreadNotificationsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for NotificationService_CountUnreadNotifications: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -137,8 +140,9 @@ func (a *Client) NotificationServiceGetNotifications(params *NotificationService
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*NotificationServiceGetNotificationsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for NotificationService_GetNotifications: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -176,8 +180,9 @@ func (a *Client) NotificationServiceMarkNotificationsAsRead(params *Notification
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*NotificationServiceMarkNotificationsAsReadDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for NotificationService_MarkNotificationsAsRead: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

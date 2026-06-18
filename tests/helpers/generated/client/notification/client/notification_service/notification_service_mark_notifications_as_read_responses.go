@@ -12,8 +12,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/models"
 )
 
 // NotificationServiceMarkNotificationsAsReadReader is a Reader for the NotificationServiceMarkNotificationsAsRead structure.
@@ -31,14 +29,7 @@ func (o *NotificationServiceMarkNotificationsAsReadReader) ReadResponse(response
 		}
 		return result, nil
 	default:
-		result := NewNotificationServiceMarkNotificationsAsReadDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/notifications/read] NotificationService_MarkNotificationsAsRead", response, response.Code())
 	}
 }
 
@@ -104,80 +95,6 @@ func (o *NotificationServiceMarkNotificationsAsReadOK) readResponse(response run
 
 	// response payload
 	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewNotificationServiceMarkNotificationsAsReadDefault creates a NotificationServiceMarkNotificationsAsReadDefault with default headers values
-func NewNotificationServiceMarkNotificationsAsReadDefault(code int) *NotificationServiceMarkNotificationsAsReadDefault {
-	return &NotificationServiceMarkNotificationsAsReadDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-NotificationServiceMarkNotificationsAsReadDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type NotificationServiceMarkNotificationsAsReadDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this notification service mark notifications as read default response has a 2xx status code
-func (o *NotificationServiceMarkNotificationsAsReadDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this notification service mark notifications as read default response has a 3xx status code
-func (o *NotificationServiceMarkNotificationsAsReadDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this notification service mark notifications as read default response has a 4xx status code
-func (o *NotificationServiceMarkNotificationsAsReadDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this notification service mark notifications as read default response has a 5xx status code
-func (o *NotificationServiceMarkNotificationsAsReadDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this notification service mark notifications as read default response a status code equal to that given
-func (o *NotificationServiceMarkNotificationsAsReadDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the notification service mark notifications as read default response
-func (o *NotificationServiceMarkNotificationsAsReadDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *NotificationServiceMarkNotificationsAsReadDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/notifications/read][%d] NotificationService_MarkNotificationsAsRead default %s", o._statusCode, payload)
-}
-
-func (o *NotificationServiceMarkNotificationsAsReadDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/notifications/read][%d] NotificationService_MarkNotificationsAsRead default %s", o._statusCode, payload)
-}
-
-func (o *NotificationServiceMarkNotificationsAsReadDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *NotificationServiceMarkNotificationsAsReadDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

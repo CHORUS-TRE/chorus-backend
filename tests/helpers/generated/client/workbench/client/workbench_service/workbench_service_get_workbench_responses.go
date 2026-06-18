@@ -31,14 +31,7 @@ func (o *WorkbenchServiceGetWorkbenchReader) ReadResponse(response runtime.Clien
 		}
 		return result, nil
 	default:
-		result := NewWorkbenchServiceGetWorkbenchDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/workbenches/{id}] WorkbenchService_GetWorkbench", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkbenchServiceGetWorkbenchOK) GetPayload() *models.ChorusGetWorkbench
 func (o *WorkbenchServiceGetWorkbenchOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusGetWorkbenchReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkbenchServiceGetWorkbenchDefault creates a WorkbenchServiceGetWorkbenchDefault with default headers values
-func NewWorkbenchServiceGetWorkbenchDefault(code int) *WorkbenchServiceGetWorkbenchDefault {
-	return &WorkbenchServiceGetWorkbenchDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkbenchServiceGetWorkbenchDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkbenchServiceGetWorkbenchDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workbench service get workbench default response has a 2xx status code
-func (o *WorkbenchServiceGetWorkbenchDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workbench service get workbench default response has a 3xx status code
-func (o *WorkbenchServiceGetWorkbenchDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workbench service get workbench default response has a 4xx status code
-func (o *WorkbenchServiceGetWorkbenchDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workbench service get workbench default response has a 5xx status code
-func (o *WorkbenchServiceGetWorkbenchDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workbench service get workbench default response a status code equal to that given
-func (o *WorkbenchServiceGetWorkbenchDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workbench service get workbench default response
-func (o *WorkbenchServiceGetWorkbenchDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkbenchServiceGetWorkbenchDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workbenches/{id}][%d] WorkbenchService_GetWorkbench default %s", o._statusCode, payload)
-}
-
-func (o *WorkbenchServiceGetWorkbenchDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workbenches/{id}][%d] WorkbenchService_GetWorkbench default %s", o._statusCode, payload)
-}
-
-func (o *WorkbenchServiceGetWorkbenchDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkbenchServiceGetWorkbenchDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

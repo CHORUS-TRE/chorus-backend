@@ -31,14 +31,7 @@ func (o *WorkspaceFileServiceAbortWorkspaceFileUploadReader) ReadResponse(respon
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceFileServiceAbortWorkspaceFileUploadDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}] WorkspaceFileService_AbortWorkspaceFileUpload", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceFileServiceAbortWorkspaceFileUploadOK) GetPayload() *models.Ch
 func (o *WorkspaceFileServiceAbortWorkspaceFileUploadOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusAbortWorkspaceFileUploadReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceFileServiceAbortWorkspaceFileUploadDefault creates a WorkspaceFileServiceAbortWorkspaceFileUploadDefault with default headers values
-func NewWorkspaceFileServiceAbortWorkspaceFileUploadDefault(code int) *WorkspaceFileServiceAbortWorkspaceFileUploadDefault {
-	return &WorkspaceFileServiceAbortWorkspaceFileUploadDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceFileServiceAbortWorkspaceFileUploadDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceFileServiceAbortWorkspaceFileUploadDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace file service abort workspace file upload default response has a 2xx status code
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace file service abort workspace file upload default response has a 3xx status code
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace file service abort workspace file upload default response has a 4xx status code
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace file service abort workspace file upload default response has a 5xx status code
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace file service abort workspace file upload default response a status code equal to that given
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace file service abort workspace file upload default response
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}][%d] WorkspaceFileService_AbortWorkspaceFileUpload default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}][%d] WorkspaceFileService_AbortWorkspaceFileUpload default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceFileServiceAbortWorkspaceFileUploadDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
