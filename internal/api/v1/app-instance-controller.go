@@ -5,12 +5,9 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ chorus.AppInstanceServiceServer = (*AppInstanceController)(nil)
@@ -27,22 +24,22 @@ type AppInstanceController struct {
 
 func (c AppInstanceController) GetAppInstance(ctx context.Context, req *chorus.GetAppInstanceRequest) (*chorus.GetAppInstanceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	appInstance, err := c.workbencher.GetAppInstance(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetAppInstance': %v", err.Error())
+		return nil, err
 	}
 
 	tgAppInstance, err := converter.AppInstanceFromBusiness(appInstance)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 	}
 
 	return &chorus.GetAppInstanceReply{Result: &chorus.GetAppInstanceResult{AppInstance: tgAppInstance}}, nil
@@ -50,29 +47,29 @@ func (c AppInstanceController) GetAppInstance(ctx context.Context, req *chorus.G
 
 func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	appInstance, err := converter.AppInstanceToBusiness(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 	}
 
 	appInstance.TenantID = tenantID
 
 	updatedAppInstance, err := c.workbencher.UpdateAppInstance(ctx, appInstance)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateAppInstance': %v", err.Error())
+		return nil, err
 	}
 
 	updatedAppInstanceProto, err := converter.AppInstanceFromBusiness(updatedAppInstance)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 	}
 
 	return &chorus.UpdateAppInstanceReply{Result: &chorus.UpdateAppInstanceResult{AppInstance: updatedAppInstanceProto}}, nil
@@ -80,22 +77,22 @@ func (c AppInstanceController) UpdateAppInstance(ctx context.Context, req *choru
 
 func (c AppInstanceController) DeleteAppInstance(ctx context.Context, req *chorus.DeleteAppInstanceRequest) (*chorus.DeleteAppInstanceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	appInstance, err := c.workbencher.DeleteAppInstance(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteAppInstance': %v", err.Error())
+		return nil, err
 	}
 
 	appInstanceRes, err := converter.AppInstanceFromBusiness(appInstance)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 	}
 
 	return &chorus.DeleteAppInstanceReply{Result: &chorus.DeleteAppInstanceResult{AppInstance: appInstanceRes}}, nil
@@ -104,12 +101,12 @@ func (c AppInstanceController) DeleteAppInstance(ctx context.Context, req *choru
 // ListAppInstances extracts the retrieved appInstances from the service and inserts them into a reply object.
 func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
@@ -121,14 +118,14 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 
 	res, paginationRes, err := c.workbencher.ListAppInstances(ctx, tenantID, &pagination, filter)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListAppInstances': %v", err.Error())
+		return nil, err
 	}
 
 	var appInstances []*chorus.AppInstance
 	for _, r := range res {
 		appInstance, err := converter.AppInstanceFromBusiness(r)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 		}
 		appInstances = append(appInstances, appInstance)
 	}
@@ -144,7 +141,7 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 // CreateAppInstance extracts the appInstance from the request and passes it to the appInstance service.
 func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
@@ -159,7 +156,7 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 
 	appInstance, err := converter.AppInstanceToBusiness(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 	}
 
 	appInstance.TenantID = tenantID
@@ -167,12 +164,12 @@ func (c AppInstanceController) CreateAppInstance(ctx context.Context, req *choru
 
 	res, err := c.workbencher.CreateAppInstance(ctx, appInstance)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateAppInstance': %v", err.Error())
+		return nil, err
 	}
 
 	appInstanceProto, err := converter.AppInstanceFromBusiness(res)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert appInstance")
 	}
 
 	return &chorus.CreateAppInstanceReply{Result: &chorus.CreateAppInstanceResult{AppInstance: appInstanceProto}}, nil
