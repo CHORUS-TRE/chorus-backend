@@ -24,6 +24,9 @@ func (s StewardController) InitializeTenant(ctx context.Context, req *chorus.Ini
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request: nil")
 	}
+	if req.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "tenant name is required")
+	}
 
 	tenant, err := s.stewarder.InitializeNewTenant(ctx, req.Name)
 	if err != nil {
