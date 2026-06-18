@@ -17,11 +17,11 @@ func NewTenantStorage(db *sqlx.DB) *TenantStorage {
 	return &TenantStorage{db: db}
 }
 
-func (s *TenantStorage) GetTenant(ctx context.Context, tenantID uint64) (*model.Tenant, error) {
-	const q = `SELECT * FROM tenants where id = $1`
+func (s *TenantStorage) GetTenantByName(ctx context.Context, name string) (*model.Tenant, error) {
+	const q = `SELECT * FROM tenants WHERE name = $1`
 	t := &model.Tenant{}
-	if err := s.db.Get(t, q, tenantID); err != nil {
-		return nil, fmt.Errorf("unable to get tenant: %w", err)
+	if err := s.db.GetContext(ctx, t, q, name); err != nil {
+		return nil, fmt.Errorf("unable to get tenant by name: %w", err)
 	}
 	return t, nil
 }

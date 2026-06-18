@@ -27,6 +27,6 @@ func (v validation) CreateTenant(ctx context.Context, name string) (*tenant_mode
 	return v.next.CreateTenant(ctx, name)
 }
 
-func (v validation) GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error) {
-	return v.next.GetTenant(ctx, tenantID)
+func (v validation) GetTenantByName(ctx context.Context, name string) (*tenant_model.Tenant, error) {
+	return v.next.GetTenantByName(ctx, name)
 }

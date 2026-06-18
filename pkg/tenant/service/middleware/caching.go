@@ -34,6 +34,6 @@ func (c *Caching) CreateTenant(ctx context.Context, name string) (*tenant_model.
 	return c.next.CreateTenant(ctx, name)
 }
 
-func (c *Caching) GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error) {
-	return c.next.GetTenant(ctx, tenantID)
+func (c *Caching) GetTenantByName(ctx context.Context, name string) (*tenant_model.Tenant, error) {
+	return c.next.GetTenantByName(ctx, name)
 }

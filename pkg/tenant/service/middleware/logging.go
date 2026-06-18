@@ -38,14 +38,15 @@ func (l tenantServiceLogging) CreateTenant(ctx context.Context, name string) (*t
 	return tenant, common.LogErrorIfAny(err, ctx, now, l.logger)
 }
 
-func (l tenantServiceLogging) GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error) {
+func (l tenantServiceLogging) GetTenantByName(ctx context.Context, name string) (*tenant_model.Tenant, error) {
 	now := time.Now()
 
-	log := logger.With(l.logger,
-		logger.WithTenantIDField(tenantID),
-	)
+	tenant, err := l.next.GetTenantByName(ctx, name)
 
-	tenant, err := l.next.GetTenant(ctx, tenantID)
+	if tenant != nil {
+		log := logger.With(l.logger, logger.WithTenantIDField(tenant.ID))
+		return tenant, common.LogErrorIfAny(err, ctx, now, log)
+	}
 
-	return tenant, common.LogErrorIfAny(err, ctx, now, log)
+	return tenant, common.LogErrorIfAny(err, ctx, now, l.logger)
 }

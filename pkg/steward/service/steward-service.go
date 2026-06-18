@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -16,28 +14,15 @@ import (
 	"golang.org/x/text/language"
 )
 
-const (
-	defaultTenantID = uint64(1)
-	defaultUserID   = uint64(1)
-)
-
-var defaultBootstrapRoles = []user_model.UserRole{
-	{Role: authorization_model.NewRole(authorization_model.RoleAuthenticated, authorization_model.WithUser(defaultUserID))},
-	{Role: authorization_model.NewRole(authorization_model.RolePlatformSettingsManager, authorization_model.WithUser(defaultUserID))},
-	{Role: authorization_model.NewRole(authorization_model.RolePlateformUserManager, authorization_model.WithUser(defaultUserID))},
-	{Role: authorization_model.NewRole(authorization_model.RoleAppStoreAdmin, authorization_model.WithUser(defaultUserID))},
-}
-
 type Tenanter interface {
 	CreateTenant(ctx context.Context, name string) (*tenant_model.Tenant, error)
-	GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error)
+	GetTenantByName(ctx context.Context, name string) (*tenant_model.Tenant, error)
 }
 
 type Userer interface {
 	CreateUser(ctx context.Context, req user_service.CreateUserReq) (*user_model.User, error)
-	GetUser(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
+	CreateUserRoles(ctx context.Context, tenantID, userID uint64, roles []user_model.UserRole) error
 	CreateRole(ctx context.Context, role string) error
-	GetRoles(ctx context.Context) ([]*user_model.Role, error)
 }
 
 type Stewarder interface {
@@ -57,11 +42,12 @@ func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer) (*S
 		userer:   userer,
 	}
 
-	if conf.Services.Steward.User.Username != "" && conf.Services.Steward.User.Password.IsSet() {
-		if err := stewardService.InitializeDefaultTenant(context.Background()); err != nil {
+	if conf.Services.Steward.Tenant.Name != "" && conf.Services.Steward.User.Username != "" && conf.Services.Steward.User.Password.IsSet() {
+		tenantID, err := stewardService.InitializeDefaultTenant(context.Background())
+		if err != nil {
 			return nil, fmt.Errorf("failed to initialize default tenant: %w", err)
 		}
-		if err := stewardService.InitializeDefaultUser(context.Background()); err != nil {
+		if err := stewardService.InitializeDefaultUser(context.Background(), tenantID); err != nil {
 			return nil, fmt.Errorf("failed to initialize default user: %w", err)
 		}
 	}
@@ -69,55 +55,59 @@ func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer) (*S
 	return stewardService, nil
 }
 
-func (s *StewardService) InitializeDefaultTenant(ctx context.Context) error {
-	_, err := s.tenanter.GetTenant(ctx, defaultTenantID)
-	if err == nil {
-		return nil
-	}
-
-	if !errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("unable to get default tenant %v: %w", defaultTenantID, err)
-	}
-
+func (s *StewardService) InitializeDefaultTenant(ctx context.Context) (uint64, error) {
 	if err := s.createDefaultRoles(ctx); err != nil {
-		return fmt.Errorf("unable to create default roles: %w", err)
+		return 0, fmt.Errorf("unable to create default roles: %w", err)
 	}
 
-	if _, err := s.createTenant(ctx, s.conf.Services.Steward.Tenant.Name); err != nil {
-		return fmt.Errorf("unable to initialize default tenant: %w", err)
+	tenant, err := s.createTenant(ctx, s.conf.Services.Steward.Tenant.Name)
+	if err != nil {
+		if !strings.Contains(err.Error(), "duplicate key") {
+			return 0, fmt.Errorf("unable to initialize default tenant: %w", err)
+		}
+		existing, err := s.tenanter.GetTenantByName(ctx, s.conf.Services.Steward.Tenant.Name)
+		if err != nil {
+			return 0, fmt.Errorf("unable to get existing default tenant %q: %w", s.conf.Services.Steward.Tenant.Name, err)
+		}
+		return existing.ID, nil
 	}
 
-	return nil
+	return tenant.ID, nil
 }
 
-func (s *StewardService) InitializeDefaultUser(ctx context.Context) error {
-	_, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: defaultTenantID, ID: defaultUserID})
-	if err == nil {
-		return nil
-	}
-
-	if !errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("unable to get default user %v: %w", defaultUserID, err)
-	}
-
-	_, createErr := s.userer.CreateUser(ctx, user_service.CreateUserReq{
-		TenantID: defaultTenantID,
+func (s *StewardService) InitializeDefaultUser(ctx context.Context, tenantID uint64) error {
+	user, err := s.userer.CreateUser(ctx, user_service.CreateUserReq{
+		TenantID: tenantID,
 		User: &user_service.UserReq{
-			ID:        defaultUserID,
 			FirstName: cases.Title(language.English).String(s.conf.Services.Steward.User.Username),
 			LastName:  "Default",
 			Username:  s.conf.Services.Steward.User.Username,
 			Source:    "internal",
 			Password:  s.conf.Services.Steward.User.Password.PlainText(),
 			Status:    user_model.UserActive,
-			Roles:     defaultBootstrapRoles,
 		},
 	})
-	if createErr != nil {
-		return fmt.Errorf("unable to initialize default user %v: %w", defaultUserID, createErr)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil
+		}
+		return fmt.Errorf("unable to initialize default user: %w", err)
+	}
+
+	if err := s.userer.CreateUserRoles(ctx, tenantID, user.ID, bootstrapRolesFor(user.ID)); err != nil {
+		return fmt.Errorf("unable to assign bootstrap roles to default user %v: %w", user.ID, err)
 	}
 
 	return nil
+}
+
+func bootstrapRolesFor(userID uint64) []user_model.UserRole {
+	return []user_model.UserRole{
+		{Role: authorization_model.NewRole(authorization_model.RoleAuthenticated, authorization_model.WithUser(userID))},
+		{Role: authorization_model.NewRole(authorization_model.RolePlatformSettingsManager, authorization_model.WithUser(userID))},
+		{Role: authorization_model.NewRole(authorization_model.RolePlateformUserManager, authorization_model.WithUser(userID))},
+		{Role: authorization_model.NewRole(authorization_model.RoleAppStoreAdmin, authorization_model.WithUser(userID))},
+	}
 }
 
 func (s *StewardService) InitializeNewTenant(ctx context.Context, name string) (*tenant_model.Tenant, error) {
