@@ -15,8 +15,6 @@ fi
 
 PATH="$PATH:$PWD/scripts/tools/$OS/bin"
 
-echo $PATH
-
 function generate_api_files() {
     # Protobuf and openapiv2 instantiations.
     echo
@@ -24,30 +22,33 @@ function generate_api_files() {
 
     mkdir -p api/openapiv2/v1-tags
 
+    rm -rf api/openapiv2/v1-tags/*-service
+
     for file in api/proto/v1/*.proto; do
         if [[ -f $file ]]; then
-            echo "---> generating grpc files for $(basename $file) ..."
-            protoc --proto_path=api/proto/v1/ --proto_path=api/proto/third_party --go_out=plugins=grpc:internal/api/v1/chorus `basename $file`
+            base=$(basename "$file")
 
-            echo "---> generating grpc gateway files ..."
-            protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --grpc-gateway_out=logtostderr=true:internal/api/v1/chorus `basename $file`
+            # Go types are needed for every proto (messages used across the codebase).
+            echo "---> generating grpc files for $base ..."
+            protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --go_out=plugins=grpc:internal/api/v1/chorus "$base"
 
-            # Per-service OpenAPI files feed goswagger (generate_client) to build the
-            # Go acceptance-test HTTP clients. Only *-service.proto declare endpoints;
-            # message-only protos produce empty swagger consumed by nothing, so skip
-            # them here. The frontend and /doc use only the merged apis.swagger.yaml.
-            case "$(basename $file)" in
+            # Only *-service.proto declare endpoints: generate the gateway and the
+            # per-service OpenAPI (consumed by goswagger in generate_client) for those
+            # only. /doc and the frontend use only the merged apis.swagger.yaml below.
+            case "$base" in
                 *-service.proto)
-                    filename=$(basename -- "$file")
-                    filename="${filename%.*}"
+                    echo "---> generating grpc gateway files for $base ..."
+                    protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --grpc-gateway_out=logtostderr=true:internal/api/v1/chorus "$base"
+
+                    filename="${base%.*}"
                     mkdir -p api/openapiv2/v1-tags/$filename
-                    protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,disable_default_errors=true,merge_file_name=apis:api/openapiv2/v1-tags/$filename $file
+                    protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,disable_default_errors=true,merge_file_name=apis:api/openapiv2/v1-tags/$filename "$base"
                     ;;
             esac
         fi
     done
 
-    echo "---> generating merged openapiv2 API definition file 'apis.openapiv2.json' ..."
+    echo "---> generating merged openapiv2 API definition file 'apis.swagger.yaml' ..."
     protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,disable_default_errors=true,merge_file_name=apis:api/openapiv2/v1-tags api/proto/v1/*.proto
 }
 
@@ -75,7 +76,7 @@ function generate_client() {
     rm -rf tests/helpers/generated/client
 
     for folder in api/openapiv2/v1-tags/*-service; do
-        if [[ -d $folder && $folder/apis.swagger.yaml ]]; then
+        if [[ -d $folder && -f "$folder/apis.swagger.yaml" ]]; then
             service=$(echo ${folder##*/} | sed 's/-service$//')
             echo "generating openapi client for $service" 
 
