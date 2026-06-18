@@ -26,38 +26,29 @@ function generate_api_files() {
 
     for file in api/proto/v1/*.proto; do
         if [[ -f $file ]]; then
-            echo "---> generating grpc files..."
-            echo $(basename $file)
-            echo $file
-            #python3 -m grpc_tools.protoc --proto_path=. --proto_path=api/proto/third_party --python_out=internal --grpc_python_out=internal $file
-            # protoc --proto_path=api/proto/v1/ --proto_path=api/proto/third_party --go_out=plugins=grpc:internal/api/v1/chorus $(basename $file)
-
-            # echo "---> generating grpc gateway files..."
-            # protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --grpc-gateway_out=logtostderr=true:internal/api/v1/chorus $(basename $file)
-
-            echo "---> generating grpc files..."
+            echo "---> generating grpc files for $(basename $file) ..."
             protoc --proto_path=api/proto/v1/ --proto_path=api/proto/third_party --go_out=plugins=grpc:internal/api/v1/chorus `basename $file`
 
-            echo "---> generating grpc gateway files..."
+            echo "---> generating grpc gateway files ..."
             protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --grpc-gateway_out=logtostderr=true:internal/api/v1/chorus `basename $file`
 
-            #echo "---> generating grpc validation files..."
-            #protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --govalidators_out=internal/api/v1/chorus  `basename $file`
-
-            # echo "---> generating openapiv2 files..."
-            # protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=disable_default_errors=true,simple_operation_ids=true,logtostderr=true:api/openapiv2/v1-tags $(basename $file)
-
-            filename=$(basename -- "$file")
-            filename="${filename%.*}"
-            mkdir -p api/openapiv2/v1-tags/$filename
-            protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,merge_file_name=apis:api/openapiv2/v1-tags/$filename $file
-            # openapi typegen api/openapiv2/v1-tags/$filename/apis.swagger.yaml > api/openapiv2/v1-tags/$filename/type.d.ts
-        
+            # Per-service OpenAPI files feed goswagger (generate_client) to build the
+            # Go acceptance-test HTTP clients. Only *-service.proto declare endpoints;
+            # message-only protos produce empty swagger consumed by nothing, so skip
+            # them here. The frontend and /doc use only the merged apis.swagger.yaml.
+            case "$(basename $file)" in
+                *-service.proto)
+                    filename=$(basename -- "$file")
+                    filename="${filename%.*}"
+                    mkdir -p api/openapiv2/v1-tags/$filename
+                    protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,disable_default_errors=true,merge_file_name=apis:api/openapiv2/v1-tags/$filename $file
+                    ;;
+            esac
         fi
     done
 
     echo "---> generating merged openapiv2 API definition file 'apis.openapiv2.json' ..."
-    protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,merge_file_name=apis:api/openapiv2/v1-tags api/proto/v1/*.proto
+    protoc --proto_path=api/proto/v1 --proto_path=api/proto/third_party --openapiv2_out=logtostderr=true,allow_merge=true,output_format=yaml,disable_default_errors=true,merge_file_name=apis:api/openapiv2/v1-tags api/proto/v1/*.proto
 }
 
 # function generate_server() {
