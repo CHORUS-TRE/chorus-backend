@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
@@ -28,7 +29,7 @@ func Validation(validate *val.Validate) func(service.Workbencher) service.Workbe
 
 func (v validation) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, nil, err
+		return nil, nil, cerr.WrapValidationError(err)
 	}
 	return v.next.ListWorkbenches(ctx, tenantID, pagination, filter)
 }
@@ -50,21 +51,21 @@ func (v validation) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID, 
 
 func (v validation) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	if err := v.validate.Struct(workbench); err != nil {
-		return v.next.UpdateWorkbench(ctx, workbench)
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateWorkbench(ctx, workbench)
 }
 
 func (v validation) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	if err := v.validate.Struct(workbench); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateWorkbench(ctx, workbench)
 }
 
 func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, nil, err
+		return nil, nil, cerr.WrapValidationError(err)
 	}
 	return v.next.ListAppInstances(ctx, tenantID, pagination, filter)
 }
@@ -79,21 +80,21 @@ func (v validation) DeleteAppInstance(ctx context.Context, tenantID, appInstance
 
 func (v validation) UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	if err := v.validate.Struct(appInstance); err != nil {
-		return v.next.UpdateAppInstance(ctx, appInstance)
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateAppInstance(ctx, appInstance)
 }
 
 func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error) {
 	if err := v.validate.Struct(appInstance); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateAppInstance(ctx, appInstance)
 }
 
 func (v validation) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	if err := v.validate.Struct(role); err != nil {
-		return err
+		return cerr.WrapValidationError(err)
 	}
 	return v.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
 }
