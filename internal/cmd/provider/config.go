@@ -128,12 +128,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.round_tripper.tls_handshake_timeout", 10*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.response_header_timeout", 15*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.max_transient_retry", 3)
-	v.SetDefault("services.steward.init_tenant.enabled", false)
-	v.SetDefault("services.steward.init_tenant.tenant_id", 1)
-	v.SetDefault("services.steward.init_user.enabled", false)
-	v.SetDefault("services.steward.init_user.user_id", 1)
-	v.SetDefault("services.steward.init_workspace.enabled", false)
-	v.SetDefault("services.steward.init_workspace.workspace_id", 1)
 
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", false)

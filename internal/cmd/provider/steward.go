@@ -39,7 +39,6 @@ func ProvideStewardService() service.Stewarder {
 			ProvideConfig(),
 			ProvideTenanter(),
 			ProvideUser(),
-			ProvideWorkspaceService(),
 		)
 		if err != nil {
 			logger.TechLog.Fatal(context.Background(), "failed to create steward service", zap.Error(err))

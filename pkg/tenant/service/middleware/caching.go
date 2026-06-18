@@ -30,8 +30,8 @@ type Caching struct {
 	next  service.Tenanter
 }
 
-func (c *Caching) CreateTenant(ctx context.Context, tenantID uint64, name string) error {
-	return c.next.CreateTenant(ctx, tenantID, name)
+func (c *Caching) CreateTenant(ctx context.Context, name string) (*tenant_model.Tenant, error) {
+	return c.next.CreateTenant(ctx, name)
 }
 
 func (c *Caching) GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error) {

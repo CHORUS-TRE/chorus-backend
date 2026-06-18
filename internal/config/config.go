@@ -341,27 +341,14 @@ type (
 		} `yaml:"user_service"`
 
 		Steward struct {
-			InitTenant struct {
-				Enabled  bool   `yaml:"enabled"`
-				TenantID uint64 `yaml:"tenant_id"`
-			} `yaml:"init_tenant"`
+			Tenant struct {
+				Name string `yaml:"name"`
+			} `yaml:"tenant"`
 
-			InitUser struct {
-				Enabled  bool      `yaml:"enabled"`
-				UserID   uint64    `yaml:"user_id"`
+			User struct {
 				Username string    `yaml:"username"`
 				Password Sensitive `yaml:"password"`
-				Roles    []struct {
-					Name    string            `yaml:"name"`
-					Context map[string]string `yaml:"context"`
-				} `yaml:"roles"`
-			} `yaml:"init_user"`
-
-			InitWorkspace struct {
-				Enabled     bool   `yaml:"enabled"`
-				WorkspaceID uint64 `yaml:"workspace_id"`
-				Name        string `yaml:"name"`
-			} `yaml:"init_workspace"`
+			} `yaml:"user"`
 		} `yaml:"steward"`
 	}
 

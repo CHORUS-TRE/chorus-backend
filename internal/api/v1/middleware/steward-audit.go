@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 var _ chorus.StewardServiceServer = (*stewardControllerAudit)(nil)
@@ -27,21 +26,21 @@ func NewStewardAuditMiddleware(auditWriter service.AuditWriter) func(chorus.Stew
 	}
 }
 
-func (c stewardControllerAudit) InitializeTenant(ctx context.Context, req *chorus.InitializeTenantRequest) (*empty.Empty, error) {
+func (c stewardControllerAudit) InitializeTenant(ctx context.Context, req *chorus.InitializeTenantRequest) (*chorus.InitializeTenantReply, error) {
 	res, err := c.next.InitializeTenant(ctx, req)
 
 	opts := []audit.Option{
-		audit.WithDetail("tenant_id", req.TenantId),
+		audit.WithDetail("name", req.Name),
 	}
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to initialize tenant %d.", req.TenantId)),
+			audit.WithDescription(fmt.Sprintf("Failed to initialize tenant %q.", req.Name)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Initialized tenant %d.", req.TenantId)),
+			audit.WithDescription(fmt.Sprintf("Initialized tenant %q.", req.Name)),
 		)
 	}
 

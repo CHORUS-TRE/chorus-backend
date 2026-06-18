@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -27,14 +26,14 @@ func (s *TenantStorage) GetTenant(ctx context.Context, tenantID uint64) (*model.
 	return t, nil
 }
 
-func (s *TenantStorage) CreateTenant(ctx context.Context, tenantID uint64, name string) error {
-	ins := `
-		INSERT INTO tenants(id, name, createdat, updatedat) VALUES($1, $2, $3, $3);
+func (s *TenantStorage) CreateTenant(ctx context.Context, name string) (*model.Tenant, error) {
+	const q = `
+		INSERT INTO tenants(name, createdat, updatedat) VALUES($1, NOW(), NOW())
+		RETURNING id, name, createdat, updatedat;
 	`
-	_, err := s.db.ExecContext(ctx, ins, tenantID, name, time.Now().UTC())
-	if err != nil {
-		return fmt.Errorf("unable to create tenant: %w", err)
+	t := &model.Tenant{}
+	if err := s.db.GetContext(ctx, t, q, name); err != nil {
+		return nil, fmt.Errorf("unable to create tenant: %w", err)
 	}
-
-	return nil
+	return t, nil
 }

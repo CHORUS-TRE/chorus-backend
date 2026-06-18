@@ -23,8 +23,8 @@ func Validation(validate *val.Validate) func(service.Tenanter) service.Tenanter 
 	}
 }
 
-func (v validation) CreateTenant(ctx context.Context, tenantID uint64, name string) error {
-	return v.next.CreateTenant(ctx, tenantID, name)
+func (v validation) CreateTenant(ctx context.Context, name string) (*tenant_model.Tenant, error) {
+	return v.next.CreateTenant(ctx, name)
 }
 
 func (v validation) GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error) {
