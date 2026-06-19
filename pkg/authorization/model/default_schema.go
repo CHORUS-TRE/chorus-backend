@@ -441,13 +441,21 @@ func roleDefinition(name RoleName, description string, context map[ContextDimens
 }
 
 func inferRoleScope(context map[ContextDimension]ContextQuantifier) RoleScope {
-	if _, ok := context[RoleContextWorkbench]; ok {
+	_, hasUser := context[RoleContextUser]
+	_, hasWorkspace := context[RoleContextWorkspace]
+	_, hasWorkbench := context[RoleContextWorkbench]
+
+	// SuperAdmin carries all three dimensions
+	if hasUser && hasWorkspace && hasWorkbench {
+		return RoleScopeSystem
+	}
+	if hasWorkbench {
 		return RoleScopeWorkbench
 	}
-	if _, ok := context[RoleContextWorkspace]; ok {
+	if hasWorkspace {
 		return RoleScopeWorkspace
 	}
-	if _, ok := context[RoleContextUser]; ok {
+	if hasUser {
 		return RoleScopePlatform
 	}
 	return RoleScopePlatform
