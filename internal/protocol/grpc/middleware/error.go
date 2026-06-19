@@ -35,5 +35,13 @@ func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.Unar
 		return nil, err // Already a gRPC error
 	}
 
-	return nil, cerr.ErrInternal.Wrap(err, "An unexpected error occurred.").ToGRPCStatus().Err()
+	wrapped := cerr.ErrInternal.Wrap(err, "An unexpected error occurred.")
+	logger.TechLog.Error(ctx, "request failed",
+		zap.String("method", info.FullMethod),
+		zap.String("code", wrapped.ChorusCode.String()),
+		zap.String("message", wrapped.Message),
+		zap.Error(err),
+		zap.String("stacktrace", wrapped.StackTrace()),
+	)
+	return nil, wrapped.ToGRPCStatus().Err()
 }

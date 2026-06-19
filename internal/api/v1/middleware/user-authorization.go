@@ -146,16 +146,16 @@ func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *ch
 
 	roleName, err := authorization.ToRoleName(req.Role.Name)
 	if err != nil {
-		return nil, fmt.Errorf("invalid role name: %w", err)
+		return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role name")
 	}
 	if c.IsRoleInScope(roleName, authorization.RoleScopeWorkspace, authorization.RoleScopeWorkbench) {
-		return nil, fmt.Errorf("role %q must be assigned through its scoped endpoint", roleName)
+		return nil, cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Role %q must be assigned through its scoped endpoint", roleName))
 	}
 	assignmentContext := authorization.Context{authorization.RoleContextUser: fmt.Sprintf("%d", req.UserId)}
 	for key, value := range req.Role.Context {
 		dimension, err := authorization.ToRoleContext(key)
 		if err != nil {
-			return nil, fmt.Errorf("invalid role context: %w", err)
+			return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role context")
 		}
 		assignmentContext[dimension] = value
 	}
