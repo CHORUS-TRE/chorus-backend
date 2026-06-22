@@ -69,7 +69,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.grpc.port", "5555")
 	v.SetDefault("daemon.grpc.max_recv_msg_size", 10485760)  // 10 MiB
 	v.SetDefault("daemon.grpc.max_send_msg_size", 104857600) // 100 MiB
-	v.SetDefault("daemon.tenant_id", 9999999)
 	v.SetDefault("daemon.jwt.expiration_time", "24h")
 	v.SetDefault("daemon.jwt.max_refresh_time", "720h") // 30 days
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
@@ -106,6 +105,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.audit_service.enabled", false)
 	v.SetDefault("services.authentication_service.enabled", false)
 	v.SetDefault("services.authentication_service.auth_ui_enabled", false)
+	v.SetDefault("services.authentication_service.self_service.tenant_id", 1)
 	v.SetDefault("services.workspace_service.kill_fixed_check_interval", time.Hour)
 	v.SetDefault("services.workspace_service.creator_is_admin", true)
 	v.SetDefault("services.workspace_service.creator_is_data_manager", true)

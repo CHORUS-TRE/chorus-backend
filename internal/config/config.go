@@ -53,8 +53,7 @@ type (
 
 		Jobber Jobber `yaml:"jobber"`
 
-		PPROFEnabled bool   `yaml:"pprof_enabled"`
-		TenantID     uint64 `yaml:"tenant_id"`
+		PPROFEnabled bool `yaml:"pprof_enabled"`
 
 		PrivateKeyFile string `yaml:"private_key_file"`
 		PrivateKey     string `yaml:"private_key"`
@@ -282,6 +281,9 @@ type (
 			Enabled       bool            `yaml:"enabled"`
 			AuthUIEnabled bool            `yaml:"auth_ui_enabled"`
 			Modes         map[string]Mode `yaml:"modes"`
+			SelfService   struct {
+				TenantID uint64 `yaml:"tenant_id"`
+			} `yaml:"self_service"`
 		} `yaml:"authentication_service"`
 
 		OpenIDConnectProvider struct {

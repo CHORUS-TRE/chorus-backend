@@ -52,7 +52,6 @@ func (f *fakeUserer) CreateRole(ctx context.Context, role string) error {
 
 func stewardConf(username, password string) config.Config {
 	var conf config.Config
-	conf.Daemon.TenantID = 9999999
 	conf.Services.Steward.User.Username = username
 	conf.Services.Steward.User.Password = config.Sensitive(password)
 	conf.Services.Steward.Tenant.Name = "default"
