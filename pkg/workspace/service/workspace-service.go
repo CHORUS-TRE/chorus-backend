@@ -367,25 +367,25 @@ func (s *WorkspaceService) AddUserRoleInWorkspace(ctx context.Context, tenantID,
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Check if the user already has the role in the workspace
+	workspaceRoles := []uint64{}
 	for _, r := range user.Roles {
-		if r.Context["workspace"] == role.Context["workspace"] {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		if r.Context["workspace"] == role.Context["workspace"] && r.Role.Name == role.Role.Name {
+			workspaceRoles = append(workspaceRoles, r.ID)
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
-		if err != nil {
-			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workspace roles for user %v for workspace %v", userID, role.Context["workspace"]))
-		}
+	if len(workspaceRoles) != 0 {
+		return cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("User %v already has role %v in workspace %v", userID, role.Role.Name, role.Context["workspace"]))
 	}
 
+	// Assign the role to the user
 	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workspace admin role to user %v for workspace %v", userID, tenantID))
 	}
 
+	// Notify the user about the new role
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
 		UserID:   userID,
