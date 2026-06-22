@@ -7,6 +7,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/lib/pq"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	tenant_model "github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -66,7 +68,7 @@ func alwaysOKTenanter() *fakeTenanter {
 
 func tenantAlreadyExistsTenanter() *fakeTenanter {
 	return &fakeTenanter{
-		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, errors.New("duplicate key") },
+		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, &pq.Error{Code: "23505"} },
 		getTenantByNameFn: func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return &tenant_model.Tenant{ID: 1}, nil },
 	}
 }
@@ -167,7 +169,7 @@ func TestNewStewardService_TenantAndUserAlreadyExist(t *testing.T) {
 	conf := stewardConf("chorus", "password")
 
 	userer := &fakeUserer{
-		createUserFn:      func(_ context.Context, _ user_service.CreateUserReq) (*user_model.User, error) { return nil, errors.New("duplicate key") },
+		createUserFn:      func(_ context.Context, _ user_service.CreateUserReq) (*user_model.User, error) { return nil, &pq.Error{Code: "23505"} },
 		createUserRolesFn: func(_ context.Context, _, _ uint64, _ []user_model.UserRole) error { t.Fatal("unexpected call"); return nil },
 		createRoleFn:      func(_ context.Context, _ string) error { return nil },
 	}
@@ -238,7 +240,7 @@ func TestNewStewardService_GetTenantByNameError_ReturnsError(t *testing.T) {
 	conf := stewardConf("chorus", "password")
 
 	tenanter := &fakeTenanter{
-		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, errors.New("duplicate key") },
+		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, &pq.Error{Code: "23505"} },
 		getTenantByNameFn: func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, errors.New("db error") },
 	}
 
@@ -253,7 +255,7 @@ func TestNewStewardService_UserExists_Skips(t *testing.T) {
 
 	userer := &fakeUserer{
 		createUserFn: func(_ context.Context, _ user_service.CreateUserReq) (*user_model.User, error) {
-			return nil, errors.New("duplicate key value violates unique constraint")
+			return nil, &pq.Error{Code: "23505"}
 		},
 		createUserRolesFn: func(_ context.Context, _, _ uint64, _ []user_model.UserRole) error {
 			t.Fatal("CreateUserRoles should not be called when user already exists")
@@ -363,7 +365,7 @@ func TestInitializeNewTenant_DuplicateTenant_ReturnsError(t *testing.T) {
 	conf := stewardConf("chorus", "password")
 
 	tenanter := &fakeTenanter{
-		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, errors.New("duplicate key") },
+		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return nil, &pq.Error{Code: "23505"} },
 		getTenantByNameFn: func(_ context.Context, _ string) (*tenant_model.Tenant, error) { return &tenant_model.Tenant{}, nil },
 	}
 

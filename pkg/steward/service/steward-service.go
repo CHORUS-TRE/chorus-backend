@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/lib/pq"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -62,7 +64,7 @@ func (s *StewardService) InitializeDefaultTenant(ctx context.Context) (uint64, e
 
 	tenant, err := s.createTenant(ctx, s.conf.Services.Steward.Tenant.Name)
 	if err != nil {
-		if !strings.Contains(err.Error(), "duplicate key") {
+		if !isDuplicateKey(err) {
 			return 0, fmt.Errorf("unable to initialize default tenant: %w", err)
 		}
 		existing, err := s.tenanter.GetTenantByName(ctx, s.conf.Services.Steward.Tenant.Name)
@@ -88,7 +90,7 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context, tenantID uin
 		},
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+		if isDuplicateKey(err) {
 			return nil
 		}
 		return fmt.Errorf("unable to initialize default user: %w", err)
@@ -135,10 +137,15 @@ func (s *StewardService) createDefaultRoles(ctx context.Context) error {
 	return nil
 }
 
+func isDuplicateKey(err error) bool {
+	var pqErr *pq.Error
+	return errors.As(err, &pqErr) && pqErr.Code == "23505"
+}
+
 func (s *StewardService) createTenant(ctx context.Context, name string) (*tenant_model.Tenant, error) {
 	tenant, err := s.tenanter.CreateTenant(ctx, name)
 	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
+		if isDuplicateKey(err) {
 			return nil, fmt.Errorf("tenant %q already exists: %w", name, err)
 		}
 		return nil, err
