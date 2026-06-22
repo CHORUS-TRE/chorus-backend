@@ -7,6 +7,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 )
 
@@ -111,7 +112,7 @@ func (c AppInstanceController) ListAppInstances(ctx context.Context, req *chorus
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	filter := service.AppInstanceFilter{}
+	filter := model.AppInstanceFilter{}
 	if req.Filter != nil {
 		filter.WorkbenchIDsIn = &req.Filter.WorkbenchIdsIn
 	}

@@ -10,6 +10,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 )
 
@@ -114,7 +115,7 @@ func (c WorkbenchController) ListWorkbenches(ctx context.Context, req *chorus.Li
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	filter := service.WorkbenchFilter{}
+	filter := model.WorkbenchFilter{}
 	if req.Filter != nil {
 		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
 	}

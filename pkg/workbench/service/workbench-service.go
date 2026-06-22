@@ -57,17 +57,9 @@ type WorkspaceReader interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
 }
 
-type WorkbenchFilter struct {
-	WorkspaceIDsIn *[]uint64
-}
-
-type AppInstanceFilter struct {
-	WorkbenchIDsIn *[]uint64
-}
-
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
@@ -78,7 +70,7 @@ type Workbencher interface {
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) (*model.AppInstance, error)
@@ -471,7 +463,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	workbenches, paginationRes, err := s.store.ListWorkbenches(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
 	if err != nil {
 		return nil, nil, cerr.WrapStoreError(err, "Unable to list workbenches")

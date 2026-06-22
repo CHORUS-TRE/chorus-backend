@@ -34,7 +34,7 @@ type Caching struct {
 	next  service.Workbencher
 }
 
-func (c *Caching) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) (reply []*model.Workbench, paginationRes *common_model.PaginationResult, err error) {
+func (c *Caching) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) (reply []*model.Workbench, paginationRes *common_model.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination), cache.WithInterface(filter))
 	reply = []*model.Workbench{}
 	paginationRes = &common_model.PaginationResult{}
@@ -84,7 +84,7 @@ func (c *Caching) CreateWorkbench(ctx context.Context, workbench *model.Workbenc
 	return c.next.CreateWorkbench(ctx, workbench)
 }
 
-func (c *Caching) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) (reply []*model.AppInstance, paginationRes *common_model.PaginationResult, err error) {
+func (c *Caching) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) (reply []*model.AppInstance, paginationRes *common_model.PaginationResult, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination), cache.WithInterface(filter))
 	reply = []*model.AppInstance{}
 	paginationRes = &common_model.PaginationResult{}

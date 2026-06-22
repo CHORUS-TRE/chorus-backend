@@ -28,7 +28,7 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListWorkbenches(ctx, tenantID, pagination, filter)
@@ -165,7 +165,7 @@ func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench 
 	return newWorkbench, nil
 }
 
-func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination, filter)
