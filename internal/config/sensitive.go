@@ -22,3 +22,8 @@ func (s Sensitive) MarshalYAML() (interface{}, error) {
 func (s Sensitive) PlainText() string {
 	return string(s)
 }
+
+// IsSet reports whether the sensitive value is non-empty without exposing it.
+func (s Sensitive) IsSet() bool {
+	return len(s) > 0
+}

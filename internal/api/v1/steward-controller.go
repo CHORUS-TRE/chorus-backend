@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
+	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/steward/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	empty "google.golang.org/protobuf/types/known/emptypb"
 )
 
 var _ chorus.StewardServiceServer = (*StewardController)(nil)
@@ -20,14 +20,23 @@ func NewStewardController(stewarder service.Stewarder) StewardController {
 	return StewardController{stewarder: stewarder}
 }
 
-func (s StewardController) InitializeTenant(ctx context.Context, req *chorus.InitializeTenantRequest) (*empty.Empty, error) {
+func (s StewardController) InitializeTenant(ctx context.Context, req *chorus.InitializeTenantRequest) (*chorus.InitializeTenantReply, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request: nil")
 	}
+	if req.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "tenant name is required")
+	}
 
-	err := s.stewarder.InitializeNewTenant(ctx, req.TenantId)
+	tenant, err := s.stewarder.InitializeNewTenant(ctx, req.Name)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
-	return &empty.Empty{}, nil
+
+	result, err := converter.TenantFromBusiness(tenant)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "%v", err)
+	}
+
+	return &chorus.InitializeTenantReply{Result: result}, nil
 }

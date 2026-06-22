@@ -1,35 +1,38 @@
-name: chorus-backend-dev-container
+name: chorus-backend-dev
+
 services:
-  # chorus:
-  #   build:
-  #     context: ..
-  #     dockerfile: docker/dockerfiles/dev.dockerfile
-  #   volumes:
-  #     - ..:/workspace:cached
-  #     - /run/docker.sock:/run/docker.sock
-  #   command: /bin/sh -c "while sleep 1000; do :; done"
   postgres:
-    image: postgres
-    # user: "<UID>:<GID>" # Replace with your actual UID:GID
+    image: postgres:16
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: chorus
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ../docker/.postgresvolume:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ../docker/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d chorus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   minio:
-    container_name: minio
-    image: minio/minio
+    image: minio/minio:latest
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - ../docker/.miniovolume:/data
+      - minio_data:/data
     command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:

@@ -2605,8 +2605,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            type: object
-            properties: {}
+            $ref: '#/definitions/chorusInitializeTenantReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema: {}
@@ -6353,12 +6352,30 @@ definitions:
     properties:
       workspaceServiceInstance:
         $ref: '#/definitions/chorusWorkspaceServiceInstance'
+  chorusInitializeTenantReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInitializeTenantResult'
   chorusInitializeTenantRequest:
     type: object
     properties:
-      tenantId:
+      name:
+        type: string
+  chorusInitializeTenantResult:
+    type: object
+    properties:
+      id:
         type: string
         format: uint64
+      name:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusInitiateWorkspaceFileUploadReply:
     type: object
     properties:

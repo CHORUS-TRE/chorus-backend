@@ -291,10 +291,7 @@ func (c UserController) registerUserSelfService(ctx context.Context, req *chorus
 		return nil, cerr.ErrInvalidRequest.WithMessage("firstName, lastName, username and password are required")
 	}
 
-	tenantID := c.cfg.Daemon.TenantID
-	if tenantID == 0 {
-		tenantID = 1
-	}
+	tenantID := c.cfg.Services.AuthenticationService.SelfService.TenantID
 
 	user := &service.UserReq{
 		FirstName: firstName,
