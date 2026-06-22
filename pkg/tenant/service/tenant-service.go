@@ -27,7 +27,11 @@ func NewTenantService(store TenantStore, conf config.Config) *TenantService {
 }
 
 func (s *TenantService) CreateTenant(ctx context.Context, name string) (*model.Tenant, error) {
-	return s.store.CreateTenant(ctx, name)
+	tenant, err := s.store.CreateTenant(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	return tenant, nil
 }
 
 func (s *TenantService) GetTenantByName(ctx context.Context, name string) (*model.Tenant, error) {
