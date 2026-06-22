@@ -125,8 +125,8 @@ func (c *Caching) CreateAppInstance(ctx context.Context, appInstance *model.AppI
 	return c.next.CreateAppInstance(ctx, appInstance)
 }
 
-func (c *Caching) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	return c.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+func (c *Caching) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return c.next.AddUserRoleInWorkbench(ctx, tenantID, userID, role)
 }
 
 func (c *Caching) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error {

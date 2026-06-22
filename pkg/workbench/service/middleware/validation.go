@@ -92,11 +92,11 @@ func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.Ap
 	return v.next.CreateAppInstance(ctx, appInstance)
 }
 
-func (v validation) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (v validation) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	if err := v.validate.Struct(role); err != nil {
 		return cerr.WrapValidationError(err)
 	}
-	return v.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+	return v.next.AddUserRoleInWorkbench(ctx, tenantID, userID, role)
 }
 
 func (v validation) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error {

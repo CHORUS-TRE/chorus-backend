@@ -66,7 +66,7 @@ type Workbencher interface {
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) (*model.Workbench, error)
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
-	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
@@ -573,7 +573,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	return newWorkbench, nil
 }
 
-func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))

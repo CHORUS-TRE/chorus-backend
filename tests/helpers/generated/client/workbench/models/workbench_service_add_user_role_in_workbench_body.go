@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// WorkbenchServiceManageUserRoleInWorkbenchBody workbench service manage user role in workbench body
+// WorkbenchServiceAddUserRoleInWorkbenchBody workbench service add user role in workbench body
 //
-// swagger:model WorkbenchServiceManageUserRoleInWorkbenchBody
-type WorkbenchServiceManageUserRoleInWorkbenchBody struct {
+// swagger:model WorkbenchServiceAddUserRoleInWorkbenchBody
+type WorkbenchServiceAddUserRoleInWorkbenchBody struct {
 
 	// role
 	Role *ChorusRole `json:"role,omitempty"`
 }
 
-// Validate validates this workbench service manage user role in workbench body
-func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) Validate(formats strfmt.Registry) error {
+// Validate validates this workbench service add user role in workbench body
+func (m *WorkbenchServiceAddUserRoleInWorkbenchBody) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateRole(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) Validate(formats strfmt.
 	return nil
 }
 
-func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) validateRole(formats strfmt.Registry) error {
+func (m *WorkbenchServiceAddUserRoleInWorkbenchBody) validateRole(formats strfmt.Registry) error {
 	if swag.IsZero(m.Role) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) validateRole(formats str
 	return nil
 }
 
-// ContextValidate validate this workbench service manage user role in workbench body based on the context it is used
-func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this workbench service add user role in workbench body based on the context it is used
+func (m *WorkbenchServiceAddUserRoleInWorkbenchBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateRole(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) ContextValidate(ctx cont
 	return nil
 }
 
-func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) contextValidateRole(ctx context.Context, formats strfmt.Registry) error {
+func (m *WorkbenchServiceAddUserRoleInWorkbenchBody) contextValidateRole(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Role != nil {
 
@@ -91,7 +91,7 @@ func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) contextValidateRole(ctx 
 }
 
 // MarshalBinary interface implementation
-func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) MarshalBinary() ([]byte, error) {
+func (m *WorkbenchServiceAddUserRoleInWorkbenchBody) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) MarshalBinary() ([]byte,
 }
 
 // UnmarshalBinary interface implementation
-func (m *WorkbenchServiceManageUserRoleInWorkbenchBody) UnmarshalBinary(b []byte) error {
-	var res WorkbenchServiceManageUserRoleInWorkbenchBody
+func (m *WorkbenchServiceAddUserRoleInWorkbenchBody) UnmarshalBinary(b []byte) error {
+	var res WorkbenchServiceAddUserRoleInWorkbenchBody
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

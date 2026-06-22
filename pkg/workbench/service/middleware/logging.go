@@ -263,10 +263,10 @@ func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInsta
 	return newAppInstance, nil
 }
 
-func (c workbenchServiceLogging) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (c workbenchServiceLogging) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	now := time.Now()
 
-	err := c.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+	err := c.next.AddUserRoleInWorkbench(ctx, tenantID, userID, role)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

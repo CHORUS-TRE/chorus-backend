@@ -54,6 +54,10 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	WorkbenchServiceAddUserRoleInWorkbench(params *WorkbenchServiceAddUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceAddUserRoleInWorkbenchOK, error)
+
+	WorkbenchServiceAddUserRoleInWorkbench2(params *WorkbenchServiceAddUserRoleInWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceAddUserRoleInWorkbench2OK, error)
+
 	WorkbenchServiceCreateWorkbench(params *WorkbenchServiceCreateWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceCreateWorkbenchOK, error)
 
 	WorkbenchServiceCreateWorkbench2(params *WorkbenchServiceCreateWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceCreateWorkbench2OK, error)
@@ -70,10 +74,6 @@ type ClientService interface {
 
 	WorkbenchServiceListWorkbenches2(params *WorkbenchServiceListWorkbenches2Params, opts ...ClientOption) (*WorkbenchServiceListWorkbenches2OK, error)
 
-	WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServiceManageUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbenchOK, error)
-
-	WorkbenchServiceManageUserRoleInWorkbench2(params *WorkbenchServiceManageUserRoleInWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbench2OK, error)
-
 	WorkbenchServiceRemoveUserFromWorkbench(params *WorkbenchServiceRemoveUserFromWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbenchOK, error)
 
 	WorkbenchServiceRemoveUserFromWorkbench2(params *WorkbenchServiceRemoveUserFromWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceRemoveUserFromWorkbench2OK, error)
@@ -83,6 +83,84 @@ type ClientService interface {
 	WorkbenchServiceUpdateWorkbench2(params *WorkbenchServiceUpdateWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceUpdateWorkbench2OK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+WorkbenchServiceAddUserRoleInWorkbench adds a user s role in a workbench
+
+This endpoint adds a user's role in a workbench
+*/
+func (a *Client) WorkbenchServiceAddUserRoleInWorkbench(params *WorkbenchServiceAddUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceAddUserRoleInWorkbenchOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceAddUserRoleInWorkbenchParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_AddUserRoleInWorkbench",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workbenches/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceAddUserRoleInWorkbenchReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceAddUserRoleInWorkbenchOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceAddUserRoleInWorkbenchDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+WorkbenchServiceAddUserRoleInWorkbench2 adds a user s role in a workbench
+
+This endpoint adds a user's role in a workbench
+*/
+func (a *Client) WorkbenchServiceAddUserRoleInWorkbench2(params *WorkbenchServiceAddUserRoleInWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceAddUserRoleInWorkbench2OK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkbenchServiceAddUserRoleInWorkbench2Params()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkbenchService_AddUserRoleInWorkbench2",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workbenchs/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkbenchServiceAddUserRoleInWorkbench2Reader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkbenchServiceAddUserRoleInWorkbench2OK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkbenchServiceAddUserRoleInWorkbench2Default)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -394,84 +472,6 @@ func (a *Client) WorkbenchServiceListWorkbenches2(params *WorkbenchServiceListWo
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenches2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-WorkbenchServiceManageUserRoleInWorkbench manages a user s role in a workbench
-
-This endpoint manages a user's role in a workbench
-*/
-func (a *Client) WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServiceManageUserRoleInWorkbenchParams, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbenchOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewWorkbenchServiceManageUserRoleInWorkbenchParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "WorkbenchService_ManageUserRoleInWorkbench",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workbenches/{id}/user/{userId}/role",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &WorkbenchServiceManageUserRoleInWorkbenchReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*WorkbenchServiceManageUserRoleInWorkbenchOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceManageUserRoleInWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-WorkbenchServiceManageUserRoleInWorkbench2 manages a user s role in a workbench
-
-This endpoint manages a user's role in a workbench
-*/
-func (a *Client) WorkbenchServiceManageUserRoleInWorkbench2(params *WorkbenchServiceManageUserRoleInWorkbench2Params, opts ...ClientOption) (*WorkbenchServiceManageUserRoleInWorkbench2OK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewWorkbenchServiceManageUserRoleInWorkbench2Params()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "WorkbenchService_ManageUserRoleInWorkbench2",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workbenchs/{id}/user/{userId}/role",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &WorkbenchServiceManageUserRoleInWorkbench2Reader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*WorkbenchServiceManageUserRoleInWorkbench2OK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceManageUserRoleInWorkbench2Default)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
