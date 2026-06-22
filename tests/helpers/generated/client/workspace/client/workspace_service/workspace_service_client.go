@@ -54,6 +54,8 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	WorkspaceServiceAddUserRoleInWorkspace(params *WorkspaceServiceAddUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceAddUserRoleInWorkspaceOK, error)
+
 	WorkspaceServiceCreateWorkspace(params *WorkspaceServiceCreateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceCreateWorkspaceOK, error)
 
 	WorkspaceServiceDeleteWorkspace(params *WorkspaceServiceDeleteWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceDeleteWorkspaceOK, error)
@@ -64,8 +66,6 @@ type ClientService interface {
 
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
-	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
-
 	WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServiceRemoveUserFromWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserFromWorkspaceOK, error)
 
 	WorkspaceServiceRemoveUserRoleInWorkspace(params *WorkspaceServiceRemoveUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserRoleInWorkspaceOK, error)
@@ -73,6 +73,45 @@ type ClientService interface {
 	WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+WorkspaceServiceAddUserRoleInWorkspace adds a user s role in a workspace
+
+This endpoint adds a user's role in a workspace
+*/
+func (a *Client) WorkspaceServiceAddUserRoleInWorkspace(params *WorkspaceServiceAddUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceAddUserRoleInWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceAddUserRoleInWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_AddUserRoleInWorkspace",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceAddUserRoleInWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceAddUserRoleInWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*WorkspaceServiceAddUserRoleInWorkspaceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -267,45 +306,6 @@ func (a *Client) WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWork
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*WorkspaceServiceListWorkspacesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-WorkspaceServiceManageUserRoleInWorkspace manages a user s role in a workspace
-
-This endpoint manages a user's role in a workspace
-*/
-func (a *Client) WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewWorkspaceServiceManageUserRoleInWorkspaceParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "WorkspaceService_ManageUserRoleInWorkspace",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &WorkspaceServiceManageUserRoleInWorkspaceReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*WorkspaceServiceManageUserRoleInWorkspaceOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceManageUserRoleInWorkspaceDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

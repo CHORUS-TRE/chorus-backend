@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusManageUserRoleInWorkspaceResult chorus manage user role in workspace result
+// ChorusAddUserRoleInWorkspaceResult chorus add user role in workspace result
 //
-// swagger:model chorusManageUserRoleInWorkspaceResult
-type ChorusManageUserRoleInWorkspaceResult struct {
+// swagger:model chorusAddUserRoleInWorkspaceResult
+type ChorusAddUserRoleInWorkspaceResult struct {
 
 	// workspace
 	Workspace *ChorusWorkspace `json:"workspace,omitempty"`
 }
 
-// Validate validates this chorus manage user role in workspace result
-func (m *ChorusManageUserRoleInWorkspaceResult) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus add user role in workspace result
+func (m *ChorusAddUserRoleInWorkspaceResult) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateWorkspace(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusManageUserRoleInWorkspaceResult) Validate(formats strfmt.Registry
 	return nil
 }
 
-func (m *ChorusManageUserRoleInWorkspaceResult) validateWorkspace(formats strfmt.Registry) error {
+func (m *ChorusAddUserRoleInWorkspaceResult) validateWorkspace(formats strfmt.Registry) error {
 	if swag.IsZero(m.Workspace) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusManageUserRoleInWorkspaceResult) validateWorkspace(formats strfmt
 	return nil
 }
 
-// ContextValidate validate this chorus manage user role in workspace result based on the context it is used
-func (m *ChorusManageUserRoleInWorkspaceResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus add user role in workspace result based on the context it is used
+func (m *ChorusAddUserRoleInWorkspaceResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateWorkspace(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusManageUserRoleInWorkspaceResult) ContextValidate(ctx context.Cont
 	return nil
 }
 
-func (m *ChorusManageUserRoleInWorkspaceResult) contextValidateWorkspace(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusAddUserRoleInWorkspaceResult) contextValidateWorkspace(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Workspace != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusManageUserRoleInWorkspaceResult) contextValidateWorkspace(ctx con
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusManageUserRoleInWorkspaceResult) MarshalBinary() ([]byte, error) {
+func (m *ChorusAddUserRoleInWorkspaceResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusManageUserRoleInWorkspaceResult) MarshalBinary() ([]byte, error) 
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusManageUserRoleInWorkspaceResult) UnmarshalBinary(b []byte) error {
-	var res ChorusManageUserRoleInWorkspaceResult
+func (m *ChorusAddUserRoleInWorkspaceResult) UnmarshalBinary(b []byte) error {
+	var res ChorusAddUserRoleInWorkspaceResult
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

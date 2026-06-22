@@ -233,14 +233,14 @@ paths:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}/role:
     post:
-      summary: Manage a user's role in a workspace
-      description: This endpoint manages a user's role in a workspace
-      operationId: WorkspaceService_ManageUserRoleInWorkspace
+      summary: Add a user's role in a workspace
+      description: This endpoint adds a user's role in a workspace
+      operationId: WorkspaceService_AddUserRoleInWorkspace
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusManageUserRoleInWorkspaceReply'
+            $ref: '#/definitions/chorusAddUserRoleInWorkspaceReply'
         default:
           description: An unexpected error response.
           schema:
@@ -260,7 +260,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
+            $ref: '#/definitions/WorkspaceServiceAddUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}:
@@ -295,11 +295,21 @@ paths:
       tags:
         - WorkspaceService
 definitions:
-  WorkspaceServiceManageUserRoleInWorkspaceBody:
+  WorkspaceServiceAddUserRoleInWorkspaceBody:
     type: object
     properties:
       role:
         $ref: '#/definitions/chorusRole'
+  chorusAddUserRoleInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAddUserRoleInWorkspaceResult'
+  chorusAddUserRoleInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusCreateWorkspaceReply:
     type: object
     properties:
@@ -357,16 +367,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkspace'
-  chorusManageUserRoleInWorkspaceReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusManageUserRoleInWorkspaceResult'
-  chorusManageUserRoleInWorkspaceResult:
-    type: object
-    properties:
-      workspace:
-        $ref: '#/definitions/chorusWorkspace'
   chorusPaginationQuery:
     type: object
     properties:
