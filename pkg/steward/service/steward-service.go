@@ -90,7 +90,7 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context, tenantID uin
 	})
 	if err != nil {
 		if errors.Is(err, cerr.ErrDuplicateKey) {
-			return cerr.ErrDuplicateKey
+			return nil
 		}
 		return fmt.Errorf("unable to initialize default user: %w", err)
 	}
@@ -140,7 +140,7 @@ func (s *StewardService) createTenant(ctx context.Context, name string) (*tenant
 	tenant, err := s.tenanter.CreateTenant(ctx, name)
 	if err != nil {
 		if errors.Is(err, cerr.ErrDuplicateKey) {
-			return nil, fmt.Errorf("tenant %q already exists", name)
+			return nil, fmt.Errorf("tenant %q already exists: %w", name, cerr.ErrDuplicateKey)
 		}
 		return nil, err
 	}
