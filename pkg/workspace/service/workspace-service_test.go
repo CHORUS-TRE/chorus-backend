@@ -198,6 +198,37 @@ func storeReturning(ws *model.Workspace) *mockWorkspaceStore {
 	}
 }
 
+func wsRole(id, workspaceID uint64, name authorization_model.RoleName) user_model.UserRole {
+	return user_model.UserRole{
+		ID: id,
+		Role: authorization_model.Role{
+			Name: name,
+			Context: authorization_model.Context{
+				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
+			},
+		},
+	}
+}
+
+func wbRole(id, workspaceID, workbenchID uint64, name authorization_model.RoleName) user_model.UserRole {
+	return user_model.UserRole{
+		ID: id,
+		Role: authorization_model.Role{
+			Name: name,
+			Context: authorization_model.Context{
+				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
+				authorization_model.RoleContextWorkbench: fmt.Sprintf("%d", workbenchID),
+			},
+		},
+	}
+}
+
+func userWithRoles(roles ...user_model.UserRole) func(context.Context, user_service.GetUserReq) (*user_model.User, error) {
+	return func(_ context.Context, _ user_service.GetUserReq) (*user_model.User, error) {
+		return &user_model.User{ID: 42, Roles: roles}, nil
+	}
+}
+
 // ---------------------------------------------------------------------------
 // CreateWorkspace
 // ---------------------------------------------------------------------------
@@ -394,39 +425,6 @@ func TestListPublicWorkspaces_PropagatesGetUsersError(t *testing.T) {
 // RemoveUserRoleInWorkspace
 // ---------------------------------------------------------------------------
 
-func wsRole(id, workspaceID uint64, name authorization_model.RoleName) user_model.UserRole {
-	return user_model.UserRole{
-		ID: id,
-		Role: authorization_model.Role{
-			Name: name,
-			Context: authorization_model.Context{
-				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
-			},
-		},
-	}
-}
-
-func wbRole(id, workspaceID, workbenchID uint64, name authorization_model.RoleName) user_model.UserRole {
-	return user_model.UserRole{
-		ID: id,
-		Role: authorization_model.Role{
-			Name: name,
-			Context: authorization_model.Context{
-				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
-				authorization_model.RoleContextWorkbench: fmt.Sprintf("%d", workbenchID),
-			},
-		},
-	}
-}
-
-func userWithRoles(roles ...user_model.UserRole) func(context.Context, user_service.GetUserReq) (*user_model.User, error) {
-	return func(_ context.Context, _ user_service.GetUserReq) (*user_model.User, error) {
-		return &user_model.User{ID: 42, Roles: roles}, nil
-	}
-}
-
-// When the removed role is the user's last workspace-scoped role, the user is
-// removed from the workspace entirely, which also clears their workbench roles.
 func TestRemoveUserRoleInWorkspace_LastRoleRemovesUserFromWorkspace(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -442,8 +440,6 @@ func TestRemoveUserRoleInWorkspace_LastRoleRemovesUserFromWorkspace(t *testing.T
 	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
 }
 
-// When the user keeps another workspace-scoped role, only the targeted role is
-// removed and workbench roles are left untouched.
 func TestRemoveUserRoleInWorkspace_KeepsOtherWorkspaceRoles(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -460,8 +456,6 @@ func TestRemoveUserRoleInWorkspace_KeepsOtherWorkspaceRoles(t *testing.T) {
 	assert.Equal(t, []uint64{1}, userer.removedRoleIDs)
 }
 
-// A workbench role in the workspace does not count as a workspace-scoped role,
-// so removing the only workspace role still triggers full workspace removal.
 func TestRemoveUserRoleInWorkspace_WorkbenchRoleDoesNotCountAsWorkspaceRole(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -477,8 +471,6 @@ func TestRemoveUserRoleInWorkspace_WorkbenchRoleDoesNotCountAsWorkspaceRole(t *t
 	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
 }
 
-// Requesting removal of a role the user does not hold returns not found and
-// removes nothing.
 func TestRemoveUserRoleInWorkspace_RoleNotFound(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -497,7 +489,6 @@ func TestRemoveUserRoleInWorkspace_RoleNotFound(t *testing.T) {
 // AddUserRoleInWorkspace
 // ---------------------------------------------------------------------------
 
-// A role the user does not yet hold in the workspace is assigned.
 func TestAddUserRoleInWorkspace_AssignsNewRole(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(),
@@ -512,8 +503,6 @@ func TestAddUserRoleInWorkspace_AssignsNewRole(t *testing.T) {
 	assert.Equal(t, "5", userer.capturedRoles[0].Context["workspace"])
 }
 
-// A user may hold several distinct roles in the same workspace, so adding a
-// different role alongside an existing one is allowed.
 func TestAddUserRoleInWorkspace_AllowsMultipleDistinctRolesInSameWorkspace(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -529,8 +518,6 @@ func TestAddUserRoleInWorkspace_AllowsMultipleDistinctRolesInSameWorkspace(t *te
 	assert.Equal(t, authorization_model.RoleWorkspaceAdmin, userer.capturedRoles[0].Role.Name)
 }
 
-// Assigning a role the user already holds in the same workspace is rejected and
-// assigns nothing.
 func TestAddUserRoleInWorkspace_RejectsDuplicateRole(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -546,7 +533,6 @@ func TestAddUserRoleInWorkspace_RejectsDuplicateRole(t *testing.T) {
 	assert.Empty(t, userer.capturedRoles)
 }
 
-// The same role in a different workspace is not a duplicate and is assigned.
 func TestAddUserRoleInWorkspace_SameRoleDifferentWorkspaceAllowed(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -566,8 +552,6 @@ func TestAddUserRoleInWorkspace_SameRoleDifferentWorkspaceAllowed(t *testing.T) 
 // RemoveUserFromWorkspace
 // ---------------------------------------------------------------------------
 
-// All of the user's roles within the workspace (workspace-scoped and workbench)
-// are removed, while roles in other workspaces are left untouched.
 func TestRemoveUserFromWorkspace_RemovesAllRolesInWorkspaceOnly(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
@@ -584,8 +568,6 @@ func TestRemoveUserFromWorkspace_RemovesAllRolesInWorkspaceOnly(t *testing.T) {
 	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
 }
 
-// When the user has no roles in the workspace, nothing is removed and no error
-// is returned.
 func TestRemoveUserFromWorkspace_NoRolesIsNoop(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
