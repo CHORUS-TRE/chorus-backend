@@ -107,6 +107,25 @@ func TestToGRPCStatus(t *testing.T) {
 	assert.Equal(t, "workspace 7 not found", detail.Message)
 }
 
+func TestToGRPCStatus_StackTraceOmittedByDefault(t *testing.T) {
+	err := ErrInternal.WithMessage("boom")
+	st := err.ToGRPCStatus()
+
+	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
+	require.True(t, ok)
+	assert.Empty(t, detail.StackTrace)
+}
+
+func TestToGRPCStatus_StackTraceIncludedWhenRequested(t *testing.T) {
+	err := ErrInternal.WithMessage("boom")
+	st := err.ToGRPCStatus(true)
+
+	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
+	require.True(t, ok)
+	assert.NotEmpty(t, detail.StackTrace)
+	assert.Contains(t, detail.StackTrace, "errors_test.go")
+}
+
 func TestToGRPCStatus_CausedByNotExposed(t *testing.T) {
 	cause := fmt.Errorf("secret db error")
 	err := ErrInternal.Wrap(cause, "something went wrong")
