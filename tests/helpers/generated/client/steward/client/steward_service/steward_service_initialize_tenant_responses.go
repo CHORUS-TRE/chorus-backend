@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/steward/models"
 )
 
 // StewardServiceInitializeTenantReader is a Reader for the StewardServiceInitializeTenant structure.
