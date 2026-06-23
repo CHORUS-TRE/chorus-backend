@@ -31,14 +31,7 @@ func (o *WorkspaceServiceListPublicWorkspacesReader) ReadResponse(response runti
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceServiceListPublicWorkspacesDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/workspaces/public] WorkspaceService_ListPublicWorkspaces", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceServiceListPublicWorkspacesOK) GetPayload() *models.ChorusList
 func (o *WorkspaceServiceListPublicWorkspacesOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusListPublicWorkspacesReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceServiceListPublicWorkspacesDefault creates a WorkspaceServiceListPublicWorkspacesDefault with default headers values
-func NewWorkspaceServiceListPublicWorkspacesDefault(code int) *WorkspaceServiceListPublicWorkspacesDefault {
-	return &WorkspaceServiceListPublicWorkspacesDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceServiceListPublicWorkspacesDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceServiceListPublicWorkspacesDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace service list public workspaces default response has a 2xx status code
-func (o *WorkspaceServiceListPublicWorkspacesDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace service list public workspaces default response has a 3xx status code
-func (o *WorkspaceServiceListPublicWorkspacesDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace service list public workspaces default response has a 4xx status code
-func (o *WorkspaceServiceListPublicWorkspacesDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace service list public workspaces default response has a 5xx status code
-func (o *WorkspaceServiceListPublicWorkspacesDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace service list public workspaces default response a status code equal to that given
-func (o *WorkspaceServiceListPublicWorkspacesDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace service list public workspaces default response
-func (o *WorkspaceServiceListPublicWorkspacesDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceServiceListPublicWorkspacesDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/public][%d] WorkspaceService_ListPublicWorkspaces default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceListPublicWorkspacesDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/public][%d] WorkspaceService_ListPublicWorkspaces default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceListPublicWorkspacesDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceServiceListPublicWorkspacesDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -31,14 +31,7 @@ func (o *HealthServiceGetHealthCheck2Reader) ReadResponse(response runtime.Clien
 		}
 		return result, nil
 	default:
-		result := NewHealthServiceGetHealthCheck2Default(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[HEAD /api/rest/v1/health] HealthService_GetHealthCheck2", response, response.Code())
 	}
 }
 
@@ -104,80 +97,6 @@ func (o *HealthServiceGetHealthCheck2OK) readResponse(response runtime.ClientRes
 
 	// response payload
 	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewHealthServiceGetHealthCheck2Default creates a HealthServiceGetHealthCheck2Default with default headers values
-func NewHealthServiceGetHealthCheck2Default(code int) *HealthServiceGetHealthCheck2Default {
-	return &HealthServiceGetHealthCheck2Default{
-		_statusCode: code,
-	}
-}
-
-/*
-HealthServiceGetHealthCheck2Default describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type HealthServiceGetHealthCheck2Default struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this health service get health check2 default response has a 2xx status code
-func (o *HealthServiceGetHealthCheck2Default) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this health service get health check2 default response has a 3xx status code
-func (o *HealthServiceGetHealthCheck2Default) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this health service get health check2 default response has a 4xx status code
-func (o *HealthServiceGetHealthCheck2Default) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this health service get health check2 default response has a 5xx status code
-func (o *HealthServiceGetHealthCheck2Default) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this health service get health check2 default response a status code equal to that given
-func (o *HealthServiceGetHealthCheck2Default) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the health service get health check2 default response
-func (o *HealthServiceGetHealthCheck2Default) Code() int {
-	return o._statusCode
-}
-
-func (o *HealthServiceGetHealthCheck2Default) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[HEAD /api/rest/v1/health][%d] HealthService_GetHealthCheck2 default %s", o._statusCode, payload)
-}
-
-func (o *HealthServiceGetHealthCheck2Default) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[HEAD /api/rest/v1/health][%d] HealthService_GetHealthCheck2 default %s", o._statusCode, payload)
-}
-
-func (o *HealthServiceGetHealthCheck2Default) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *HealthServiceGetHealthCheck2Default) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

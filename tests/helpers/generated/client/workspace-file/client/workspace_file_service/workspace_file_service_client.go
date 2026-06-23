@@ -6,6 +6,8 @@ package workspace_file_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -112,8 +114,9 @@ func (a *Client) WorkspaceFileServiceAbortWorkspaceFileUpload(params *WorkspaceF
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceAbortWorkspaceFileUploadDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_AbortWorkspaceFileUpload: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -151,8 +154,9 @@ func (a *Client) WorkspaceFileServiceCompleteWorkspaceFileUpload(params *Workspa
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceCompleteWorkspaceFileUploadDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_CompleteWorkspaceFileUpload: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -190,8 +194,9 @@ func (a *Client) WorkspaceFileServiceCreateWorkspaceFile(params *WorkspaceFileSe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceCreateWorkspaceFileDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_CreateWorkspaceFile: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -229,8 +234,9 @@ func (a *Client) WorkspaceFileServiceDeleteWorkspaceFile(params *WorkspaceFileSe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceDeleteWorkspaceFileDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_DeleteWorkspaceFile: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -268,8 +274,9 @@ func (a *Client) WorkspaceFileServiceGetWorkspaceFile(params *WorkspaceFileServi
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceGetWorkspaceFileDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_GetWorkspaceFile: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -307,8 +314,9 @@ func (a *Client) WorkspaceFileServiceInitiateWorkspaceFileUpload(params *Workspa
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceInitiateWorkspaceFileUploadDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_InitiateWorkspaceFileUpload: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -346,8 +354,9 @@ func (a *Client) WorkspaceFileServiceListWorkspaceFileStores(params *WorkspaceFi
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceListWorkspaceFileStoresDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_ListWorkspaceFileStores: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -385,8 +394,9 @@ func (a *Client) WorkspaceFileServiceListWorkspaceFiles(params *WorkspaceFileSer
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceListWorkspaceFilesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_ListWorkspaceFiles: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -424,8 +434,9 @@ func (a *Client) WorkspaceFileServiceUpdateWorkspaceFile(params *WorkspaceFileSe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceUpdateWorkspaceFileDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_UpdateWorkspaceFile: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -463,8 +474,9 @@ func (a *Client) WorkspaceFileServiceUploadWorkspaceFilePart(params *WorkspaceFi
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceFileServiceUploadWorkspaceFilePartDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceFileService_UploadWorkspaceFilePart: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

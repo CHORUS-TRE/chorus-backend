@@ -31,14 +31,7 @@ func (o *TermsOfUseServiceCreateTermsOfUseVersionReader) ReadResponse(response r
 		}
 		return result, nil
 	default:
-		result := NewTermsOfUseServiceCreateTermsOfUseVersionDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/terms-of-use/versions] TermsOfUseService_CreateTermsOfUseVersion", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *TermsOfUseServiceCreateTermsOfUseVersionOK) GetPayload() *models.Chorus
 func (o *TermsOfUseServiceCreateTermsOfUseVersionOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusCreateTermsOfUseVersionReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewTermsOfUseServiceCreateTermsOfUseVersionDefault creates a TermsOfUseServiceCreateTermsOfUseVersionDefault with default headers values
-func NewTermsOfUseServiceCreateTermsOfUseVersionDefault(code int) *TermsOfUseServiceCreateTermsOfUseVersionDefault {
-	return &TermsOfUseServiceCreateTermsOfUseVersionDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-TermsOfUseServiceCreateTermsOfUseVersionDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type TermsOfUseServiceCreateTermsOfUseVersionDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this terms of use service create terms of use version default response has a 2xx status code
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this terms of use service create terms of use version default response has a 3xx status code
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this terms of use service create terms of use version default response has a 4xx status code
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this terms of use service create terms of use version default response has a 5xx status code
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this terms of use service create terms of use version default response a status code equal to that given
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the terms of use service create terms of use version default response
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/terms-of-use/versions][%d] TermsOfUseService_CreateTermsOfUseVersion default %s", o._statusCode, payload)
-}
-
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/terms-of-use/versions][%d] TermsOfUseService_CreateTermsOfUseVersion default %s", o._statusCode, payload)
-}
-
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *TermsOfUseServiceCreateTermsOfUseVersionDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -6,6 +6,8 @@ package approval_request_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -108,8 +110,9 @@ func (a *Client) ApprovalRequestServiceApproveApprovalRequest(params *ApprovalRe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceApproveApprovalRequestDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_ApproveApprovalRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -147,8 +150,9 @@ func (a *Client) ApprovalRequestServiceCountMyApprovalRequests(params *ApprovalR
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceCountMyApprovalRequestsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_CountMyApprovalRequests: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -186,8 +190,9 @@ func (a *Client) ApprovalRequestServiceCreateDataExtractionRequest(params *Appro
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceCreateDataExtractionRequestDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_CreateDataExtractionRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -225,8 +230,9 @@ func (a *Client) ApprovalRequestServiceCreateDataTransferRequest(params *Approva
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceCreateDataTransferRequestDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_CreateDataTransferRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -264,8 +270,9 @@ func (a *Client) ApprovalRequestServiceDeleteApprovalRequest(params *ApprovalReq
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceDeleteApprovalRequestDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_DeleteApprovalRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -303,8 +310,9 @@ func (a *Client) ApprovalRequestServiceDownloadApprovalRequestFile(params *Appro
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceDownloadApprovalRequestFileDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_DownloadApprovalRequestFile: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -342,8 +350,9 @@ func (a *Client) ApprovalRequestServiceGetApprovalRequest(params *ApprovalReques
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceGetApprovalRequestDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_GetApprovalRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -381,8 +390,9 @@ func (a *Client) ApprovalRequestServiceListApprovalRequests(params *ApprovalRequ
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ApprovalRequestServiceListApprovalRequestsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ApprovalRequestService_ListApprovalRequests: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

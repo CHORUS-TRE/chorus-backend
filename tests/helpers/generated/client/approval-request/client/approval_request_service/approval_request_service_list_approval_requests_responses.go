@@ -31,14 +31,7 @@ func (o *ApprovalRequestServiceListApprovalRequestsReader) ReadResponse(response
 		}
 		return result, nil
 	default:
-		result := NewApprovalRequestServiceListApprovalRequestsDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/approval-requests] ApprovalRequestService_ListApprovalRequests", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *ApprovalRequestServiceListApprovalRequestsOK) GetPayload() *models.Chor
 func (o *ApprovalRequestServiceListApprovalRequestsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusListApprovalRequestsReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewApprovalRequestServiceListApprovalRequestsDefault creates a ApprovalRequestServiceListApprovalRequestsDefault with default headers values
-func NewApprovalRequestServiceListApprovalRequestsDefault(code int) *ApprovalRequestServiceListApprovalRequestsDefault {
-	return &ApprovalRequestServiceListApprovalRequestsDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-ApprovalRequestServiceListApprovalRequestsDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type ApprovalRequestServiceListApprovalRequestsDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this approval request service list approval requests default response has a 2xx status code
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this approval request service list approval requests default response has a 3xx status code
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this approval request service list approval requests default response has a 4xx status code
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this approval request service list approval requests default response has a 5xx status code
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this approval request service list approval requests default response a status code equal to that given
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the approval request service list approval requests default response
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/approval-requests][%d] ApprovalRequestService_ListApprovalRequests default %s", o._statusCode, payload)
-}
-
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/approval-requests][%d] ApprovalRequestService_ListApprovalRequests default %s", o._statusCode, payload)
-}
-
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *ApprovalRequestServiceListApprovalRequestsDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -31,14 +31,7 @@ func (o *UserServiceResetTotpReader) ReadResponse(response runtime.ClientRespons
 		}
 		return result, nil
 	default:
-		result := NewUserServiceResetTotpDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/users/me/totp/reset] UserService_ResetTotp", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *UserServiceResetTotpOK) GetPayload() *models.ChorusResetTotpReply {
 func (o *UserServiceResetTotpOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusResetTotpReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewUserServiceResetTotpDefault creates a UserServiceResetTotpDefault with default headers values
-func NewUserServiceResetTotpDefault(code int) *UserServiceResetTotpDefault {
-	return &UserServiceResetTotpDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-UserServiceResetTotpDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type UserServiceResetTotpDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this user service reset totp default response has a 2xx status code
-func (o *UserServiceResetTotpDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this user service reset totp default response has a 3xx status code
-func (o *UserServiceResetTotpDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this user service reset totp default response has a 4xx status code
-func (o *UserServiceResetTotpDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this user service reset totp default response has a 5xx status code
-func (o *UserServiceResetTotpDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this user service reset totp default response a status code equal to that given
-func (o *UserServiceResetTotpDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the user service reset totp default response
-func (o *UserServiceResetTotpDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *UserServiceResetTotpDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/users/me/totp/reset][%d] UserService_ResetTotp default %s", o._statusCode, payload)
-}
-
-func (o *UserServiceResetTotpDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/users/me/totp/reset][%d] UserService_ResetTotp default %s", o._statusCode, payload)
-}
-
-func (o *UserServiceResetTotpDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *UserServiceResetTotpDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

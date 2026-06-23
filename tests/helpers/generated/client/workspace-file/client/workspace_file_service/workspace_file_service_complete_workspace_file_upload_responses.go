@@ -31,14 +31,7 @@ func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadReader) ReadResponse(res
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceFileServiceCompleteWorkspaceFileUploadDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete] WorkspaceFileService_CompleteWorkspaceFileUpload", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadOK) GetPayload() *models
 func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusCompleteWorkspaceFileUploadReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceFileServiceCompleteWorkspaceFileUploadDefault creates a WorkspaceFileServiceCompleteWorkspaceFileUploadDefault with default headers values
-func NewWorkspaceFileServiceCompleteWorkspaceFileUploadDefault(code int) *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault {
-	return &WorkspaceFileServiceCompleteWorkspaceFileUploadDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceFileServiceCompleteWorkspaceFileUploadDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceFileServiceCompleteWorkspaceFileUploadDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace file service complete workspace file upload default response has a 2xx status code
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace file service complete workspace file upload default response has a 3xx status code
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace file service complete workspace file upload default response has a 4xx status code
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace file service complete workspace file upload default response has a 5xx status code
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace file service complete workspace file upload default response a status code equal to that given
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace file service complete workspace file upload default response
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete][%d] WorkspaceFileService_CompleteWorkspaceFileUpload default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}/complete][%d] WorkspaceFileService_CompleteWorkspaceFileUpload default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceFileServiceCompleteWorkspaceFileUploadDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

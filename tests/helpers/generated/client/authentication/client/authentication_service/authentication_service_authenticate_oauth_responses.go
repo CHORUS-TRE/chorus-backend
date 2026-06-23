@@ -31,14 +31,7 @@ func (o *AuthenticationServiceAuthenticateOauthReader) ReadResponse(response run
 		}
 		return result, nil
 	default:
-		result := NewAuthenticationServiceAuthenticateOauthDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/authentication/oauth2/{id}/login] AuthenticationService_AuthenticateOauth", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *AuthenticationServiceAuthenticateOauthOK) GetPayload() *models.ChorusAu
 func (o *AuthenticationServiceAuthenticateOauthOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusAuthenticateOauthReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewAuthenticationServiceAuthenticateOauthDefault creates a AuthenticationServiceAuthenticateOauthDefault with default headers values
-func NewAuthenticationServiceAuthenticateOauthDefault(code int) *AuthenticationServiceAuthenticateOauthDefault {
-	return &AuthenticationServiceAuthenticateOauthDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-AuthenticationServiceAuthenticateOauthDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type AuthenticationServiceAuthenticateOauthDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this authentication service authenticate oauth default response has a 2xx status code
-func (o *AuthenticationServiceAuthenticateOauthDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this authentication service authenticate oauth default response has a 3xx status code
-func (o *AuthenticationServiceAuthenticateOauthDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this authentication service authenticate oauth default response has a 4xx status code
-func (o *AuthenticationServiceAuthenticateOauthDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this authentication service authenticate oauth default response has a 5xx status code
-func (o *AuthenticationServiceAuthenticateOauthDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this authentication service authenticate oauth default response a status code equal to that given
-func (o *AuthenticationServiceAuthenticateOauthDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the authentication service authenticate oauth default response
-func (o *AuthenticationServiceAuthenticateOauthDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *AuthenticationServiceAuthenticateOauthDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/authentication/oauth2/{id}/login][%d] AuthenticationService_AuthenticateOauth default %s", o._statusCode, payload)
-}
-
-func (o *AuthenticationServiceAuthenticateOauthDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/authentication/oauth2/{id}/login][%d] AuthenticationService_AuthenticateOauth default %s", o._statusCode, payload)
-}
-
-func (o *AuthenticationServiceAuthenticateOauthDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *AuthenticationServiceAuthenticateOauthDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

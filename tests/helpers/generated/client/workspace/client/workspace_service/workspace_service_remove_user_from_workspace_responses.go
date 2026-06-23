@@ -31,14 +31,7 @@ func (o *WorkspaceServiceRemoveUserFromWorkspaceReader) ReadResponse(response ru
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceServiceRemoveUserFromWorkspaceDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[DELETE /api/rest/v1/workspaces/{id}/user/{userId}] WorkspaceService_RemoveUserFromWorkspace", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceServiceRemoveUserFromWorkspaceOK) GetPayload() *models.ChorusR
 func (o *WorkspaceServiceRemoveUserFromWorkspaceOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusRemoveUserFromWorkspaceReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceServiceRemoveUserFromWorkspaceDefault creates a WorkspaceServiceRemoveUserFromWorkspaceDefault with default headers values
-func NewWorkspaceServiceRemoveUserFromWorkspaceDefault(code int) *WorkspaceServiceRemoveUserFromWorkspaceDefault {
-	return &WorkspaceServiceRemoveUserFromWorkspaceDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceServiceRemoveUserFromWorkspaceDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceServiceRemoveUserFromWorkspaceDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace service remove user from workspace default response has a 2xx status code
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace service remove user from workspace default response has a 3xx status code
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace service remove user from workspace default response has a 4xx status code
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace service remove user from workspace default response has a 5xx status code
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace service remove user from workspace default response a status code equal to that given
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace service remove user from workspace default response
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{id}/user/{userId}][%d] WorkspaceService_RemoveUserFromWorkspace default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workspaces/{id}/user/{userId}][%d] WorkspaceService_RemoveUserFromWorkspace default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceServiceRemoveUserFromWorkspaceDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

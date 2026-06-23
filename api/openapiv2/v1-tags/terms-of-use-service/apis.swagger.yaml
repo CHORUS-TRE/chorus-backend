@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListTermsOfUseAcceptancesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - TermsOfUseService
     post:
@@ -40,10 +36,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusAcceptTermsOfUseReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -62,10 +54,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetMyTermsOfUseStatusReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - TermsOfUseService
   /api/rest/v1/terms-of-use/versions:
@@ -78,10 +66,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListTermsOfUseVersionsReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -125,10 +109,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateTermsOfUseVersionReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -147,10 +127,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetCurrentTermsOfUseVersionReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - TermsOfUseService
   /api/rest/v1/terms-of-use/versions/{id}:
@@ -163,10 +139,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetTermsOfUseVersionReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -184,10 +156,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateTermsOfUseVersionReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -211,10 +179,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusPublishTermsOfUseVersionReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -437,22 +401,3 @@ definitions:
     properties:
       termsOfUseVersion:
         $ref: '#/definitions/chorusTermsOfUseVersion'
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

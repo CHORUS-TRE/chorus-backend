@@ -31,14 +31,7 @@ func (o *ApprovalRequestServiceCreateDataTransferRequestReader) ReadResponse(res
 		}
 		return result, nil
 	default:
-		result := NewApprovalRequestServiceCreateDataTransferRequestDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/approval-requests/data-transfer] ApprovalRequestService_CreateDataTransferRequest", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *ApprovalRequestServiceCreateDataTransferRequestOK) GetPayload() *models
 func (o *ApprovalRequestServiceCreateDataTransferRequestOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusCreateDataTransferRequestReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewApprovalRequestServiceCreateDataTransferRequestDefault creates a ApprovalRequestServiceCreateDataTransferRequestDefault with default headers values
-func NewApprovalRequestServiceCreateDataTransferRequestDefault(code int) *ApprovalRequestServiceCreateDataTransferRequestDefault {
-	return &ApprovalRequestServiceCreateDataTransferRequestDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-ApprovalRequestServiceCreateDataTransferRequestDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type ApprovalRequestServiceCreateDataTransferRequestDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this approval request service create data transfer request default response has a 2xx status code
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this approval request service create data transfer request default response has a 3xx status code
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this approval request service create data transfer request default response has a 4xx status code
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this approval request service create data transfer request default response has a 5xx status code
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this approval request service create data transfer request default response a status code equal to that given
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the approval request service create data transfer request default response
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/approval-requests/data-transfer][%d] ApprovalRequestService_CreateDataTransferRequest default %s", o._statusCode, payload)
-}
-
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/approval-requests/data-transfer][%d] ApprovalRequestService_CreateDataTransferRequest default %s", o._statusCode, payload)
-}
-
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *ApprovalRequestServiceCreateDataTransferRequestDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

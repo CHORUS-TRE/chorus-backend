@@ -6,6 +6,8 @@ package workbench_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -120,8 +122,9 @@ func (a *Client) WorkbenchServiceCreateWorkbench(params *WorkbenchServiceCreateW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceCreateWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_CreateWorkbench: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -159,8 +162,9 @@ func (a *Client) WorkbenchServiceCreateWorkbench2(params *WorkbenchServiceCreate
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceCreateWorkbench2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_CreateWorkbench2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -198,8 +202,9 @@ func (a *Client) WorkbenchServiceDeleteWorkbench(params *WorkbenchServiceDeleteW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceDeleteWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_DeleteWorkbench: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -237,8 +242,9 @@ func (a *Client) WorkbenchServiceDeleteWorkbench2(params *WorkbenchServiceDelete
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceDeleteWorkbench2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_DeleteWorkbench2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -276,8 +282,9 @@ func (a *Client) WorkbenchServiceGetWorkbench(params *WorkbenchServiceGetWorkben
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceGetWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_GetWorkbench: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -315,8 +322,9 @@ func (a *Client) WorkbenchServiceGetWorkbench2(params *WorkbenchServiceGetWorkbe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceGetWorkbench2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_GetWorkbench2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -354,8 +362,9 @@ func (a *Client) WorkbenchServiceListWorkbenches(params *WorkbenchServiceListWor
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenchesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_ListWorkbenches: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -393,8 +402,9 @@ func (a *Client) WorkbenchServiceListWorkbenches2(params *WorkbenchServiceListWo
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceListWorkbenches2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_ListWorkbenches2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -432,8 +442,9 @@ func (a *Client) WorkbenchServiceManageUserRoleInWorkbench(params *WorkbenchServ
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceManageUserRoleInWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_ManageUserRoleInWorkbench: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -471,8 +482,9 @@ func (a *Client) WorkbenchServiceManageUserRoleInWorkbench2(params *WorkbenchSer
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceManageUserRoleInWorkbench2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_ManageUserRoleInWorkbench2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -510,8 +522,9 @@ func (a *Client) WorkbenchServiceRemoveUserFromWorkbench(params *WorkbenchServic
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceRemoveUserFromWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_RemoveUserFromWorkbench: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -549,8 +562,9 @@ func (a *Client) WorkbenchServiceRemoveUserFromWorkbench2(params *WorkbenchServi
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceRemoveUserFromWorkbench2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_RemoveUserFromWorkbench2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -588,8 +602,9 @@ func (a *Client) WorkbenchServiceUpdateWorkbench(params *WorkbenchServiceUpdateW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceUpdateWorkbenchDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_UpdateWorkbench: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -627,8 +642,9 @@ func (a *Client) WorkbenchServiceUpdateWorkbench2(params *WorkbenchServiceUpdate
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkbenchServiceUpdateWorkbench2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkbenchService_UpdateWorkbench2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

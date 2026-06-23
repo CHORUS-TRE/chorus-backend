@@ -31,14 +31,7 @@ func (o *WorkspaceFileServiceListWorkspaceFileStoresReader) ReadResponse(respons
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceFileServiceListWorkspaceFileStoresDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/workspaces/{workspaceId}/stores] WorkspaceFileService_ListWorkspaceFileStores", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceFileServiceListWorkspaceFileStoresOK) GetPayload() *models.Cho
 func (o *WorkspaceFileServiceListWorkspaceFileStoresOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusListWorkspaceFileStoresReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceFileServiceListWorkspaceFileStoresDefault creates a WorkspaceFileServiceListWorkspaceFileStoresDefault with default headers values
-func NewWorkspaceFileServiceListWorkspaceFileStoresDefault(code int) *WorkspaceFileServiceListWorkspaceFileStoresDefault {
-	return &WorkspaceFileServiceListWorkspaceFileStoresDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceFileServiceListWorkspaceFileStoresDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceFileServiceListWorkspaceFileStoresDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace file service list workspace file stores default response has a 2xx status code
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace file service list workspace file stores default response has a 3xx status code
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace file service list workspace file stores default response has a 4xx status code
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace file service list workspace file stores default response has a 5xx status code
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace file service list workspace file stores default response a status code equal to that given
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace file service list workspace file stores default response
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/stores][%d] WorkspaceFileService_ListWorkspaceFileStores default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspaces/{workspaceId}/stores][%d] WorkspaceFileService_ListWorkspaceFileStores default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceFileServiceListWorkspaceFileStoresDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

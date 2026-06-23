@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListApprovalRequestsReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -116,10 +112,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateDataExtractionRequestReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -138,10 +130,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateDataTransferRequestReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -160,10 +148,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCountMyApprovalRequestsReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - ApprovalRequestService
   /api/rest/v1/approval-requests/{id}:
@@ -176,10 +160,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetApprovalRequestReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -197,10 +177,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteApprovalRequestReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -219,10 +195,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusApproveApprovalRequestReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -246,10 +218,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDownloadApprovalRequestFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -569,22 +537,3 @@ definitions:
         type: string
       type:
         type: string
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
