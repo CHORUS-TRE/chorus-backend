@@ -35,6 +35,7 @@ config:
       max_refresh_time: 4320h #180d
     private_key: "" # set in secret
     salt: feast-salutary3-online-slogan-chafe-july-rickety-desktop-from
+    expose_error_stack_trace: true
     metrics:
       enabled: true
       authentication:
