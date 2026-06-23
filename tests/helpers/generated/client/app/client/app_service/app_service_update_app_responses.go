@@ -31,14 +31,7 @@ func (o *AppServiceUpdateAppReader) ReadResponse(response runtime.ClientResponse
 		}
 		return result, nil
 	default:
-		result := NewAppServiceUpdateAppDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[PUT /api/rest/v1/apps] AppService_UpdateApp", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *AppServiceUpdateAppOK) GetPayload() *models.ChorusUpdateAppReply {
 func (o *AppServiceUpdateAppOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusUpdateAppReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewAppServiceUpdateAppDefault creates a AppServiceUpdateAppDefault with default headers values
-func NewAppServiceUpdateAppDefault(code int) *AppServiceUpdateAppDefault {
-	return &AppServiceUpdateAppDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-AppServiceUpdateAppDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type AppServiceUpdateAppDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this app service update app default response has a 2xx status code
-func (o *AppServiceUpdateAppDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this app service update app default response has a 3xx status code
-func (o *AppServiceUpdateAppDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this app service update app default response has a 4xx status code
-func (o *AppServiceUpdateAppDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this app service update app default response has a 5xx status code
-func (o *AppServiceUpdateAppDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this app service update app default response a status code equal to that given
-func (o *AppServiceUpdateAppDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the app service update app default response
-func (o *AppServiceUpdateAppDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *AppServiceUpdateAppDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/apps][%d] AppService_UpdateApp default %s", o._statusCode, payload)
-}
-
-func (o *AppServiceUpdateAppDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[PUT /api/rest/v1/apps][%d] AppService_UpdateApp default %s", o._statusCode, payload)
-}
-
-func (o *AppServiceUpdateAppDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *AppServiceUpdateAppDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

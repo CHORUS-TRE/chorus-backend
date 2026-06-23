@@ -31,14 +31,7 @@ func (o *TermsOfUseServiceGetMyTermsOfUseStatusReader) ReadResponse(response run
 		}
 		return result, nil
 	default:
-		result := NewTermsOfUseServiceGetMyTermsOfUseStatusDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/terms-of-use/acceptances/status] TermsOfUseService_GetMyTermsOfUseStatus", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *TermsOfUseServiceGetMyTermsOfUseStatusOK) GetPayload() *models.ChorusGe
 func (o *TermsOfUseServiceGetMyTermsOfUseStatusOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusGetMyTermsOfUseStatusReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewTermsOfUseServiceGetMyTermsOfUseStatusDefault creates a TermsOfUseServiceGetMyTermsOfUseStatusDefault with default headers values
-func NewTermsOfUseServiceGetMyTermsOfUseStatusDefault(code int) *TermsOfUseServiceGetMyTermsOfUseStatusDefault {
-	return &TermsOfUseServiceGetMyTermsOfUseStatusDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-TermsOfUseServiceGetMyTermsOfUseStatusDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type TermsOfUseServiceGetMyTermsOfUseStatusDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this terms of use service get my terms of use status default response has a 2xx status code
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this terms of use service get my terms of use status default response has a 3xx status code
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this terms of use service get my terms of use status default response has a 4xx status code
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this terms of use service get my terms of use status default response has a 5xx status code
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this terms of use service get my terms of use status default response a status code equal to that given
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the terms of use service get my terms of use status default response
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/terms-of-use/acceptances/status][%d] TermsOfUseService_GetMyTermsOfUseStatus default %s", o._statusCode, payload)
-}
-
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/terms-of-use/acceptances/status][%d] TermsOfUseService_GetMyTermsOfUseStatus default %s", o._statusCode, payload)
-}
-
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *TermsOfUseServiceGetMyTermsOfUseStatusDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

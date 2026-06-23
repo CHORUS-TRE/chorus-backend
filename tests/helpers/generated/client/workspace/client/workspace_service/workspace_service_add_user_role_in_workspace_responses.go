@@ -31,14 +31,7 @@ func (o *WorkspaceServiceAddUserRoleInWorkspaceReader) ReadResponse(response run
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceServiceAddUserRoleInWorkspaceDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/workspaces/{id}/user/{userId}/role] WorkspaceService_AddUserRoleInWorkspace", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceServiceAddUserRoleInWorkspaceOK) GetPayload() *models.ChorusAd
 func (o *WorkspaceServiceAddUserRoleInWorkspaceOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusAddUserRoleInWorkspaceReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceServiceAddUserRoleInWorkspaceDefault creates a WorkspaceServiceAddUserRoleInWorkspaceDefault with default headers values
-func NewWorkspaceServiceAddUserRoleInWorkspaceDefault(code int) *WorkspaceServiceAddUserRoleInWorkspaceDefault {
-	return &WorkspaceServiceAddUserRoleInWorkspaceDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceServiceAddUserRoleInWorkspaceDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceServiceAddUserRoleInWorkspaceDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace service add user role in workspace default response has a 2xx status code
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace service add user role in workspace default response has a 3xx status code
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace service add user role in workspace default response has a 4xx status code
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace service add user role in workspace default response has a 5xx status code
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace service add user role in workspace default response a status code equal to that given
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace service add user role in workspace default response
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{id}/user/{userId}/role][%d] WorkspaceService_AddUserRoleInWorkspace default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/workspaces/{id}/user/{userId}/role][%d] WorkspaceService_AddUserRoleInWorkspace default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceServiceAddUserRoleInWorkspaceDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

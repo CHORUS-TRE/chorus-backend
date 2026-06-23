@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListEntriesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - DevstoreService
       security: []
@@ -41,10 +37,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusPutEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -64,10 +56,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: key
           in: path
@@ -85,10 +73,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: key
           in: path
@@ -107,10 +91,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListEntriesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - DevstoreService
       security: []
@@ -123,10 +103,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusPutEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -146,10 +122,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: key
           in: path
@@ -167,10 +139,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: key
           in: path
@@ -189,10 +157,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListEntriesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -211,10 +175,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusPutEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -239,10 +199,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -265,10 +221,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteEntryReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -340,22 +292,3 @@ definitions:
         type: string
       value:
         type: string
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

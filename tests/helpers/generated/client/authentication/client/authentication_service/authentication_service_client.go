@@ -6,6 +6,8 @@ package authentication_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -106,8 +108,9 @@ func (a *Client) AuthenticationServiceAuthenticate(params *AuthenticationService
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_Authenticate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -145,8 +148,9 @@ func (a *Client) AuthenticationServiceAuthenticateOauth(params *AuthenticationSe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_AuthenticateOauth: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -184,8 +188,9 @@ func (a *Client) AuthenticationServiceAuthenticateOauthRedirect(params *Authenti
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthRedirectDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_AuthenticateOauthRedirect: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -223,8 +228,9 @@ func (a *Client) AuthenticationServiceAuthenticateOauthRedirect2(params *Authent
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceAuthenticateOauthRedirect2Default)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_AuthenticateOauthRedirect2: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -262,8 +268,9 @@ func (a *Client) AuthenticationServiceGetAuthenticationModes(params *Authenticat
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceGetAuthenticationModesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_GetAuthenticationModes: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -301,8 +308,9 @@ func (a *Client) AuthenticationServiceLogout(params *AuthenticationServiceLogout
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceLogoutDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_Logout: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -340,8 +348,9 @@ func (a *Client) AuthenticationServiceRefreshToken(params *AuthenticationService
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AuthenticationServiceRefreshTokenDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AuthenticationService_RefreshToken: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateWorkspaceFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -52,10 +48,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateWorkspaceFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -90,10 +82,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetWorkspaceFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -116,10 +104,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkspaceFileReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -143,10 +127,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusInitiateWorkspaceFileUploadReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -175,10 +155,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusAbortWorkspaceFileUploadReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -205,10 +181,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUploadWorkspaceFilePartReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -241,10 +213,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCompleteWorkspaceFileUploadReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -280,10 +248,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkspaceFilesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -307,10 +271,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkspaceFileStoresReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: workspaceId
           in: path
@@ -472,22 +432,3 @@ definitions:
       status:
         type: string
         title: '"ready", "disconnected", or "disabled"'
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

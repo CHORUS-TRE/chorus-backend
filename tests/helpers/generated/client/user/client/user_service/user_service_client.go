@@ -6,6 +6,8 @@ package user_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -116,8 +118,9 @@ func (a *Client) UserServiceCreateUser(params *UserServiceCreateUserParams, opts
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceCreateUserDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_CreateUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -155,8 +158,9 @@ func (a *Client) UserServiceCreateUserRole(params *UserServiceCreateUserRolePara
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceCreateUserRoleDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_CreateUserRole: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -194,8 +198,9 @@ func (a *Client) UserServiceDeleteUser(params *UserServiceDeleteUserParams, opts
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceDeleteUserDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_DeleteUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -233,8 +238,9 @@ func (a *Client) UserServiceDeleteUserRole(params *UserServiceDeleteUserRolePara
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceDeleteUserRoleDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_DeleteUserRole: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -272,8 +278,9 @@ func (a *Client) UserServiceEnableTotp(params *UserServiceEnableTotpParams, opts
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceEnableTotpDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_EnableTotp: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -311,8 +318,9 @@ func (a *Client) UserServiceGetUser(params *UserServiceGetUserParams, opts ...Cl
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceGetUserDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_GetUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -350,8 +358,9 @@ func (a *Client) UserServiceGetUserMe(params *UserServiceGetUserMeParams, opts .
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceGetUserMeDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_GetUserMe: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -389,8 +398,9 @@ func (a *Client) UserServiceListUsers(params *UserServiceListUsersParams, opts .
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceListUsersDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_ListUsers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -428,8 +438,9 @@ func (a *Client) UserServiceResetPassword(params *UserServiceResetPasswordParams
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceResetPasswordDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_ResetPassword: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -467,8 +478,9 @@ func (a *Client) UserServiceResetTotp(params *UserServiceResetTotpParams, opts .
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceResetTotpDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_ResetTotp: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -506,8 +518,9 @@ func (a *Client) UserServiceUpdatePassword(params *UserServiceUpdatePasswordPara
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceUpdatePasswordDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_UpdatePassword: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -545,8 +558,9 @@ func (a *Client) UserServiceUpdateUser(params *UserServiceUpdateUserParams, opts
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UserServiceUpdateUserDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UserService_UpdateUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetPlatformSettingsReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - PlatformSettingsService
       security: []
@@ -41,10 +37,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdatePlatformSettingsReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -111,22 +103,3 @@ definitions:
     properties:
       platformSettings:
         $ref: '#/definitions/chorusPlatformSettings'
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

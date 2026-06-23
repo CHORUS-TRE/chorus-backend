@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkspacesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -80,10 +76,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -101,10 +93,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -123,10 +111,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListPublicWorkspacesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -171,10 +155,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -192,10 +172,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -214,10 +190,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusRemoveUserFromWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -241,10 +213,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusAddUserRoleInWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -273,10 +241,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusRemoveUserRoleInWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -568,22 +532,3 @@ definitions:
       - WORKSPACE_VISIBILITY_PRIVATE
       - WORKSPACE_VISIBILITY_PUBLIC
     default: WORKSPACE_VISIBILITY_PRIVATE
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

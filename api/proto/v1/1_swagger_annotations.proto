@@ -1,4 +1,4 @@
-// This file must be the first file processed (hence its name '_swagger_annotations.proto') and is used for the merged swagger API file 'apis.swagger.json' .
+// This file must be the first file processed (hence its name '_swagger_annotations.proto') and is used for the merged swagger API file 'apis.swagger.yaml' .
 
 syntax = "proto3";
 package chorus;
@@ -46,37 +46,42 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
         key: "500";
         value: {
             description: "Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request";
+            schema: { json_schema: { ref: ".chorus.ChorusErrorResponse" } };
         }
     };
     responses: {
         key: "503";
         value: {
             description: "Service Unavailable: indicates that the server is not ready to handle the request.";
+            schema: { json_schema: { ref: ".chorus.ChorusErrorResponse" } };
         }
     };
     responses: {
         key: "404";
         value: {
             description: "Not Found: indicates that the server cannot find the requested resource";
+            schema: { json_schema: { ref: ".chorus.ChorusErrorResponse" } };
         }
     };
     responses: {
         key: "403";
         value: {
             description: "Forbidden: indicates that the server understands the request but refuses to authorize it";
+            schema: { json_schema: { ref: ".chorus.ChorusErrorResponse" } };
         }
     };
     responses: {
         key: "401";
         value: {
             description: "Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource";
+            schema: { json_schema: { ref: ".chorus.ChorusErrorResponse" } };
         }
     };
     responses: {
         key: "400";
         value: {
             description: "Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)";
+            schema: { json_schema: { ref: ".chorus.ChorusErrorResponse" } };
         }
     };
-
 };

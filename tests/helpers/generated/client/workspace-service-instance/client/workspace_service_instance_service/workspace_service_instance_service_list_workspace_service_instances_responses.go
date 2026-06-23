@@ -31,14 +31,7 @@ func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesReader) Rea
 		}
 		return result, nil
 	default:
-		result := NewWorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/workspace-service-instances] WorkspaceServiceInstanceService_ListWorkspaceServiceInstances", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesOK) GetPayl
 func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusListWorkspaceServiceInstancesReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault creates a WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault with default headers values
-func NewWorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault(code int) *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault {
-	return &WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workspace service instance service list workspace service instances default response has a 2xx status code
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workspace service instance service list workspace service instances default response has a 3xx status code
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workspace service instance service list workspace service instances default response has a 4xx status code
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workspace service instance service list workspace service instances default response has a 5xx status code
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workspace service instance service list workspace service instances default response a status code equal to that given
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workspace service instance service list workspace service instances default response
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspace-service-instances][%d] WorkspaceServiceInstanceService_ListWorkspaceServiceInstances default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/workspace-service-instances][%d] WorkspaceServiceInstanceService_ListWorkspaceServiceInstances default %s", o._statusCode, payload)
-}
-
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

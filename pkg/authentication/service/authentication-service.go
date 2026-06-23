@@ -59,15 +59,16 @@ type AuthenticationStore interface {
 
 // AuthenticationService is the authentication service handler.
 type AuthenticationService struct {
-	modes               map[string]config.Mode
-	userer              Userer
-	signingKey          string        // signingKey is the secret key with which JWT-tokens are signed.
-	jwtExpirationTime   time.Duration // jwtExpirationTime is the number of minutes until a JWT-token expires.
-	maxRefreshTime      time.Duration
-	daemonEncryptionKey *crypto.Secret
-	store               AuthenticationStore // store is the database handler object.
-	oauthConfigs        map[string]*oauth2.Config
-	oauthHTTPClients    map[string]*http.Client // Custom HTTP clients per OAuth provider for TLS configuration
+	modes                map[string]config.Mode
+	userer               Userer
+	signingKey           string        // signingKey is the secret key with which JWT-tokens are signed.
+	jwtExpirationTime    time.Duration // jwtExpirationTime is the number of minutes until a JWT-token expires.
+	maxRefreshTime       time.Duration
+	daemonEncryptionKey  *crypto.Secret
+	store                AuthenticationStore // store is the database handler object.
+	oauthConfigs         map[string]*oauth2.Config
+	oauthHTTPClients     map[string]*http.Client // Custom HTTP clients per OAuth provider for TLS configuration
+	selfServiceTenantID  uint64
 }
 
 // CustomClaims groups the JWT-token data fields.
@@ -153,6 +154,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 		store:               store,
 		oauthConfigs:        oauthConfigs,
 		oauthHTTPClients:    oauthHTTPClients,
+		selfServiceTenantID: cfg.Services.AuthenticationService.SelfService.TenantID,
 	}, nil
 }
 
@@ -389,6 +391,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 			TotpEnabled: false,
 		}
 
+		// TODO: tenant ID for OAuth-provisioned users should come from the provider config, not a global default.
 		createdUser, err := a.userer.CreateUser(ctx, userService.CreateUserReq{TenantID: 1, User: createUser})
 		if err != nil {
 			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to create user")

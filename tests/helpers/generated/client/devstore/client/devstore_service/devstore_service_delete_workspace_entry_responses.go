@@ -31,14 +31,7 @@ func (o *DevstoreServiceDeleteWorkspaceEntryReader) ReadResponse(response runtim
 		}
 		return result, nil
 	default:
-		result := NewDevstoreServiceDeleteWorkspaceEntryDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[DELETE /api/rest/v1/devstore/workspace/{id}/{key}] DevstoreService_DeleteWorkspaceEntry", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *DevstoreServiceDeleteWorkspaceEntryOK) GetPayload() *models.ChorusDelet
 func (o *DevstoreServiceDeleteWorkspaceEntryOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusDeleteEntryReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewDevstoreServiceDeleteWorkspaceEntryDefault creates a DevstoreServiceDeleteWorkspaceEntryDefault with default headers values
-func NewDevstoreServiceDeleteWorkspaceEntryDefault(code int) *DevstoreServiceDeleteWorkspaceEntryDefault {
-	return &DevstoreServiceDeleteWorkspaceEntryDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-DevstoreServiceDeleteWorkspaceEntryDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type DevstoreServiceDeleteWorkspaceEntryDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this devstore service delete workspace entry default response has a 2xx status code
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this devstore service delete workspace entry default response has a 3xx status code
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this devstore service delete workspace entry default response has a 4xx status code
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this devstore service delete workspace entry default response has a 5xx status code
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this devstore service delete workspace entry default response a status code equal to that given
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the devstore service delete workspace entry default response
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/devstore/workspace/{id}/{key}][%d] DevstoreService_DeleteWorkspaceEntry default %s", o._statusCode, payload)
-}
-
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/devstore/workspace/{id}/{key}][%d] DevstoreService_DeleteWorkspaceEntry default %s", o._statusCode, payload)
-}
-
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *DevstoreServiceDeleteWorkspaceEntryDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

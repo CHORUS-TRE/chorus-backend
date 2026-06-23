@@ -6,6 +6,8 @@ package terms_of_use_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -110,8 +112,9 @@ func (a *Client) TermsOfUseServiceAcceptTermsOfUse(params *TermsOfUseServiceAcce
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceAcceptTermsOfUseDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_AcceptTermsOfUse: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -149,8 +152,9 @@ func (a *Client) TermsOfUseServiceCreateTermsOfUseVersion(params *TermsOfUseServ
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceCreateTermsOfUseVersionDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_CreateTermsOfUseVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -188,8 +192,9 @@ func (a *Client) TermsOfUseServiceGetCurrentTermsOfUseVersion(params *TermsOfUse
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceGetCurrentTermsOfUseVersionDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_GetCurrentTermsOfUseVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -227,8 +232,9 @@ func (a *Client) TermsOfUseServiceGetMyTermsOfUseStatus(params *TermsOfUseServic
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceGetMyTermsOfUseStatusDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_GetMyTermsOfUseStatus: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -266,8 +272,9 @@ func (a *Client) TermsOfUseServiceGetTermsOfUseVersion(params *TermsOfUseService
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceGetTermsOfUseVersionDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_GetTermsOfUseVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -305,8 +312,9 @@ func (a *Client) TermsOfUseServiceListTermsOfUseAcceptances(params *TermsOfUseSe
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceListTermsOfUseAcceptancesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_ListTermsOfUseAcceptances: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -344,8 +352,9 @@ func (a *Client) TermsOfUseServiceListTermsOfUseVersions(params *TermsOfUseServi
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceListTermsOfUseVersionsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_ListTermsOfUseVersions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -383,8 +392,9 @@ func (a *Client) TermsOfUseServicePublishTermsOfUseVersion(params *TermsOfUseSer
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServicePublishTermsOfUseVersionDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_PublishTermsOfUseVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -422,8 +432,9 @@ func (a *Client) TermsOfUseServiceUpdateTermsOfUseVersion(params *TermsOfUseServ
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*TermsOfUseServiceUpdateTermsOfUseVersionDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for TermsOfUseService_UpdateTermsOfUseVersion: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

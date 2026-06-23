@@ -31,14 +31,7 @@ func (o *UserServiceCreateUserRoleReader) ReadResponse(response runtime.ClientRe
 		}
 		return result, nil
 	default:
-		result := NewUserServiceCreateUserRoleDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/users/{userId}/role] UserService_CreateUserRole", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *UserServiceCreateUserRoleOK) GetPayload() *models.ChorusCreateUserRoleR
 func (o *UserServiceCreateUserRoleOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusCreateUserRoleReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewUserServiceCreateUserRoleDefault creates a UserServiceCreateUserRoleDefault with default headers values
-func NewUserServiceCreateUserRoleDefault(code int) *UserServiceCreateUserRoleDefault {
-	return &UserServiceCreateUserRoleDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-UserServiceCreateUserRoleDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type UserServiceCreateUserRoleDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this user service create user role default response has a 2xx status code
-func (o *UserServiceCreateUserRoleDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this user service create user role default response has a 3xx status code
-func (o *UserServiceCreateUserRoleDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this user service create user role default response has a 4xx status code
-func (o *UserServiceCreateUserRoleDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this user service create user role default response has a 5xx status code
-func (o *UserServiceCreateUserRoleDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this user service create user role default response a status code equal to that given
-func (o *UserServiceCreateUserRoleDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the user service create user role default response
-func (o *UserServiceCreateUserRoleDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *UserServiceCreateUserRoleDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/users/{userId}/role][%d] UserService_CreateUserRole default %s", o._statusCode, payload)
-}
-
-func (o *UserServiceCreateUserRoleDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/users/{userId}/role][%d] UserService_CreateUserRole default %s", o._statusCode, payload)
-}
-
-func (o *UserServiceCreateUserRoleDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *UserServiceCreateUserRoleDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

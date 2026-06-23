@@ -14,43 +14,28 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusAttachment chorus attachment
+// ChorusInitializeTenantResult chorus initialize tenant result
 //
-// swagger:model chorusAttachment
-type ChorusAttachment struct {
-
-	// content type
-	ContentType string `json:"contentType,omitempty"`
+// swagger:model chorusInitializeTenantResult
+type ChorusInitializeTenantResult struct {
 
 	// created at
 	// Format: date-time
 	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
-	// document category
-	DocumentCategory string `json:"documentCategory,omitempty"`
-
-	// filename
-	Filename string `json:"filename,omitempty"`
-
 	// id
 	ID string `json:"id,omitempty"`
 
-	// key
-	Key string `json:"key,omitempty"`
-
-	// location
-	Location string `json:"location,omitempty"`
+	// name
+	Name string `json:"name,omitempty"`
 
 	// updated at
 	// Format: date-time
 	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
-
-	// value
-	Value string `json:"value,omitempty"`
 }
 
-// Validate validates this chorus attachment
-func (m *ChorusAttachment) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus initialize tenant result
+func (m *ChorusInitializeTenantResult) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCreatedAt(formats); err != nil {
@@ -67,7 +52,7 @@ func (m *ChorusAttachment) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusAttachment) validateCreatedAt(formats strfmt.Registry) error {
+func (m *ChorusInitializeTenantResult) validateCreatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
@@ -79,7 +64,7 @@ func (m *ChorusAttachment) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusAttachment) validateUpdatedAt(formats strfmt.Registry) error {
+func (m *ChorusInitializeTenantResult) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
 	}
@@ -91,13 +76,13 @@ func (m *ChorusAttachment) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus attachment based on context it is used
-func (m *ChorusAttachment) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this chorus initialize tenant result based on context it is used
+func (m *ChorusInitializeTenantResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusAttachment) MarshalBinary() ([]byte, error) {
+func (m *ChorusInitializeTenantResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -105,8 +90,8 @@ func (m *ChorusAttachment) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusAttachment) UnmarshalBinary(b []byte) error {
-	var res ChorusAttachment
+func (m *ChorusInitializeTenantResult) UnmarshalBinary(b []byte) error {
+	var res ChorusInitializeTenantResult
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

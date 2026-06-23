@@ -13,17 +13,17 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusGetAttachmentReply chorus get attachment reply
+// ChorusInitializeTenantReply chorus initialize tenant reply
 //
-// swagger:model chorusGetAttachmentReply
-type ChorusGetAttachmentReply struct {
+// swagger:model chorusInitializeTenantReply
+type ChorusInitializeTenantReply struct {
 
 	// result
-	Result *ChorusAttachment `json:"result,omitempty"`
+	Result *ChorusInitializeTenantResult `json:"result,omitempty"`
 }
 
-// Validate validates this chorus get attachment reply
-func (m *ChorusGetAttachmentReply) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus initialize tenant reply
+func (m *ChorusInitializeTenantReply) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateResult(formats); err != nil {
@@ -36,7 +36,7 @@ func (m *ChorusGetAttachmentReply) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusGetAttachmentReply) validateResult(formats strfmt.Registry) error {
+func (m *ChorusInitializeTenantReply) validateResult(formats strfmt.Registry) error {
 	if swag.IsZero(m.Result) { // not required
 		return nil
 	}
@@ -55,8 +55,8 @@ func (m *ChorusGetAttachmentReply) validateResult(formats strfmt.Registry) error
 	return nil
 }
 
-// ContextValidate validate this chorus get attachment reply based on the context it is used
-func (m *ChorusGetAttachmentReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this chorus initialize tenant reply based on the context it is used
+func (m *ChorusInitializeTenantReply) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateResult(ctx, formats); err != nil {
@@ -69,7 +69,7 @@ func (m *ChorusGetAttachmentReply) ContextValidate(ctx context.Context, formats 
 	return nil
 }
 
-func (m *ChorusGetAttachmentReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusInitializeTenantReply) contextValidateResult(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Result != nil {
 
@@ -91,7 +91,7 @@ func (m *ChorusGetAttachmentReply) contextValidateResult(ctx context.Context, fo
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusGetAttachmentReply) MarshalBinary() ([]byte, error) {
+func (m *ChorusInitializeTenantReply) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -99,8 +99,8 @@ func (m *ChorusGetAttachmentReply) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusGetAttachmentReply) UnmarshalBinary(b []byte) error {
-	var res ChorusGetAttachmentReply
+func (m *ChorusInitializeTenantReply) UnmarshalBinary(b []byte) error {
+	var res ChorusInitializeTenantReply
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

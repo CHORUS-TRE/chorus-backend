@@ -31,14 +31,7 @@ func (o *WorkbenchServiceDeleteWorkbenchReader) ReadResponse(response runtime.Cl
 		}
 		return result, nil
 	default:
-		result := NewWorkbenchServiceDeleteWorkbenchDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[DELETE /api/rest/v1/workbenches/{id}] WorkbenchService_DeleteWorkbench", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *WorkbenchServiceDeleteWorkbenchOK) GetPayload() *models.ChorusDeleteWor
 func (o *WorkbenchServiceDeleteWorkbenchOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusDeleteWorkbenchReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewWorkbenchServiceDeleteWorkbenchDefault creates a WorkbenchServiceDeleteWorkbenchDefault with default headers values
-func NewWorkbenchServiceDeleteWorkbenchDefault(code int) *WorkbenchServiceDeleteWorkbenchDefault {
-	return &WorkbenchServiceDeleteWorkbenchDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-WorkbenchServiceDeleteWorkbenchDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type WorkbenchServiceDeleteWorkbenchDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this workbench service delete workbench default response has a 2xx status code
-func (o *WorkbenchServiceDeleteWorkbenchDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this workbench service delete workbench default response has a 3xx status code
-func (o *WorkbenchServiceDeleteWorkbenchDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this workbench service delete workbench default response has a 4xx status code
-func (o *WorkbenchServiceDeleteWorkbenchDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this workbench service delete workbench default response has a 5xx status code
-func (o *WorkbenchServiceDeleteWorkbenchDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this workbench service delete workbench default response a status code equal to that given
-func (o *WorkbenchServiceDeleteWorkbenchDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the workbench service delete workbench default response
-func (o *WorkbenchServiceDeleteWorkbenchDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *WorkbenchServiceDeleteWorkbenchDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workbenches/{id}][%d] WorkbenchService_DeleteWorkbench default %s", o._statusCode, payload)
-}
-
-func (o *WorkbenchServiceDeleteWorkbenchDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/workbenches/{id}][%d] WorkbenchService_DeleteWorkbench default %s", o._statusCode, payload)
-}
-
-func (o *WorkbenchServiceDeleteWorkbenchDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *WorkbenchServiceDeleteWorkbenchDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
