@@ -12,6 +12,7 @@ daemon:
   totp:
     num_recovery_codes: 10
   pprof_enabled: true
+  expose_error_stack_trace: true
   salt: 1234
  
 storage:
