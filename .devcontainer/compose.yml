@@ -33,6 +33,17 @@ services:
     command: server /data --console-address ":9001"
     restart: unless-stopped
 
+  create_bucket:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done;
+        mc mb local/chorus-data || true;
+      "
+    restart: "no"
+
 volumes:
   postgres_data:
   minio_data:
