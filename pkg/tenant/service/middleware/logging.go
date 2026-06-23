@@ -25,26 +25,28 @@ func Logging(log *logger.ContextLogger) func(tenanter service.Tenanter) service.
 	}
 }
 
-func (l tenantServiceLogging) CreateTenant(ctx context.Context, tenantID uint64, name string) error {
+func (l tenantServiceLogging) CreateTenant(ctx context.Context, name string) (*tenant_model.Tenant, error) {
 	now := time.Now()
 
-	log := logger.With(l.logger,
-		logger.WithTenantIDField(tenantID),
-	)
+	tenant, err := l.next.CreateTenant(ctx, name)
 
-	err := l.next.CreateTenant(ctx, tenantID, name)
+	if tenant != nil {
+		log := logger.With(l.logger, logger.WithTenantIDField(tenant.ID))
+		return tenant, common.LogErrorIfAny(err, ctx, now, log)
+	}
 
-	return common.LogErrorIfAny(err, ctx, now, log)
+	return tenant, common.LogErrorIfAny(err, ctx, now, l.logger)
 }
 
-func (l tenantServiceLogging) GetTenant(ctx context.Context, tenantID uint64) (*tenant_model.Tenant, error) {
+func (l tenantServiceLogging) GetTenantByName(ctx context.Context, name string) (*tenant_model.Tenant, error) {
 	now := time.Now()
 
-	log := logger.With(l.logger,
-		logger.WithTenantIDField(tenantID),
-	)
+	tenant, err := l.next.GetTenantByName(ctx, name)
 
-	tenant, err := l.next.GetTenant(ctx, tenantID)
+	if tenant != nil {
+		log := logger.With(l.logger, logger.WithTenantIDField(tenant.ID))
+		return tenant, common.LogErrorIfAny(err, ctx, now, log)
+	}
 
-	return tenant, common.LogErrorIfAny(err, ctx, now, log)
+	return tenant, common.LogErrorIfAny(err, ctx, now, l.logger)
 }

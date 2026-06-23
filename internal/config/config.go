@@ -53,8 +53,7 @@ type (
 
 		Jobber Jobber `yaml:"jobber"`
 
-		PPROFEnabled bool   `yaml:"pprof_enabled"`
-		TenantID     uint64 `yaml:"tenant_id"`
+		PPROFEnabled bool `yaml:"pprof_enabled"`
 
 		PrivateKeyFile string `yaml:"private_key_file"`
 		PrivateKey     string `yaml:"private_key"`
@@ -282,6 +281,9 @@ type (
 			Enabled       bool            `yaml:"enabled"`
 			AuthUIEnabled bool            `yaml:"auth_ui_enabled"`
 			Modes         map[string]Mode `yaml:"modes"`
+			SelfService   struct {
+				TenantID uint64 `yaml:"tenant_id"`
+			} `yaml:"self_service"`
 		} `yaml:"authentication_service"`
 
 		OpenIDConnectProvider struct {
@@ -341,27 +343,14 @@ type (
 		} `yaml:"user_service"`
 
 		Steward struct {
-			InitTenant struct {
-				Enabled  bool   `yaml:"enabled"`
-				TenantID uint64 `yaml:"tenant_id"`
-			} `yaml:"init_tenant"`
+			Tenant struct {
+				Name string `yaml:"name"`
+			} `yaml:"tenant"`
 
-			InitUser struct {
-				Enabled  bool      `yaml:"enabled"`
-				UserID   uint64    `yaml:"user_id"`
+			User struct {
 				Username string    `yaml:"username"`
 				Password Sensitive `yaml:"password"`
-				Roles    []struct {
-					Name    string            `yaml:"name"`
-					Context map[string]string `yaml:"context"`
-				} `yaml:"roles"`
-			} `yaml:"init_user"`
-
-			InitWorkspace struct {
-				Enabled     bool   `yaml:"enabled"`
-				WorkspaceID uint64 `yaml:"workspace_id"`
-				Name        string `yaml:"name"`
-			} `yaml:"init_workspace"`
+			} `yaml:"user"`
 		} `yaml:"steward"`
 	}
 

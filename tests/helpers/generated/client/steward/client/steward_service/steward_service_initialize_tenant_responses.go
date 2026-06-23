@@ -44,7 +44,7 @@ StewardServiceInitializeTenantOK describes a response with status code 200, with
 A successful response.
 */
 type StewardServiceInitializeTenantOK struct {
-	Payload interface{}
+	Payload *models.ChorusInitializeTenantReply
 }
 
 // IsSuccess returns true when this steward service initialize tenant o k response has a 2xx status code
@@ -87,14 +87,16 @@ func (o *StewardServiceInitializeTenantOK) String() string {
 	return fmt.Sprintf("[POST /api/rest/v1/steward/tenants/initialize][%d] stewardServiceInitializeTenantOK %s", 200, payload)
 }
 
-func (o *StewardServiceInitializeTenantOK) GetPayload() interface{} {
+func (o *StewardServiceInitializeTenantOK) GetPayload() *models.ChorusInitializeTenantReply {
 	return o.Payload
 }
 
 func (o *StewardServiceInitializeTenantOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
+	o.Payload = new(models.ChorusInitializeTenantReply)
+
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

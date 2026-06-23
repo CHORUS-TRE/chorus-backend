@@ -17,8 +17,8 @@ import (
 // swagger:model chorusInitializeTenantRequest
 type ChorusInitializeTenantRequest struct {
 
-	// tenant Id
-	TenantID string `json:"tenantId,omitempty"`
+	// name
+	Name string `json:"name,omitempty"`
 }
 
 // Validate validates this chorus initialize tenant request

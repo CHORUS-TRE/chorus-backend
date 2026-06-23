@@ -3,8 +3,6 @@ package middleware
 import (
 	"context"
 
-	empty "google.golang.org/protobuf/types/known/emptypb"
-
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -30,7 +28,7 @@ func StewardAuthorizing(logger *logger.ContextLogger, authorizer authorization_s
 	}
 }
 
-func (c stewardControllerAuthorization) InitializeTenant(ctx context.Context, request *chorus.InitializeTenantRequest) (*empty.Empty, error) {
+func (c stewardControllerAuthorization) InitializeTenant(ctx context.Context, request *chorus.InitializeTenantRequest) (*chorus.InitializeTenantReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionInitializeTenant)
 	if err != nil {
 		return nil, err
