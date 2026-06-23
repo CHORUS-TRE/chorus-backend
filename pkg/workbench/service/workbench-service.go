@@ -574,11 +574,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 }
 
 func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
-	if err != nil {
-		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
-	}
-
+	// Verify that the workbench exists
 	workbenchID, err := strconv.ParseUint(role.Context["workbench"], 10, 64)
 	if err != nil {
 		return cerr.ErrInvalidRequest.Wrap(err, fmt.Sprintf("Unable to parse workbench ID %v", role.Context["workbench"]))
@@ -589,22 +585,30 @@ func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID,
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", role.Context["workbench"]))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Verify that the user exists and get its roles
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
+	}
+
+	// Remove existing role in workbench
+	existingRoleID := uint64(0)
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == role.Context["workbench"] {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			existingRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	if existingRoleID != 0 {
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{existingRoleID})
 		if err != nil {
 			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workbench roles for user %v for workbench %v", userID, tenantID))
 		}
 	}
 
+	// Add the new role to the user
 	role.Context["workspace"] = fmt.Sprintf("%d", workbench.WorkspaceID)
-
 	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
 
 	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
@@ -612,6 +616,7 @@ func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID,
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workbench admin role to user %v for workbench %v", userID, tenantID))
 	}
 
+	// Notify the user about the new role
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
 		UserID:   userID,
@@ -631,23 +636,49 @@ func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID,
 }
 
 func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID uint64, workbenchID uint64) error {
+	// Verify that the workbench exists
+	_, err := s.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
+	}
+
+	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Get the user's role in the workbench
+	workbenchRoleID := uint64(0)
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == fmt.Sprintf("%d", workbenchID) {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			workbenchRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	// Remove workbench role from the user
+	if workbenchRoleID != 0 {
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{workbenchRoleID})
 		if err != nil {
 			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workbench roles for user %v for workbench %v", userID, workbenchID))
 		}
+	}
+
+	// Notify the user about being removed from the workbench
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		UserID:   userID,
+		Message:  fmt.Sprintf("You have been removed from workbench %v", workbenchID),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: &notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v about being removed from workbench %v", userID, workbenchID))
 	}
 
 	return nil
