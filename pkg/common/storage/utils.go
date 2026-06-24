@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -214,4 +215,9 @@ func BuildAuditFilterClause(filter *audit_model.AuditFilter, args *[]interface{}
 	}
 
 	return strings.Join(clauses, " AND ")
+}
+
+func IsDuplicateKey(err error) bool {
+	var pqErr *pq.Error
+	return errors.As(err, &pqErr) && pqErr.Code == "23505"
 }
