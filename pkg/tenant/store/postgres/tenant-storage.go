@@ -2,13 +2,12 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
+	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 )
 
@@ -36,15 +35,10 @@ func (s *TenantStorage) CreateTenant(ctx context.Context, name string) (*model.T
 	`
 	t := &model.Tenant{}
 	if err := s.db.GetContext(ctx, t, q, name); err != nil {
-		if isDuplicateKey(err) {
+		if common.IsDuplicateKey(err) {
 			return nil, cerr.ErrDuplicateKey
 		}
 		return nil, fmt.Errorf("unable to create tenant: %w", err)
 	}
 	return t, nil
-}
-
-func isDuplicateKey(err error) bool {
-	var pqErr *pq.Error
-	return errors.As(err, &pqErr) && pqErr.Code == "23505"
 }

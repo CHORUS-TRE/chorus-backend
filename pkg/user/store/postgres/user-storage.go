@@ -12,7 +12,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
-	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
+	common_storage "github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
@@ -33,7 +33,7 @@ func NewUserStorage(db *sqlx.DB) *UserStorage {
 func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination *common.Pagination, filter *service.UserFilter) (users []*model.User, paginationRes *common.PaginationResult, err error) {
 	args := []interface{}{tenantID}
 
-	filterClause := storage.BuildUserFilterClause(filter, &args)
+	filterClause := common_storage.BuildUserFilterClause(filter, &args)
 
 	// Get total count query
 	countQuery := `SELECT COUNT(*) FROM users WHERE tenantid = $1 AND status != 'deleted'`
@@ -56,7 +56,7 @@ func (s *UserStorage) ListUsers(ctx context.Context, tenantID uint64, pagination
 	}
 
 	// Add pagination
-	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.User{})
+	clause, validatedPagination := common_storage.BuildPaginationClause(pagination, model.User{})
 	query += clause
 
 	// Build pagination result
@@ -113,7 +113,7 @@ func (s *UserStorage) GetUsers(ctx context.Context, tenantID uint64, userIDs []u
 		WHERE tenantid = $1 AND id = ANY($2);
 	`
 	var users []*model.User
-	if err := s.db.SelectContext(ctx, &users, query, tenantID, storage.Uint64ToPqInt64(userIDs)); err != nil {
+	if err := s.db.SelectContext(ctx, &users, query, tenantID, common_storage.Uint64ToPqInt64(userIDs)); err != nil {
 		return nil, fmt.Errorf("unable to get users by IDs: %w", err)
 	}
 	return users, nil
@@ -277,7 +277,7 @@ func (s *UserStorage) updateUserAndRoles(ctx context.Context, tx *sqlx.Tx, tenan
 func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *model.User) (*model.User, error) {
 	var userQuery = `
 		INSERT INTO users (tenantid, firstname, lastname, username, email, source, password, passwordChanged, status, totpsecret, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
 		RETURNING id, tenantid, firstname, lastname, username, email, source, status, passwordChanged, totpenabled, totpsecret, createdat, updatedat;
 	`
 	args := []interface{}{tenantID, user.FirstName, user.LastName, user.Username, user.Email, user.Source, user.Password, user.PasswordChanged, user.Status, user.TotpSecret}
@@ -306,12 +306,15 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	var newUser model.User
 	err = tx.GetContext(ctx, &newUser, userQuery, args...)
 	if err != nil {
-		return nil, storage.Rollback(tx, err)
+		if common_storage.IsDuplicateKey(err) {
+			return nil, common_storage.Rollback(tx, cerr.ErrDuplicateKey)
+		}
+		return nil, common_storage.Rollback(tx, err)
 	}
 
 	err = s.createUserRoles(ctx, tx, newUser.ID, user.Roles)
 	if err != nil {
-		return nil, storage.Rollback(tx, err)
+		return nil, common_storage.Rollback(tx, err)
 	}
 	newUser.Roles = append(newUser.Roles, user.Roles...)
 
@@ -319,7 +322,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 	if user.TotpRecoveryCodes != nil {
 		for _, rc := range user.TotpRecoveryCodes {
 			if _, loopErr := tx.ExecContext(ctx, recoveryCodeQuery, tenantID, newUser.ID, rc); loopErr != nil {
-				return nil, storage.Rollback(tx, loopErr)
+				return nil, common_storage.Rollback(tx, loopErr)
 			}
 		}
 	}
@@ -337,7 +340,7 @@ func (s *UserStorage) CreateUserRoles(ctx context.Context, userID uint64, userRo
 	}
 
 	if err = s.createUserRoles(ctx, tx, userID, userRoles); err != nil {
-		return fmt.Errorf("unable to create user roles: %w", storage.Rollback(tx, err))
+		return fmt.Errorf("unable to create user roles: %w", common_storage.Rollback(tx, err))
 	}
 
 	if err = tx.Commit(); err != nil {
