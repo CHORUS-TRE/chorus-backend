@@ -47,7 +47,6 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionListUsers,
 			PermissionCreateRequest,
 			PermissionListWorkspaceServiceInstances,
-			PermissionGetWorkspaceServiceInstance,
 		},
 	)
 
@@ -57,6 +56,8 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionCreateWorkbench,
 			PermissionListFilesInWorkspace,
 			PermissionCreateRequest,
+			PermissionGetWorkspaceServiceInstance,
+			PermissionGetWorkspaceServiceInstanceSecret,
 		},
 	)
 
@@ -286,6 +287,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionCreateWorkspaceServiceInstance, "Allow the user to create a workspace service instance", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionUpdateWorkspaceServiceInstance, "Allow the user to update a workspace service instance", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionGetWorkspaceServiceInstance, "Allow the user to get a workspace service instance", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionGetWorkspaceServiceInstanceSecret, "Allow the user to get the secrets of a workspace service instance", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionDeleteWorkspaceServiceInstance, "Allow the user to delete a workspace service instance", oneContext(RoleContextWorkspace)),
 
 			permissionDefinition(PermissionListApps, "Allow the user to list apps", nil),
