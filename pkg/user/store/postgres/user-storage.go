@@ -309,6 +309,7 @@ func (s *UserStorage) CreateUser(ctx context.Context, tenantID uint64, user *mod
 		if common_storage.IsDuplicateKey(err) {
 			return nil, common_storage.Rollback(tx, cerr.ErrDuplicateKey)
 		}
+		return nil, common_storage.Rollback(tx, err)
 	}
 
 	err = s.createUserRoles(ctx, tx, newUser.ID, user.Roles)
