@@ -46,6 +46,24 @@ func (c WorkspaceServiceInstanceController) GetWorkspaceServiceInstance(ctx cont
 	return &chorus.GetWorkspaceServiceInstanceReply{Result: &chorus.GetWorkspaceServiceInstanceResult{WorkspaceServiceInstance: pbSvc}}, nil
 }
 
+func (c WorkspaceServiceInstanceController) GetWorkspaceServiceInstanceSecrets(ctx context.Context, req *chorus.GetWorkspaceServiceInstanceSecretsRequest) (*chorus.GetWorkspaceServiceInstanceSecretsReply, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	secrets, err := c.workspaceer.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspaceServiceInstanceSecrets': %v", err.Error())
+	}
+
+	return &chorus.GetWorkspaceServiceInstanceSecretsReply{Result: &chorus.GetWorkspaceServiceInstanceSecretsResult{Secrets: secrets}}, nil
+}
+
 func (c WorkspaceServiceInstanceController) ListWorkspaceServiceInstances(ctx context.Context, req *chorus.ListWorkspaceServiceInstancesRequest) (*chorus.ListWorkspaceServiceInstancesReply, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

@@ -60,6 +60,8 @@ const (
 	PermissionGetWorkspaceServiceInstance    PermissionName = "getWorkspaceServiceInstance"
 	PermissionDeleteWorkspaceServiceInstance PermissionName = "deleteWorkspaceServiceInstance"
 
+	PermissionGetWorkspaceServiceInstanceSecret PermissionName = "getWorkspaceServiceInstanceSecret"
+
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
 	PermissionUpdateApp PermissionName = "updateApp"
@@ -187,6 +189,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionUpdateWorkspaceServiceInstance, nil
 	case string(PermissionGetWorkspaceServiceInstance):
 		return PermissionGetWorkspaceServiceInstance, nil
+	case string(PermissionGetWorkspaceServiceInstanceSecret):
+		return PermissionGetWorkspaceServiceInstanceSecret, nil
 	case string(PermissionDeleteWorkspaceServiceInstance):
 		return PermissionDeleteWorkspaceServiceInstance, nil
 

@@ -102,6 +102,25 @@ func (c workspaceServiceInstanceControllerAuthorization) GetWorkspaceServiceInst
 	return c.next.GetWorkspaceServiceInstance(ctx, req)
 }
 
+func (c workspaceServiceInstanceControllerAuthorization) GetWorkspaceServiceInstanceSecrets(ctx context.Context, req *chorus.GetWorkspaceServiceInstanceSecretsRequest) (*chorus.GetWorkspaceServiceInstanceSecretsReply, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	instance, err := c.resolver.GetWorkspaceServiceInstance(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "unable to resolve workspace service instance %v: %v", req.Id, err)
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionGetWorkspaceServiceInstanceSecret, authorization.WithWorkspace(instance.WorkspaceID))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.GetWorkspaceServiceInstanceSecrets(ctx, req)
+}
+
 func (c workspaceServiceInstanceControllerAuthorization) CreateWorkspaceServiceInstance(ctx context.Context, req *chorus.WorkspaceServiceInstance) (*chorus.CreateWorkspaceServiceInstanceReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionCreateWorkspaceServiceInstance, authorization.WithWorkspace(req.WorkspaceId))
 	if err != nil {
