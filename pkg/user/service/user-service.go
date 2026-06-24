@@ -212,7 +212,8 @@ func (u *UserService) CreateUser(ctx context.Context, req CreateUserReq) (*model
 
 	newUser, err := u.store.CreateUser(ctx, req.TenantID, user)
 	if err != nil {
-		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to create user %v", user.Username))
+		// TODO: wrap with custom error when ready to handle type matching
+		return nil, err
 	}
 
 	go u.sendMailWithTempPassword("Please change your password", req.TenantID, user, password, mailer.TemporaryPasswordKey)
