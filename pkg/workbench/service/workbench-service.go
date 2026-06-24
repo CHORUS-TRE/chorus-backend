@@ -57,28 +57,20 @@ type WorkspaceReader interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
 }
 
-type WorkbenchFilter struct {
-	WorkspaceIDsIn *[]uint64
-}
-
-type AppInstanceFilter struct {
-	WorkbenchIDsIn *[]uint64
-}
-
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) (*model.Workbench, error)
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
-	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) (*model.AppInstance, error)
@@ -471,7 +463,7 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	workbenches, paginationRes, err := s.store.ListWorkbenches(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
 	if err != nil {
 		return nil, nil, cerr.WrapStoreError(err, "Unable to list workbenches")
@@ -581,12 +573,8 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 	return newWorkbench, nil
 }
 
-func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
-	if err != nil {
-		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
-	}
-
+func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	// Verify that the workbench exists
 	workbenchID, err := strconv.ParseUint(role.Context["workbench"], 10, 64)
 	if err != nil {
 		return cerr.ErrInvalidRequest.Wrap(err, fmt.Sprintf("Unable to parse workbench ID %v", role.Context["workbench"]))
@@ -597,22 +585,30 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", role.Context["workbench"]))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Verify that the user exists and get its roles
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
+	}
+
+	// Remove existing role in workbench
+	existingRoleID := uint64(0)
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == role.Context["workbench"] {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			existingRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	if existingRoleID != 0 {
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{existingRoleID})
 		if err != nil {
 			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workbench roles for user %v for workbench %v", userID, tenantID))
 		}
 	}
 
+	// Add the new role to the user
 	role.Context["workspace"] = fmt.Sprintf("%d", workbench.WorkspaceID)
-
 	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
 
 	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
@@ -620,6 +616,7 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workbench admin role to user %v for workbench %v", userID, tenantID))
 	}
 
+	// Notify the user about the new role
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
 		UserID:   userID,
@@ -639,23 +636,49 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 }
 
 func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID uint64, workbenchID uint64) error {
+	// Verify that the workbench exists
+	_, err := s.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
+	}
+
+	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Get the user's role in the workbench
+	workbenchRoleID := uint64(0)
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == fmt.Sprintf("%d", workbenchID) {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			workbenchRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	// Remove workbench role from the user
+	if workbenchRoleID != 0 {
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{workbenchRoleID})
 		if err != nil {
 			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workbench roles for user %v for workbench %v", userID, workbenchID))
 		}
+	}
+
+	// Notify the user about being removed from the workbench
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		UserID:   userID,
+		Message:  fmt.Sprintf("You have been removed from workbench %v", workbenchID),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: &notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v about being removed from workbench %v", userID, workbenchID))
 	}
 
 	return nil

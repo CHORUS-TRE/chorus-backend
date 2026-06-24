@@ -121,6 +121,10 @@ func ToK8sWorkbenchStatus(status string) (K8sWorkbenchStatus, error) {
 	}
 }
 
+type WorkbenchFilter struct {
+	WorkspaceIDsIn *[]uint64
+}
+
 func (Workbench) IsValidSortType(sortType string) bool {
 	validSortTypes := map[string]bool{
 		"id":          true,

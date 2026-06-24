@@ -145,8 +145,8 @@ func (c workbenchControllerAudit) DeleteWorkbench(ctx context.Context, req *chor
 	return res, err
 }
 
-func (c workbenchControllerAudit) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
-	res, err := c.next.ManageUserRoleInWorkbench(ctx, req)
+func (c workbenchControllerAudit) AddUserRoleInWorkbench(ctx context.Context, req *chorus.AddUserRoleInWorkbenchRequest) (*chorus.AddUserRoleInWorkbenchReply, error) {
+	res, err := c.next.AddUserRoleInWorkbench(ctx, req)
 
 	opts := []audit.Option{
 		audit.WithWorkbenchID(req.Id),

@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -15,10 +16,12 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
+	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
+	workbench_model "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
@@ -94,6 +97,7 @@ func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstanceStatuses(_ context.Co
 type mockUserer struct {
 	createUserRolesErr error
 	capturedRoles      []user_model.UserRole
+	removedRoleIDs     []uint64
 	getUser            func(ctx context.Context, req user_service.GetUserReq) (*user_model.User, error)
 	getUsers           func(ctx context.Context, tenantID uint64, userIDs []uint64) ([]*user_model.User, error)
 }
@@ -103,7 +107,8 @@ func (m *mockUserer) CreateUserRoles(_ context.Context, _, _ uint64, roles []use
 	return m.createUserRolesErr
 }
 
-func (m *mockUserer) RemoveUserRoles(_ context.Context, _, _ uint64, _ []uint64) error {
+func (m *mockUserer) RemoveUserRoles(_ context.Context, _, _ uint64, roleIDs []uint64) error {
+	m.removedRoleIDs = append(m.removedRoleIDs, roleIDs...)
 	return nil
 }
 
@@ -149,6 +154,10 @@ func (m *mockK8s) RegisterOnUpdateWorkspaceHandler(_ func(k8s.WorkspaceOutput) e
 
 type mockWorkbencher struct{}
 
+func (m *mockWorkbencher) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter workbench_model.WorkbenchFilter) ([]*workbench_model.Workbench, *common_model.PaginationResult, error) {
+	return nil, nil, nil
+}
+
 func (m *mockWorkbencher) DeleteWorkbenchesInWorkspace(_ context.Context, _, _ uint64) error {
 	return nil
 }
@@ -186,6 +195,37 @@ func storeReturning(ws *model.Workspace) *mockWorkspaceStore {
 		createWorkspace: func(_ context.Context, _ uint64, _ *model.Workspace) (*model.Workspace, error) {
 			return ws, nil
 		},
+	}
+}
+
+func wsRole(id, workspaceID uint64, name authorization_model.RoleName) user_model.UserRole {
+	return user_model.UserRole{
+		ID: id,
+		Role: authorization_model.Role{
+			Name: name,
+			Context: authorization_model.Context{
+				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
+			},
+		},
+	}
+}
+
+func wbRole(id, workspaceID, workbenchID uint64, name authorization_model.RoleName) user_model.UserRole {
+	return user_model.UserRole{
+		ID: id,
+		Role: authorization_model.Role{
+			Name: name,
+			Context: authorization_model.Context{
+				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
+				authorization_model.RoleContextWorkbench: fmt.Sprintf("%d", workbenchID),
+			},
+		},
+	}
+}
+
+func userWithRoles(roles ...user_model.UserRole) func(context.Context, user_service.GetUserReq) (*user_model.User, error) {
+	return func(_ context.Context, _ user_service.GetUserReq) (*user_model.User, error) {
+		return &user_model.User{ID: 42, Roles: roles}, nil
 	}
 }
 
@@ -379,4 +419,165 @@ func TestListPublicWorkspaces_PropagatesGetUsersError(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "user not found")
+}
+
+// ---------------------------------------------------------------------------
+// RemoveUserRoleInWorkspace
+// ---------------------------------------------------------------------------
+
+func TestRemoveUserRoleInWorkspace_LastRoleRemovesUserFromWorkspace(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceAdmin)
+
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
+}
+
+func TestRemoveUserRoleInWorkspace_KeepsOtherWorkspaceRoles(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+			wsRole(3, 5, authorization_model.RoleWorkspaceDataManager),
+			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceAdmin)
+
+	require.NoError(t, err)
+	assert.Equal(t, []uint64{1}, userer.removedRoleIDs)
+}
+
+func TestRemoveUserRoleInWorkspace_WorkbenchRoleDoesNotCountAsWorkspaceRole(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceDataManager),
+			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceDataManager)
+
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
+}
+
+func TestRemoveUserRoleInWorkspace_RoleNotFound(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceDataManager)
+
+	require.Error(t, err)
+	assert.Empty(t, userer.removedRoleIDs)
+}
+
+// ---------------------------------------------------------------------------
+// AddUserRoleInWorkspace
+// ---------------------------------------------------------------------------
+
+func TestAddUserRoleInWorkspace_AssignsNewRole(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.RoleWorkspaceAdmin))
+
+	require.NoError(t, err)
+	require.Len(t, userer.capturedRoles, 1)
+	assert.Equal(t, authorization_model.RoleWorkspaceAdmin, userer.capturedRoles[0].Role.Name)
+	assert.Equal(t, "5", userer.capturedRoles[0].Context["workspace"])
+}
+
+func TestAddUserRoleInWorkspace_AllowsMultipleDistinctRolesInSameWorkspace(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceDataManager),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.RoleWorkspaceAdmin))
+
+	require.NoError(t, err)
+	require.Len(t, userer.capturedRoles, 1)
+	assert.Equal(t, authorization_model.RoleWorkspaceAdmin, userer.capturedRoles[0].Role.Name)
+}
+
+func TestAddUserRoleInWorkspace_RejectsDuplicateRole(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.RoleWorkspaceAdmin))
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "already has role")
+	assert.Empty(t, userer.capturedRoles)
+}
+
+func TestAddUserRoleInWorkspace_SameRoleDifferentWorkspaceAllowed(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 9, authorization_model.RoleWorkspaceAdmin))
+
+	require.NoError(t, err)
+	require.Len(t, userer.capturedRoles, 1)
+	assert.Equal(t, "9", userer.capturedRoles[0].Context["workspace"])
+}
+
+// ---------------------------------------------------------------------------
+// RemoveUserFromWorkspace
+// ---------------------------------------------------------------------------
+
+func TestRemoveUserFromWorkspace_RemovesAllRolesInWorkspaceOnly(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+			wsRole(3, 9, authorization_model.RoleWorkspaceAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.RemoveUserFromWorkspace(context.Background(), 1, 42, 5)
+
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
+}
+
+func TestRemoveUserFromWorkspace_NoRolesIsNoop(t *testing.T) {
+	userer := &mockUserer{
+		getUser: userWithRoles(
+			wsRole(3, 9, authorization_model.RoleWorkspaceAdmin),
+		),
+	}
+
+	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
+	err := svc.RemoveUserFromWorkspace(context.Background(), 1, 42, 5)
+
+	require.NoError(t, err)
+	assert.Empty(t, userer.removedRoleIDs)
 }

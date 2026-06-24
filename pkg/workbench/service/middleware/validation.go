@@ -27,7 +27,7 @@ func Validation(validate *val.Validate) func(service.Workbencher) service.Workbe
 	}
 }
 
-func (v validation) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (v validation) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, cerr.WrapValidationError(err)
 	}
@@ -63,7 +63,7 @@ func (v validation) CreateWorkbench(ctx context.Context, workbench *model.Workbe
 	return v.next.CreateWorkbench(ctx, workbench)
 }
 
-func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (v validation) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, cerr.WrapValidationError(err)
 	}
@@ -92,11 +92,11 @@ func (v validation) CreateAppInstance(ctx context.Context, appInstance *model.Ap
 	return v.next.CreateAppInstance(ctx, appInstance)
 }
 
-func (v validation) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (v validation) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	if err := v.validate.Struct(role); err != nil {
 		return cerr.WrapValidationError(err)
 	}
-	return v.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+	return v.next.AddUserRoleInWorkbench(ctx, tenantID, userID, role)
 }
 
 func (v validation) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error {

@@ -157,8 +157,8 @@ func (c workspaceControllerAudit) DeleteWorkspace(ctx context.Context, req *chor
 	return res, err
 }
 
-func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
-	res, err := c.next.ManageUserRoleInWorkspace(ctx, req)
+func (c workspaceControllerAudit) AddUserRoleInWorkspace(ctx context.Context, req *chorus.AddUserRoleInWorkspaceRequest) (*chorus.AddUserRoleInWorkspaceReply, error) {
+	res, err := c.next.AddUserRoleInWorkspace(ctx, req)
 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),

@@ -28,7 +28,7 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListWorkbenches(ctx, tenantID, pagination, filter)
@@ -165,7 +165,7 @@ func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench 
 	return newWorkbench, nil
 }
 
-func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination, filter)
@@ -263,10 +263,10 @@ func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInsta
 	return newAppInstance, nil
 }
 
-func (c workbenchServiceLogging) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (c workbenchServiceLogging) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	now := time.Now()
 
-	err := c.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+	err := c.next.AddUserRoleInWorkbench(ctx, tenantID, userID, role)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

@@ -177,6 +177,10 @@ func ToAppInstanceStatus(status string) (AppInstanceStatus, error) {
 	}
 }
 
+type AppInstanceFilter struct {
+	WorkbenchIDsIn *[]uint64
+}
+
 func (AppInstance) IsValidSortType(sortType string) bool {
 	validSortTypes := map[string]bool{
 		"id":                     true,
