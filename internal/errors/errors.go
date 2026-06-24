@@ -37,7 +37,7 @@ func (e *ChorusError) Error() string {
 	return e.Message
 }
 
-func (e *ChorusError) ToGRPCStatus(includeStackTrace ...bool) *status.Status {
+func (e *ChorusError) ToGRPCStatus(includeStackTrace bool) *status.Status {
 	st := status.New(e.GRPCCode, e.Message)
 
 	detail := &errorspb.ErrorDetail{
@@ -46,7 +46,7 @@ func (e *ChorusError) ToGRPCStatus(includeStackTrace ...bool) *status.Status {
 		Message:          e.Message,
 		ValidationErrors: e.ValidationErrors,
 	}
-	if len(includeStackTrace) > 0 && includeStackTrace[0] {
+	if includeStackTrace {
 		detail.StackTrace = e.StackTrace()
 	}
 
