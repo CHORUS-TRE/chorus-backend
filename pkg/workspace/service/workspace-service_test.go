@@ -437,7 +437,7 @@ func TestGetWorkspaceServiceInstanceSecrets_EmptySecretReturnsEmpty(t *testing.T
 func TestGetWorkspaceServiceInstanceSecrets_NoSecretNameReturnsEmpty(t *testing.T) {
 	store := &mockWorkspaceStore{
 		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
-			return &model.WorkspaceServiceInstance{CredentialsPaths: model.StringSlice{"username"}}, nil
+			return &model.WorkspaceServiceInstance{}, nil
 		},
 	}
 	k8sClient := &mockK8s{getSecretErr: errors.New("should not be called")}
@@ -453,8 +453,7 @@ func TestGetWorkspaceServiceInstanceSecrets_SecretReadErrorPropagates(t *testing
 	store := &mockWorkspaceStore{
 		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
 			return &model.WorkspaceServiceInstance{
-				SecretName:       "svc-secret",
-				CredentialsPaths: model.StringSlice{"username"},
+				SecretName: "svc-secret",
 			}, nil
 		},
 	}
