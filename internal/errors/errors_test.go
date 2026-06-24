@@ -94,7 +94,7 @@ func TestErrorsIs_CauseChain(t *testing.T) {
 
 func TestToGRPCStatus(t *testing.T) {
 	err := ErrNotFound.WithMessage("workspace 7 not found")
-	st := err.ToGRPCStatus()
+	st := err.ToGRPCStatus(false)
 
 	assert.Equal(t, codes.NotFound, st.Code())
 	assert.Equal(t, "workspace 7 not found", st.Message())
@@ -107,10 +107,29 @@ func TestToGRPCStatus(t *testing.T) {
 	assert.Equal(t, "workspace 7 not found", detail.Message)
 }
 
+func TestToGRPCStatus_StackTraceOmittedByDefault(t *testing.T) {
+	err := ErrInternal.WithMessage("boom")
+	st := err.ToGRPCStatus(false)
+
+	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
+	require.True(t, ok)
+	assert.Empty(t, detail.StackTrace)
+}
+
+func TestToGRPCStatus_StackTraceIncludedWhenRequested(t *testing.T) {
+	err := ErrInternal.WithMessage("boom")
+	st := err.ToGRPCStatus(true)
+
+	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
+	require.True(t, ok)
+	assert.NotEmpty(t, detail.StackTrace)
+	assert.Contains(t, detail.StackTrace, "errors_test.go")
+}
+
 func TestToGRPCStatus_CausedByNotExposed(t *testing.T) {
 	cause := fmt.Errorf("secret db error")
 	err := ErrInternal.Wrap(cause, "something went wrong")
-	st := err.ToGRPCStatus()
+	st := err.ToGRPCStatus(false)
 
 	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
 	require.True(t, ok)
@@ -122,7 +141,7 @@ func TestToGRPCStatus_CausedByNotExposed(t *testing.T) {
 
 func TestToGRPCStatus_RoundTrip(t *testing.T) {
 	err := ErrPermissionDenied.WithMessage("not your resource")
-	st := err.ToGRPCStatus()
+	st := err.ToGRPCStatus(false)
 
 	// Simulate what the interceptor does: convert to gRPC error and back
 	grpcErr := st.Err()
@@ -169,7 +188,7 @@ func TestToGRPCStatus_WithValidationErrors(t *testing.T) {
 		{Field: "LastName", Reason: "required"},
 	}
 	err := ErrValidation.WithMessage("Validation error").WithValidationErrors(fields)
-	st := err.ToGRPCStatus()
+	st := err.ToGRPCStatus(false)
 
 	assert.Equal(t, codes.InvalidArgument, st.Code())
 
@@ -188,7 +207,7 @@ func TestToGRPCStatus_WithValidationErrors(t *testing.T) {
 
 func TestToGRPCStatus_WithoutValidationErrors(t *testing.T) {
 	err := ErrNotFound.WithMessage("not found")
-	st := err.ToGRPCStatus()
+	st := err.ToGRPCStatus(false)
 
 	detail, ok := st.Details()[0].(*errorspb.ErrorDetail)
 	require.True(t, ok)

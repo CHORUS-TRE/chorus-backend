@@ -51,6 +51,8 @@ message ErrorDetail {
     string message = 4;
     // Field-level validation errors (only populated for VALIDATION_ERROR)
     repeated ValidationError validation_errors = 5;
+    // Debug-only stack trace; empty unless server has stacktrace exposure enabled.
+    string stack_trace = 6;
 }
 
 // ChorusErrorResponse is the JSON body returned for every API error.

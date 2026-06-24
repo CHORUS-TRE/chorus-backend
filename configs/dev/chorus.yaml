@@ -21,6 +21,7 @@ daemon:
   private_key_file: ./configs/dev/files/keys/chorus_privkey.pem
   public_key_file: ./configs/dev/files/keys/chorus_pubkey.pem
   salt: primary-2tiptop-violator-6bloating-2coastline-1spearmint-unruffled5-comfy-operation4
+  expose_error_stack_trace: true
   jobs:
     app-sync:
       enabled: true

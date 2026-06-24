@@ -37,15 +37,20 @@ func (e *ChorusError) Error() string {
 	return e.Message
 }
 
-func (e *ChorusError) ToGRPCStatus() *status.Status {
+func (e *ChorusError) ToGRPCStatus(includeStackTrace bool) *status.Status {
 	st := status.New(e.GRPCCode, e.Message)
 
-	statusWithDetails, err := st.WithDetails(&errorspb.ErrorDetail{
+	detail := &errorspb.ErrorDetail{
 		ChorusCode:       e.ChorusCode,
 		Title:            e.Title,
 		Message:          e.Message,
 		ValidationErrors: e.ValidationErrors,
-	})
+	}
+	if includeStackTrace {
+		detail.StackTrace = e.StackTrace()
+	}
+
+	statusWithDetails, err := st.WithDetails(detail)
 	if err != nil {
 		return st
 	}

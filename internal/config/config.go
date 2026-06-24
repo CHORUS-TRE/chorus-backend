@@ -55,6 +55,8 @@ type (
 
 		PPROFEnabled bool `yaml:"pprof_enabled"`
 
+		ExposeErrorStackTrace bool `yaml:"expose_error_stack_trace"`
+
 		PrivateKeyFile string `yaml:"private_key_file"`
 		PrivateKey     string `yaml:"private_key"`
 		PublicKeyFile  string `yaml:"public_key_file"`

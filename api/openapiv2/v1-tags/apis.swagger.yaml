@@ -6531,6 +6531,9 @@ definitions:
           type: object
           $ref: '#/definitions/chorusValidationError'
         title: Field-level validation errors (only populated for VALIDATION_ERROR)
+      stackTrace:
+        type: string
+        description: Debug-only stack trace; empty unless server has stacktrace exposure enabled.
     description: A single error occurrence; Chorus errors return exactly one in ChorusErrorResponse.details.
   chorusGetAppInstanceReply:
     type: object

@@ -23,6 +23,7 @@ func TestDecodeDaemon(t *testing.T) {
 	require.Equal(t, 10*time.Second, cfg.Daemon.JWT.ExpirationTime)
 	require.Equal(t, 10, cfg.Daemon.TOTP.NumRecoveryCodes)
 	require.Equal(t, true, cfg.Daemon.PPROFEnabled)
+	require.Equal(t, true, cfg.Daemon.ExposeErrorStackTrace)
 	require.Equal(t, "True-Client-IP", cfg.Daemon.HTTP.HeaderClientIP)
 }
 
