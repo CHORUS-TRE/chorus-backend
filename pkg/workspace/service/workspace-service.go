@@ -18,6 +18,7 @@ import (
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
+	workbench_model "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"go.uber.org/zap"
 )
@@ -34,7 +35,7 @@ type Workspaceer interface {
 	UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error)
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
 
-	ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
 
@@ -50,6 +51,7 @@ type WorkspaceServiceInstanceFilter struct {
 }
 
 type Workbencher interface {
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter workbench_model.WorkbenchFilter) ([]*workbench_model.Workbench, *common_model.PaginationResult, error)
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 }
 
@@ -360,31 +362,33 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 	return newWorkspace, nil
 }
 
-func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (s *WorkspaceService) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Check if the user already has the role in the workspace
+	workspaceRoleID := uint64(0)
 	for _, r := range user.Roles {
-		if r.Context["workspace"] == role.Context["workspace"] {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		if r.Context["workspace"] == role.Context["workspace"] && r.Role.Name == role.Role.Name {
+			workspaceRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
-		if err != nil {
-			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workspace roles for user %v for workspace %v", userID, role.Context["workspace"]))
-		}
+	if workspaceRoleID != 0 {
+		return cerr.ErrAlreadyExists.WithMessage(fmt.Sprintf("User %v already has role %v in workspace %v", userID, role.Role.Name, role.Context["workspace"]))
 	}
 
+	// Assign the role to the user
 	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workspace admin role to user %v for workspace %v", userID, tenantID))
 	}
 
+	// Notify the user about the new role
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
 		UserID:   userID,
@@ -404,27 +408,40 @@ func (s *WorkspaceService) ManageUserRoleInWorkspace(ctx context.Context, tenant
 }
 
 func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
+	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Get workspace roles and matchin role
+	workspaceRolesIDs := []uint64{}
+	matchingRoleID := uint64(0)
 	for _, r := range user.Roles {
-		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) && r.Role.Name == roleName {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) && r.Context["workbench"] == "" {
+			workspaceRolesIDs = append(workspaceRolesIDs, r.ID)
+			if r.Role.Name == roleName {
+				matchingRoleID = r.ID
+			}
 		}
 	}
 
-	if len(matchingRolesIDs) == 0 {
+	if matchingRoleID == 0 {
 		return cerr.ErrNotFound.WithMessage(fmt.Sprintf("User %v does not have role %v in workspace %v", userID, roleName, workspaceID))
 	}
 
-	err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	// If the user has only one workspace role left, remove the user from the workspace
+	if len(workspaceRolesIDs) == 1 {
+		return s.RemoveUserFromWorkspace(ctx, tenantID, userID, workspaceID)
+	}
+
+	// Remove the role from the user
+	err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{matchingRoleID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove role %v from user %v in workspace %v", roleName, userID, workspaceID))
 	}
 
+	// Notify the user about the removed role
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
 		UserID:   userID,
@@ -444,11 +461,13 @@ func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenant
 }
 
 func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error {
+	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
+	// Get the user's roles in workspace and workbenches
 	matchingRolesIDs := []uint64{}
 	for _, r := range user.Roles {
 		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) {
@@ -456,11 +475,28 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 		}
 	}
 
+	// Remove the user's roles in workspace
 	if len(matchingRolesIDs) != 0 {
 		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
 		if err != nil {
-			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workspace roles for user %v for workspace %v", userID, workspaceID))
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing roles for user %v in workspace %v", userID, workspaceID))
 		}
+	}
+
+	// Notify the user about being removed from the workspace
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		UserID:   userID,
+		Message:  fmt.Sprintf("You have been removed from workspace %v", workspaceID),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: &notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v about being removed from workspace %v", userID, workspaceID))
 	}
 
 	return nil

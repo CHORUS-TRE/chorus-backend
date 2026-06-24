@@ -214,7 +214,7 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 	return &chorus.CreateWorkspaceReply{Result: &chorus.CreateWorkspaceResult{Workspace: tgWorkspace}}, nil
 }
 
-func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+func (c WorkspaceController) AddUserRoleInWorkspace(ctx context.Context, req *chorus.AddUserRoleInWorkspaceRequest) (*chorus.AddUserRoleInWorkspaceReply, error) {
 	if req == nil {
 		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
@@ -229,7 +229,7 @@ func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req 
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract role from request")
 	}
 
-	err = c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
+	err = c.workspace.AddUserRoleInWorkspace(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req 
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
-	return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
+	return &chorus.AddUserRoleInWorkspaceReply{Result: &chorus.AddUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
 
 }
 

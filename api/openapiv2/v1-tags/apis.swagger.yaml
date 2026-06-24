@@ -3994,14 +3994,14 @@ paths:
         - WorkbenchService
   /api/rest/v1/workbenches/{id}/user/{userId}/role:
     post:
-      summary: Manage a user's role in a workbench
-      description: This endpoint manages a user's role in a workbench
-      operationId: WorkbenchService_ManageUserRoleInWorkbench
+      summary: Add a user's role in a workbench
+      description: This endpoint adds a user's role in a workbench
+      operationId: WorkbenchService_AddUserRoleInWorkbench
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
+            $ref: '#/definitions/chorusAddUserRoleInWorkbenchReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema:
@@ -4041,7 +4041,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkbenchServiceManageUserRoleInWorkbenchBody'
+            $ref: '#/definitions/WorkbenchServiceAddUserRoleInWorkbenchBody'
       tags:
         - WorkbenchService
   /api/rest/v1/workbenchs:
@@ -4334,14 +4334,14 @@ paths:
         - WorkbenchService
   /api/rest/v1/workbenchs/{id}/user/{userId}/role:
     post:
-      summary: Manage a user's role in a workbench
-      description: This endpoint manages a user's role in a workbench
-      operationId: WorkbenchService_ManageUserRoleInWorkbench2
+      summary: Add a user's role in a workbench
+      description: This endpoint adds a user's role in a workbench
+      operationId: WorkbenchService_AddUserRoleInWorkbench2
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusManageUserRoleInWorkbenchReply'
+            $ref: '#/definitions/chorusAddUserRoleInWorkbenchReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema:
@@ -4381,7 +4381,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkbenchServiceManageUserRoleInWorkbenchBody'
+            $ref: '#/definitions/WorkbenchServiceAddUserRoleInWorkbenchBody'
       tags:
         - WorkbenchService
   /api/rest/v1/workspace-service-instances:
@@ -4983,14 +4983,14 @@ paths:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}/role:
     post:
-      summary: Manage a user's role in a workspace
-      description: This endpoint manages a user's role in a workspace
-      operationId: WorkspaceService_ManageUserRoleInWorkspace
+      summary: Add a user's role in a workspace
+      description: This endpoint adds a user's role in a workspace
+      operationId: WorkspaceService_AddUserRoleInWorkspace
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusManageUserRoleInWorkspaceReply'
+            $ref: '#/definitions/chorusAddUserRoleInWorkspaceReply'
         "400":
           description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
           schema:
@@ -5030,7 +5030,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
+            $ref: '#/definitions/WorkspaceServiceAddUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}:
@@ -5627,12 +5627,12 @@ definitions:
   UserServiceResetPasswordBody:
     type: object
     title: Reset Password
-  WorkbenchServiceManageUserRoleInWorkbenchBody:
+  WorkbenchServiceAddUserRoleInWorkbenchBody:
     type: object
     properties:
       role:
         $ref: '#/definitions/chorusRole'
-  WorkspaceServiceManageUserRoleInWorkspaceBody:
+  WorkspaceServiceAddUserRoleInWorkspaceBody:
     type: object
     properties:
       role:
@@ -5656,6 +5656,26 @@ definitions:
     properties:
       termsOfUseAcceptance:
         $ref: '#/definitions/chorusTermsOfUseAcceptance'
+  chorusAddUserRoleInWorkbenchReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAddUserRoleInWorkbenchResult'
+  chorusAddUserRoleInWorkbenchResult:
+    type: object
+    properties:
+      workbench:
+        $ref: '#/definitions/chorusWorkbench'
+  chorusAddUserRoleInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAddUserRoleInWorkspaceResult'
+  chorusAddUserRoleInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusApp:
     type: object
     properties:
@@ -6920,26 +6940,6 @@ definitions:
         type: string
   chorusLogoutRequest:
     type: object
-  chorusManageUserRoleInWorkbenchReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusManageUserRoleInWorkbenchResult'
-  chorusManageUserRoleInWorkbenchResult:
-    type: object
-    properties:
-      workbench:
-        $ref: '#/definitions/chorusWorkbench'
-  chorusManageUserRoleInWorkspaceReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusManageUserRoleInWorkspaceResult'
-  chorusManageUserRoleInWorkspaceResult:
-    type: object
-    properties:
-      workspace:
-        $ref: '#/definitions/chorusWorkspace'
   chorusMarkNotificationsAsReadRequest:
     type: object
     properties:

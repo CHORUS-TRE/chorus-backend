@@ -63,8 +63,8 @@ func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Worksp
 	return v.next.CreateWorkspace(ctx, workspace)
 }
 
-func (v validation) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	return v.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+func (v validation) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return v.next.AddUserRoleInWorkspace(ctx, tenantID, userID, role)
 }
 
 func (v validation) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
