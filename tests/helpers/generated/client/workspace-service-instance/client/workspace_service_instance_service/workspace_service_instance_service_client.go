@@ -62,6 +62,8 @@ type ClientService interface {
 
 	WorkspaceServiceInstanceServiceGetWorkspaceServiceInstance(params *WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceParams, opts ...ClientOption) (*WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceOK, error)
 
+	WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecrets(params *WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsParams, opts ...ClientOption) (*WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsOK, error)
+
 	WorkspaceServiceInstanceServiceListWorkspaceServiceInstances(params *WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesParams, opts ...ClientOption) (*WorkspaceServiceInstanceServiceListWorkspaceServiceInstancesOK, error)
 
 	WorkspaceServiceInstanceServiceUpdateWorkspaceServiceInstance(params *WorkspaceServiceInstanceServiceUpdateWorkspaceServiceInstanceParams, opts ...ClientOption) (*WorkspaceServiceInstanceServiceUpdateWorkspaceServiceInstanceOK, error)
@@ -186,6 +188,46 @@ func (a *Client) WorkspaceServiceInstanceServiceGetWorkspaceServiceInstance(para
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for WorkspaceServiceInstanceService_GetWorkspaceServiceInstance: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecrets gets the secrets of a workspace service instance
+
+This endpoint returns the secrets of the deployed service.
+*/
+func (a *Client) WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecrets(params *WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsParams, opts ...ClientOption) (*WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workspace-service-instances/{id}/secrets",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceInstanceServiceGetWorkspaceServiceInstanceSecretsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

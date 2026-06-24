@@ -40,6 +40,7 @@ type Workspaceer interface {
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
 
 	GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error)
+	GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error)
 	ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error)
 	CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
 	UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
@@ -508,6 +509,30 @@ func (s *WorkspaceService) GetWorkspaceServiceInstance(ctx context.Context, tena
 		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workspace service instance %v", workspaceServiceInstanceID))
 	}
 	return svc, nil
+}
+
+func (s *WorkspaceService) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	svc, err := s.store.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workspace service instance %v", workspaceServiceInstanceID))
+	}
+
+	secrets := map[string]string{}
+	if svc.SecretName == "" {
+		return secrets, nil
+	}
+
+	namespace := model.GetWorkspaceClusterName(svc.WorkspaceID)
+	data, err := s.k8sClient.GetSecret(namespace, svc.SecretName)
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get secret for workspace service instance %v", workspaceServiceInstanceID))
+	}
+
+	for k, v := range data {
+		secrets[k] = string(v)
+	}
+
+	return secrets, nil
 }
 
 func (s *WorkspaceService) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {

@@ -37,8 +37,9 @@ const (
 
 	// Workspace Service Instance
 	AuditActionServiceInstanceCreate AuditAction = "CreateServiceInstance"
-	AuditActionServiceInstanceRead   AuditAction = "ReadServiceInstance"
-	AuditActionServiceInstanceUpdate AuditAction = "UpdateServiceInstance"
+	AuditActionServiceInstanceRead       AuditAction = "ReadServiceInstance"
+	AuditActionServiceInstanceReadSecret AuditAction = "ReadServiceInstanceSecret"
+	AuditActionServiceInstanceUpdate     AuditAction = "UpdateServiceInstance"
 	AuditActionServiceInstanceDelete AuditAction = "DeleteServiceInstance"
 	AuditActionServiceInstanceList   AuditAction = "ListServiceInstance"
 

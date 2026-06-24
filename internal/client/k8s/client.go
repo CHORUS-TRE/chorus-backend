@@ -56,6 +56,7 @@ type K8sClienter interface {
 	// Utility operations
 	CreatePortForward(namespace, serviceName string) (uint16, chan struct{}, error)
 	PrePullImageOnAllNodes(image string)
+	GetSecret(namespace, name string) (map[string][]byte, error)
 
 	// Watcher operations
 	RegisterOnNewWorkbenchHandler(func(workbench Workbench) error) error
@@ -438,6 +439,16 @@ func (c *client) CreatePortForward(namespace, serviceName string) (uint16, chan 
 	port := forwardedPorts[0]
 
 	return port.Local, stopChan, nil
+}
+
+// GetSecret returns the data of the named secret in the given namespace.
+func (c *client) GetSecret(namespace, name string) (map[string][]byte, error) {
+	secret, err := c.k8sClient.CoreV1().Secrets(namespace).Get(context.Background(), name, v1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to get secret %q in namespace %q: %w", name, namespace, err)
+	}
+
+	return secret.Data, nil
 }
 
 func (c *client) PrePullImageOnAllNodes(image string) {

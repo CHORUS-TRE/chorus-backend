@@ -48,6 +48,16 @@ message GetWorkspaceServiceInstanceResult {
     WorkspaceServiceInstance workspaceServiceInstance = 1;
 }
 
+message GetWorkspaceServiceInstanceSecretsRequest {
+    uint64 id = 1;
+}
+message GetWorkspaceServiceInstanceSecretsReply {
+    GetWorkspaceServiceInstanceSecretsResult result = 1;
+}
+message GetWorkspaceServiceInstanceSecretsResult {
+    map<string, string> secrets = 1;
+}
+
 message CreateWorkspaceServiceInstanceReply {
     CreateWorkspaceServiceInstanceResult result = 1;
 }
@@ -80,6 +90,17 @@ service WorkspaceServiceInstanceService {
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
             summary: "Get a workspace service instance";
             description: "This endpoint returns a workspace service instance";
+            tags: "WorkspaceServiceInstanceService";
+        };
+    };
+
+    rpc GetWorkspaceServiceInstanceSecrets(GetWorkspaceServiceInstanceSecretsRequest) returns (GetWorkspaceServiceInstanceSecretsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspace-service-instances/{id}/secrets"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get the secrets of a workspace service instance";
+            description: "This endpoint returns the secrets of the deployed service.";
             tags: "WorkspaceServiceInstanceService";
         };
     };

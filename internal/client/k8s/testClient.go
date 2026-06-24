@@ -55,6 +55,10 @@ func (c *testClient) CreatePortForward(namespace, serviceName string) (uint16, c
 	return 0, nil, nil
 }
 
+func (c *testClient) GetSecret(namespace, name string) (map[string][]byte, error) {
+	return nil, nil
+}
+
 // Watchers registration methods
 func (c *testClient) RegisterOnNewWorkbenchHandler(func(workbench Workbench) error) error {
 	return nil
