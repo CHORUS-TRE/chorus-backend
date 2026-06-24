@@ -138,7 +138,7 @@ func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, r
 	return c.next.DeleteWorkspace(ctx, req)
 }
 
-func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+func (c workspaceControllerAuthorization) AddUserRoleInWorkspace(ctx context.Context, req *chorus.AddUserRoleInWorkspaceRequest) (*chorus.AddUserRoleInWorkspaceReply, error) {
 	roleName, err := authorization.ToRoleName(req.Role.Name)
 	if err != nil {
 		return nil, fmt.Errorf("invalid role name: %w", err)
@@ -168,7 +168,7 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 		return nil, err
 	}
 
-	return c.next.ManageUserRoleInWorkspace(ctx, req)
+	return c.next.AddUserRoleInWorkspace(ctx, req)
 }
 
 func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.Context, req *chorus.RemoveUserRoleInWorkspaceRequest) (*chorus.RemoveUserRoleInWorkspaceReply, error) {

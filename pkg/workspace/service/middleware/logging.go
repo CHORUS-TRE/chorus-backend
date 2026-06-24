@@ -149,10 +149,10 @@ func (c workspaceServiceLogging) CreateWorkspace(ctx context.Context, workspace 
 	return newWorkspace, nil
 }
 
-func (c workspaceServiceLogging) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (c workspaceServiceLogging) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	now := time.Now()
 
-	err := c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+	err := c.next.AddUserRoleInWorkspace(ctx, tenantID, userID, role)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),

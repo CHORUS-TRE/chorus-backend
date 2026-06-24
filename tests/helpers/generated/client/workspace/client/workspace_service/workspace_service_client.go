@@ -56,6 +56,8 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	WorkspaceServiceAddUserRoleInWorkspace(params *WorkspaceServiceAddUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceAddUserRoleInWorkspaceOK, error)
+
 	WorkspaceServiceCreateWorkspace(params *WorkspaceServiceCreateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceCreateWorkspaceOK, error)
 
 	WorkspaceServiceDeleteWorkspace(params *WorkspaceServiceDeleteWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceDeleteWorkspaceOK, error)
@@ -66,8 +68,6 @@ type ClientService interface {
 
 	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
-	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
-
 	WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServiceRemoveUserFromWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserFromWorkspaceOK, error)
 
 	WorkspaceServiceRemoveUserRoleInWorkspace(params *WorkspaceServiceRemoveUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserRoleInWorkspaceOK, error)
@@ -75,6 +75,46 @@ type ClientService interface {
 	WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+WorkspaceServiceAddUserRoleInWorkspace adds a user s role in a workspace
+
+This endpoint adds a user's role in a workspace
+*/
+func (a *Client) WorkspaceServiceAddUserRoleInWorkspace(params *WorkspaceServiceAddUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceAddUserRoleInWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceAddUserRoleInWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_AddUserRoleInWorkspace",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceAddUserRoleInWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceAddUserRoleInWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_AddUserRoleInWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -274,46 +314,6 @@ func (a *Client) WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWork
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for WorkspaceService_ListWorkspaces: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-WorkspaceServiceManageUserRoleInWorkspace manages a user s role in a workspace
-
-This endpoint manages a user's role in a workspace
-*/
-func (a *Client) WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewWorkspaceServiceManageUserRoleInWorkspaceParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "WorkspaceService_ManageUserRoleInWorkspace",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &WorkspaceServiceManageUserRoleInWorkspaceReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*WorkspaceServiceManageUserRoleInWorkspaceOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for WorkspaceService_ManageUserRoleInWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -90,8 +90,8 @@ func (c *Caching) CreateWorkspace(ctx context.Context, workspace *model.Workspac
 	return c.next.CreateWorkspace(ctx, workspace)
 }
 
-func (c *Caching) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	return c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+func (c *Caching) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return c.next.AddUserRoleInWorkspace(ctx, tenantID, userID, role)
 }
 
 func (c *Caching) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {

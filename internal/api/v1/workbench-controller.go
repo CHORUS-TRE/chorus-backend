@@ -10,6 +10,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 )
 
@@ -114,7 +115,7 @@ func (c WorkbenchController) ListWorkbenches(ctx context.Context, req *chorus.Li
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	filter := service.WorkbenchFilter{}
+	filter := model.WorkbenchFilter{}
 	if req.Filter != nil {
 		filter.WorkspaceIDsIn = &req.Filter.WorkspaceIdsIn
 	}
@@ -178,7 +179,7 @@ func (c WorkbenchController) CreateWorkbench(ctx context.Context, req *chorus.Wo
 	return &chorus.CreateWorkbenchReply{Result: &chorus.CreateWorkbenchResult{Workbench: newWorkbenchProto}}, nil
 }
 
-func (c WorkbenchController) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
+func (c WorkbenchController) AddUserRoleInWorkbench(ctx context.Context, req *chorus.AddUserRoleInWorkbenchRequest) (*chorus.AddUserRoleInWorkbenchReply, error) {
 	if req == nil {
 		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
@@ -193,7 +194,7 @@ func (c WorkbenchController) ManageUserRoleInWorkbench(ctx context.Context, req 
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract role from request")
 	}
 
-	err = c.workbench.ManageUserRoleInWorkbench(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
+	err = c.workbench.AddUserRoleInWorkbench(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +209,7 @@ func (c WorkbenchController) ManageUserRoleInWorkbench(ctx context.Context, req 
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workbench")
 	}
 
-	return &chorus.ManageUserRoleInWorkbenchReply{Result: &chorus.ManageUserRoleInWorkbenchResult{Workbench: workbenchRes}}, nil
+	return &chorus.AddUserRoleInWorkbenchReply{Result: &chorus.AddUserRoleInWorkbenchResult{Workbench: workbenchRes}}, nil
 }
 
 func (c WorkbenchController) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
