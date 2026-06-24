@@ -136,6 +136,24 @@ paths:
           format: uint64
       tags:
         - WorkspaceServiceInstanceService
+  /api/rest/v1/workspace-service-instances/{id}/secrets:
+    get:
+      summary: Get the secrets of a workspace service instance
+      description: This endpoint returns the secrets of the deployed service.
+      operationId: WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkspaceServiceInstanceSecretsReply'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceServiceInstanceService
 definitions:
   chorusCreateWorkspaceServiceInstanceReply:
     type: object
@@ -167,6 +185,18 @@ definitions:
     properties:
       workspaceServiceInstance:
         $ref: '#/definitions/chorusWorkspaceServiceInstance'
+  chorusGetWorkspaceServiceInstanceSecretsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkspaceServiceInstanceSecretsResult'
+  chorusGetWorkspaceServiceInstanceSecretsResult:
+    type: object
+    properties:
+      secrets:
+        type: object
+        additionalProperties:
+          type: string
   chorusListWorkspaceServiceInstancesReply:
     type: object
     properties:

@@ -72,6 +72,43 @@ func local_request_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0
 	return msg, metadata, err
 }
 
+func request_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceInstanceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetWorkspaceServiceInstanceSecretsRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	io.Copy(io.Discard, req.Body)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := client.GetWorkspaceServiceInstanceSecrets(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0(ctx context.Context, marshaler runtime.Marshaler, server WorkspaceServiceInstanceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq GetWorkspaceServiceInstanceSecretsRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+	protoReq.Id, err = runtime.Uint64(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+	msg, err := server.GetWorkspaceServiceInstanceSecrets(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 var filter_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 
 func request_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceInstanceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -216,6 +253,26 @@ func RegisterWorkspaceServiceInstanceServiceHandlerServer(ctx context.Context, m
 		}
 		forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceServiceInstanceService/GetWorkspaceServiceInstanceSecrets", runtime.WithHTTPPathPattern("/api/rest/v1/workspace-service-instances/{id}/secrets"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -353,6 +410,23 @@ func RegisterWorkspaceServiceInstanceServiceHandlerClient(ctx context.Context, m
 		}
 		forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceServiceInstanceService/GetWorkspaceServiceInstanceSecrets", runtime.WithHTTPPathPattern("/api/rest/v1/workspace-service-instances/{id}/secrets"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodGet, pattern_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -425,17 +499,19 @@ func RegisterWorkspaceServiceInstanceServiceHandlerClient(ctx context.Context, m
 }
 
 var (
-	pattern_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspace-service-instances", "id"}, ""))
-	pattern_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspace-service-instances"}, ""))
-	pattern_WorkspaceServiceInstanceService_CreateWorkspaceServiceInstance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspace-service-instances"}, ""))
-	pattern_WorkspaceServiceInstanceService_UpdateWorkspaceServiceInstance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspace-service-instances"}, ""))
-	pattern_WorkspaceServiceInstanceService_DeleteWorkspaceServiceInstance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspace-service-instances", "id"}, ""))
+	pattern_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspace-service-instances", "id"}, ""))
+	pattern_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "rest", "v1", "workspace-service-instances", "id", "secrets"}, ""))
+	pattern_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspace-service-instances"}, ""))
+	pattern_WorkspaceServiceInstanceService_CreateWorkspaceServiceInstance_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspace-service-instances"}, ""))
+	pattern_WorkspaceServiceInstanceService_UpdateWorkspaceServiceInstance_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspace-service-instances"}, ""))
+	pattern_WorkspaceServiceInstanceService_DeleteWorkspaceServiceInstance_0     = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspace-service-instances", "id"}, ""))
 )
 
 var (
-	forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0    = runtime.ForwardResponseMessage
-	forward_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0  = runtime.ForwardResponseMessage
-	forward_WorkspaceServiceInstanceService_CreateWorkspaceServiceInstance_0 = runtime.ForwardResponseMessage
-	forward_WorkspaceServiceInstanceService_UpdateWorkspaceServiceInstance_0 = runtime.ForwardResponseMessage
-	forward_WorkspaceServiceInstanceService_DeleteWorkspaceServiceInstance_0 = runtime.ForwardResponseMessage
+	forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstance_0        = runtime.ForwardResponseMessage
+	forward_WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets_0 = runtime.ForwardResponseMessage
+	forward_WorkspaceServiceInstanceService_ListWorkspaceServiceInstances_0      = runtime.ForwardResponseMessage
+	forward_WorkspaceServiceInstanceService_CreateWorkspaceServiceInstance_0     = runtime.ForwardResponseMessage
+	forward_WorkspaceServiceInstanceService_UpdateWorkspaceServiceInstance_0     = runtime.ForwardResponseMessage
+	forward_WorkspaceServiceInstanceService_DeleteWorkspaceServiceInstance_0     = runtime.ForwardResponseMessage
 )

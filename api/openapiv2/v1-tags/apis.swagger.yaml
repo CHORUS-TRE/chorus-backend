@@ -4625,6 +4625,48 @@ paths:
           format: uint64
       tags:
         - WorkspaceServiceInstanceService
+  /api/rest/v1/workspace-service-instances/{id}/secrets:
+    get:
+      summary: Get the secrets of a workspace service instance
+      description: This endpoint returns the secrets of the deployed service.
+      operationId: WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetWorkspaceServiceInstanceSecretsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceServiceInstanceService
   /api/rest/v1/workspaces:
     get:
       summary: List workspaces
@@ -6638,6 +6680,18 @@ definitions:
     properties:
       workspaceServiceInstance:
         $ref: '#/definitions/chorusWorkspaceServiceInstance'
+  chorusGetWorkspaceServiceInstanceSecretsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkspaceServiceInstanceSecretsResult'
+  chorusGetWorkspaceServiceInstanceSecretsResult:
+    type: object
+    properties:
+      secrets:
+        type: object
+        additionalProperties:
+          type: string
   chorusInitializeTenantReply:
     type: object
     properties:
