@@ -106,6 +106,10 @@ func (c *Caching) GetWorkspaceServiceInstance(ctx context.Context, tenantID, wor
 	return c.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
 }
 
+func (c *Caching) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	return c.next.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, workspaceServiceInstanceID)
+}
+
 func (c *Caching) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
 	return c.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
 }

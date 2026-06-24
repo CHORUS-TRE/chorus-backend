@@ -79,6 +79,10 @@ func (v validation) GetWorkspaceServiceInstance(ctx context.Context, tenantID, w
 	return v.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
 }
 
+func (v validation) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	return v.next.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, workspaceServiceInstanceID)
+}
+
 func (v validation) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
 		return nil, nil, cerr.WrapValidationError(err)

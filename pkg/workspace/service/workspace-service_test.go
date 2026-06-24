@@ -27,8 +27,9 @@ import (
 // ---------------------------------------------------------------------------
 
 type mockWorkspaceStore struct {
-	createWorkspace      func(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
-	listPublicWorkspaces func(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
+	createWorkspace             func(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
+	listPublicWorkspaces        func(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
+	getWorkspaceServiceInstance func(ctx context.Context, tenantID, id uint64) (*model.WorkspaceServiceInstance, error)
 }
 
 func (m *mockWorkspaceStore) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
@@ -63,7 +64,10 @@ func (m *mockWorkspaceStore) UpdateWorkspaceStatus(_ context.Context, _ uint64, 
 	return nil
 }
 
-func (m *mockWorkspaceStore) GetWorkspaceServiceInstance(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+func (m *mockWorkspaceStore) GetWorkspaceServiceInstance(ctx context.Context, tenantID, id uint64) (*model.WorkspaceServiceInstance, error) {
+	if m.getWorkspaceServiceInstance != nil {
+		return m.getWorkspaceServiceInstance(ctx, tenantID, id)
+	}
 	return nil, nil
 }
 
@@ -127,19 +131,24 @@ func (m *mockUserer) GetUsers(ctx context.Context, tenantID uint64, userIDs []ui
 
 type mockK8s struct {
 	createWorkspaceErr error
+	getSecretData      map[string][]byte
+	getSecretErr       error
 }
 
-func (m *mockK8s) CreateWorkspace(_ k8s.WorkspaceInput) error                         { return m.createWorkspaceErr }
-func (m *mockK8s) UpdateWorkspace(_ k8s.WorkspaceInput) error                         { return nil }
-func (m *mockK8s) DeleteWorkspace(_ string) error                                     { return nil }
-func (m *mockK8s) CreateWorkbench(_ k8s.Workbench) error                              { return nil }
-func (m *mockK8s) UpdateWorkbench(_ k8s.Workbench) error                              { return nil }
-func (m *mockK8s) DeleteWorkbench(_, _ string) error                                  { return nil }
-func (m *mockK8s) CreateAppInstance(_, _ string, _ k8s.AppInstance) error             { return nil }
-func (m *mockK8s) UpdateAppInstance(_, _ string, _ k8s.AppInstance) error             { return nil }
-func (m *mockK8s) DeleteAppInstance(_, _ string, _ k8s.AppInstance) error             { return nil }
-func (m *mockK8s) CreatePortForward(_, _ string) (uint16, chan struct{}, error)       { return 0, nil, nil }
-func (m *mockK8s) PrePullImageOnAllNodes(_ string)                                    {}
+func (m *mockK8s) CreateWorkspace(_ k8s.WorkspaceInput) error                   { return m.createWorkspaceErr }
+func (m *mockK8s) UpdateWorkspace(_ k8s.WorkspaceInput) error                   { return nil }
+func (m *mockK8s) DeleteWorkspace(_ string) error                               { return nil }
+func (m *mockK8s) CreateWorkbench(_ k8s.Workbench) error                        { return nil }
+func (m *mockK8s) UpdateWorkbench(_ k8s.Workbench) error                        { return nil }
+func (m *mockK8s) DeleteWorkbench(_, _ string) error                            { return nil }
+func (m *mockK8s) CreateAppInstance(_, _ string, _ k8s.AppInstance) error       { return nil }
+func (m *mockK8s) UpdateAppInstance(_, _ string, _ k8s.AppInstance) error       { return nil }
+func (m *mockK8s) DeleteAppInstance(_, _ string, _ k8s.AppInstance) error       { return nil }
+func (m *mockK8s) CreatePortForward(_, _ string) (uint16, chan struct{}, error) { return 0, nil, nil }
+func (m *mockK8s) PrePullImageOnAllNodes(_ string)                              {}
+func (m *mockK8s) GetSecret(_, _ string) (map[string][]byte, error) {
+	return m.getSecretData, m.getSecretErr
+}
 func (m *mockK8s) RegisterOnNewWorkbenchHandler(_ func(k8s.Workbench) error) error    { return nil }
 func (m *mockK8s) RegisterOnUpdateWorkbenchHandler(_ func(k8s.Workbench) error) error { return nil }
 func (m *mockK8s) RegisterOnDeleteWorkbenchHandler(_ func(k8s.Workbench) error) error { return nil }
@@ -379,4 +388,80 @@ func TestListPublicWorkspaces_PropagatesGetUsersError(t *testing.T) {
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "user not found")
+}
+
+// ---------------------------------------------------------------------------
+// GetWorkspaceServiceInstanceSecrets
+// ---------------------------------------------------------------------------
+
+func TestGetWorkspaceServiceInstanceSecrets_ReturnsAllKeys(t *testing.T) {
+	store := &mockWorkspaceStore{
+		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+			return &model.WorkspaceServiceInstance{
+				ID:          7,
+				WorkspaceID: 3,
+				SecretName:  "svc-secret",
+			}, nil
+		},
+	}
+	k8sClient := &mockK8s{
+		getSecretData: map[string][]byte{
+			"username": []byte("alice"),
+			"password": []byte("s3cr3t"),
+			"extra":    []byte("value"),
+		},
+	}
+
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	secrets, err := svc.GetWorkspaceServiceInstanceSecrets(context.Background(), 1, 7)
+
+	require.NoError(t, err)
+	assert.Equal(t, map[string]string{"username": "alice", "password": "s3cr3t", "extra": "value"}, secrets)
+}
+
+func TestGetWorkspaceServiceInstanceSecrets_EmptySecretReturnsEmpty(t *testing.T) {
+	store := &mockWorkspaceStore{
+		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+			return &model.WorkspaceServiceInstance{SecretName: "svc-secret"}, nil
+		},
+	}
+	k8sClient := &mockK8s{getSecretData: map[string][]byte{}}
+
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	secrets, err := svc.GetWorkspaceServiceInstanceSecrets(context.Background(), 1, 7)
+
+	require.NoError(t, err)
+	assert.Empty(t, secrets)
+}
+
+func TestGetWorkspaceServiceInstanceSecrets_NoSecretNameReturnsEmpty(t *testing.T) {
+	store := &mockWorkspaceStore{
+		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+			return &model.WorkspaceServiceInstance{CredentialsPaths: model.StringSlice{"username"}}, nil
+		},
+	}
+	k8sClient := &mockK8s{getSecretErr: errors.New("should not be called")}
+
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	secrets, err := svc.GetWorkspaceServiceInstanceSecrets(context.Background(), 1, 7)
+
+	require.NoError(t, err)
+	assert.Empty(t, secrets)
+}
+
+func TestGetWorkspaceServiceInstanceSecrets_SecretReadErrorPropagates(t *testing.T) {
+	store := &mockWorkspaceStore{
+		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+			return &model.WorkspaceServiceInstance{
+				SecretName:       "svc-secret",
+				CredentialsPaths: model.StringSlice{"username"},
+			}, nil
+		},
+	}
+	k8sClient := &mockK8s{getSecretErr: errors.New("boom")}
+
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	_, err := svc.GetWorkspaceServiceInstanceSecrets(context.Background(), 1, 7)
+
+	require.Error(t, err)
 }

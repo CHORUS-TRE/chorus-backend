@@ -226,6 +226,27 @@ func (c workspaceServiceLogging) GetWorkspaceServiceInstance(ctx context.Context
 	return res, nil
 }
 
+func (c workspaceServiceLogging) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	now := time.Now()
+
+	res, err := c.next.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Int("num_secrets", len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
 func (c workspaceServiceLogging) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
