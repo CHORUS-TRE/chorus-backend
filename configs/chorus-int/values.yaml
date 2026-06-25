@@ -207,8 +207,9 @@ config:
       enabled: true
     k8s_client:
       enabled: true
-      api_server: "" # set in secret
       sa_secret_path: "/var/run/secrets/kubernetes.io/serviceaccount"
+      # Point to the internal API server hostname by default
+      api_server: "https://kubernetes.default.svc"
       server_version: "latest"
       add_user_details: true
       image_pull_secret: [] # set in secret
