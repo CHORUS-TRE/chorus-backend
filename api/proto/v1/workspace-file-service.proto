@@ -59,6 +59,7 @@ message ListWorkspaceFilesResult {
 message CreateWorkspaceFileRequest {
     uint64 workspaceId = 1;
     WorkspaceFile file = 2;
+    string complianceMessage = 3;
 }
 message CreateWorkspaceFileReply {
     CreateWorkspaceFileResult result = 1;
@@ -94,6 +95,7 @@ message InitiateWorkspaceFileUploadRequest {
     uint64 workspaceId = 1;
     string path = 2;
     WorkspaceFile file = 3;
+    string complianceMessage = 4;
 }
 message InitiateWorkspaceFileUploadReply {
     InitiateWorkspaceFileUploadResult result = 1;

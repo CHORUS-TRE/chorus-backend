@@ -5171,6 +5171,10 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
+        - name: complianceMessage
+          in: query
+          required: false
+          type: string
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
@@ -5374,6 +5378,10 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
+        - name: complianceMessage
+          in: query
+          required: false
+          type: string
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}:
