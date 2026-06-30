@@ -11,6 +11,8 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -70,13 +72,24 @@ type harborTag struct {
 	PushTime time.Time `json:"push_time"`
 }
 
+// imageRef identifies one image whose labels must be retrieved.
+type imageRef struct {
+	repository   string // full repository name, used for the resulting App
+	strippedName string // project-prefix-stripped name, used to address the registry
+	digest       string
+	tags         []harborTag
+}
+
 func (c *harborClient) ListApps() ([]App, error) {
 	repos, err := c.listRepositories()
 	if err != nil {
 		return nil, fmt.Errorf("listing repositories: %w", err)
 	}
 
-	var apps []App
+	// Collect the set of images to fetch labels for. Listing artifacts is cheap
+	// and paginated, so it stays serial; the per-image label fetches below are
+	// the expensive part and run concurrently.
+	var refs []imageRef
 	for _, repo := range repos {
 		strippedName := c.stripProjectPrefix(repo.Name)
 		artifacts, err := c.listArtifacts(strippedName)
@@ -88,19 +101,44 @@ func (c *harborClient) ListApps() ([]App, error) {
 			if len(artifact.Tags) == 0 {
 				continue
 			}
+			refs = append(refs, imageRef{
+				repository:   repo.Name,
+				strippedName: strippedName,
+				digest:       artifact.Digest,
+				tags:         artifact.Tags,
+			})
+		}
+	}
 
-			labels, err := c.fetchLabels(strippedName, artifact.Digest)
+	// Fetch labels in parallel, bounded by max_parallel_fetches. Each fetch
+	// writes into its own slot, so the results need no locking.
+	labelsByRef := make([]map[string]string, len(refs))
+	g := new(errgroup.Group)
+	g.SetLimit(int(c.cfg.MaxParallelFetches))
+	for i := range refs {
+		i := i
+		ref := refs[i]
+		g.Go(func() error {
+			labels, err := c.fetchLabels(ref.strippedName, ref.digest)
 			if err != nil {
-				return nil, fmt.Errorf("fetching labels for %s@%s: %w", strippedName, artifact.Digest, err)
+				return fmt.Errorf("fetching labels for %s@%s: %w", ref.strippedName, ref.digest, err)
 			}
+			labelsByRef[i] = labels
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
 
-			for _, tag := range artifact.Tags {
-				apps = append(apps, App{
-					Repository: repo.Name,
-					Tag:        tag.Name,
-					Labels:     labels,
-				})
-			}
+	var apps []App
+	for i, ref := range refs {
+		for _, tag := range ref.tags {
+			apps = append(apps, App{
+				Repository: ref.repository,
+				Tag:        tag.Name,
+				Labels:     labelsByRef[i],
+			})
 		}
 	}
 
