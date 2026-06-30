@@ -5,10 +5,16 @@ ALTER TABLE public.approval_requests
 ALTER TABLE public.approval_requests
     ADD COLUMN stepdecisions JSONB NOT NULL DEFAULT '{}'::jsonb;
 
--- Backfill: existing approverids becomes the "download" step so legacy
--- requests remain approvable by the same set of users.
+-- Backfill: the legacy approverids list seeds every step the request's type
+-- requires, so existing requests remain approvable by the same set of users.
 UPDATE public.approval_requests
-SET approveridsbystep = jsonb_build_object('download', COALESCE(to_jsonb(approverids), '[]'::jsonb))
+SET approveridsbystep = CASE
+    WHEN type = 'data_transfer' THEN jsonb_build_object(
+        'download', COALESCE(to_jsonb(approverids), '[]'::jsonb),
+        'upload', COALESCE(to_jsonb(approverids), '[]'::jsonb))
+    ELSE jsonb_build_object(
+        'download', COALESCE(to_jsonb(approverids), '[]'::jsonb))
+END
 WHERE approverids IS NOT NULL AND array_length(approverids, 1) > 0;
 
 -- The new column is queried in List / Count via a JSONB containment test,
