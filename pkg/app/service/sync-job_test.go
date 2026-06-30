@@ -2,7 +2,6 @@ package service
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -139,25 +138,24 @@ func appLabels(name, category, title string) map[string]string {
 }
 
 func TestAppsToCreate(t *testing.T) {
-	now := time.Now()
 	j := &AppSyncJob{registry: testRegistry}
 
-	// Deliberately out of order; PushTime should drive creation order.
+	// Deliberately out of order; Tag should drive creation order.
 	harborApps := []harbor.App{
-		{Repository: "newer", Tag: "1", PushTime: now.Add(2 * time.Hour), Labels: appLabels("newer", "Development", "Newer")},
-		{Repository: "internal", Tag: "1", PushTime: now.Add(time.Hour), Labels: appLabels("internal", categoryChorus, "Internal")},
-		{Repository: "older", Tag: "1", PushTime: now, Labels: appLabels("older", "Science", "Older")},
-		{Repository: "dup", Tag: "1", PushTime: now.Add(3 * time.Hour), Labels: appLabels("dup", "Science", "Existing")},
+		{Repository: "newer", Tag: "2.0.0-1", Labels: appLabels("newer", "Development", "Newer")},
+		{Repository: "internal", Tag: "1.5.0-1", Labels: appLabels("internal", categoryChorus, "Internal")},
+		{Repository: "older", Tag: "1.0.0-1", Labels: appLabels("older", "Science", "Older")},
+		{Repository: "dup", Tag: "3.0.0-1", Labels: appLabels("dup", "Science", "Existing")},
 	}
 
 	existing := map[string]struct{}{
-		appIdentity(&model.App{DockerImageName: "dup", DockerImageTag: "1", Name: "Existing"}): {},
+		appIdentity(&model.App{DockerImageName: "dup", DockerImageTag: "3.0.0-1", Name: "Existing"}): {},
 	}
 
 	toCreate := j.appsToCreate(harborApps, existing, 1, 1)
 
 	// "internal" (chorus) and "dup" (already existing) are skipped; the rest are
-	// ordered oldest-first.
+	// ordered by tag.
 	require.Len(t, toCreate, 2)
 	assert.Equal(t, "Older", toCreate[0].Name)
 	assert.Equal(t, "Newer", toCreate[1].Name)
