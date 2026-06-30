@@ -114,9 +114,9 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 }
 
 func (j *AppSyncJob) appsToCreate(harborApps []harbor.App, existing map[string]struct{}, tenantID, userID uint64) []*model.App {
-	// Sort Harbor apps by tag, highest version first.
+	// Sort Harbor apps by tag, lowest version first.
 	sort.SliceStable(harborApps, func(i, k int) bool {
-		return harborApps[i].Tag > harborApps[k].Tag
+		return harborApps[i].Tag < harborApps[k].Tag
 	})
 
 	var toCreate []*model.App
