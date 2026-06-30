@@ -41,8 +41,8 @@ message ApproverIds {
     repeated uint64 ids = 1;
 }
 
-// ArmApproval records a single per-arm approval decision.
-message ArmApproval {
+// ApprovalStepDecision records a single per-step approval decision.
+message ApprovalStepDecision {
     uint64 approverId = 1;
     google.protobuf.Timestamp approvedAt = 2;
     bool approve = 3;
@@ -63,11 +63,11 @@ message ApprovalRequest {
         DataTransferDetails dataTransfer = 9;
     }
 
-    // approverIdsByArm lists the user ids allowed to approve each arm of the
-    // request, keyed by arm name (e.g. "download", "upload"). A user that
-    // appears in every arm can approve the whole request in one step;
-    // otherwise each arm must be approved separately.
-    map<string, ApproverIds> approverIdsByArm = 10;
+    // approverIdsByStep lists the user ids allowed to approve each step of the
+    // request, keyed by step name (e.g. "download", "upload"). A user that
+    // appears in every step can approve the whole request in one go;
+    // otherwise each step must be approved separately.
+    map<string, ApproverIds> approverIdsByStep = 10;
     optional uint64 approvedById = 11;
 
     google.protobuf.Timestamp createdAt = 12;
@@ -77,6 +77,6 @@ message ApprovalRequest {
     bool autoApproved = 15;
     string approvalMessage = 16;
 
-    // armApprovals records the per-arm approval decisions made so far.
-    map<string, ArmApproval> armApprovals = 17;
+    // stepDecisions records the per-step approval decisions made so far.
+    map<string, ApprovalStepDecision> stepDecisions = 17;
 }

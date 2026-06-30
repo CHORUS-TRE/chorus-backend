@@ -14,10 +14,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusArmApproval ArmApproval records a single per-arm approval decision.
+// ChorusApprovalStepDecision ApprovalStepDecision records a single per-step approval decision.
 //
-// swagger:model chorusArmApproval
-type ChorusArmApproval struct {
+// swagger:model chorusApprovalStepDecision
+type ChorusApprovalStepDecision struct {
 
 	// approve
 	Approve bool `json:"approve,omitempty"`
@@ -30,8 +30,8 @@ type ChorusArmApproval struct {
 	ApproverID string `json:"approverId,omitempty"`
 }
 
-// Validate validates this chorus arm approval
-func (m *ChorusArmApproval) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus approval step decision
+func (m *ChorusApprovalStepDecision) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateApprovedAt(formats); err != nil {
@@ -44,7 +44,7 @@ func (m *ChorusArmApproval) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusArmApproval) validateApprovedAt(formats strfmt.Registry) error {
+func (m *ChorusApprovalStepDecision) validateApprovedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.ApprovedAt) { // not required
 		return nil
 	}
@@ -56,13 +56,13 @@ func (m *ChorusArmApproval) validateApprovedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus arm approval based on context it is used
-func (m *ChorusArmApproval) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this chorus approval step decision based on context it is used
+func (m *ChorusApprovalStepDecision) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusArmApproval) MarshalBinary() ([]byte, error) {
+func (m *ChorusApprovalStepDecision) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -70,8 +70,8 @@ func (m *ChorusArmApproval) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusArmApproval) UnmarshalBinary(b []byte) error {
-	var res ChorusArmApproval
+func (m *ChorusApprovalStepDecision) UnmarshalBinary(b []byte) error {
+	var res ChorusApprovalStepDecision
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

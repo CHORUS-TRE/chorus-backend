@@ -17,18 +17,18 @@ type ApprovalRequest struct {
 
 	Details ApprovalRequestDetails
 
-	// ApproverIDsByArm lists the user IDs allowed to approve each arm of the
-	// request, keyed by arm (see ApprovalRequestArm* constants).
-	// A user who appears in every arm can approve the whole request in one
-	// step; otherwise each arm must be approved separately by a user
-	// authorized for that arm.
-	ApproverIDsByArm map[Arm][]uint64
+	// ApproverIDsByStep lists the user IDs allowed to approve each step of the
+	// request, keyed by step (see Step* constants).
+	// A user who appears in every step can approve the whole request in one
+	// go; otherwise each step must be approved separately by a user
+	// authorized for that step.
+	ApproverIDsByStep map[ApprovalStep][]uint64
 
-	// ArmApprovals records the per-arm approval decisions made so far.
-	// The key is the arm. A request is fully approved once every arm
+	// StepDecisions records the per-step approval decisions made so far.
+	// The key is the step. A request is fully approved once every step
 	// it requires has an Approve=true entry; a single Approve=false entry
 	// rejects the whole request.
-	ArmApprovals map[Arm]ArmApproval
+	StepDecisions map[ApprovalStep]ApprovalStepDecision
 
 	ApprovedByID    *uint64
 	AutoApproved    bool
@@ -39,33 +39,33 @@ type ApprovalRequest struct {
 	ApprovedAt *time.Time
 }
 
-// ArmApproval records a single per-arm approval decision.
-type ArmApproval struct {
+// ApprovalStepDecision records a single per-step approval decision.
+type ApprovalStepDecision struct {
 	ApproverID uint64    `json:"approver_id"`
 	ApprovedAt time.Time `json:"approved_at"`
 	Approve    bool      `json:"approve"`
 }
 
-// Arm identifies one independently-approved leg of a request: the data leaving
-// a workspace ("download") and, for transfers, the data arriving in the
-// destination ("upload"). Each arm has its own approver set and is decided
-// separately.
-type Arm string
+// ApprovalStep identifies one independently-approved part of a request: the
+// data leaving a workspace ("download") and, for transfers, the data arriving
+// in the destination ("upload"). Each step has its own approver set and is
+// decided separately.
+type ApprovalStep string
 
-// Arm names used to partition the set of approvers for a request.
+// Step names used to partition the set of approvers for a request.
 const (
-	ApprovalRequestArmDownload Arm = "download"
-	ApprovalRequestArmUpload   Arm = "upload"
+	StepDownload ApprovalStep = "download"
+	StepUpload   ApprovalStep = "upload"
 )
 
-// ArmsForType returns the ordered list of arms that must be approved
+// StepsForType returns the ordered list of steps that must be approved
 // for a request of the given type.
-func ArmsForType(t ApprovalRequestType) []Arm {
+func StepsForType(t ApprovalRequestType) []ApprovalStep {
 	switch t {
 	case ApprovalRequestTypeDataExtraction:
-		return []Arm{ApprovalRequestArmDownload}
+		return []ApprovalStep{StepDownload}
 	case ApprovalRequestTypeDataTransfer:
-		return []Arm{ApprovalRequestArmDownload, ApprovalRequestArmUpload}
+		return []ApprovalStep{StepDownload, StepUpload}
 	default:
 		return nil
 	}
@@ -109,47 +109,47 @@ func (r *ApprovalRequest) CanBeApprovedBy(userID uint64) bool {
 	if r.IsFinalState() {
 		return false
 	}
-	return len(r.ArmsToApprove(userID)) > 0
+	return len(r.StepsToApprove(userID)) > 0
 }
 
-// ArmsToApprove returns the arms the given user is authorized to approve and
+// StepsToApprove returns the steps the given user is authorized to approve and
 // that have not yet been decided. The result is empty if the user has nothing
 // to approve on this request.
-func (r *ApprovalRequest) ArmsToApprove(userID uint64) []Arm {
+func (r *ApprovalRequest) StepsToApprove(userID uint64) []ApprovalStep {
 	if r.IsFinalState() {
 		return nil
 	}
 
-	arms := ArmsForType(r.Type)
-	// If no arms are declared (e.g. legacy/unknown type) but approver IDs
-	// are set, treat the union of all approver IDs as a single implicit arm.
-	if len(arms) == 0 {
-		if len(r.ApproverIDsByArm) == 0 {
+	steps := StepsForType(r.Type)
+	// If no steps are declared (e.g. legacy/unknown type) but approver IDs
+	// are set, treat the union of all approver IDs as a single implicit step.
+	if len(steps) == 0 {
+		if len(r.ApproverIDsByStep) == 0 {
 			return nil
 		}
-		for arm := range r.ApproverIDsByArm {
-			arms = append(arms, arm)
+		for step := range r.ApproverIDsByStep {
+			steps = append(steps, step)
 		}
 	}
 
-	var pending []Arm
-	for _, arm := range arms {
-		if _, decided := r.ArmApprovals[arm]; decided {
+	var pending []ApprovalStep
+	for _, step := range steps {
+		if _, decided := r.StepDecisions[step]; decided {
 			continue
 		}
-		if r.userIsApproverOf(userID, arm) {
-			pending = append(pending, arm)
+		if r.userIsApproverOf(userID, step) {
+			pending = append(pending, step)
 		}
 	}
 	return pending
 }
 
-func (r *ApprovalRequest) userIsApproverOf(userID uint64, arm Arm) bool {
-	approvers, ok := r.ApproverIDsByArm[arm]
+func (r *ApprovalRequest) userIsApproverOf(userID uint64, step ApprovalStep) bool {
+	approvers, ok := r.ApproverIDsByStep[step]
 	if !ok {
 		return false
 	}
-	// An empty approver list for an arm allows anyone to approve that arm
+	// An empty approver list for a step allows anyone to approve that step
 	// (matches the legacy behaviour where an empty list was permissive).
 	if len(approvers) == 0 {
 		return true
@@ -162,14 +162,14 @@ func (r *ApprovalRequest) userIsApproverOf(userID uint64, arm Arm) bool {
 	return false
 }
 
-// IsFullyApproved reports whether every required arm has been approved.
+// IsFullyApproved reports whether every required step has been approved.
 func (r *ApprovalRequest) IsFullyApproved() bool {
-	arms := ArmsForType(r.Type)
-	if len(arms) == 0 {
+	steps := StepsForType(r.Type)
+	if len(steps) == 0 {
 		return false
 	}
-	for _, arm := range arms {
-		decision, ok := r.ArmApprovals[arm]
+	for _, step := range steps {
+		decision, ok := r.StepDecisions[step]
 		if !ok || !decision.Approve {
 			return false
 		}
@@ -177,9 +177,9 @@ func (r *ApprovalRequest) IsFullyApproved() bool {
 	return true
 }
 
-// HasArmRejection reports whether any arm has been explicitly rejected.
-func (r *ApprovalRequest) HasArmRejection() bool {
-	for _, decision := range r.ArmApprovals {
+// HasStepRejection reports whether any step has been explicitly rejected.
+func (r *ApprovalRequest) HasStepRejection() bool {
+	for _, decision := range r.StepDecisions {
 		if !decision.Approve {
 			return true
 		}
@@ -187,11 +187,11 @@ func (r *ApprovalRequest) HasArmRejection() bool {
 	return false
 }
 
-// AllApproverIDs returns the deduplicated union of every approver across all arms.
+// AllApproverIDs returns the deduplicated union of every approver across all steps.
 func (r *ApprovalRequest) AllApproverIDs() []uint64 {
 	seen := make(map[uint64]struct{})
 	var ids []uint64
-	for _, approvers := range r.ApproverIDsByArm {
+	for _, approvers := range r.ApproverIDsByStep {
 		for _, id := range approvers {
 			if _, ok := seen[id]; ok {
 				continue

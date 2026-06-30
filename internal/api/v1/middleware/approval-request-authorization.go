@@ -129,8 +129,8 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 	}
 
 	// A user may approve a request if they hold the permission of at least
-	// one arm that is still pending. Approvers responsible for the remaining
-	// arms must approve those separately.
+	// one step that is still pending. Approvers responsible for the remaining
+	// steps must approve those separately.
 	var canApprove bool
 
 	switch approvalRequest.Type {
@@ -141,13 +141,13 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 		}
 	case approval_request_model.ApprovalRequestTypeDataTransfer:
 		sourceWorkspaceID := approvalRequest.GetSourceWorkspaceID()
-		if _, decided := approvalRequest.ArmApprovals[approval_request_model.ApprovalRequestArmDownload]; !decided {
+		if _, decided := approvalRequest.StepDecisions[approval_request_model.StepDownload]; !decided {
 			if err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(sourceWorkspaceID)); err == nil {
 				canApprove = true
 			}
 		}
 		targetWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
-		if _, decided := approvalRequest.ArmApprovals[approval_request_model.ApprovalRequestArmUpload]; !decided {
+		if _, decided := approvalRequest.StepDecisions[approval_request_model.StepUpload]; !decided {
 			if err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(targetWorkspaceID)); err == nil {
 				canApprove = true
 			}
@@ -157,7 +157,7 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 	}
 
 	if !canApprove {
-		return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve any pending arm of this request")
+		return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve any pending step of this request")
 	}
 
 	return c.next.ApproveApprovalRequest(ctx, req)

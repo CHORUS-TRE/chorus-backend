@@ -29,14 +29,11 @@ type ChorusApprovalRequest struct {
 	// approved by Id
 	ApprovedByID string `json:"approvedById,omitempty"`
 
-	// approverIdsByArm lists the user ids allowed to approve each arm of the
-	// request, keyed by arm name (e.g. "download", "upload"). A user that
-	// appears in every arm can approve the whole request in one step;
-	// otherwise each arm must be approved separately.
-	ApproverIdsByArm map[string]ChorusApproverIds `json:"approverIdsByArm,omitempty"`
-
-	// armApprovals records the per-arm approval decisions made so far.
-	ArmApprovals map[string]ChorusArmApproval `json:"armApprovals,omitempty"`
+	// approverIdsByStep lists the user ids allowed to approve each step of the
+	// request, keyed by step name (e.g. "download", "upload"). A user that
+	// appears in every step can approve the whole request in one go;
+	// otherwise each step must be approved separately.
+	ApproverIdsByStep map[string]ChorusApproverIds `json:"approverIdsByStep,omitempty"`
 
 	// auto approved
 	AutoApproved bool `json:"autoApproved,omitempty"`
@@ -63,6 +60,9 @@ type ChorusApprovalRequest struct {
 	// status
 	Status *ChorusApprovalRequestStatus `json:"status,omitempty"`
 
+	// stepDecisions records the per-step approval decisions made so far.
+	StepDecisions map[string]ChorusApprovalStepDecision `json:"stepDecisions,omitempty"`
+
 	// tenant Id
 	TenantID string `json:"tenantId,omitempty"`
 
@@ -85,11 +85,7 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateApproverIdsByArm(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateArmApprovals(formats); err != nil {
+	if err := m.validateApproverIdsByStep(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -106,6 +102,10 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateStatus(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStepDecisions(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -135,48 +135,22 @@ func (m *ChorusApprovalRequest) validateApprovedAt(formats strfmt.Registry) erro
 	return nil
 }
 
-func (m *ChorusApprovalRequest) validateApproverIdsByArm(formats strfmt.Registry) error {
-	if swag.IsZero(m.ApproverIdsByArm) { // not required
+func (m *ChorusApprovalRequest) validateApproverIdsByStep(formats strfmt.Registry) error {
+	if swag.IsZero(m.ApproverIdsByStep) { // not required
 		return nil
 	}
 
-	for k := range m.ApproverIdsByArm {
+	for k := range m.ApproverIdsByStep {
 
-		if err := validate.Required("approverIdsByArm"+"."+k, "body", m.ApproverIdsByArm[k]); err != nil {
+		if err := validate.Required("approverIdsByStep"+"."+k, "body", m.ApproverIdsByStep[k]); err != nil {
 			return err
 		}
-		if val, ok := m.ApproverIdsByArm[k]; ok {
+		if val, ok := m.ApproverIdsByStep[k]; ok {
 			if err := val.Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("approverIdsByArm" + "." + k)
+					return ve.ValidateName("approverIdsByStep" + "." + k)
 				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("approverIdsByArm" + "." + k)
-				}
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
-func (m *ChorusApprovalRequest) validateArmApprovals(formats strfmt.Registry) error {
-	if swag.IsZero(m.ArmApprovals) { // not required
-		return nil
-	}
-
-	for k := range m.ArmApprovals {
-
-		if err := validate.Required("armApprovals"+"."+k, "body", m.ArmApprovals[k]); err != nil {
-			return err
-		}
-		if val, ok := m.ArmApprovals[k]; ok {
-			if err := val.Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("armApprovals" + "." + k)
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("armApprovals" + "." + k)
+					return ce.ValidateName("approverIdsByStep" + "." + k)
 				}
 				return err
 			}
@@ -256,6 +230,32 @@ func (m *ChorusApprovalRequest) validateStatus(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ChorusApprovalRequest) validateStepDecisions(formats strfmt.Registry) error {
+	if swag.IsZero(m.StepDecisions) { // not required
+		return nil
+	}
+
+	for k := range m.StepDecisions {
+
+		if err := validate.Required("stepDecisions"+"."+k, "body", m.StepDecisions[k]); err != nil {
+			return err
+		}
+		if val, ok := m.StepDecisions[k]; ok {
+			if err := val.Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("stepDecisions" + "." + k)
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("stepDecisions" + "." + k)
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *ChorusApprovalRequest) validateType(formats strfmt.Registry) error {
 	if swag.IsZero(m.Type) { // not required
 		return nil
@@ -291,11 +291,7 @@ func (m *ChorusApprovalRequest) validateUpdatedAt(formats strfmt.Registry) error
 func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.contextValidateApproverIdsByArm(ctx, formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.contextValidateArmApprovals(ctx, formats); err != nil {
+	if err := m.contextValidateApproverIdsByStep(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -311,6 +307,10 @@ func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats str
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateStepDecisions(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateType(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -321,26 +321,11 @@ func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats str
 	return nil
 }
 
-func (m *ChorusApprovalRequest) contextValidateApproverIdsByArm(ctx context.Context, formats strfmt.Registry) error {
+func (m *ChorusApprovalRequest) contextValidateApproverIdsByStep(ctx context.Context, formats strfmt.Registry) error {
 
-	for k := range m.ApproverIdsByArm {
+	for k := range m.ApproverIdsByStep {
 
-		if val, ok := m.ApproverIdsByArm[k]; ok {
-			if err := val.ContextValidate(ctx, formats); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	return nil
-}
-
-func (m *ChorusApprovalRequest) contextValidateArmApprovals(ctx context.Context, formats strfmt.Registry) error {
-
-	for k := range m.ArmApprovals {
-
-		if val, ok := m.ArmApprovals[k]; ok {
+		if val, ok := m.ApproverIdsByStep[k]; ok {
 			if err := val.ContextValidate(ctx, formats); err != nil {
 				return err
 			}
@@ -409,6 +394,21 @@ func (m *ChorusApprovalRequest) contextValidateStatus(ctx context.Context, forma
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *ChorusApprovalRequest) contextValidateStepDecisions(ctx context.Context, formats strfmt.Registry) error {
+
+	for k := range m.StepDecisions {
+
+		if val, ok := m.StepDecisions[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
