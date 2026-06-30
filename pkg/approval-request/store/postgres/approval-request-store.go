@@ -16,6 +16,14 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/service"
 )
 
+// jsonbApproverIDs is the JSON encoding of ApprovalRequest.ApproverIDsByStep
+// (a step -> user-id-list map) stored in the approveridsbystep column.
+type jsonbApproverIDs map[model.ApprovalStep][]uint64
+
+// jsonbStepDecisions is the JSON encoding of ApprovalRequest.StepDecisions
+// stored in the stepdecisions column.
+type jsonbStepDecisions map[model.ApprovalStep]model.ApprovalStepDecision
+
 var _ service.ApprovalRequestStore = (*ApprovalRequestStorage)(nil)
 
 type ApprovalRequestStorage struct {
@@ -27,21 +35,21 @@ func NewApprovalRequestStorage(db *sqlx.DB) *ApprovalRequestStorage {
 }
 
 type approvalRequestRow struct {
-	ID              uint64        `db:"id"`
-	TenantID        uint64        `db:"tenantid"`
-	RequesterID     uint64        `db:"requesterid"`
-	Type            string        `db:"type"`
-	Status          string        `db:"status"`
-	Title           string        `db:"title"`
-	Description     string        `db:"description"`
-	Details         []byte        `db:"details"`
-	ApproverIDs     pq.Int64Array `db:"approverids"`
-	ApprovedByID    *uint64       `db:"approvedbyid"`
-	AutoApproved    bool          `db:"autoapproved"`
-	ApprovalMessage string        `db:"approvalmessage"`
-	CreatedAt       time.Time     `db:"createdat"`
-	UpdatedAt       time.Time     `db:"updatedat"`
-	ApprovedAt      *time.Time    `db:"approvedat"`
+	ID                uint64     `db:"id"`
+	TenantID          uint64     `db:"tenantid"`
+	RequesterID       uint64     `db:"requesterid"`
+	Type              string     `db:"type"`
+	Status            string     `db:"status"`
+	Title             string     `db:"title"`
+	Description       string     `db:"description"`
+	Details           []byte     `db:"details"`
+	ApproverIDsByStep []byte     `db:"approveridsbystep"`
+	StepDecisions     []byte     `db:"stepdecisions"`
+	AutoApproved      bool       `db:"autoapproved"`
+	ApprovalMessage   string     `db:"approvalmessage"`
+	CreatedAt         time.Time  `db:"createdat"`
+	UpdatedAt         time.Time  `db:"updatedat"`
+	ApprovedAt        *time.Time `db:"approvedat"`
 }
 
 type approvalRequestCountsRow struct {
@@ -63,28 +71,60 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 		}
 	}
 
+	approverIDs := make(jsonbApproverIDs)
+	if len(r.ApproverIDsByStep) > 0 {
+		if err := json.Unmarshal(r.ApproverIDsByStep, &approverIDs); err != nil {
+			return nil, fmt.Errorf("unable to unmarshal approverIdsByStep: %w", err)
+		}
+	}
+
+	stepDecisions := make(jsonbStepDecisions)
+	if len(r.StepDecisions) > 0 {
+		if err := json.Unmarshal(r.StepDecisions, &stepDecisions); err != nil {
+			return nil, fmt.Errorf("unable to unmarshal stepDecisions: %w", err)
+		}
+	}
+
 	return &model.ApprovalRequest{
-		ID:              r.ID,
-		TenantID:        r.TenantID,
-		RequesterID:     r.RequesterID,
-		Type:            model.ApprovalRequestType(r.Type),
-		Status:          model.ApprovalRequestStatus(r.Status),
-		Title:           r.Title,
-		Description:     r.Description,
-		Details:         details,
-		ApproverIDs:     storage.PqInt64ToUint64(r.ApproverIDs),
-		ApprovedByID:    r.ApprovedByID,
-		AutoApproved:    r.AutoApproved,
-		ApprovalMessage: r.ApprovalMessage,
-		CreatedAt:       r.CreatedAt,
-		UpdatedAt:       r.UpdatedAt,
-		ApprovedAt:      r.ApprovedAt,
+		ID:                r.ID,
+		TenantID:          r.TenantID,
+		RequesterID:       r.RequesterID,
+		Type:              model.ApprovalRequestType(r.Type),
+		Status:            model.ApprovalRequestStatus(r.Status),
+		Title:             r.Title,
+		Description:       r.Description,
+		Details:           details,
+		ApproverIDsByStep: map[model.ApprovalStep][]uint64(approverIDs),
+		StepDecisions:     map[model.ApprovalStep]model.ApprovalStepDecision(stepDecisions),
+		AutoApproved:      r.AutoApproved,
+		ApprovalMessage:   r.ApprovalMessage,
+		CreatedAt:         r.CreatedAt,
+		UpdatedAt:         r.UpdatedAt,
+		ApprovedAt:        r.ApprovedAt,
 	}, nil
 }
 
+func marshalApproverIDs(m map[model.ApprovalStep][]uint64) ([]byte, error) {
+	if m == nil {
+		m = map[model.ApprovalStep][]uint64{}
+	}
+	return json.Marshal(m)
+}
+
+func marshalStepDecisions(m map[model.ApprovalStep]model.ApprovalStepDecision) ([]byte, error) {
+	if m == nil {
+		m = map[model.ApprovalStep]model.ApprovalStepDecision{}
+	}
+	return json.Marshal(m)
+}
+
+// isApproverSQL is a predicate that returns true when the user id at the
+// given placeholder appears in any step of the approveridsbystep JSONB map.
+const isApproverSQL = `EXISTS (SELECT 1 FROM jsonb_each(approveridsbystep) step WHERE step.value @> to_jsonb(%s::bigint))`
+
 func (s *ApprovalRequestStorage) GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error) {
 	const query = `
-		SELECT id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+		SELECT id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		FROM approval_requests
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
 	`
@@ -100,7 +140,7 @@ func (s *ApprovalRequestStorage) GetApprovalRequest(ctx context.Context, tenantI
 func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenantID, userID uint64, pagination *common_model.Pagination, filter service.ApprovalRequestFilter) ([]*model.ApprovalRequest, *common_model.PaginationResult, error) {
 	args := []interface{}{tenantID, userID}
 
-	whereClause := "WHERE tenantid = $1 AND (requesterid = $2 OR $2 = ANY(approverids)) AND deletedat IS NULL"
+	whereClause := "WHERE tenantid = $1 AND (requesterid = $2 OR " + fmt.Sprintf(isApproverSQL, "$2") + ") AND deletedat IS NULL"
 
 	if filter.StatusesIn != nil && len(*filter.StatusesIn) > 0 {
 		statuses := make([]string, len(*filter.StatusesIn))
@@ -131,7 +171,7 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 
 	if filter.ApproverID != nil {
 		args = append(args, *filter.ApproverID)
-		whereClause += fmt.Sprintf(" AND $%d = ANY(approverids)", len(args))
+		whereClause += " AND " + fmt.Sprintf(isApproverSQL, fmt.Sprintf("$%d", len(args)))
 	}
 
 	if filter.RequesterID != nil {
@@ -146,7 +186,7 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 	}
 
 	selectQuery := `
-		SELECT id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+		SELECT id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		FROM approval_requests ` + whereClause
 
 	paginationClause, validatedPagination := storage.BuildPaginationClause(pagination, model.ApprovalRequest{})
@@ -195,16 +235,17 @@ func newApprovalRequestTypeCountMap() map[string]uint64 {
 }
 
 func (s *ApprovalRequestStorage) CountMyApprovalRequests(ctx context.Context, tenantID, userID uint64) (*model.ApprovalRequestCounts, error) {
-	const baseWhereClause = `
+	isApprover := fmt.Sprintf(isApproverSQL, "$2")
+	baseWhereClause := `
 		FROM approval_requests
-		WHERE tenantid = $1 AND deletedat IS NULL AND (requesterid = $2 OR $2 = ANY(approverids))
+		WHERE tenantid = $1 AND deletedat IS NULL AND (requesterid = $2 OR ` + isApprover + `)
 	`
 
 	var summary approvalRequestCountsRow
 	if err := s.db.GetContext(ctx, &summary, `
 		SELECT
 			COUNT(*) AS total,
-			COUNT(*) FILTER (WHERE $2 = ANY(approverids)) AS total_approver,
+			COUNT(*) FILTER (WHERE `+isApprover+`) AS total_approver,
 			COUNT(*) FILTER (WHERE requesterid = $2) AS total_requester
 		`+baseWhereClause, tenantID, userID); err != nil {
 		return nil, fmt.Errorf("unable to count approval requests: %w", err)
@@ -251,10 +292,19 @@ func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tena
 		return nil, fmt.Errorf("unable to marshal details: %w", err)
 	}
 
+	approverIDsJSON, err := marshalApproverIDs(request.ApproverIDsByStep)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal approverIdsByStep: %w", err)
+	}
+	stepDecisionsJSON, err := marshalStepDecisions(request.StepDecisions)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal stepDecisions: %w", err)
+	}
+
 	const query = `
-		INSERT INTO approval_requests (tenantid, requesterid, type, status, title, description, details, approverids, autoapproved, approvalmessage, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-		RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+		INSERT INTO approval_requests (tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+		RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 	`
 
 	var row approvalRequestRow
@@ -266,7 +316,8 @@ func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tena
 		request.Title,
 		request.Description,
 		detailsJSON,
-		storage.Uint64ToPqInt64(request.ApproverIDs),
+		approverIDsJSON,
+		stepDecisionsJSON,
 		request.AutoApproved,
 		request.ApprovalMessage,
 	)
@@ -283,15 +334,24 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 		return nil, fmt.Errorf("unable to marshal details: %w", err)
 	}
 
+	approverIDsJSON, err := marshalApproverIDs(request.ApproverIDsByStep)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal approverIdsByStep: %w", err)
+	}
+	stepDecisionsJSON, err := marshalStepDecisions(request.StepDecisions)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal stepDecisions: %w", err)
+	}
+
 	var query string
 	var args []interface{}
 
 	if request.Status == model.ApprovalRequestStatusApproved || request.Status == model.ApprovalRequestStatusRejected {
 		query = `
 			UPDATE approval_requests
-			SET type = $3, status = $4, title = $5, description = $6, details = $7, approverids = $8, approvedbyid = $9, autoapproved = $10, approvalmessage = $11, approvedat = NOW(), updatedat = NOW()
+			SET type = $3, status = $4, title = $5, description = $6, details = $7, approveridsbystep = $8, stepdecisions = $9, autoapproved = $10, approvalmessage = $11, approvedat = NOW(), updatedat = NOW()
 			WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-			RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+			RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		`
 		args = []interface{}{
 			tenantID,
@@ -301,17 +361,17 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 			request.Title,
 			request.Description,
 			detailsJSON,
-			storage.Uint64ToPqInt64(request.ApproverIDs),
-			request.ApprovedByID,
+			approverIDsJSON,
+			stepDecisionsJSON,
 			request.AutoApproved,
 			request.ApprovalMessage,
 		}
 	} else {
 		query = `
 			UPDATE approval_requests
-			SET type = $3, status = $4, title = $5, description = $6, details = $7, approverids = $8, autoapproved = $9, approvalmessage = $10, updatedat = NOW()
+			SET type = $3, status = $4, title = $5, description = $6, details = $7, approveridsbystep = $8, stepdecisions = $9, autoapproved = $10, approvalmessage = $11, updatedat = NOW()
 			WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-			RETURNING id, tenantid, requesterid, type, status, title, description, details, approverids, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+			RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		`
 		args = []interface{}{
 			tenantID,
@@ -321,7 +381,8 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 			request.Title,
 			request.Description,
 			detailsJSON,
-			storage.Uint64ToPqInt64(request.ApproverIDs),
+			approverIDsJSON,
+			stepDecisionsJSON,
 			request.AutoApproved,
 			request.ApprovalMessage,
 		}

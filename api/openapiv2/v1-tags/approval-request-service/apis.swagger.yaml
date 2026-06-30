@@ -263,27 +263,35 @@ definitions:
         $ref: '#/definitions/chorusDataExtractionDetails'
       dataTransfer:
         $ref: '#/definitions/chorusDataTransferDetails'
-      approverIds:
-        type: array
-        items:
-          type: string
-          format: uint64
-      approvedById:
+      approverIdsByStep:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusApproverIds'
+        description: Users allowed to approve each step, keyed by step name ("download", "upload").
+      stepDecisions:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusApprovalStepDecision'
+        description: Decisions recorded for each step so far, keyed by step name.
+      autoApproved:
+        type: boolean
+      approvalMessage:
         type: string
-        format: uint64
+      approvedAt:
+        type: string
+        format: date-time
       createdAt:
         type: string
         format: date-time
       updatedAt:
         type: string
         format: date-time
-      approvedAt:
-        type: string
-        format: date-time
-      autoApproved:
-        type: boolean
-      approvalMessage:
-        type: string
+    description: |-
+      ApprovalRequest is split into approval steps keyed by name. A data
+      extraction has one step, "download" (data leaving the source workspace);
+      a data transfer adds "upload" (data entering the destination). The request
+      is approved once every required step is approved, and rejected the moment
+      any step is rejected.
   chorusApprovalRequestFile:
     type: object
     properties:
@@ -332,6 +340,19 @@ definitions:
       - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
       - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
     default: APPROVAL_REQUEST_TYPE_UNSPECIFIED
+  chorusApprovalStepDecision:
+    type: object
+    properties:
+      approverId:
+        type: string
+        format: uint64
+      approvedAt:
+        type: string
+        format: date-time
+      approve:
+        type: boolean
+        description: 'true: approved, false: rejected.'
+    description: ApprovalStepDecision is one approver's decision on one step.
   chorusApproveApprovalRequestReply:
     type: object
     properties:
@@ -342,6 +363,15 @@ definitions:
     properties:
       approvalRequest:
         $ref: '#/definitions/chorusApprovalRequest'
+  chorusApproverIds:
+    type: object
+    properties:
+      ids:
+        type: array
+        items:
+          type: string
+          format: uint64
+    description: ApproverIds is a list of user ids.
   chorusCountMyApprovalRequestsReply:
     type: object
     properties:

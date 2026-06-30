@@ -17,14 +17,47 @@ type ApprovalRequest struct {
 
 	Details ApprovalRequestDetails
 
-	ApproverIDs     []uint64
-	ApprovedByID    *uint64
+	// ApproverIDsByStep lists the users allowed to approve each step.
+	ApproverIDsByStep map[ApprovalStep][]uint64
+
+	// StepDecisions records the decision made for each step so far.
+	StepDecisions map[ApprovalStep]ApprovalStepDecision
+
 	AutoApproved    bool
 	ApprovalMessage string
 
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	ApprovedAt *time.Time
+}
+
+// ApprovalStepDecision is one approver's decision on one step.
+type ApprovalStepDecision struct {
+	ApproverID uint64    `json:"approver_id"`
+	ApprovedAt time.Time `json:"approved_at"`
+	Approve    bool      `json:"approve"` // true: approved, false: rejected.
+}
+
+// ApprovalStep is one independently-approved part of a request: "download"
+// (data leaving the source) or "upload" (data entering the destination).
+type ApprovalStep string
+
+const (
+	StepDownload ApprovalStep = "download"
+	StepUpload   ApprovalStep = "upload"
+)
+
+// StepsForType returns the ordered list of steps that must be approved
+// for a request of the given type.
+func StepsForType(t ApprovalRequestType) []ApprovalStep {
+	switch t {
+	case ApprovalRequestTypeDataExtraction:
+		return []ApprovalStep{StepDownload}
+	case ApprovalRequestTypeDataTransfer:
+		return []ApprovalStep{StepDownload, StepUpload}
+	default:
+		return nil
+	}
 }
 
 type ApprovalRequestCounts struct {
@@ -65,15 +98,98 @@ func (r *ApprovalRequest) CanBeApprovedBy(userID uint64) bool {
 	if r.IsFinalState() {
 		return false
 	}
-	if len(r.ApproverIDs) == 0 {
+	return len(r.StepsToApprove(userID)) > 0
+}
+
+// StepsToApprove returns the steps the given user is authorized to approve and
+// that have not yet been decided. The result is empty if the user has nothing
+// to approve on this request.
+func (r *ApprovalRequest) StepsToApprove(userID uint64) []ApprovalStep {
+	if r.IsFinalState() {
+		return nil
+	}
+
+	steps := StepsForType(r.Type)
+	// If no steps are declared (e.g. legacy/unknown type) but approver IDs
+	// are set, treat the union of all approver IDs as a single implicit step.
+	if len(steps) == 0 {
+		if len(r.ApproverIDsByStep) == 0 {
+			return nil
+		}
+		for step := range r.ApproverIDsByStep {
+			steps = append(steps, step)
+		}
+	}
+
+	var pending []ApprovalStep
+	for _, step := range steps {
+		if _, decided := r.StepDecisions[step]; decided {
+			continue
+		}
+		if r.userIsApproverOf(userID, step) {
+			pending = append(pending, step)
+		}
+	}
+	return pending
+}
+
+func (r *ApprovalRequest) userIsApproverOf(userID uint64, step ApprovalStep) bool {
+	approvers, ok := r.ApproverIDsByStep[step]
+	if !ok {
+		return false
+	}
+	// An empty approver list for a step allows anyone to approve that step
+	// (matches the legacy behaviour where an empty list was permissive).
+	if len(approvers) == 0 {
 		return true
 	}
-	for _, id := range r.ApproverIDs {
+	for _, id := range approvers {
 		if id == userID {
 			return true
 		}
 	}
 	return false
+}
+
+// IsFullyApproved reports whether every required step has been approved.
+func (r *ApprovalRequest) IsFullyApproved() bool {
+	steps := StepsForType(r.Type)
+	if len(steps) == 0 {
+		return false
+	}
+	for _, step := range steps {
+		decision, ok := r.StepDecisions[step]
+		if !ok || !decision.Approve {
+			return false
+		}
+	}
+	return true
+}
+
+// HasStepRejection reports whether any step has been explicitly rejected.
+func (r *ApprovalRequest) HasStepRejection() bool {
+	for _, decision := range r.StepDecisions {
+		if !decision.Approve {
+			return true
+		}
+	}
+	return false
+}
+
+// AllApproverIDs returns the deduplicated union of every approver across all steps.
+func (r *ApprovalRequest) AllApproverIDs() []uint64 {
+	seen := make(map[uint64]struct{})
+	var ids []uint64
+	for _, approvers := range r.ApproverIDsByStep {
+		for _, id := range approvers {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
 
 func (r *ApprovalRequest) GetSourceWorkspaceID() uint64 {

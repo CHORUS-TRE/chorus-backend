@@ -14,7 +14,11 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusApprovalRequest chorus approval request
+// ChorusApprovalRequest ApprovalRequest is split into approval steps keyed by name. A data
+// extraction has one step, "download" (data leaving the source workspace);
+// a data transfer adds "upload" (data entering the destination). The request
+// is approved once every required step is approved, and rejected the moment
+// any step is rejected.
 //
 // swagger:model chorusApprovalRequest
 type ChorusApprovalRequest struct {
@@ -26,11 +30,8 @@ type ChorusApprovalRequest struct {
 	// Format: date-time
 	ApprovedAt strfmt.DateTime `json:"approvedAt,omitempty"`
 
-	// approved by Id
-	ApprovedByID string `json:"approvedById,omitempty"`
-
-	// approver ids
-	ApproverIds []string `json:"approverIds"`
+	// Users allowed to approve each step, keyed by step name ("download", "upload").
+	ApproverIdsByStep map[string]ChorusApproverIds `json:"approverIdsByStep,omitempty"`
 
 	// auto approved
 	AutoApproved bool `json:"autoApproved,omitempty"`
@@ -57,6 +58,9 @@ type ChorusApprovalRequest struct {
 	// status
 	Status *ChorusApprovalRequestStatus `json:"status,omitempty"`
 
+	// Decisions recorded for each step so far, keyed by step name.
+	StepDecisions map[string]ChorusApprovalStepDecision `json:"stepDecisions,omitempty"`
+
 	// tenant Id
 	TenantID string `json:"tenantId,omitempty"`
 
@@ -79,6 +83,10 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateApproverIdsByStep(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateCreatedAt(formats); err != nil {
 		res = append(res, err)
 	}
@@ -92,6 +100,10 @@ func (m *ChorusApprovalRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateStatus(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStepDecisions(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -116,6 +128,32 @@ func (m *ChorusApprovalRequest) validateApprovedAt(formats strfmt.Registry) erro
 
 	if err := validate.FormatOf("approvedAt", "body", "date-time", m.ApprovedAt.String(), formats); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *ChorusApprovalRequest) validateApproverIdsByStep(formats strfmt.Registry) error {
+	if swag.IsZero(m.ApproverIdsByStep) { // not required
+		return nil
+	}
+
+	for k := range m.ApproverIdsByStep {
+
+		if err := validate.Required("approverIdsByStep"+"."+k, "body", m.ApproverIdsByStep[k]); err != nil {
+			return err
+		}
+		if val, ok := m.ApproverIdsByStep[k]; ok {
+			if err := val.Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("approverIdsByStep" + "." + k)
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("approverIdsByStep" + "." + k)
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -190,6 +228,32 @@ func (m *ChorusApprovalRequest) validateStatus(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ChorusApprovalRequest) validateStepDecisions(formats strfmt.Registry) error {
+	if swag.IsZero(m.StepDecisions) { // not required
+		return nil
+	}
+
+	for k := range m.StepDecisions {
+
+		if err := validate.Required("stepDecisions"+"."+k, "body", m.StepDecisions[k]); err != nil {
+			return err
+		}
+		if val, ok := m.StepDecisions[k]; ok {
+			if err := val.Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("stepDecisions" + "." + k)
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("stepDecisions" + "." + k)
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *ChorusApprovalRequest) validateType(formats strfmt.Registry) error {
 	if swag.IsZero(m.Type) { // not required
 		return nil
@@ -225,6 +289,10 @@ func (m *ChorusApprovalRequest) validateUpdatedAt(formats strfmt.Registry) error
 func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateApproverIdsByStep(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateDataExtraction(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -237,6 +305,10 @@ func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats str
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateStepDecisions(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateType(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -244,6 +316,21 @@ func (m *ChorusApprovalRequest) ContextValidate(ctx context.Context, formats str
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *ChorusApprovalRequest) contextValidateApproverIdsByStep(ctx context.Context, formats strfmt.Registry) error {
+
+	for k := range m.ApproverIdsByStep {
+
+		if val, ok := m.ApproverIdsByStep[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -305,6 +392,21 @@ func (m *ChorusApprovalRequest) contextValidateStatus(ctx context.Context, forma
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *ChorusApprovalRequest) contextValidateStepDecisions(ctx context.Context, formats strfmt.Registry) error {
+
+	for k := range m.StepDecisions {
+
+		if val, ok := m.StepDecisions[k]; ok {
+			if err := val.ContextValidate(ctx, formats); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil

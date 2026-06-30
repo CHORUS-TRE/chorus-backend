@@ -27,23 +27,20 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 	}
 
 	protoRequest := &chorus.ApprovalRequest{
-		Id:              request.ID,
-		TenantId:        request.TenantID,
-		RequesterId:     request.RequesterID,
-		Type:            ApprovalRequestTypeFromBusiness(request.Type),
-		Status:          ApprovalRequestStatusFromBusiness(request.Status),
-		Title:           request.Title,
-		Description:     request.Description,
-		ApproverIds:     request.ApproverIDs,
-		CreatedAt:       ca,
-		UpdatedAt:       ua,
-		ApprovedAt:      aa,
-		AutoApproved:    request.AutoApproved,
-		ApprovalMessage: request.ApprovalMessage,
-	}
-
-	if request.ApprovedByID != nil {
-		protoRequest.ApprovedById = request.ApprovedByID
+		Id:                request.ID,
+		TenantId:          request.TenantID,
+		RequesterId:       request.RequesterID,
+		Type:              ApprovalRequestTypeFromBusiness(request.Type),
+		Status:            ApprovalRequestStatusFromBusiness(request.Status),
+		Title:             request.Title,
+		Description:       request.Description,
+		ApproverIdsByStep: ApproverIDsByStepFromBusiness(request.ApproverIDsByStep),
+		StepDecisions:     StepDecisionsFromBusiness(request.StepDecisions),
+		AutoApproved:      request.AutoApproved,
+		ApprovalMessage:   request.ApprovalMessage,
+		ApprovedAt:        aa,
+		CreatedAt:         ca,
+		UpdatedAt:         ua,
 	}
 
 	switch request.Type {
@@ -123,18 +120,20 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 	}
 
 	result := &model.ApprovalRequest{
-		ID:           request.Id,
-		TenantID:     request.TenantId,
-		RequesterID:  request.RequesterId,
-		Type:         ApprovalRequestTypeToBusiness(request.Type),
-		Status:       ApprovalRequestStatusToBusiness(request.Status),
-		Title:        request.Title,
-		Description:  request.Description,
-		ApproverIDs:  request.ApproverIds,
-		ApprovedByID: request.ApprovedById,
-		CreatedAt:    ca,
-		UpdatedAt:    ua,
-		ApprovedAt:   approvedAt,
+		ID:          request.Id,
+		TenantID:    request.TenantId,
+		RequesterID: request.RequesterId,
+		Type:        ApprovalRequestTypeToBusiness(request.Type),
+		Status:      ApprovalRequestStatusToBusiness(request.Status),
+		Title:       request.Title,
+		Description: request.Description,
+
+		ApproverIDsByStep: ApproverIDsByStepToBusiness(request.ApproverIdsByStep),
+		StepDecisions:     StepDecisionsToBusiness(request.StepDecisions),
+		ApprovedAt:        approvedAt,
+
+		CreatedAt: ca,
+		UpdatedAt: ua,
 	}
 
 	switch d := request.Details.(type) {
@@ -212,4 +211,75 @@ func ApprovalRequestStatusToBusiness(s chorus.ApprovalRequestStatus) model.Appro
 	default:
 		return model.ApprovalRequestStatusUnspecified
 	}
+}
+
+func ApproverIDsByStepFromBusiness(m map[model.ApprovalStep][]uint64) map[string]*chorus.ApproverIds {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]*chorus.ApproverIds, len(m))
+	for step, ids := range m {
+		copied := make([]uint64, len(ids))
+		copy(copied, ids)
+		out[string(step)] = &chorus.ApproverIds{Ids: copied}
+	}
+	return out
+}
+
+func ApproverIDsByStepToBusiness(m map[string]*chorus.ApproverIds) map[model.ApprovalStep][]uint64 {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[model.ApprovalStep][]uint64, len(m))
+	for step, ids := range m {
+		if ids == nil {
+			out[model.ApprovalStep(step)] = nil
+			continue
+		}
+		copied := make([]uint64, len(ids.Ids))
+		copy(copied, ids.Ids)
+		out[model.ApprovalStep(step)] = copied
+	}
+	return out
+}
+
+func StepDecisionsFromBusiness(m map[model.ApprovalStep]model.ApprovalStepDecision) map[string]*chorus.ApprovalStepDecision {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]*chorus.ApprovalStepDecision, len(m))
+	for step, a := range m {
+		ts, err := ToProtoTimestamp(a.ApprovedAt)
+		if err != nil {
+			ts = nil
+		}
+		out[string(step)] = &chorus.ApprovalStepDecision{
+			ApproverId: a.ApproverID,
+			ApprovedAt: ts,
+			Approve:    a.Approve,
+		}
+	}
+	return out
+}
+
+func StepDecisionsToBusiness(m map[string]*chorus.ApprovalStepDecision) map[model.ApprovalStep]model.ApprovalStepDecision {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[model.ApprovalStep]model.ApprovalStepDecision, len(m))
+	for step, a := range m {
+		if a == nil {
+			continue
+		}
+		ts, err := FromProtoTimestamp(a.ApprovedAt)
+		if err != nil {
+			continue
+		}
+		out[model.ApprovalStep(step)] = model.ApprovalStepDecision{
+			ApproverID: a.ApproverId,
+			ApprovedAt: ts,
+			Approve:    a.Approve,
+		}
+	}
+	return out
 }
