@@ -129,7 +129,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		request.ApprovedAt = &now
 	} else {
 		request.Status = model.ApprovalRequestStatusPending
-		request.ApproverIDs = approversByArm
+		request.ApproverIDsByArm = approversByArm
 	}
 
 	createdRequest, err := s.store.CreateApprovalRequest(ctx, request.TenantID, request)
@@ -245,7 +245,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		request.ApprovedAt = &now
 	} else {
 		request.Status = model.ApprovalRequestStatusPending
-		request.ApproverIDs = approversByArm
+		request.ApproverIDsByArm = approversByArm
 	}
 
 	createdRequest, err := s.store.CreateApprovalRequest(ctx, request.TenantID, request)

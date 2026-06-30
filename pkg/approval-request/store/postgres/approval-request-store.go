@@ -87,22 +87,22 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 	}
 
 	return &model.ApprovalRequest{
-		ID:              r.ID,
-		TenantID:        r.TenantID,
-		RequesterID:     r.RequesterID,
-		Type:            model.ApprovalRequestType(r.Type),
-		Status:          model.ApprovalRequestStatus(r.Status),
-		Title:           r.Title,
-		Description:     r.Description,
-		Details:         details,
-		ApproverIDs:     map[string][]uint64(approverIDs),
-		ArmApprovals:    map[string]model.ArmApproval(armApprovals),
-		ApprovedByID:    r.ApprovedByID,
-		AutoApproved:    r.AutoApproved,
-		ApprovalMessage: r.ApprovalMessage,
-		CreatedAt:       r.CreatedAt,
-		UpdatedAt:       r.UpdatedAt,
-		ApprovedAt:      r.ApprovedAt,
+		ID:               r.ID,
+		TenantID:         r.TenantID,
+		RequesterID:      r.RequesterID,
+		Type:             model.ApprovalRequestType(r.Type),
+		Status:           model.ApprovalRequestStatus(r.Status),
+		Title:            r.Title,
+		Description:      r.Description,
+		Details:          details,
+		ApproverIDsByArm: map[string][]uint64(approverIDs),
+		ArmApprovals:     map[string]model.ArmApproval(armApprovals),
+		ApprovedByID:     r.ApprovedByID,
+		AutoApproved:     r.AutoApproved,
+		ApprovalMessage:  r.ApprovalMessage,
+		CreatedAt:        r.CreatedAt,
+		UpdatedAt:        r.UpdatedAt,
+		ApprovedAt:       r.ApprovedAt,
 	}, nil
 }
 
@@ -294,7 +294,7 @@ func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tena
 		return nil, fmt.Errorf("unable to marshal details: %w", err)
 	}
 
-	approverIDsJSON, err := marshalApproverIDs(request.ApproverIDs)
+	approverIDsJSON, err := marshalApproverIDs(request.ApproverIDsByArm)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal approverIdsByArm: %w", err)
 	}
@@ -336,7 +336,7 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 		return nil, fmt.Errorf("unable to marshal details: %w", err)
 	}
 
-	approverIDsJSON, err := marshalApproverIDs(request.ApproverIDs)
+	approverIDsJSON, err := marshalApproverIDs(request.ApproverIDsByArm)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal approverIdsByArm: %w", err)
 	}

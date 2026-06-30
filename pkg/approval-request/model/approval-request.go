@@ -17,12 +17,12 @@ type ApprovalRequest struct {
 
 	Details ApprovalRequestDetails
 
-	// ApproverIDs lists the user IDs allowed to approve each arm of the
+	// ApproverIDsByArm lists the user IDs allowed to approve each arm of the
 	// request, keyed by arm name (see ApprovalRequestArm* constants).
 	// A user who appears in every arm can approve the whole request in one
 	// step; otherwise each arm must be approved separately by a user
 	// authorized for that arm.
-	ApproverIDs map[string][]uint64
+	ApproverIDsByArm map[string][]uint64
 
 	// ArmApprovals records the per-arm approval decisions made so far.
 	// The key is the arm name. A request is fully approved once every arm
@@ -118,10 +118,10 @@ func (r *ApprovalRequest) ArmsToApprove(userID uint64) []string {
 	// If no arms are declared (e.g. legacy/unknown type) but approver IDs
 	// are set, treat the union of all approver IDs as a single implicit arm.
 	if len(arms) == 0 {
-		if len(r.ApproverIDs) == 0 {
+		if len(r.ApproverIDsByArm) == 0 {
 			return nil
 		}
-		for arm := range r.ApproverIDs {
+		for arm := range r.ApproverIDsByArm {
 			arms = append(arms, arm)
 		}
 	}
@@ -139,7 +139,7 @@ func (r *ApprovalRequest) ArmsToApprove(userID uint64) []string {
 }
 
 func (r *ApprovalRequest) userIsApproverOf(userID uint64, arm string) bool {
-	approvers, ok := r.ApproverIDs[arm]
+	approvers, ok := r.ApproverIDsByArm[arm]
 	if !ok {
 		return false
 	}
@@ -185,7 +185,7 @@ func (r *ApprovalRequest) HasArmRejection() bool {
 func (r *ApprovalRequest) AllApproverIDs() []uint64 {
 	seen := make(map[uint64]struct{})
 	var ids []uint64
-	for _, approvers := range r.ApproverIDs {
+	for _, approvers := range r.ApproverIDsByArm {
 		for _, id := range approvers {
 			if _, ok := seen[id]; ok {
 				continue

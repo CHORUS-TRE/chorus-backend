@@ -34,7 +34,7 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 		Status:           ApprovalRequestStatusFromBusiness(request.Status),
 		Title:            request.Title,
 		Description:      request.Description,
-		ApproverIdsByArm: ApproverIDsByArmFromBusiness(request.ApproverIDs),
+		ApproverIdsByArm: ApproverIDsByArmFromBusiness(request.ApproverIDsByArm),
 		ArmApprovals:     ArmApprovalsFromBusiness(request.ArmApprovals),
 		CreatedAt:        ca,
 		UpdatedAt:        ua,
@@ -124,19 +124,19 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 	}
 
 	result := &model.ApprovalRequest{
-		ID:           request.Id,
-		TenantID:     request.TenantId,
-		RequesterID:  request.RequesterId,
-		Type:         ApprovalRequestTypeToBusiness(request.Type),
-		Status:       ApprovalRequestStatusToBusiness(request.Status),
-		Title:        request.Title,
-		Description:  request.Description,
-		ApproverIDs:  ApproverIDsByArmToBusiness(request.ApproverIdsByArm),
-		ArmApprovals: ArmApprovalsToBusiness(request.ArmApprovals),
-		ApprovedByID: request.ApprovedById,
-		CreatedAt:    ca,
-		UpdatedAt:    ua,
-		ApprovedAt:   approvedAt,
+		ID:               request.Id,
+		TenantID:         request.TenantId,
+		RequesterID:      request.RequesterId,
+		Type:             ApprovalRequestTypeToBusiness(request.Type),
+		Status:           ApprovalRequestStatusToBusiness(request.Status),
+		Title:            request.Title,
+		Description:      request.Description,
+		ApproverIDsByArm: ApproverIDsByArmToBusiness(request.ApproverIdsByArm),
+		ArmApprovals:     ArmApprovalsToBusiness(request.ArmApprovals),
+		ApprovedByID:     request.ApprovedById,
+		CreatedAt:        ca,
+		UpdatedAt:        ua,
+		ApprovedAt:       approvedAt,
 	}
 
 	switch d := request.Details.(type) {
