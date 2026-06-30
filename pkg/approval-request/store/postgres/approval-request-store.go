@@ -35,21 +35,21 @@ func NewApprovalRequestStorage(db *sqlx.DB) *ApprovalRequestStorage {
 }
 
 type approvalRequestRow struct {
-	ID              uint64     `db:"id"`
-	TenantID        uint64     `db:"tenantid"`
-	RequesterID     uint64     `db:"requesterid"`
-	Type            string     `db:"type"`
-	Status          string     `db:"status"`
-	Title           string     `db:"title"`
-	Description     string     `db:"description"`
-	Details         []byte     `db:"details"`
-	ApproverIDs     []byte     `db:"approveridsbystep"`
-	StepDecisions   []byte     `db:"stepdecisions"`
-	AutoApproved    bool       `db:"autoapproved"`
-	ApprovalMessage string     `db:"approvalmessage"`
-	CreatedAt       time.Time  `db:"createdat"`
-	UpdatedAt       time.Time  `db:"updatedat"`
-	ApprovedAt      *time.Time `db:"approvedat"`
+	ID                uint64     `db:"id"`
+	TenantID          uint64     `db:"tenantid"`
+	RequesterID       uint64     `db:"requesterid"`
+	Type              string     `db:"type"`
+	Status            string     `db:"status"`
+	Title             string     `db:"title"`
+	Description       string     `db:"description"`
+	Details           []byte     `db:"details"`
+	ApproverIDsByStep []byte     `db:"approveridsbystep"`
+	StepDecisions     []byte     `db:"stepdecisions"`
+	AutoApproved      bool       `db:"autoapproved"`
+	ApprovalMessage   string     `db:"approvalmessage"`
+	CreatedAt         time.Time  `db:"createdat"`
+	UpdatedAt         time.Time  `db:"updatedat"`
+	ApprovedAt        *time.Time `db:"approvedat"`
 }
 
 type approvalRequestCountsRow struct {
@@ -72,8 +72,8 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 	}
 
 	approverIDs := make(jsonbApproverIDs)
-	if len(r.ApproverIDs) > 0 {
-		if err := json.Unmarshal(r.ApproverIDs, &approverIDs); err != nil {
+	if len(r.ApproverIDsByStep) > 0 {
+		if err := json.Unmarshal(r.ApproverIDsByStep, &approverIDs); err != nil {
 			return nil, fmt.Errorf("unable to unmarshal approverIdsByStep: %w", err)
 		}
 	}
