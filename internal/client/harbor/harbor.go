@@ -17,7 +17,6 @@ type App struct {
 	Repository string            `json:"repository"`
 	Tag        string            `json:"tag"`
 	Labels     map[string]string `json:"labels"`
-	PushTime   time.Time         `json:"push_time"`
 }
 
 type HarborClient interface {
@@ -100,7 +99,6 @@ func (c *harborClient) ListApps() ([]App, error) {
 					Repository: repo.Name,
 					Tag:        tag.Name,
 					Labels:     labels,
-					PushTime:   tag.PushTime,
 				})
 			}
 		}
