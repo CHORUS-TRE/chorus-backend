@@ -150,6 +150,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.harbor_client.project", "apps")
 	v.SetDefault("clients.harbor_client.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
 	v.SetDefault("clients.harbor_client.page_size", 100)
+	v.SetDefault("clients.harbor_client.max_parallel_fetches", 16)
 	v.SetDefault("clients.harbor_client.username", "robot$backend-apps-client")
 
 	// Loggers

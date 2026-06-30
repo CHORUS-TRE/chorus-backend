@@ -153,13 +153,14 @@ type (
 	}
 
 	HarborClient struct {
-		Enabled       bool      `yaml:"enabled,omitempty"`
-		URL           string    `yaml:"url,omitempty"`
-		Username      string    `yaml:"username,omitempty"`
-		Password      Sensitive `yaml:"password,omitempty"`
-		Project       string    `yaml:"project,omitempty"`
-		LabelPrefixes []string  `yaml:"label_prefixes,omitempty"`
-		PageSize      int       `yaml:"page_size,omitempty"`
+		Enabled            bool      `yaml:"enabled,omitempty"`
+		URL                string    `yaml:"url,omitempty"`
+		Username           string    `yaml:"username,omitempty"`
+		Password           Sensitive `yaml:"password,omitempty"`
+		Project            string    `yaml:"project,omitempty"`
+		LabelPrefixes      []string  `yaml:"label_prefixes,omitempty"`
+		PageSize           int       `yaml:"page_size,omitempty"`
+		MaxParallelFetches uint64    `yaml:"max_parallel_fetches,omitempty"`
 	}
 
 	ImagePullSecret struct {
