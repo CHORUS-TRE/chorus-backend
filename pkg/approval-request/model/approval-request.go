@@ -18,17 +18,17 @@ type ApprovalRequest struct {
 	Details ApprovalRequestDetails
 
 	// ApproverIDsByArm lists the user IDs allowed to approve each arm of the
-	// request, keyed by arm name (see ApprovalRequestArm* constants).
+	// request, keyed by arm (see ApprovalRequestArm* constants).
 	// A user who appears in every arm can approve the whole request in one
 	// step; otherwise each arm must be approved separately by a user
 	// authorized for that arm.
-	ApproverIDsByArm map[string][]uint64
+	ApproverIDsByArm map[Arm][]uint64
 
 	// ArmApprovals records the per-arm approval decisions made so far.
-	// The key is the arm name. A request is fully approved once every arm
+	// The key is the arm. A request is fully approved once every arm
 	// it requires has an Approve=true entry; a single Approve=false entry
 	// rejects the whole request.
-	ArmApprovals map[string]ArmApproval
+	ArmApprovals map[Arm]ArmApproval
 
 	ApprovedByID    *uint64
 	AutoApproved    bool
@@ -46,20 +46,26 @@ type ArmApproval struct {
 	Approve    bool      `json:"approve"`
 }
 
+// Arm identifies one independently-approved leg of a request: the data leaving
+// a workspace ("download") and, for transfers, the data arriving in the
+// destination ("upload"). Each arm has its own approver set and is decided
+// separately.
+type Arm string
+
 // Arm names used to partition the set of approvers for a request.
 const (
-	ApprovalRequestArmDownload = "download"
-	ApprovalRequestArmUpload   = "upload"
+	ApprovalRequestArmDownload Arm = "download"
+	ApprovalRequestArmUpload   Arm = "upload"
 )
 
-// ArmsForType returns the ordered list of arm names that must be approved
+// ArmsForType returns the ordered list of arms that must be approved
 // for a request of the given type.
-func ArmsForType(t ApprovalRequestType) []string {
+func ArmsForType(t ApprovalRequestType) []Arm {
 	switch t {
 	case ApprovalRequestTypeDataExtraction:
-		return []string{ApprovalRequestArmDownload}
+		return []Arm{ApprovalRequestArmDownload}
 	case ApprovalRequestTypeDataTransfer:
-		return []string{ApprovalRequestArmDownload, ApprovalRequestArmUpload}
+		return []Arm{ApprovalRequestArmDownload, ApprovalRequestArmUpload}
 	default:
 		return nil
 	}
@@ -106,10 +112,10 @@ func (r *ApprovalRequest) CanBeApprovedBy(userID uint64) bool {
 	return len(r.ArmsToApprove(userID)) > 0
 }
 
-// ArmsToApprove returns the names of the arms the given user is authorized
-// to approve and that have not yet been decided. The result is empty if the
-// user has nothing to approve on this request.
-func (r *ApprovalRequest) ArmsToApprove(userID uint64) []string {
+// ArmsToApprove returns the arms the given user is authorized to approve and
+// that have not yet been decided. The result is empty if the user has nothing
+// to approve on this request.
+func (r *ApprovalRequest) ArmsToApprove(userID uint64) []Arm {
 	if r.IsFinalState() {
 		return nil
 	}
@@ -126,7 +132,7 @@ func (r *ApprovalRequest) ArmsToApprove(userID uint64) []string {
 		}
 	}
 
-	var pending []string
+	var pending []Arm
 	for _, arm := range arms {
 		if _, decided := r.ArmApprovals[arm]; decided {
 			continue
@@ -138,7 +144,7 @@ func (r *ApprovalRequest) ArmsToApprove(userID uint64) []string {
 	return pending
 }
 
-func (r *ApprovalRequest) userIsApproverOf(userID uint64, arm string) bool {
+func (r *ApprovalRequest) userIsApproverOf(userID uint64, arm Arm) bool {
 	approvers, ok := r.ApproverIDsByArm[arm]
 	if !ok {
 		return false

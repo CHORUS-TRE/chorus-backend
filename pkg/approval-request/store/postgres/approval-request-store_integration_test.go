@@ -76,7 +76,7 @@ func newExtractionRequest(requesterID uint64, approverIDs []uint64, status appro
 		Status:      status,
 		Title:       title,
 		Description: title + " description",
-		ApproverIDsByArm: map[string][]uint64{
+		ApproverIDsByArm: map[approval_request_model.Arm][]uint64{
 			approval_request_model.ApprovalRequestArmDownload: approverIDs,
 		},
 		CreatedAt:       time.Now().UTC(),
@@ -102,7 +102,7 @@ func newTransferRequest(requesterID uint64, approverIDs []uint64, status approva
 		Status:      status,
 		Title:       title,
 		Description: title + " description",
-		ApproverIDsByArm: map[string][]uint64{
+		ApproverIDsByArm: map[approval_request_model.Arm][]uint64{
 			approval_request_model.ApprovalRequestArmDownload: approverIDs,
 			approval_request_model.ApprovalRequestArmUpload:   approverIDs,
 		},
@@ -138,7 +138,7 @@ func TestApprovalRequestStorage_CreateGetAndUpdateApprovalRequest(t *testing.T) 
 	require.NoError(t, err)
 	require.NotZero(t, created.ID)
 	require.Equal(t, fixtures.userIDs["alice"], created.RequesterID)
-	require.Equal(t, map[string][]uint64{
+	require.Equal(t, map[approval_request_model.Arm][]uint64{
 		approval_request_model.ApprovalRequestArmDownload: {fixtures.userIDs["bob"]},
 	}, created.ApproverIDsByArm)
 	require.Equal(t, uint64(101), created.Details.DataExtractionDetails.SourceWorkspaceID)

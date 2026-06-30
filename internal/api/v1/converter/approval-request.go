@@ -216,7 +216,7 @@ func ApprovalRequestStatusToBusiness(s chorus.ApprovalRequestStatus) model.Appro
 	}
 }
 
-func ApproverIDsByArmFromBusiness(m map[string][]uint64) map[string]*chorus.ApproverIds {
+func ApproverIDsByArmFromBusiness(m map[model.Arm][]uint64) map[string]*chorus.ApproverIds {
 	if len(m) == 0 {
 		return nil
 	}
@@ -224,29 +224,29 @@ func ApproverIDsByArmFromBusiness(m map[string][]uint64) map[string]*chorus.Appr
 	for arm, ids := range m {
 		copied := make([]uint64, len(ids))
 		copy(copied, ids)
-		out[arm] = &chorus.ApproverIds{Ids: copied}
+		out[string(arm)] = &chorus.ApproverIds{Ids: copied}
 	}
 	return out
 }
 
-func ApproverIDsByArmToBusiness(m map[string]*chorus.ApproverIds) map[string][]uint64 {
+func ApproverIDsByArmToBusiness(m map[string]*chorus.ApproverIds) map[model.Arm][]uint64 {
 	if len(m) == 0 {
 		return nil
 	}
-	out := make(map[string][]uint64, len(m))
+	out := make(map[model.Arm][]uint64, len(m))
 	for arm, ids := range m {
 		if ids == nil {
-			out[arm] = nil
+			out[model.Arm(arm)] = nil
 			continue
 		}
 		copied := make([]uint64, len(ids.Ids))
 		copy(copied, ids.Ids)
-		out[arm] = copied
+		out[model.Arm(arm)] = copied
 	}
 	return out
 }
 
-func ArmApprovalsFromBusiness(m map[string]model.ArmApproval) map[string]*chorus.ArmApproval {
+func ArmApprovalsFromBusiness(m map[model.Arm]model.ArmApproval) map[string]*chorus.ArmApproval {
 	if len(m) == 0 {
 		return nil
 	}
@@ -256,7 +256,7 @@ func ArmApprovalsFromBusiness(m map[string]model.ArmApproval) map[string]*chorus
 		if err != nil {
 			ts = nil
 		}
-		out[arm] = &chorus.ArmApproval{
+		out[string(arm)] = &chorus.ArmApproval{
 			ApproverId: a.ApproverID,
 			ApprovedAt: ts,
 			Approve:    a.Approve,
@@ -265,11 +265,11 @@ func ArmApprovalsFromBusiness(m map[string]model.ArmApproval) map[string]*chorus
 	return out
 }
 
-func ArmApprovalsToBusiness(m map[string]*chorus.ArmApproval) map[string]model.ArmApproval {
+func ArmApprovalsToBusiness(m map[string]*chorus.ArmApproval) map[model.Arm]model.ArmApproval {
 	if len(m) == 0 {
 		return nil
 	}
-	out := make(map[string]model.ArmApproval, len(m))
+	out := make(map[model.Arm]model.ArmApproval, len(m))
 	for arm, a := range m {
 		if a == nil {
 			continue
@@ -278,7 +278,7 @@ func ArmApprovalsToBusiness(m map[string]*chorus.ArmApproval) map[string]model.A
 		if err != nil {
 			continue
 		}
-		out[arm] = model.ArmApproval{
+		out[model.Arm(arm)] = model.ArmApproval{
 			ApproverID: a.ApproverId,
 			ApprovedAt: ts,
 			Approve:    a.Approve,

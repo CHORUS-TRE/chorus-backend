@@ -177,7 +177,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 	return updatedRequest, nil
 }
 
-func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx context.Context, tenantID, requesterID, workspaceID uint64) (map[string][]uint64, bool, error) {
+func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx context.Context, tenantID, requesterID, workspaceID uint64) (map[model.Arm][]uint64, bool, error) {
 	workspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(workspaceID))
 
 	filter := authorization_model.FindUsersWithPermissionFilter{
@@ -204,7 +204,7 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 
 	requesterCanApprove := containsID(approvers, requesterID)
 
-	return map[string][]uint64{
+	return map[model.Arm][]uint64{
 		model.ApprovalRequestArmDownload: approvers,
 	}, requesterCanApprove, nil
 }
@@ -299,7 +299,7 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 	return updatedRequest, nil
 }
 
-func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context.Context, tenantID, requesterID, sourceWorkspaceID, targetWorkspaceID uint64) (map[string][]uint64, bool, error) {
+func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context.Context, tenantID, requesterID, sourceWorkspaceID, targetWorkspaceID uint64) (map[model.Arm][]uint64, bool, error) {
 	downloadWorkspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(sourceWorkspaceID))
 	uploadWorkspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(targetWorkspaceID))
 
@@ -340,7 +340,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 	// The requester may self-approve only if they are authorized for every arm.
 	requesterCanApprove := containsID(downloadApprovers, requesterID) && containsID(uploadApprovers, requesterID)
 
-	return map[string][]uint64{
+	return map[model.Arm][]uint64{
 		model.ApprovalRequestArmDownload: downloadApprovers,
 		model.ApprovalRequestArmUpload:   uploadApprovers,
 	}, requesterCanApprove, nil
@@ -357,7 +357,7 @@ func containsID(ids []uint64, target uint64) bool {
 }
 
 // uniqueApproverIDs returns the deduplicated union of approver ids across all arms.
-func uniqueApproverIDs(approversByArm map[string][]uint64) []uint64 {
+func uniqueApproverIDs(approversByArm map[model.Arm][]uint64) []uint64 {
 	seen := make(map[uint64]struct{})
 	var ids []uint64
 	for _, approvers := range approversByArm {
@@ -390,7 +390,7 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 	}
 
 	if request.ArmApprovals == nil {
-		request.ArmApprovals = make(map[string]model.ArmApproval)
+		request.ArmApprovals = make(map[model.Arm]model.ArmApproval)
 	}
 	now := time.Now()
 	for _, arm := range armsToDecide {

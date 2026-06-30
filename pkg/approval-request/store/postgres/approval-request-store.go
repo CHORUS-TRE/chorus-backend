@@ -16,13 +16,13 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/service"
 )
 
-// jsonbApproverIDs is the JSON encoding of ApprovalRequest.ApproverIDs
-// (an arm-name -> user-id-list map) stored in the approveridsbyarm column.
-type jsonbApproverIDs map[string][]uint64
+// jsonbApproverIDs is the JSON encoding of ApprovalRequest.ApproverIDsByArm
+// (an arm -> user-id-list map) stored in the approveridsbyarm column.
+type jsonbApproverIDs map[model.Arm][]uint64
 
 // jsonbArmApprovals is the JSON encoding of ApprovalRequest.ArmApprovals
 // stored in the armapprovals column.
-type jsonbArmApprovals map[string]model.ArmApproval
+type jsonbArmApprovals map[model.Arm]model.ArmApproval
 
 var _ service.ApprovalRequestStore = (*ApprovalRequestStorage)(nil)
 
@@ -95,8 +95,8 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 		Title:            r.Title,
 		Description:      r.Description,
 		Details:          details,
-		ApproverIDsByArm: map[string][]uint64(approverIDs),
-		ArmApprovals:     map[string]model.ArmApproval(armApprovals),
+		ApproverIDsByArm: map[model.Arm][]uint64(approverIDs),
+		ArmApprovals:     map[model.Arm]model.ArmApproval(armApprovals),
 		ApprovedByID:     r.ApprovedByID,
 		AutoApproved:     r.AutoApproved,
 		ApprovalMessage:  r.ApprovalMessage,
@@ -106,16 +106,16 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 	}, nil
 }
 
-func marshalApproverIDs(m map[string][]uint64) ([]byte, error) {
+func marshalApproverIDs(m map[model.Arm][]uint64) ([]byte, error) {
 	if m == nil {
-		m = map[string][]uint64{}
+		m = map[model.Arm][]uint64{}
 	}
 	return json.Marshal(m)
 }
 
-func marshalArmApprovals(m map[string]model.ArmApproval) ([]byte, error) {
+func marshalArmApprovals(m map[model.Arm]model.ArmApproval) ([]byte, error) {
 	if m == nil {
-		m = map[string]model.ArmApproval{}
+		m = map[model.Arm]model.ArmApproval{}
 	}
 	return json.Marshal(m)
 }
