@@ -20,7 +20,15 @@ CREATE INDEX approval_requests_active_approveridsbystep_idx
 DROP INDEX IF EXISTS approval_requests_active_approverids_idx;
 ALTER TABLE public.approval_requests DROP COLUMN approverids;
 
+-- approvedbyid is redundant now that each entry in stepdecisions records its
+-- own approver
+ALTER TABLE public.approval_requests DROP COLUMN approvedbyid;
+
 -- +migrate Down
+
+ALTER TABLE public.approval_requests ADD COLUMN approvedbyid BIGINT;
+ALTER TABLE public.approval_requests
+    ADD CONSTRAINT approval_requests_approvedbycon FOREIGN KEY (approvedbyid) REFERENCES users(id);
 
 ALTER TABLE public.approval_requests ADD COLUMN approverids BIGINT[] DEFAULT '{}';
 

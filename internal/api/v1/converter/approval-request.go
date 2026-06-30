@@ -36,15 +36,11 @@ func ApprovalRequestFromBusiness(request *model.ApprovalRequest) (*chorus.Approv
 		Description:       request.Description,
 		ApproverIdsByStep: ApproverIDsByStepFromBusiness(request.ApproverIDsByStep),
 		StepDecisions:     StepDecisionsFromBusiness(request.StepDecisions),
-		CreatedAt:         ca,
-		UpdatedAt:         ua,
-		ApprovedAt:        aa,
 		AutoApproved:      request.AutoApproved,
 		ApprovalMessage:   request.ApprovalMessage,
-	}
-
-	if request.ApprovedByID != nil {
-		protoRequest.ApprovedById = request.ApprovedByID
+		ApprovedAt:        aa,
+		CreatedAt:         ca,
+		UpdatedAt:         ua,
 	}
 
 	switch request.Type {
@@ -124,19 +120,20 @@ func ApprovalRequestToBusiness(request *chorus.ApprovalRequest) (*model.Approval
 	}
 
 	result := &model.ApprovalRequest{
-		ID:                request.Id,
-		TenantID:          request.TenantId,
-		RequesterID:       request.RequesterId,
-		Type:              ApprovalRequestTypeToBusiness(request.Type),
-		Status:            ApprovalRequestStatusToBusiness(request.Status),
-		Title:             request.Title,
-		Description:       request.Description,
+		ID:          request.Id,
+		TenantID:    request.TenantId,
+		RequesterID: request.RequesterId,
+		Type:        ApprovalRequestTypeToBusiness(request.Type),
+		Status:      ApprovalRequestStatusToBusiness(request.Status),
+		Title:       request.Title,
+		Description: request.Description,
+
 		ApproverIDsByStep: ApproverIDsByStepToBusiness(request.ApproverIdsByStep),
 		StepDecisions:     StepDecisionsToBusiness(request.StepDecisions),
-		ApprovedByID:      request.ApprovedById,
-		CreatedAt:         ca,
-		UpdatedAt:         ua,
 		ApprovedAt:        approvedAt,
+
+		CreatedAt: ca,
+		UpdatedAt: ua,
 	}
 
 	switch d := request.Details.(type) {

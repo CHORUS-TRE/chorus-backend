@@ -14,7 +14,11 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusApprovalRequest chorus approval request
+// ChorusApprovalRequest ApprovalRequest is split into approval steps keyed by name. A data
+// extraction has one step, "download" (data leaving the source workspace);
+// a data transfer adds "upload" (data entering the destination). The request
+// is approved once every required step is approved, and rejected the moment
+// any step is rejected.
 //
 // swagger:model chorusApprovalRequest
 type ChorusApprovalRequest struct {
@@ -26,13 +30,7 @@ type ChorusApprovalRequest struct {
 	// Format: date-time
 	ApprovedAt strfmt.DateTime `json:"approvedAt,omitempty"`
 
-	// approved by Id
-	ApprovedByID string `json:"approvedById,omitempty"`
-
-	// approverIdsByStep lists the user ids allowed to approve each step of the
-	// request, keyed by step name (e.g. "download", "upload"). A user that
-	// appears in every step can approve the whole request in one go;
-	// otherwise each step must be approved separately.
+	// Users allowed to approve each step, keyed by step name ("download", "upload").
 	ApproverIdsByStep map[string]ChorusApproverIds `json:"approverIdsByStep,omitempty"`
 
 	// auto approved
@@ -60,7 +58,7 @@ type ChorusApprovalRequest struct {
 	// status
 	Status *ChorusApprovalRequestStatus `json:"status,omitempty"`
 
-	// stepDecisions records the per-step approval decisions made so far.
+	// Decisions recorded for each step so far, keyed by step name.
 	StepDecisions map[string]ChorusApprovalStepDecision `json:"stepDecisions,omitempty"`
 
 	// tenant Id

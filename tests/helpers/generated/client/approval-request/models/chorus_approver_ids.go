@@ -12,8 +12,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ChorusApproverIds ApproverIds wraps a repeated list of user ids so it can be used as the
-// value type of a proto3 map (which does not allow `repeated` values).
+// ChorusApproverIds ApproverIds is a list of user ids.
 //
 // swagger:model chorusApproverIds
 type ChorusApproverIds struct {

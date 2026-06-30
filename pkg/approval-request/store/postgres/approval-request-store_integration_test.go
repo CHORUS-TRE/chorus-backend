@@ -143,9 +143,7 @@ func TestApprovalRequestStorage_CreateGetAndUpdateApprovalRequest(t *testing.T) 
 	}, created.ApproverIDsByStep)
 	require.Equal(t, uint64(101), created.Details.DataExtractionDetails.SourceWorkspaceID)
 
-	approvedByID := fixtures.userIDs["bob"]
 	created.Status = approval_request_model.ApprovalRequestStatusApproved
-	created.ApprovedByID = &approvedByID
 	approvedAt := time.Now().UTC().Truncate(time.Second)
 	created.ApprovedAt = &approvedAt
 	created.ApprovalMessage = "approved"
@@ -153,8 +151,6 @@ func TestApprovalRequestStorage_CreateGetAndUpdateApprovalRequest(t *testing.T) 
 	updated, err := store.UpdateApprovalRequest(ctx, fixtures.tenantID, created)
 	require.NoError(t, err)
 	require.Equal(t, approval_request_model.ApprovalRequestStatusApproved, updated.Status)
-	require.NotNil(t, updated.ApprovedByID)
-	require.Equal(t, approvedByID, *updated.ApprovedByID)
 	require.NotNil(t, updated.ApprovedAt)
 	require.Equal(t, "approved", updated.ApprovalMessage)
 

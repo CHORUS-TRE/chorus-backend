@@ -35,19 +35,23 @@ message DataTransferDetails {
     repeated ApprovalRequestFile files = 3;
 }
 
-// ApproverIds wraps a repeated list of user ids so it can be used as the
-// value type of a proto3 map (which does not allow `repeated` values).
+// ApproverIds is a list of user ids.
 message ApproverIds {
     repeated uint64 ids = 1;
 }
 
-// ApprovalStepDecision records a single per-step approval decision.
+// ApprovalStepDecision is one approver's decision on one step.
 message ApprovalStepDecision {
     uint64 approverId = 1;
     google.protobuf.Timestamp approvedAt = 2;
-    bool approve = 3;
+    bool approve = 3; // true: approved, false: rejected.
 }
 
+// ApprovalRequest is split into approval steps keyed by name. A data
+// extraction has one step, "download" (data leaving the source workspace);
+// a data transfer adds "upload" (data entering the destination). The request
+// is approved once every required step is approved, and rejected the moment
+// any step is rejected.
 message ApprovalRequest {
     uint64 id = 1;
     uint64 tenantId = 2;
@@ -63,20 +67,15 @@ message ApprovalRequest {
         DataTransferDetails dataTransfer = 9;
     }
 
-    // approverIdsByStep lists the user ids allowed to approve each step of the
-    // request, keyed by step name (e.g. "download", "upload"). A user that
-    // appears in every step can approve the whole request in one go;
-    // otherwise each step must be approved separately.
+    // Users allowed to approve each step, keyed by step name ("download", "upload").
     map<string, ApproverIds> approverIdsByStep = 10;
-    optional uint64 approvedById = 11;
+    // Decisions recorded for each step so far, keyed by step name.
+    map<string, ApprovalStepDecision> stepDecisions = 11;
 
-    google.protobuf.Timestamp createdAt = 12;
-    google.protobuf.Timestamp updatedAt = 13;
+    bool autoApproved = 12;
+    string approvalMessage = 13;
     optional google.protobuf.Timestamp approvedAt = 14;
 
-    bool autoApproved = 15;
-    string approvalMessage = 16;
-
-    // stepDecisions records the per-step approval decisions made so far.
-    map<string, ApprovalStepDecision> stepDecisions = 17;
+    google.protobuf.Timestamp createdAt = 15;
+    google.protobuf.Timestamp updatedAt = 16;
 }

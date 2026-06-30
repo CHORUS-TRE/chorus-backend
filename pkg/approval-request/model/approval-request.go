@@ -17,20 +17,12 @@ type ApprovalRequest struct {
 
 	Details ApprovalRequestDetails
 
-	// ApproverIDsByStep lists the user IDs allowed to approve each step of the
-	// request, keyed by step (see Step* constants).
-	// A user who appears in every step can approve the whole request in one
-	// go; otherwise each step must be approved separately by a user
-	// authorized for that step.
+	// ApproverIDsByStep lists the users allowed to approve each step.
 	ApproverIDsByStep map[ApprovalStep][]uint64
 
-	// StepDecisions records the per-step approval decisions made so far.
-	// The key is the step. A request is fully approved once every step
-	// it requires has an Approve=true entry; a single Approve=false entry
-	// rejects the whole request.
+	// StepDecisions records the decision made for each step so far.
 	StepDecisions map[ApprovalStep]ApprovalStepDecision
 
-	ApprovedByID    *uint64
 	AutoApproved    bool
 	ApprovalMessage string
 
@@ -39,20 +31,17 @@ type ApprovalRequest struct {
 	ApprovedAt *time.Time
 }
 
-// ApprovalStepDecision records a single per-step approval decision.
+// ApprovalStepDecision is one approver's decision on one step.
 type ApprovalStepDecision struct {
 	ApproverID uint64    `json:"approver_id"`
 	ApprovedAt time.Time `json:"approved_at"`
-	Approve    bool      `json:"approve"`
+	Approve    bool      `json:"approve"` // true: approved, false: rejected.
 }
 
-// ApprovalStep identifies one independently-approved part of a request: the
-// data leaving a workspace ("download") and, for transfers, the data arriving
-// in the destination ("upload"). Each step has its own approver set and is
-// decided separately.
+// ApprovalStep is one independently-approved part of a request: "download"
+// (data leaving the source) or "upload" (data entering the destination).
 type ApprovalStep string
 
-// Step names used to partition the set of approvers for a request.
 const (
 	StepDownload ApprovalStep = "download"
 	StepUpload   ApprovalStep = "upload"

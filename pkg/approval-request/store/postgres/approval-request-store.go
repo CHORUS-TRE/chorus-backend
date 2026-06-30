@@ -45,7 +45,6 @@ type approvalRequestRow struct {
 	Details         []byte     `db:"details"`
 	ApproverIDs     []byte     `db:"approveridsbystep"`
 	StepDecisions   []byte     `db:"stepdecisions"`
-	ApprovedByID    *uint64    `db:"approvedbyid"`
 	AutoApproved    bool       `db:"autoapproved"`
 	ApprovalMessage string     `db:"approvalmessage"`
 	CreatedAt       time.Time  `db:"createdat"`
@@ -97,7 +96,6 @@ func (r *approvalRequestRow) toModel() (*model.ApprovalRequest, error) {
 		Details:           details,
 		ApproverIDsByStep: map[model.ApprovalStep][]uint64(approverIDs),
 		StepDecisions:     map[model.ApprovalStep]model.ApprovalStepDecision(stepDecisions),
-		ApprovedByID:      r.ApprovedByID,
 		AutoApproved:      r.AutoApproved,
 		ApprovalMessage:   r.ApprovalMessage,
 		CreatedAt:         r.CreatedAt,
@@ -126,7 +124,7 @@ const isApproverSQL = `EXISTS (SELECT 1 FROM jsonb_each(approveridsbystep) step 
 
 func (s *ApprovalRequestStorage) GetApprovalRequest(ctx context.Context, tenantID, requestID uint64) (*model.ApprovalRequest, error) {
 	const query = `
-		SELECT id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+		SELECT id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		FROM approval_requests
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
 	`
@@ -188,7 +186,7 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 	}
 
 	selectQuery := `
-		SELECT id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+		SELECT id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		FROM approval_requests ` + whereClause
 
 	paginationClause, validatedPagination := storage.BuildPaginationClause(pagination, model.ApprovalRequest{})
@@ -306,7 +304,7 @@ func (s *ApprovalRequestStorage) CreateApprovalRequest(ctx context.Context, tena
 	const query = `
 		INSERT INTO approval_requests (tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-		RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+		RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 	`
 
 	var row approvalRequestRow
@@ -351,9 +349,9 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 	if request.Status == model.ApprovalRequestStatusApproved || request.Status == model.ApprovalRequestStatusRejected {
 		query = `
 			UPDATE approval_requests
-			SET type = $3, status = $4, title = $5, description = $6, details = $7, approveridsbystep = $8, stepdecisions = $9, approvedbyid = $10, autoapproved = $11, approvalmessage = $12, approvedat = NOW(), updatedat = NOW()
+			SET type = $3, status = $4, title = $5, description = $6, details = $7, approveridsbystep = $8, stepdecisions = $9, autoapproved = $10, approvalmessage = $11, approvedat = NOW(), updatedat = NOW()
 			WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-			RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+			RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		`
 		args = []interface{}{
 			tenantID,
@@ -365,7 +363,6 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 			detailsJSON,
 			approverIDsJSON,
 			stepDecisionsJSON,
-			request.ApprovedByID,
 			request.AutoApproved,
 			request.ApprovalMessage,
 		}
@@ -374,7 +371,7 @@ func (s *ApprovalRequestStorage) UpdateApprovalRequest(ctx context.Context, tena
 			UPDATE approval_requests
 			SET type = $3, status = $4, title = $5, description = $6, details = $7, approveridsbystep = $8, stepdecisions = $9, autoapproved = $10, approvalmessage = $11, updatedat = NOW()
 			WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL
-			RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, approvedbyid, autoapproved, approvalmessage, createdat, updatedat, approvedat
+			RETURNING id, tenantid, requesterid, type, status, title, description, details, approveridsbystep, stepdecisions, autoapproved, approvalmessage, createdat, updatedat, approvedat
 		`
 		args = []interface{}{
 			tenantID,

@@ -14,12 +14,12 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusApprovalStepDecision ApprovalStepDecision records a single per-step approval decision.
+// ChorusApprovalStepDecision ApprovalStepDecision is one approver's decision on one step.
 //
 // swagger:model chorusApprovalStepDecision
 type ChorusApprovalStepDecision struct {
 
-	// approve
+	// true: approved, false: rejected.
 	Approve bool `json:"approve,omitempty"`
 
 	// approved at

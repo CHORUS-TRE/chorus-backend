@@ -124,7 +124,6 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 		request.Status = model.ApprovalRequestStatusApproved
 		request.AutoApproved = true
 		request.ApprovalMessage = "Auto-approved: requester has permission to download files from workspace"
-		request.ApprovedByID = &request.RequesterID
 		now := time.Now()
 		request.ApprovedAt = &now
 	} else {
@@ -240,7 +239,6 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 		request.Status = model.ApprovalRequestStatusApproved
 		request.AutoApproved = true
 		request.ApprovalMessage = "Auto-approved: requester has data transfer permission"
-		request.ApprovedByID = &request.RequesterID
 		now := time.Now()
 		request.ApprovedAt = &now
 	} else {
@@ -409,11 +407,9 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 	switch {
 	case !approve:
 		request.Status = model.ApprovalRequestStatusRejected
-		request.ApprovedByID = &userID
 		request.ApprovedAt = &now
 	case request.IsFullyApproved():
 		request.Status = model.ApprovalRequestStatusApproved
-		request.ApprovedByID = &userID
 		request.ApprovedAt = &now
 	default:
 		// Still waiting on other steps; stay pending.

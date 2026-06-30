@@ -267,32 +267,31 @@ definitions:
         type: object
         additionalProperties:
           $ref: '#/definitions/chorusApproverIds'
-        description: |-
-          approverIdsByStep lists the user ids allowed to approve each step of the
-          request, keyed by step name (e.g. "download", "upload"). A user that
-          appears in every step can approve the whole request in one go;
-          otherwise each step must be approved separately.
-      approvedById:
+        description: Users allowed to approve each step, keyed by step name ("download", "upload").
+      stepDecisions:
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/chorusApprovalStepDecision'
+        description: Decisions recorded for each step so far, keyed by step name.
+      autoApproved:
+        type: boolean
+      approvalMessage:
         type: string
-        format: uint64
+      approvedAt:
+        type: string
+        format: date-time
       createdAt:
         type: string
         format: date-time
       updatedAt:
         type: string
         format: date-time
-      approvedAt:
-        type: string
-        format: date-time
-      autoApproved:
-        type: boolean
-      approvalMessage:
-        type: string
-      stepDecisions:
-        type: object
-        additionalProperties:
-          $ref: '#/definitions/chorusApprovalStepDecision'
-        description: stepDecisions records the per-step approval decisions made so far.
+    description: |-
+      ApprovalRequest is split into approval steps keyed by name. A data
+      extraction has one step, "download" (data leaving the source workspace);
+      a data transfer adds "upload" (data entering the destination). The request
+      is approved once every required step is approved, and rejected the moment
+      any step is rejected.
   chorusApprovalRequestFile:
     type: object
     properties:
@@ -352,7 +351,8 @@ definitions:
         format: date-time
       approve:
         type: boolean
-    description: ApprovalStepDecision records a single per-step approval decision.
+        description: 'true: approved, false: rejected.'
+    description: ApprovalStepDecision is one approver's decision on one step.
   chorusApproveApprovalRequestReply:
     type: object
     properties:
@@ -371,9 +371,7 @@ definitions:
         items:
           type: string
           format: uint64
-    description: |-
-      ApproverIds wraps a repeated list of user ids so it can be used as the
-      value type of a proto3 map (which does not allow `repeated` values).
+    description: ApproverIds is a list of user ids.
   chorusCountMyApprovalRequestsReply:
     type: object
     properties:
