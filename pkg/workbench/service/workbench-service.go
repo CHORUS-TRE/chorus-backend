@@ -17,6 +17,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/audit"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/protocol/rest/middleware"
 	app_service "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
@@ -56,28 +57,20 @@ type WorkspaceReader interface {
 	GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*workspace_model.Workspace, error)
 }
 
-type WorkbenchFilter struct {
-	WorkspaceIDsIn *[]uint64
-}
-
-type AppInstanceFilter struct {
-	WorkbenchIDsIn *[]uint64
-}
-
 type Workbencher interface {
 	GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error)
-	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
+	ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error)
 	CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 	UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantId, workbenchId uint64) (*model.Workbench, error)
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 
-	ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
+	AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
 	RemoveUserFromWorkbench(ctx context.Context, tenantID, userID, workbenchID uint64) error
 
 	GetAppInstance(ctx context.Context, tenantID, appInstanceID uint64) (*model.AppInstance, error)
-	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
+	ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error)
 	CreateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	UpdateAppInstance(ctx context.Context, appInstance *model.AppInstance) (*model.AppInstance, error)
 	DeleteAppInstance(ctx context.Context, tenantId, appInstanceId uint64) (*model.AppInstance, error)
@@ -200,20 +193,20 @@ func (s *WorkbenchService) SetClientWatchers() {
 		workbenchID, err := model.GetIDFromClusterName(k8sWorkbench.Name)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to get workbench ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
-			return fmt.Errorf("unable to get workbench ID from cluster name %s: %w", k8sWorkbench.Name, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench ID from cluster name %s", k8sWorkbench.Name))
 		}
 
 		workspaceID, err := workspace_model.GetIDFromClusterName(k8sWorkbench.Namespace)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to get namespace ID from cluster name", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
-			return fmt.Errorf("unable to get namespace ID from cluster name %s: %w", k8sWorkbench.Namespace, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get namespace ID from cluster name %s", k8sWorkbench.Namespace))
 		}
 
 		// Fetch existing workbench
 		workbench, err := s.store.GetWorkbench(ctx, k8sWorkbench.TenantID, workbenchID)
 		if err != nil {
 			logger.TechLog.Error(ctx, "unable to get workbench for k8s status update", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Error(err))
-			return fmt.Errorf("unable to get workbench %d: %w", workbenchID, err)
+			return cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workbench %d", workbenchID))
 		}
 
 		// Overwrite k8s-derived statuses
@@ -393,12 +386,12 @@ func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
 func (s *WorkbenchService) syncWorkbenchWithID(ctx context.Context, tenantID, workbenchID uint64) error {
 	workbench, err := s.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
 	}
 
 	err = s.syncWorkbench(ctx, workbench)
 	if err != nil {
-		return fmt.Errorf("unable to sync workbench %v: %w", workbenchID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to sync workbench %v", workbenchID))
 	}
 	return nil
 }
@@ -470,10 +463,10 @@ func (s *WorkbenchService) syncWorkbench(ctx context.Context, workbench *model.W
 	return nil
 }
 
-func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	workbenches, paginationRes, err := s.store.ListWorkbenches(ctx, tenantID, pagination, filter.WorkspaceIDsIn)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to query workbenches: %w", err)
+		return nil, nil, cerr.WrapStoreError(err, "Unable to list workbenches")
 	}
 	return workbenches, paginationRes, nil
 }
@@ -481,7 +474,7 @@ func (s *WorkbenchService) ListWorkbenches(ctx context.Context, tenantID uint64,
 func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
 	}
 
 	return workbench, nil
@@ -490,22 +483,22 @@ func (s *WorkbenchService) GetWorkbench(ctx context.Context, tenantID, workbench
 func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbenchID uint64) (*model.Workbench, error) {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
 	}
 
 	err = s.store.DeleteWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to delete workbench %v", workbenchID))
 	}
 
 	_, err = s.userer.RemoveRolesByContext(ctx, "workbench", fmt.Sprintf("%d", workbenchID))
 	if err != nil {
-		return nil, fmt.Errorf("unable to remove roles for workbench %v: %w", workbenchID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove roles for workbench %v", workbenchID))
 	}
 
 	err = s.client.DeleteWorkbench(workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID))
 	if err != nil {
-		return nil, fmt.Errorf("unable to delete workbench %v: %w", workbenchID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to delete workbench %v in K8s", workbenchID))
 	}
 
 	return workbench, nil
@@ -514,7 +507,7 @@ func (s *WorkbenchService) DeleteWorkbench(ctx context.Context, tenantID, workbe
 func (s *WorkbenchService) DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error {
 	err := s.store.DeleteWorkbenchesInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
-		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to delete workbenches in workspace %v", workspaceID))
 	}
 
 	return nil
@@ -523,7 +516,7 @@ func (s *WorkbenchService) DeleteWorkbenchesInWorkspace(ctx context.Context, ten
 func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	updatedWorkbench, err := s.store.UpdateWorkbench(ctx, workbench.TenantID, workbench)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update workbench %v: %w", workbench.ID, err)
+		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to update workbench %v", workbench.ID))
 	}
 
 	return updatedWorkbench, nil
@@ -532,7 +525,7 @@ func (s *WorkbenchService) UpdateWorkbench(ctx context.Context, workbench *model
 func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model.Workbench) (*model.Workbench, error) {
 	newWorkbench, err := s.store.CreateWorkbench(ctx, workbench.TenantID, workbench)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create workbench: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to create workbench")
 	}
 
 	r := authorization_model.NewRole(authorization_model.RoleWorkbenchAdmin,
@@ -540,12 +533,12 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		authorization_model.WithWorkspace(newWorkbench.WorkspaceID))
 	err = s.userer.CreateUserRoles(ctx, workbench.TenantID, workbench.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
-		return nil, fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", workbench.UserID, newWorkbench.ID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workbench admin role to user %v for workbench %v", workbench.UserID, newWorkbench.ID))
 	}
 
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: workbench.TenantID, ID: workbench.UserID})
 	if err != nil {
-		return nil, fmt.Errorf("unable to get user %v: %w", workbench.UserID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", workbench.UserID))
 	}
 
 	username := ""
@@ -574,51 +567,56 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		InitialResolutionHeight: workbench.InitialResolutionHeight,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to create workbench %v: %w", workbench.ID, err)
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create workbench %v in K8s", workbench.ID))
 	}
 
 	return newWorkbench, nil
 }
 
-func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
-	if err != nil {
-		return fmt.Errorf("unable to get user %v: %w", userID, err)
-	}
-
+func (s *WorkbenchService) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	// Verify that the workbench exists
 	workbenchID, err := strconv.ParseUint(role.Context["workbench"], 10, 64)
 	if err != nil {
-		return fmt.Errorf("unable to parse workbench ID %v: %w", role.Context["workbench"], err)
+		return cerr.ErrInvalidRequest.Wrap(err, fmt.Sprintf("Unable to parse workbench ID %v", role.Context["workbench"]))
 	}
 
 	workbench, err := s.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", role.Context["workbench"], err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", role.Context["workbench"]))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Verify that the user exists and get its roles
+	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
+	}
+
+	// Remove existing role in workbench
+	existingRoleID := uint64(0)
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == role.Context["workbench"] {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			existingRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	if existingRoleID != 0 {
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{existingRoleID})
 		if err != nil {
-			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, tenantID, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workbench roles for user %v for workbench %v", userID, tenantID))
 		}
 	}
 
+	// Add the new role to the user
 	role.Context["workspace"] = fmt.Sprintf("%d", workbench.WorkspaceID)
-
 	logger.TechLog.Debug(ctx, "assigning role to user", zap.Uint64("userID", userID), zap.Any("role", role))
 
 	err = s.userer.CreateUserRoles(ctx, tenantID, userID, []user_model.UserRole{role})
 	if err != nil {
-		return fmt.Errorf("unable to assign workbench admin role to user %v for workbench %v: %w", userID, tenantID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workbench admin role to user %v for workbench %v", userID, tenantID))
 	}
 
+	// Notify the user about the new role
 	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
 		TenantID: tenantID,
 		UserID:   userID,
@@ -631,30 +629,56 @@ func (s *WorkbenchService) ManageUserRoleInWorkbench(ctx context.Context, tenant
 		},
 	}, []uint64{userID})
 	if err != nil {
-		return fmt.Errorf("unable to create notification for user %v about new role %v in workspace %v: %w", userID, role.Role, role.Context["workspace"], err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v about new role %v in workspace %v", userID, role.Role, role.Context["workspace"]))
 	}
 
 	return nil
 }
 
 func (s *WorkbenchService) RemoveUserFromWorkbench(ctx context.Context, tenantID, userID uint64, workbenchID uint64) error {
+	// Verify that the workbench exists
+	_, err := s.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
+	}
+
+	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
-		return fmt.Errorf("unable to get user %v: %w", userID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
-	matchingRolesIDs := []uint64{}
+	// Get the user's role in the workbench
+	workbenchRoleID := uint64(0)
 	for _, r := range user.Roles {
 		if r.Context["workbench"] == fmt.Sprintf("%d", workbenchID) {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			workbenchRoleID = r.ID
+			break
 		}
 	}
 
-	if len(matchingRolesIDs) != 0 {
-		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, matchingRolesIDs)
+	// Remove workbench role from the user
+	if workbenchRoleID != 0 {
+		err = s.userer.RemoveUserRoles(ctx, tenantID, userID, []uint64{workbenchRoleID})
 		if err != nil {
-			return fmt.Errorf("unable to remove existing workbench roles for user %v for workbench %v: %w", userID, workbenchID, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to remove existing workbench roles for user %v for workbench %v", userID, workbenchID))
 		}
+	}
+
+	// Notify the user about being removed from the workbench
+	err = s.notificationStore.CreateNotification(ctx, &notification_model.Notification{
+		TenantID: tenantID,
+		UserID:   userID,
+		Message:  fmt.Sprintf("You have been removed from workbench %v", workbenchID),
+		Content: notification_model.NotificationContent{
+			Type: "SystemNotification",
+			SystemNotification: &notification_model.SystemNotification{
+				RefreshJWTRequired: true,
+			},
+		},
+	}, []uint64{userID})
+	if err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to create notification for user %v about being removed from workbench %v", userID, workbenchID))
 	}
 
 	return nil
@@ -784,7 +808,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 	if !s.cfg.Services.WorkbenchService.BackendInK8S {
 		port, stopChan, err = s.client.CreatePortForward(proxyID.namespace, proxyID.workbench)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create port forward: %w", err)
+			return nil, cerr.ErrInternal.Wrap(err, "Failed to create port forward")
 		}
 
 		xpraUrl = fmt.Sprintf("http://localhost:%v", port)
@@ -795,7 +819,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 
 	targetURL, err := url.Parse(xpraUrl)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse url: %w", err)
+		return nil, cerr.ErrInternal.Wrap(err, "Failed to parse xpra url")
 	}
 
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
@@ -843,7 +867,7 @@ func (s *WorkbenchService) getProxy(proxyID proxyID) (*proxy, error) {
 func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error {
 	workbench, err := s.store.GetWorkbench(ctx, tenantID, workbenchID)
 	if err != nil {
-		return fmt.Errorf("unable to get workbench %v: %w", workbenchID, err)
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workbench %v", workbenchID))
 	}
 
 	namespace, workbenchName := workspace_model.GetWorkspaceClusterName(workbench.WorkspaceID), model.GetWorkbenchClusterName(workbenchID)
@@ -855,7 +879,7 @@ func (s *WorkbenchService) ProxyWorkbench(ctx context.Context, tenantID, workben
 
 	proxy, err := s.getProxy(proxyID)
 	if err != nil {
-		return fmt.Errorf("unable to get proxy %v: %w", proxyID, err)
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get proxy %v", proxyID))
 	}
 
 	go s.addWorkbenchHit(workbenchID)

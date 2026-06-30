@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListUsersReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -108,10 +104,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateUserReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -130,10 +122,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateUserReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -152,10 +140,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetUserMeReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       tags:
         - UserService
   /api/rest/v1/users/me/password:
@@ -168,10 +152,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdatePasswordReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -190,10 +170,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusEnableTotpReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -212,10 +188,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusResetTotpReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -234,10 +206,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetUserReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -255,10 +223,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteUserReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -277,10 +241,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusResetPasswordReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -304,10 +264,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateUserRoleReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: userId
           in: path
@@ -331,10 +287,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteUserRoleReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: userId
           in: path
@@ -596,6 +548,14 @@ definitions:
         type: array
         items:
           type: string
+      uid:
+        type: string
+        format: uint64
+      gids:
+        type: array
+        items:
+          type: string
+          format: uint64
   chorusUserFilter:
     type: object
     properties:
@@ -620,22 +580,3 @@ definitions:
         type: boolean
       withNamespaces:
         type: boolean
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

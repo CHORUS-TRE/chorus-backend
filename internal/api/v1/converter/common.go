@@ -12,6 +12,13 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 )
 
+func nonZeroUint64(v uint64) *uint64 {
+	if v == 0 {
+		return nil
+	}
+	return &v
+}
+
 func ToProtoTimestamp(t time.Time) (*timestamp.Timestamp, error) {
 	if t.IsZero() {
 		return nil, nil

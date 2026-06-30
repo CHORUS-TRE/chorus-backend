@@ -58,7 +58,7 @@ func (c UserController) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequ
 		return nil, err
 	}
 
-	tgUser, err := converter.UserFromBusiness(user)
+	tgUser, err := converter.UserFromBusiness(user, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}
@@ -83,7 +83,7 @@ func (c UserController) GetUser(ctx context.Context, req *chorus.GetUserRequest)
 		return nil, err
 	}
 
-	tgUser, err := converter.UserFromBusiness(user)
+	tgUser, err := converter.UserFromBusiness(user, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}
@@ -138,7 +138,7 @@ func (c UserController) UpdateUser(ctx context.Context, req *chorus.User) (*chor
 	if err != nil {
 		return nil, err
 	}
-	updatedUserProto, err := converter.UserFromBusiness(updatedUser)
+	updatedUserProto, err := converter.UserFromBusiness(updatedUser, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}
@@ -187,7 +187,7 @@ func (c UserController) ListUsers(ctx context.Context, req *chorus.ListUsersRequ
 
 	var users []*chorus.User
 	for _, r := range res {
-		user, err := converter.UserFromBusiness(r)
+		user, err := converter.UserFromBusiness(r, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 		if err != nil {
 			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 		}
@@ -269,7 +269,7 @@ func (c UserController) createUserAsAdmin(ctx context.Context, req *chorus.User)
 		return nil, err
 	}
 
-	tgUser, err := converter.UserFromBusiness(res)
+	tgUser, err := converter.UserFromBusiness(res, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}
@@ -291,10 +291,7 @@ func (c UserController) registerUserSelfService(ctx context.Context, req *chorus
 		return nil, cerr.ErrInvalidRequest.WithMessage("firstName, lastName, username and password are required")
 	}
 
-	tenantID := c.cfg.Daemon.TenantID
-	if tenantID == 0 {
-		tenantID = 1
-	}
+	tenantID := c.cfg.Services.AuthenticationService.SelfService.TenantID
 
 	user := &service.UserReq{
 		FirstName: firstName,
@@ -315,7 +312,7 @@ func (c UserController) registerUserSelfService(ctx context.Context, req *chorus
 		return nil, err
 	}
 
-	tgUser, err := converter.UserFromBusiness(res)
+	tgUser, err := converter.UserFromBusiness(res, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}
@@ -366,7 +363,7 @@ func (c UserController) CreateUserRole(ctx context.Context, req *chorus.CreateUs
 		return nil, err
 	}
 
-	u, err := converter.UserFromBusiness(user)
+	u, err := converter.UserFromBusiness(user, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}
@@ -397,7 +394,7 @@ func (c UserController) DeleteUserRole(ctx context.Context, req *chorus.DeleteUs
 		return nil, err
 	}
 
-	u, err := converter.UserFromBusiness(user)
+	u, err := converter.UserFromBusiness(user, c.cfg.Services.UserService.UIDOffset, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert user")
 	}

@@ -40,6 +40,17 @@ message WorkspaceFilter {
     repeated uint64 workspace_ids_in = 1;
 }
 
+message ListPublicWorkspacesRequest {
+    PaginationQuery pagination = 1;
+}
+message ListPublicWorkspacesReply {
+    ListPublicWorkspacesResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListPublicWorkspacesResult {
+    repeated PublicWorkspace public_workspaces = 1;
+}
+
 message GetWorkspaceRequest {
     uint64 id = 1;
 }
@@ -64,15 +75,15 @@ message UpdateWorkspaceResult {
     Workspace workspace = 1;
 }
 
-message ManageUserRoleInWorkspaceRequest {
+message AddUserRoleInWorkspaceRequest {
     uint64 id = 1;
     uint64 userId = 2;
     Role role = 3;
 }
-message ManageUserRoleInWorkspaceReply {
-    ManageUserRoleInWorkspaceResult result = 1;
+message AddUserRoleInWorkspaceReply {
+    AddUserRoleInWorkspaceResult result = 1;
 }
-message ManageUserRoleInWorkspaceResult {
+message AddUserRoleInWorkspaceResult {
     Workspace workspace = 1;
 }
 
@@ -131,6 +142,17 @@ service WorkspaceService {
         };
     };
 
+    rpc ListPublicWorkspaces(ListPublicWorkspacesRequest) returns (ListPublicWorkspacesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/workspaces/public"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List public workspaces";
+            description: "This endpoint returns a list of public workspaces";
+            tags: "WorkspaceService";
+        };
+    };
+
     rpc CreateWorkspace(Workspace) returns (CreateWorkspaceReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/workspaces";
@@ -155,14 +177,14 @@ service WorkspaceService {
         };
     };
 
-    rpc ManageUserRoleInWorkspace(ManageUserRoleInWorkspaceRequest) returns (ManageUserRoleInWorkspaceReply) {
+    rpc AddUserRoleInWorkspace(AddUserRoleInWorkspaceRequest) returns (AddUserRoleInWorkspaceReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/workspaces/{id}/user/{userId}/role"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-            summary: "Manage a user's role in a workspace";
-            description: "This endpoint manages a user's role in a workspace";
+            summary: "Add a user's role in a workspace";
+            description: "This endpoint adds a user's role in a workspace";
             tags: "WorkspaceService";
         };
     };

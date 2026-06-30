@@ -41,6 +41,7 @@ const (
 	PermissionAuditWorkbench         PermissionName = "auditWorkbench"
 
 	PermissionListWorkspaces                 PermissionName = "listWorkspaces"
+	PermissionListPublicWorkspaces           PermissionName = "listPublicWorkspaces"
 	PermissionCreateWorkspace                PermissionName = "createWorkspace"
 	PermissionUpdateWorkspace                PermissionName = "updateWorkspace"
 	PermissionGetWorkspace                   PermissionName = "getWorkspace"
@@ -58,6 +59,8 @@ const (
 	PermissionUpdateWorkspaceServiceInstance PermissionName = "updateWorkspaceServiceInstance"
 	PermissionGetWorkspaceServiceInstance    PermissionName = "getWorkspaceServiceInstance"
 	PermissionDeleteWorkspaceServiceInstance PermissionName = "deleteWorkspaceServiceInstance"
+
+	PermissionGetWorkspaceServiceInstanceSecret PermissionName = "getWorkspaceServiceInstanceSecret"
 
 	PermissionListApps  PermissionName = "listApps"
 	PermissionCreateApp PermissionName = "createApp"
@@ -98,6 +101,16 @@ const (
 	PermissionSetPlatformSettings PermissionName = "setPlatformSettings"
 	PermissionAuditPlatform       PermissionName = "auditPlatform"
 	PermissionManageDynamicRoles  PermissionName = "manageDynamicRoles"
+
+	PermissionCreateTermsOfUseVersion     PermissionName = "createTermsOfUseVersion"
+	PermissionUpdateTermsOfUseVersion     PermissionName = "updateTermsOfUseVersion"
+	PermissionPublishTermsOfUseVersion    PermissionName = "publishTermsOfUseVersion"
+	PermissionGetTermsOfUseVersion        PermissionName = "getTermsOfUseVersion"
+	PermissionListTermsOfUseVersions      PermissionName = "listTermsOfUseVersions"
+	PermissionGetCurrentTermsOfUseVersion PermissionName = "getCurrentTermsOfUseVersion"
+	PermissionListTermsOfUseAcceptances   PermissionName = "listTermsOfUseAcceptances"
+	PermissionGetMyTermsOfUseStatus       PermissionName = "getMyTermsOfUseStatus"
+	PermissionAcceptTermsOfUse            PermissionName = "acceptTermsOfUse"
 
 	PermissionListRequests   PermissionName = "listRequests"
 	PermissionListMyRequests PermissionName = "listMyRequests"
@@ -143,6 +156,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 
 	case string(PermissionListWorkspaces):
 		return PermissionListWorkspaces, nil
+	case string(PermissionListPublicWorkspaces):
+		return PermissionListPublicWorkspaces, nil
 	case string(PermissionCreateWorkspace):
 		return PermissionCreateWorkspace, nil
 	case string(PermissionUpdateWorkspace):
@@ -174,6 +189,8 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionUpdateWorkspaceServiceInstance, nil
 	case string(PermissionGetWorkspaceServiceInstance):
 		return PermissionGetWorkspaceServiceInstance, nil
+	case string(PermissionGetWorkspaceServiceInstanceSecret):
+		return PermissionGetWorkspaceServiceInstanceSecret, nil
 	case string(PermissionDeleteWorkspaceServiceInstance):
 		return PermissionDeleteWorkspaceServiceInstance, nil
 
@@ -249,6 +266,25 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionAuditPlatform, nil
 	case string(PermissionManageDynamicRoles):
 		return PermissionManageDynamicRoles, nil
+
+	case string(PermissionCreateTermsOfUseVersion):
+		return PermissionCreateTermsOfUseVersion, nil
+	case string(PermissionUpdateTermsOfUseVersion):
+		return PermissionUpdateTermsOfUseVersion, nil
+	case string(PermissionPublishTermsOfUseVersion):
+		return PermissionPublishTermsOfUseVersion, nil
+	case string(PermissionGetTermsOfUseVersion):
+		return PermissionGetTermsOfUseVersion, nil
+	case string(PermissionListTermsOfUseVersions):
+		return PermissionListTermsOfUseVersions, nil
+	case string(PermissionGetCurrentTermsOfUseVersion):
+		return PermissionGetCurrentTermsOfUseVersion, nil
+	case string(PermissionListTermsOfUseAcceptances):
+		return PermissionListTermsOfUseAcceptances, nil
+	case string(PermissionGetMyTermsOfUseStatus):
+		return PermissionGetMyTermsOfUseStatus, nil
+	case string(PermissionAcceptTermsOfUse):
+		return PermissionAcceptTermsOfUse, nil
 
 	case string(PermissionListRequests):
 		return PermissionListRequests, nil

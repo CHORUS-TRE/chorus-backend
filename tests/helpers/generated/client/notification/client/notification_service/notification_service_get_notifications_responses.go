@@ -31,14 +31,7 @@ func (o *NotificationServiceGetNotificationsReader) ReadResponse(response runtim
 		}
 		return result, nil
 	default:
-		result := NewNotificationServiceGetNotificationsDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/notifications] NotificationService_GetNotifications", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *NotificationServiceGetNotificationsOK) GetPayload() *models.ChorusGetNo
 func (o *NotificationServiceGetNotificationsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusGetNotificationsReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewNotificationServiceGetNotificationsDefault creates a NotificationServiceGetNotificationsDefault with default headers values
-func NewNotificationServiceGetNotificationsDefault(code int) *NotificationServiceGetNotificationsDefault {
-	return &NotificationServiceGetNotificationsDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-NotificationServiceGetNotificationsDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type NotificationServiceGetNotificationsDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this notification service get notifications default response has a 2xx status code
-func (o *NotificationServiceGetNotificationsDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this notification service get notifications default response has a 3xx status code
-func (o *NotificationServiceGetNotificationsDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this notification service get notifications default response has a 4xx status code
-func (o *NotificationServiceGetNotificationsDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this notification service get notifications default response has a 5xx status code
-func (o *NotificationServiceGetNotificationsDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this notification service get notifications default response a status code equal to that given
-func (o *NotificationServiceGetNotificationsDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the notification service get notifications default response
-func (o *NotificationServiceGetNotificationsDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *NotificationServiceGetNotificationsDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/notifications][%d] NotificationService_GetNotifications default %s", o._statusCode, payload)
-}
-
-func (o *NotificationServiceGetNotificationsDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/notifications][%d] NotificationService_GetNotifications default %s", o._statusCode, payload)
-}
-
-func (o *NotificationServiceGetNotificationsDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *NotificationServiceGetNotificationsDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

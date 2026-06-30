@@ -6,6 +6,8 @@ package app_instance_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -102,8 +104,9 @@ func (a *Client) AppInstanceServiceCreateAppInstance(params *AppInstanceServiceC
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AppInstanceServiceCreateAppInstanceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AppInstanceService_CreateAppInstance: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -141,8 +144,9 @@ func (a *Client) AppInstanceServiceDeleteAppInstance(params *AppInstanceServiceD
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AppInstanceServiceDeleteAppInstanceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AppInstanceService_DeleteAppInstance: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -180,8 +184,9 @@ func (a *Client) AppInstanceServiceGetAppInstance(params *AppInstanceServiceGetA
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AppInstanceServiceGetAppInstanceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AppInstanceService_GetAppInstance: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -219,8 +224,9 @@ func (a *Client) AppInstanceServiceListAppInstances(params *AppInstanceServiceLi
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AppInstanceServiceListAppInstancesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AppInstanceService_ListAppInstances: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -258,8 +264,9 @@ func (a *Client) AppInstanceServiceUpdateAppInstance(params *AppInstanceServiceU
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*AppInstanceServiceUpdateAppInstanceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AppInstanceService_UpdateAppInstance: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -29,7 +28,7 @@ func Logging(logger *logger.ContextLogger) func(service.Workbencher) service.Wor
 	}
 }
 
-func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkbenchFilter) ([]*model.Workbench, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListWorkbenches(ctx, tenantID, pagination, filter)
@@ -38,7 +37,7 @@ func (c workbenchServiceLogging) ListWorkbenches(ctx context.Context, tenantID u
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to get workbenches: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -57,7 +56,7 @@ func (c workbenchServiceLogging) ProxyWorkbench(ctx context.Context, tenantID, w
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to proxy workbenches: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -77,7 +76,7 @@ func (c workbenchServiceLogging) GetWorkbench(ctx context.Context, tenantID, wor
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get workbench: %w", err)
+		return res, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -97,7 +96,7 @@ func (c workbenchServiceLogging) DeleteWorkbench(ctx context.Context, tenantID, 
 			logger.WithWorkbenchIDField(workbenchID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to delete workbench: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -117,7 +116,7 @@ func (c workbenchServiceLogging) DeleteWorkbenchesInWorkspace(ctx context.Contex
 			logger.WithWorkspaceIDField(workspaceID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete workbenches in workspace %v: %w", workspaceID, err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -137,7 +136,7 @@ func (c workbenchServiceLogging) UpdateWorkbench(ctx context.Context, workbench 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to update workbench: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -156,7 +155,7 @@ func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create workbench: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -166,7 +165,7 @@ func (c workbenchServiceLogging) CreateWorkbench(ctx context.Context, workbench 
 	return newWorkbench, nil
 }
 
-func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
+func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.AppInstanceFilter) ([]*model.AppInstance, *common_model.PaginationResult, error) {
 	now := time.Now()
 
 	res, paginationRes, err := c.next.ListAppInstances(ctx, tenantID, pagination, filter)
@@ -175,7 +174,7 @@ func (c workbenchServiceLogging) ListAppInstances(ctx context.Context, tenantID 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to get appInstances: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -195,7 +194,7 @@ func (c workbenchServiceLogging) GetAppInstance(ctx context.Context, tenantID, a
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get appInstance: %w", err)
+		return res, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -215,7 +214,7 @@ func (c workbenchServiceLogging) DeleteAppInstance(ctx context.Context, tenantID
 			logger.WithAppInstanceIDField(appInstanceID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to delete appInstance: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -235,7 +234,7 @@ func (c workbenchServiceLogging) UpdateAppInstance(ctx context.Context, appInsta
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to update appInstance: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -254,7 +253,7 @@ func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInsta
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create appInstance: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -264,10 +263,10 @@ func (c workbenchServiceLogging) CreateAppInstance(ctx context.Context, appInsta
 	return newAppInstance, nil
 }
 
-func (c workbenchServiceLogging) ManageUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (c workbenchServiceLogging) AddUserRoleInWorkbench(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	now := time.Now()
 
-	err := c.next.ManageUserRoleInWorkbench(ctx, tenantID, userID, role)
+	err := c.next.AddUserRoleInWorkbench(ctx, tenantID, userID, role)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
@@ -275,7 +274,7 @@ func (c workbenchServiceLogging) ManageUserRoleInWorkbench(ctx context.Context, 
 			logger.WithUserIDField(userID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to manage user role in workbench: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -297,7 +296,7 @@ func (c workbenchServiceLogging) RemoveUserFromWorkbench(ctx context.Context, te
 			logger.WithUserIDField(userID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to remove user from workbench: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,

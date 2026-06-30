@@ -12,6 +12,7 @@ daemon:
   totp:
     num_recovery_codes: 10
   pprof_enabled: true
+  expose_error_stack_trace: true
   salt: 1234
  
 storage:
@@ -93,22 +94,11 @@ services:
     enabled: true
     datastore_name: audit
   steward:
-    init_tenant:
-      enabled: true
-      tenant_id: 88888
-    init_user:
-      enabled: true
-      user_id: 88888
+    tenant:
+      name: default
+    user:
       username: chorus
       password: "password"
-      roles:
-        - name: Authenticated
-          context:
-            user: 88888
-    init_workspace:
-      enabled: true
-      workspace_id: 88888
-      name: "Home workspace"
 
 tenants:
   88888:

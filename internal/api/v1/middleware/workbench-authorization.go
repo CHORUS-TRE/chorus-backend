@@ -121,7 +121,7 @@ func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, r
 	return c.next.DeleteWorkbench(ctx, req)
 }
 
-func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.Context, req *chorus.ManageUserRoleInWorkbenchRequest) (*chorus.ManageUserRoleInWorkbenchReply, error) {
+func (c workbenchControllerAuthorization) AddUserRoleInWorkbench(ctx context.Context, req *chorus.AddUserRoleInWorkbenchRequest) (*chorus.AddUserRoleInWorkbenchReply, error) {
 	roleName, err := authorization.ToRoleName(req.Role.Name)
 	if err != nil {
 		return nil, fmt.Errorf("invalid role name: %w", err)
@@ -144,7 +144,7 @@ func (c workbenchControllerAuthorization) ManageUserRoleInWorkbench(ctx context.
 		return nil, err
 	}
 
-	return c.next.ManageUserRoleInWorkbench(ctx, req)
+	return c.next.AddUserRoleInWorkbench(ctx, req)
 }
 
 func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {

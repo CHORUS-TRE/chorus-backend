@@ -168,6 +168,7 @@ func registerGRPCServices(server *google_grpc.Server) {
 	chorus.RegisterApprovalRequestServiceServer(server, provider.ProvideApprovalRequestController())
 	chorus.RegisterAuthorizationServiceServer(server, provider.ProvideAuthorizationController())
 	chorus.RegisterPlatformSettingsServiceServer(server, provider.ProvidePlatformSettingsController())
+	chorus.RegisterTermsOfUseServiceServer(server, provider.ProvideTermsOfUseController())
 
 	// Setup a standard health check service to allow a client to poll the
 	// status.
@@ -227,5 +228,8 @@ func registerHTTPEndpoints(ctx context.Context, mux *runtime.ServeMux, grpcHostP
 	}
 	if err := chorus.RegisterPlatformSettingsServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
 		logger.TechLog.Fatal(ctx, "failed to register http platform settings service handler", logger.WithErrorField(err))
+	}
+	if err := chorus.RegisterTermsOfUseServiceHandlerFromEndpoint(ctx, mux, grpcHostPort, opts); err != nil {
+		logger.TechLog.Fatal(ctx, "failed to register http terms of use service handler", logger.WithErrorField(err))
 	}
 }

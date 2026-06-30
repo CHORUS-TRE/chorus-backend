@@ -31,14 +31,7 @@ func (o *AuthenticationServiceAuthenticateOauthRedirect2Reader) ReadResponse(res
 		}
 		return result, nil
 	default:
-		result := NewAuthenticationServiceAuthenticateOauthRedirect2Default(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/authentication/oauth2/{id}/redirect] AuthenticationService_AuthenticateOauthRedirect2", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *AuthenticationServiceAuthenticateOauthRedirect2OK) GetPayload() *models
 func (o *AuthenticationServiceAuthenticateOauthRedirect2OK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusAuthenticateOauthRedirectReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewAuthenticationServiceAuthenticateOauthRedirect2Default creates a AuthenticationServiceAuthenticateOauthRedirect2Default with default headers values
-func NewAuthenticationServiceAuthenticateOauthRedirect2Default(code int) *AuthenticationServiceAuthenticateOauthRedirect2Default {
-	return &AuthenticationServiceAuthenticateOauthRedirect2Default{
-		_statusCode: code,
-	}
-}
-
-/*
-AuthenticationServiceAuthenticateOauthRedirect2Default describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type AuthenticationServiceAuthenticateOauthRedirect2Default struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this authentication service authenticate oauth redirect2 default response has a 2xx status code
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this authentication service authenticate oauth redirect2 default response has a 3xx status code
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this authentication service authenticate oauth redirect2 default response has a 4xx status code
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this authentication service authenticate oauth redirect2 default response has a 5xx status code
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this authentication service authenticate oauth redirect2 default response a status code equal to that given
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the authentication service authenticate oauth redirect2 default response
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) Code() int {
-	return o._statusCode
-}
-
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/authentication/oauth2/{id}/redirect][%d] AuthenticationService_AuthenticateOauthRedirect2 default %s", o._statusCode, payload)
-}
-
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/authentication/oauth2/{id}/redirect][%d] AuthenticationService_AuthenticateOauthRedirect2 default %s", o._statusCode, payload)
-}
-
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *AuthenticationServiceAuthenticateOauthRedirect2Default) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

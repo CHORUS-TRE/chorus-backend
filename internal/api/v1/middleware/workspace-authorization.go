@@ -81,6 +81,15 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 	return c.next.ListWorkspaces(ctx, req)
 }
 
+func (c workspaceControllerAuthorization) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
+	err := c.IsAuthorized(ctx, authorization.PermissionListPublicWorkspaces)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.next.ListPublicWorkspaces(ctx, req)
+}
+
 func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
 	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
 	if err != nil {
@@ -129,7 +138,7 @@ func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, r
 	return c.next.DeleteWorkspace(ctx, req)
 }
 
-func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+func (c workspaceControllerAuthorization) AddUserRoleInWorkspace(ctx context.Context, req *chorus.AddUserRoleInWorkspaceRequest) (*chorus.AddUserRoleInWorkspaceReply, error) {
 	roleName, err := authorization.ToRoleName(req.Role.Name)
 	if err != nil {
 		return nil, fmt.Errorf("invalid role name: %w", err)
@@ -159,7 +168,7 @@ func (c workspaceControllerAuthorization) ManageUserRoleInWorkspace(ctx context.
 		return nil, err
 	}
 
-	return c.next.ManageUserRoleInWorkspace(ctx, req)
+	return c.next.AddUserRoleInWorkspace(ctx, req)
 }
 
 func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.Context, req *chorus.RemoveUserRoleInWorkspaceRequest) (*chorus.RemoveUserRoleInWorkspaceReply, error) {

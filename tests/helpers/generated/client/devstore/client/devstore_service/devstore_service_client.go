@@ -6,6 +6,8 @@ package devstore_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -116,8 +118,9 @@ func (a *Client) DevstoreServiceDeleteGlobalEntry(params *DevstoreServiceDeleteG
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceDeleteGlobalEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_DeleteGlobalEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -155,8 +158,9 @@ func (a *Client) DevstoreServiceDeleteUserEntry(params *DevstoreServiceDeleteUse
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceDeleteUserEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_DeleteUserEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -194,8 +198,9 @@ func (a *Client) DevstoreServiceDeleteWorkspaceEntry(params *DevstoreServiceDele
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceDeleteWorkspaceEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_DeleteWorkspaceEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -233,8 +238,9 @@ func (a *Client) DevstoreServiceGetGlobalEntry(params *DevstoreServiceGetGlobalE
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceGetGlobalEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_GetGlobalEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -272,8 +278,9 @@ func (a *Client) DevstoreServiceGetUserEntry(params *DevstoreServiceGetUserEntry
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceGetUserEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_GetUserEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -311,8 +318,9 @@ func (a *Client) DevstoreServiceGetWorkspaceEntry(params *DevstoreServiceGetWork
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceGetWorkspaceEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_GetWorkspaceEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -350,8 +358,9 @@ func (a *Client) DevstoreServiceListGlobalEntries(params *DevstoreServiceListGlo
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceListGlobalEntriesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_ListGlobalEntries: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -389,8 +398,9 @@ func (a *Client) DevstoreServiceListUserEntries(params *DevstoreServiceListUserE
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceListUserEntriesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_ListUserEntries: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -428,8 +438,9 @@ func (a *Client) DevstoreServiceListWorkspaceEntries(params *DevstoreServiceList
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServiceListWorkspaceEntriesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_ListWorkspaceEntries: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -467,8 +478,9 @@ func (a *Client) DevstoreServicePutGlobalEntry(params *DevstoreServicePutGlobalE
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServicePutGlobalEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_PutGlobalEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -506,8 +518,9 @@ func (a *Client) DevstoreServicePutUserEntry(params *DevstoreServicePutUserEntry
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServicePutUserEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_PutUserEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -545,8 +558,9 @@ func (a *Client) DevstoreServicePutWorkspaceEntry(params *DevstoreServicePutWork
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DevstoreServicePutWorkspaceEntryDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DevstoreService_PutWorkspaceEntry: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

@@ -31,14 +31,7 @@ func (o *ApprovalRequestServiceApproveApprovalRequestReader) ReadResponse(respon
 		}
 		return result, nil
 	default:
-		result := NewApprovalRequestServiceApproveApprovalRequestDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[POST /api/rest/v1/approval-requests/{id}/approve] ApprovalRequestService_ApproveApprovalRequest", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *ApprovalRequestServiceApproveApprovalRequestOK) GetPayload() *models.Ch
 func (o *ApprovalRequestServiceApproveApprovalRequestOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusApproveApprovalRequestReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewApprovalRequestServiceApproveApprovalRequestDefault creates a ApprovalRequestServiceApproveApprovalRequestDefault with default headers values
-func NewApprovalRequestServiceApproveApprovalRequestDefault(code int) *ApprovalRequestServiceApproveApprovalRequestDefault {
-	return &ApprovalRequestServiceApproveApprovalRequestDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-ApprovalRequestServiceApproveApprovalRequestDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type ApprovalRequestServiceApproveApprovalRequestDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this approval request service approve approval request default response has a 2xx status code
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this approval request service approve approval request default response has a 3xx status code
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this approval request service approve approval request default response has a 4xx status code
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this approval request service approve approval request default response has a 5xx status code
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this approval request service approve approval request default response a status code equal to that given
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the approval request service approve approval request default response
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/approval-requests/{id}/approve][%d] ApprovalRequestService_ApproveApprovalRequest default %s", o._statusCode, payload)
-}
-
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /api/rest/v1/approval-requests/{id}/approve][%d] ApprovalRequestService_ApproveApprovalRequest default %s", o._statusCode, payload)
-}
-
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *ApprovalRequestServiceApproveApprovalRequestDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

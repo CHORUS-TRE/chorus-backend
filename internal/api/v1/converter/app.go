@@ -48,6 +48,7 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 		IconURL:                      app.IconURL,
 		IconBackgroundColor:          app.IconBackgroundColor,
 		StabilityStatus:              model.AppStabilityStatus(app.StabilityStatus),
+		Category:                     app.Category,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,
@@ -92,6 +93,7 @@ func AppFromBusiness(app *model.App) (*chorus.App, error) {
 		IconURL:                      app.IconURL,
 		IconBackgroundColor:          app.IconBackgroundColor,
 		StabilityStatus:              app.StabilityStatus.String(),
+		Category:                     app.Category,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

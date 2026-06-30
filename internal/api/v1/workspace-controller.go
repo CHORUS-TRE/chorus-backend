@@ -6,16 +6,13 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/converter"
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
-	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/utils/grpc"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	workspace_model "github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/service"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // type WorkspaceServiceServer interface {
@@ -34,31 +31,32 @@ var _ chorus.WorkspaceServiceServer = (*WorkspaceController)(nil)
 // WorkspaceController is the workspace service controller handler.
 type WorkspaceController struct {
 	workspace service.Workspaceer
+	cfg       config.Config
 }
 
 // NewWorkspaceController returns a fresh admin service controller instance.
-func NewWorkspaceController(workspace service.Workspaceer) WorkspaceController {
-	return WorkspaceController{workspace: workspace}
+func NewWorkspaceController(workspace service.Workspaceer, cfg config.Config) WorkspaceController {
+	return WorkspaceController{workspace: workspace, cfg: cfg}
 }
 
 func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+		return nil, err
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	return &chorus.GetWorkspaceReply{Result: &chorus.GetWorkspaceResult{Workspace: tgWorkspace}}, nil
@@ -66,29 +64,29 @@ func (c WorkspaceController) GetWorkspace(ctx context.Context, req *chorus.GetWo
 
 func (c WorkspaceController) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	workspace, err := converter.WorkspaceToBusiness(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	workspace.TenantID = tenantID
 
 	updatedWorkspace, err := c.workspace.UpdateWorkspace(ctx, workspace)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'UpdateWorkspace': %v", err.Error())
+		return nil, err
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(updatedWorkspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(updatedWorkspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	return &chorus.UpdateWorkspaceReply{Result: &chorus.UpdateWorkspaceResult{Workspace: tgWorkspace}}, nil
@@ -96,17 +94,17 @@ func (c WorkspaceController) UpdateWorkspace(ctx context.Context, req *chorus.Wo
 
 func (c WorkspaceController) DeleteWorkspace(ctx context.Context, req *chorus.DeleteWorkspaceRequest) (*chorus.DeleteWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	err = c.workspace.DeleteWorkspace(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'DeleteWorkspace': %v", err.Error())
+		return nil, err
 	}
 	return &chorus.DeleteWorkspaceReply{Result: &chorus.DeleteWorkspaceResult{}}, nil
 }
@@ -114,14 +112,12 @@ func (c WorkspaceController) DeleteWorkspace(ctx context.Context, req *chorus.De
 // ListWorkspaces extracts the retrieved workspaces from the service and inserts them into a reply object.
 func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
 	if req == nil {
-		logger.TechLog.Error(ctx, "empty request")
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		logger.TechLog.Error(ctx, fmt.Sprintf("could not extract tenant id from jwt-token: %v", err.Error()))
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
@@ -133,16 +129,14 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 
 	res, paginationRes, err := c.workspace.ListWorkspaces(ctx, tenantID, &pagination, filter)
 	if err != nil {
-		logger.TechLog.Error(ctx, fmt.Sprintf("unable to call 'ListWorkspaces': %v", err.Error()))
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ListWorkspaces': %v", err.Error())
+		return nil, err
 	}
 
 	var workspaces []*chorus.Workspace
 	for _, r := range res {
-		workspace, err := converter.WorkspaceFromBusiness(r)
+		workspace, err := converter.WorkspaceFromBusiness(r, c.cfg.Services.WorkspaceService.GIDOffset)
 		if err != nil {
-			logger.TechLog.Error(ctx, fmt.Sprintf("conversion error: %v", err.Error()))
-			return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 		}
 		workspaces = append(workspaces, workspace)
 	}
@@ -152,10 +146,41 @@ func (c WorkspaceController) ListWorkspaces(ctx context.Context, req *chorus.Lis
 	return &chorus.ListWorkspacesReply{Result: &chorus.ListWorkspacesResult{Workspaces: workspaces}, Pagination: paginationResult}, nil
 }
 
+// ListPublicWorkspaces extracts the public information for the retrieved workspaces from the service and inserts them into a reply object.
+func (c WorkspaceController) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
+	if req == nil {
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
+	}
+
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
+	}
+
+	pagination := converter.PaginationToBusiness(req.Pagination)
+
+	res, paginationRes, err := c.workspace.ListPublicWorkspaces(ctx, tenantID, &pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	paginationResult := converter.PaginationResultFromBusiness(paginationRes)
+	var publicWorkspaces []*chorus.PublicWorkspace
+	for _, r := range res {
+		publicWorkspace, err := converter.PublicWorkspaceFromBusiness(r, c.cfg.Services.WorkspaceService.GIDOffset)
+		if err != nil {
+			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert public workspace")
+		}
+		publicWorkspaces = append(publicWorkspaces, publicWorkspace)
+	}
+
+	return &chorus.ListPublicWorkspacesReply{Result: &chorus.ListPublicWorkspacesResult{PublicWorkspaces: publicWorkspaces}, Pagination: paginationResult}, nil
+}
+
 // CreateWorkspace extracts the workspace from the request and passes it to the workspace service.
 func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
@@ -170,7 +195,7 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 
 	workspace, err := converter.WorkspaceToBusiness(req)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	workspace.TenantID = tenantID
@@ -178,79 +203,79 @@ func (c WorkspaceController) CreateWorkspace(ctx context.Context, req *chorus.Wo
 
 	newWorkspace, err := c.workspace.CreateWorkspace(ctx, workspace)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'CreateWorkspace': %v", err.Error())
+		return nil, err
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(newWorkspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(newWorkspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	return &chorus.CreateWorkspaceReply{Result: &chorus.CreateWorkspaceResult{Workspace: tgWorkspace}}, nil
 }
 
-func (c WorkspaceController) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
+func (c WorkspaceController) AddUserRoleInWorkspace(ctx context.Context, req *chorus.AddUserRoleInWorkspaceRequest) (*chorus.AddUserRoleInWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	role, err := authorization.ToRole(req.Role.Name, map[string]string{"workspace": fmt.Sprintf("%d", req.Id)})
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract role from request")
 	}
 
-	err = c.workspace.ManageUserRoleInWorkspace(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
+	err = c.workspace.AddUserRoleInWorkspace(ctx, tenantID, req.UserId, user_model.UserRole{Role: role})
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'ManageUserRoleInWorkspace': %v", err.Error())
+		return nil, err
 	}
 
 	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+		return nil, err
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
-	return &chorus.ManageUserRoleInWorkspaceReply{Result: &chorus.ManageUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
+	return &chorus.AddUserRoleInWorkspaceReply{Result: &chorus.AddUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
 
 }
 
 func (c WorkspaceController) RemoveUserRoleInWorkspace(ctx context.Context, req *chorus.RemoveUserRoleInWorkspaceRequest) (*chorus.RemoveUserRoleInWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	roleName, err := authorization.ToRoleName(req.RoleName)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract role from request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract role from request")
 	}
 
 	err = c.workspace.RemoveUserRoleInWorkspace(ctx, tenantID, req.UserId, req.Id, roleName)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserRoleInWorkspace': %v", err.Error())
+		return nil, err
 	}
 
 	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+		return nil, err
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	return &chorus.RemoveUserRoleInWorkspaceReply{Result: &chorus.RemoveUserRoleInWorkspaceResult{Workspace: tgWorkspace}}, nil
@@ -259,27 +284,27 @@ func (c WorkspaceController) RemoveUserRoleInWorkspace(ctx context.Context, req 
 
 func (c WorkspaceController) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
 
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
 	err = c.workspace.RemoveUserFromWorkspace(ctx, tenantID, req.UserId, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'RemoveUserFromWorkspace': %v", err.Error())
+		return nil, err
 	}
 
 	workspace, err := c.workspace.GetWorkspace(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Errorf(grpc.ErrorCode(err), "unable to call 'GetWorkspace': %v", err.Error())
+		return nil, err
 	}
 
-	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace)
+	tgWorkspace, err := converter.WorkspaceFromBusiness(workspace, c.cfg.Services.WorkspaceService.GIDOffset)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "conversion error: %v", err.Error())
+		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert workspace")
 	}
 
 	return &chorus.RemoveUserFromWorkspaceReply{Result: &chorus.RemoveUserFromWorkspaceResult{Workspace: tgWorkspace}}, nil

@@ -31,14 +31,7 @@ func (o *DevstoreServiceGetUserEntryReader) ReadResponse(response runtime.Client
 		}
 		return result, nil
 	default:
-		result := NewDevstoreServiceGetUserEntryDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[GET /api/rest/v1/devstore/user/{key}] DevstoreService_GetUserEntry", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *DevstoreServiceGetUserEntryOK) GetPayload() *models.ChorusGetEntryReply
 func (o *DevstoreServiceGetUserEntryOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusGetEntryReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewDevstoreServiceGetUserEntryDefault creates a DevstoreServiceGetUserEntryDefault with default headers values
-func NewDevstoreServiceGetUserEntryDefault(code int) *DevstoreServiceGetUserEntryDefault {
-	return &DevstoreServiceGetUserEntryDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-DevstoreServiceGetUserEntryDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type DevstoreServiceGetUserEntryDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this devstore service get user entry default response has a 2xx status code
-func (o *DevstoreServiceGetUserEntryDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this devstore service get user entry default response has a 3xx status code
-func (o *DevstoreServiceGetUserEntryDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this devstore service get user entry default response has a 4xx status code
-func (o *DevstoreServiceGetUserEntryDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this devstore service get user entry default response has a 5xx status code
-func (o *DevstoreServiceGetUserEntryDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this devstore service get user entry default response a status code equal to that given
-func (o *DevstoreServiceGetUserEntryDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the devstore service get user entry default response
-func (o *DevstoreServiceGetUserEntryDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *DevstoreServiceGetUserEntryDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/devstore/user/{key}][%d] DevstoreService_GetUserEntry default %s", o._statusCode, payload)
-}
-
-func (o *DevstoreServiceGetUserEntryDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /api/rest/v1/devstore/user/{key}][%d] DevstoreService_GetUserEntry default %s", o._statusCode, payload)
-}
-
-func (o *DevstoreServiceGetUserEntryDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *DevstoreServiceGetUserEntryDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

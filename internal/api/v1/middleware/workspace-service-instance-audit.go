@@ -40,6 +40,29 @@ func (c workspaceServiceInstanceControllerAudit) GetWorkspaceServiceInstance(ctx
 	return res, err
 }
 
+func (c workspaceServiceInstanceControllerAudit) GetWorkspaceServiceInstanceSecrets(ctx context.Context, req *chorus.GetWorkspaceServiceInstanceSecretsRequest) (*chorus.GetWorkspaceServiceInstanceSecretsReply, error) {
+	res, err := c.next.GetWorkspaceServiceInstanceSecrets(ctx, req)
+
+	opts := []audit.Option{
+		audit.WithDetail("service_instance_id", req.Id),
+	}
+
+	if err != nil {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Failed to read secrets of service instance %d.", req.Id)),
+			audit.WithError(err),
+		)
+	} else {
+		opts = append(opts,
+			audit.WithDescription(fmt.Sprintf("Read secrets of service instance %d.", req.Id)),
+		)
+	}
+
+	audit.Record(ctx, c.auditWriter, model.AuditActionServiceInstanceReadSecret, opts...)
+
+	return res, err
+}
+
 func (c workspaceServiceInstanceControllerAudit) ListWorkspaceServiceInstances(ctx context.Context, req *chorus.ListWorkspaceServiceInstancesRequest) (*chorus.ListWorkspaceServiceInstancesReply, error) {
 	res, err := c.next.ListWorkspaceServiceInstances(ctx, req)
 

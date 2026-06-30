@@ -24,12 +24,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            type: object
-            properties: {}
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
+            $ref: '#/definitions/chorusInitializeTenantReply'
       parameters:
         - name: body
           in: body
@@ -39,28 +34,27 @@ paths:
       tags:
         - StewardService
 definitions:
+  chorusInitializeTenantReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusInitializeTenantResult'
   chorusInitializeTenantRequest:
     type: object
     properties:
-      tenantId:
+      name:
+        type: string
+  chorusInitializeTenantResult:
+    type: object
+    properties:
+      id:
         type: string
         format: uint64
-  protobufAny:
-    type: object
-    properties:
-      '@type':
+      name:
         type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
+      createdAt:
         type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time

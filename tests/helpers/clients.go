@@ -7,12 +7,12 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/openapi"
 	app_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/app/client"
-	attachment_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/attachment/client"
 	auth_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/authentication/client"
 	health_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/health/client"
 	notification_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/client"
 	steward_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/steward/client"
 	user_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/client"
+	workspace_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace/client"
 	"github.com/go-openapi/strfmt"
 )
 
@@ -24,10 +24,6 @@ func AppServiceHTTPClient() *app_client.ChorusAppService {
 
 func AuthenticationServiceHTTPClient() *auth_client.ChorusAuthenticationService {
 	return auth_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
-}
-
-func AttachmentServiceHTTPClient() *attachment_client.ChorusAttachmentService {
-	return attachment_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
 }
 
 func UserServiceHTTPClient() *user_client.ChorusUserService {
@@ -44,4 +40,8 @@ func HealthServiceHTTPClient() *health_client.ChorusHealthService {
 
 func StewardServiceHTTPClient() *steward_client.ChorusStewardService {
 	return steward_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
+}
+
+func WorkspaceServiceHTTPClient() *workspace_client.ChorusWorkspaceService {
+	return workspace_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
 }

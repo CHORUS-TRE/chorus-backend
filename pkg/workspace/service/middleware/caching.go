@@ -49,6 +49,21 @@ func (c *Caching) ListWorkspaces(ctx context.Context, tenantID uint64, paginatio
 	return
 }
 
+func (c *Caching) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) (reply []*model.PublicWorkspace, paginationRes *common_model.PaginationResult, err error) {
+	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithInterface(pagination))
+	reply = []*model.PublicWorkspace{}
+	paginationRes = &common_model.PaginationResult{}
+
+	if ok := entry.Get(ctx, &reply, &paginationRes); !ok {
+		reply, paginationRes, err = c.next.ListPublicWorkspaces(ctx, tenantID, pagination)
+		if err == nil {
+			entry.Set(ctx, defaultCacheExpiration, reply, paginationRes)
+		}
+	}
+
+	return
+}
+
 func (c *Caching) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (reply *model.Workspace, err error) {
 	entry := c.cache.NewEntry(cache.WithUint64(tenantID), cache.WithUint64(workspaceID))
 	reply = &model.Workspace{}
@@ -75,8 +90,8 @@ func (c *Caching) CreateWorkspace(ctx context.Context, workspace *model.Workspac
 	return c.next.CreateWorkspace(ctx, workspace)
 }
 
-func (c *Caching) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	return c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+func (c *Caching) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return c.next.AddUserRoleInWorkspace(ctx, tenantID, userID, role)
 }
 
 func (c *Caching) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
@@ -89,6 +104,10 @@ func (c *Caching) RemoveUserFromWorkspace(ctx context.Context, tenantID, userID 
 
 func (c *Caching) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
 	return c.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+}
+
+func (c *Caching) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	return c.next.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, workspaceServiceInstanceID)
 }
 
 func (c *Caching) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {

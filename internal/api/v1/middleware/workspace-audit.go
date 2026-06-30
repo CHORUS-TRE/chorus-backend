@@ -47,6 +47,19 @@ func (c workspaceControllerAudit) ListWorkspaces(ctx context.Context, req *choru
 	return res, err
 }
 
+func (c workspaceControllerAudit) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
+	res, err := c.next.ListPublicWorkspaces(ctx, req)
+
+	if err != nil {
+		audit.Record(ctx, c.auditWriter, model.AuditActionWorkspaceList,
+			audit.WithDescription("Failed to list public workspaces."),
+			audit.WithError(err),
+		)
+	}
+
+	return res, err
+}
+
 func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
 	res, err := c.next.CreateWorkspace(ctx, req)
 
@@ -144,8 +157,8 @@ func (c workspaceControllerAudit) DeleteWorkspace(ctx context.Context, req *chor
 	return res, err
 }
 
-func (c workspaceControllerAudit) ManageUserRoleInWorkspace(ctx context.Context, req *chorus.ManageUserRoleInWorkspaceRequest) (*chorus.ManageUserRoleInWorkspaceReply, error) {
-	res, err := c.next.ManageUserRoleInWorkspace(ctx, req)
+func (c workspaceControllerAudit) AddUserRoleInWorkspace(ctx context.Context, req *chorus.AddUserRoleInWorkspaceRequest) (*chorus.AddUserRoleInWorkspaceReply, error) {
+	res, err := c.next.AddUserRoleInWorkspace(ctx, req)
 
 	opts := []audit.Option{
 		audit.WithWorkspaceID(req.Id),

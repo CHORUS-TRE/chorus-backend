@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkspaceServiceInstancesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -80,10 +76,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateWorkspaceServiceInstanceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -101,10 +93,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateWorkspaceServiceInstanceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -123,10 +111,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetWorkspaceServiceInstanceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -144,10 +128,24 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkspaceServiceInstanceReply'
-        default:
-          description: An unexpected error response.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - WorkspaceServiceInstanceService
+  /api/rest/v1/workspace-service-instances/{id}/secrets:
+    get:
+      summary: Get the secrets of a workspace service instance
+      description: This endpoint returns the secrets of the deployed service.
+      operationId: WorkspaceServiceInstanceService_GetWorkspaceServiceInstanceSecrets
+      responses:
+        "200":
+          description: A successful response.
           schema:
-            $ref: '#/definitions/rpcStatus'
+            $ref: '#/definitions/chorusGetWorkspaceServiceInstanceSecretsReply'
       parameters:
         - name: id
           in: path
@@ -187,6 +185,18 @@ definitions:
     properties:
       workspaceServiceInstance:
         $ref: '#/definitions/chorusWorkspaceServiceInstance'
+  chorusGetWorkspaceServiceInstanceSecretsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetWorkspaceServiceInstanceSecretsResult'
+  chorusGetWorkspaceServiceInstanceSecretsResult:
+    type: object
+    properties:
+      secrets:
+        type: object
+        additionalProperties:
+          type: string
   chorusListWorkspaceServiceInstancesReply:
     type: object
     properties:
@@ -338,22 +348,3 @@ definitions:
         items:
           type: string
           format: uint64
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'

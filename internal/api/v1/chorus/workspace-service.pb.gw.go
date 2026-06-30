@@ -105,6 +105,39 @@ func local_request_WorkspaceService_ListWorkspaces_0(ctx context.Context, marsha
 	return msg, metadata, err
 }
 
+var filter_WorkspaceService_ListPublicWorkspaces_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_WorkspaceService_ListPublicWorkspaces_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListPublicWorkspacesRequest
+		metadata runtime.ServerMetadata
+	)
+	io.Copy(io.Discard, req.Body)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkspaceService_ListPublicWorkspaces_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.ListPublicWorkspaces(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_WorkspaceService_ListPublicWorkspaces_0(ctx context.Context, marshaler runtime.Marshaler, server WorkspaceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListPublicWorkspacesRequest
+		metadata runtime.ServerMetadata
+	)
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_WorkspaceService_ListPublicWorkspaces_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.ListPublicWorkspaces(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 func request_WorkspaceService_CreateWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
 		protoReq Workspace
@@ -153,9 +186,9 @@ func local_request_WorkspaceService_UpdateWorkspace_0(ctx context.Context, marsh
 	return msg, metadata, err
 }
 
-func request_WorkspaceService_ManageUserRoleInWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_WorkspaceService_AddUserRoleInWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, client WorkspaceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ManageUserRoleInWorkspaceRequest
+		protoReq AddUserRoleInWorkspaceRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -178,13 +211,13 @@ func request_WorkspaceService_ManageUserRoleInWorkspace_0(ctx context.Context, m
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "userId", err)
 	}
-	msg, err := client.ManageUserRoleInWorkspace(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AddUserRoleInWorkspace(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 }
 
-func local_request_WorkspaceService_ManageUserRoleInWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, server WorkspaceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func local_request_WorkspaceService_AddUserRoleInWorkspace_0(ctx context.Context, marshaler runtime.Marshaler, server WorkspaceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ManageUserRoleInWorkspaceRequest
+		protoReq AddUserRoleInWorkspaceRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -207,7 +240,7 @@ func local_request_WorkspaceService_ManageUserRoleInWorkspace_0(ctx context.Cont
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "userId", err)
 	}
-	msg, err := server.ManageUserRoleInWorkspace(ctx, &protoReq)
+	msg, err := server.AddUserRoleInWorkspace(ctx, &protoReq)
 	return msg, metadata, err
 }
 
@@ -416,6 +449,26 @@ func RegisterWorkspaceServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkspaceService_ListWorkspaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_WorkspaceService_ListPublicWorkspaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/ListPublicWorkspaces", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/public"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_WorkspaceService_ListPublicWorkspaces_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkspaceService_ListPublicWorkspaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_WorkspaceService_CreateWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -456,25 +509,25 @@ func RegisterWorkspaceServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkspaceService_UpdateWorkspace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_WorkspaceService_ManageUserRoleInWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_WorkspaceService_AddUserRoleInWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/ManageUserRoleInWorkspace", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{id}/user/{userId}/role"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/chorus.WorkspaceService/AddUserRoleInWorkspace", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{id}/user/{userId}/role"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_WorkspaceService_ManageUserRoleInWorkspace_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_WorkspaceService_AddUserRoleInWorkspace_0(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_WorkspaceService_ManageUserRoleInWorkspace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkspaceService_AddUserRoleInWorkspace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodDelete, pattern_WorkspaceService_RemoveUserRoleInWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -610,6 +663,23 @@ func RegisterWorkspaceServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkspaceService_ListWorkspaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_WorkspaceService_ListPublicWorkspaces_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/ListPublicWorkspaces", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/public"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_WorkspaceService_ListPublicWorkspaces_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_WorkspaceService_ListPublicWorkspaces_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	mux.Handle(http.MethodPost, pattern_WorkspaceService_CreateWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -644,22 +714,22 @@ func RegisterWorkspaceServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 		forward_WorkspaceService_UpdateWorkspace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_WorkspaceService_ManageUserRoleInWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle(http.MethodPost, pattern_WorkspaceService_AddUserRoleInWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/ManageUserRoleInWorkspace", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{id}/user/{userId}/role"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/chorus.WorkspaceService/AddUserRoleInWorkspace", runtime.WithHTTPPathPattern("/api/rest/v1/workspaces/{id}/user/{userId}/role"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_WorkspaceService_ManageUserRoleInWorkspace_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_WorkspaceService_AddUserRoleInWorkspace_0(annotatedContext, inboundMarshaler, client, req, pathParams)
 		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_WorkspaceService_ManageUserRoleInWorkspace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_WorkspaceService_AddUserRoleInWorkspace_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodDelete, pattern_WorkspaceService_RemoveUserRoleInWorkspace_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -718,9 +788,10 @@ func RegisterWorkspaceServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 var (
 	pattern_WorkspaceService_GetWorkspace_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspaces", "id"}, ""))
 	pattern_WorkspaceService_ListWorkspaces_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspaces"}, ""))
+	pattern_WorkspaceService_ListPublicWorkspaces_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "rest", "v1", "workspaces", "public"}, ""))
 	pattern_WorkspaceService_CreateWorkspace_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspaces"}, ""))
 	pattern_WorkspaceService_UpdateWorkspace_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "rest", "v1", "workspaces"}, ""))
-	pattern_WorkspaceService_ManageUserRoleInWorkspace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "rest", "v1", "workspaces", "id", "user", "userId", "role"}, ""))
+	pattern_WorkspaceService_AddUserRoleInWorkspace_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "rest", "v1", "workspaces", "id", "user", "userId", "role"}, ""))
 	pattern_WorkspaceService_RemoveUserRoleInWorkspace_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "rest", "v1", "workspaces", "id", "user", "userId", "role", "roleName"}, ""))
 	pattern_WorkspaceService_RemoveUserFromWorkspace_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "rest", "v1", "workspaces", "id", "user", "userId"}, ""))
 	pattern_WorkspaceService_DeleteWorkspace_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "rest", "v1", "workspaces", "id"}, ""))
@@ -729,9 +800,10 @@ var (
 var (
 	forward_WorkspaceService_GetWorkspace_0              = runtime.ForwardResponseMessage
 	forward_WorkspaceService_ListWorkspaces_0            = runtime.ForwardResponseMessage
+	forward_WorkspaceService_ListPublicWorkspaces_0      = runtime.ForwardResponseMessage
 	forward_WorkspaceService_CreateWorkspace_0           = runtime.ForwardResponseMessage
 	forward_WorkspaceService_UpdateWorkspace_0           = runtime.ForwardResponseMessage
-	forward_WorkspaceService_ManageUserRoleInWorkspace_0 = runtime.ForwardResponseMessage
+	forward_WorkspaceService_AddUserRoleInWorkspace_0    = runtime.ForwardResponseMessage
 	forward_WorkspaceService_RemoveUserRoleInWorkspace_0 = runtime.ForwardResponseMessage
 	forward_WorkspaceService_RemoveUserFromWorkspace_0   = runtime.ForwardResponseMessage
 	forward_WorkspaceService_DeleteWorkspace_0           = runtime.ForwardResponseMessage

@@ -1,0 +1,216 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "common.proto";
+import "terms-of-use.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus terms of use service";
+        version: "1.0";
+        contact: {
+            name: "chorus terms of use service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+// Version management
+message ListTermsOfUseVersionsRequest {
+    PaginationQuery pagination = 1;
+}
+message ListTermsOfUseVersionsReply {
+    ListTermsOfUseVersionsResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListTermsOfUseVersionsResult {
+    repeated TermsOfUseVersion termsOfUseVersions = 1;
+}
+
+message GetTermsOfUseVersionRequest {
+    uint64 id = 1;
+}
+message GetTermsOfUseVersionReply {
+    GetTermsOfUseVersionResult result = 1;
+}
+message GetTermsOfUseVersionResult {
+    TermsOfUseVersion termsOfUseVersion = 1;
+}
+
+message CreateTermsOfUseVersionRequest {
+    string content = 1;
+}
+message CreateTermsOfUseVersionReply {
+    CreateTermsOfUseVersionResult result = 1;
+}
+message CreateTermsOfUseVersionResult {
+    TermsOfUseVersion termsOfUseVersion = 1;
+}
+
+message UpdateTermsOfUseVersionRequest {
+    uint64 id = 1;
+    string content = 2;
+}
+message UpdateTermsOfUseVersionReply {
+    UpdateTermsOfUseVersionResult result = 1;
+}
+message UpdateTermsOfUseVersionResult {
+    TermsOfUseVersion termsOfUseVersion = 1;
+}
+
+message PublishTermsOfUseVersionRequest {
+    uint64 id = 1;
+}
+message PublishTermsOfUseVersionReply {
+    PublishTermsOfUseVersionResult result = 1;
+}
+message PublishTermsOfUseVersionResult {
+    TermsOfUseVersion termsOfUseVersion = 1;
+}
+
+message GetCurrentTermsOfUseVersionRequest {}
+message GetCurrentTermsOfUseVersionReply {
+    GetCurrentTermsOfUseVersionResult result = 1;
+}
+message GetCurrentTermsOfUseVersionResult {
+    TermsOfUseVersion termsOfUseVersion = 1;
+}
+
+// Acceptances
+message ListTermsOfUseAcceptancesRequest {}
+message ListTermsOfUseAcceptancesReply {
+    ListTermsOfUseAcceptancesResult result = 1;
+}
+message ListTermsOfUseAcceptancesResult {
+    repeated TermsOfUseAcceptance termsOfUseAcceptances = 1;
+}
+
+message GetMyTermsOfUseStatusRequest {}
+message GetMyTermsOfUseStatusReply {
+    GetMyTermsOfUseStatusResult result = 1;
+}
+message GetMyTermsOfUseStatusResult {
+    TermsOfUseUserStatus status = 1;
+}
+
+message AcceptTermsOfUseRequest {}
+message AcceptTermsOfUseReply {
+    AcceptTermsOfUseResult result = 1;
+}
+message AcceptTermsOfUseResult {
+    TermsOfUseAcceptance termsOfUseAcceptance = 1;
+}
+
+service TermsOfUseService {
+    rpc CreateTermsOfUseVersion(CreateTermsOfUseVersionRequest) returns (CreateTermsOfUseVersionReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/terms-of-use/versions"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create a terms of use version";
+            description: "Creates a new terms of use version in draft status.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc UpdateTermsOfUseVersion(UpdateTermsOfUseVersionRequest) returns (UpdateTermsOfUseVersionReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/terms-of-use/versions/{id}"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update a terms of use version";
+            description: "Updates the content of a draft terms of use version. Published versions cannot be edited.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc PublishTermsOfUseVersion(PublishTermsOfUseVersionRequest) returns (PublishTermsOfUseVersionReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/terms-of-use/versions/{id}/publish"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Publish a terms of use version";
+            description: "Publishes a draft version, archiving any previously published version and updating platform settings.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc GetTermsOfUseVersion(GetTermsOfUseVersionRequest) returns (GetTermsOfUseVersionReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/terms-of-use/versions/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get a terms of use version";
+            description: "Returns a specific terms of use version by ID.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc ListTermsOfUseVersions(ListTermsOfUseVersionsRequest) returns (ListTermsOfUseVersionsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/terms-of-use/versions"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List terms of use versions";
+            description: "Returns all terms of use versions for the tenant.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc ListTermsOfUseAcceptances(ListTermsOfUseAcceptancesRequest) returns (ListTermsOfUseAcceptancesReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/terms-of-use/acceptances"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List terms of use acceptances";
+            description: "Returns the acceptance history for the current user.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    // User-facing
+    rpc GetCurrentTermsOfUseVersion(GetCurrentTermsOfUseVersionRequest) returns (GetCurrentTermsOfUseVersionReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/terms-of-use/versions/current"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get the current terms of use version";
+            description: "Returns the currently published terms of use version.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc GetMyTermsOfUseStatus(GetMyTermsOfUseStatusRequest) returns (GetMyTermsOfUseStatusReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/terms-of-use/acceptances/status"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get my terms of use status";
+            description: "Returns whether the authenticated user has accepted the currently published terms of use version.";
+            tags: "TermsOfUseService";
+        };
+    };
+
+    rpc AcceptTermsOfUse(AcceptTermsOfUseRequest) returns (AcceptTermsOfUseReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/terms-of-use/acceptances"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Accept the current terms of use";
+            description: "Records the authenticated user's acceptance of the currently published terms of use version.";
+            tags: "TermsOfUseService";
+        };
+    };
+}

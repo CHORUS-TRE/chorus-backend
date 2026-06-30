@@ -12,6 +12,7 @@ import (
 var (
 	ErrNoRowsUpdated = errors.New("database: no rows updated")
 	ErrNoRowsDeleted = errors.New("database: no rows deleted")
+	ErrDuplicateKey  = errors.New("database: duplicate key value violates unique constraint")
 
 	// Client errors
 	ErrInvalidRequest = &ChorusError{GRPCCode: codes.InvalidArgument, ChorusCode: errorspb.ChorusErrorCode_INVALID_REQUEST, Title: "Invalid Request"}

@@ -69,11 +69,11 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.grpc.port", "5555")
 	v.SetDefault("daemon.grpc.max_recv_msg_size", 10485760)  // 10 MiB
 	v.SetDefault("daemon.grpc.max_send_msg_size", 104857600) // 100 MiB
-	v.SetDefault("daemon.tenant_id", 9999999)
 	v.SetDefault("daemon.jwt.expiration_time", "24h")
 	v.SetDefault("daemon.jwt.max_refresh_time", "720h") // 30 days
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 	v.SetDefault("daemon.pprof_enabled", false)
+	v.SetDefault("daemon.expose_error_stack_trace", false)
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
 
@@ -106,9 +106,12 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.audit_service.enabled", false)
 	v.SetDefault("services.authentication_service.enabled", false)
 	v.SetDefault("services.authentication_service.auth_ui_enabled", false)
+	v.SetDefault("services.authentication_service.self_service.tenant_id", 1)
 	v.SetDefault("services.workspace_service.kill_fixed_check_interval", time.Hour)
 	v.SetDefault("services.workspace_service.creator_is_admin", true)
 	v.SetDefault("services.workspace_service.creator_is_data_manager", true)
+	v.SetDefault("services.workspace_service.gid_offset", 2000)
+	v.SetDefault("services.user_service.uid_offset", 2000)
 	v.SetDefault("services.authorization_service.workspace_admin_can_assign_data_manager", true)
 	v.SetDefault("services.approval_request_service.require_data_manager_approval", false)
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", false)
@@ -126,12 +129,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.round_tripper.tls_handshake_timeout", 10*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.response_header_timeout", 15*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.max_transient_retry", 3)
-	v.SetDefault("services.steward.init_tenant.enabled", false)
-	v.SetDefault("services.steward.init_tenant.tenant_id", 1)
-	v.SetDefault("services.steward.init_user.enabled", false)
-	v.SetDefault("services.steward.init_user.user_id", 1)
-	v.SetDefault("services.steward.init_workspace.enabled", false)
-	v.SetDefault("services.steward.init_workspace.workspace_id", 1)
+	v.SetDefault("services.steward.tenant.name", "default")
+	v.SetDefault("services.steward.user.username", "chorus")
 
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", false)

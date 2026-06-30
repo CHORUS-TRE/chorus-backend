@@ -11,29 +11,39 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func UnaryErrorInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	resp, err := handler(ctx, req)
-	if err == nil {
-		return resp, nil
-	}
+func NewUnaryErrorInterceptor(exposeStackTrace bool) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		resp, err := handler(ctx, req)
+		if err == nil {
+			return resp, nil
+		}
 
-	// Check if the error is a ChorusError
-	var cErr *cerr.ChorusError
-	if errors.As(err, &cErr) {
+		// Check if the error is a ChorusError
+		var cErr *cerr.ChorusError
+		if errors.As(err, &cErr) {
+			logger.TechLog.Error(ctx, "request failed",
+				zap.String("method", info.FullMethod),
+				zap.String("code", cErr.ChorusCode.String()),
+				zap.String("message", cErr.Message),
+				zap.Error(cErr.CausedBy),
+				zap.String("stacktrace", cErr.StackTrace()),
+			)
+			return nil, cErr.ToGRPCStatus(exposeStackTrace).Err()
+		}
+
+		// If it's already a gRPC status error, return it as is
+		if _, ok := status.FromError(err); ok {
+			return nil, err // Already a gRPC error
+		}
+
+		wrapped := cerr.ErrInternal.Wrap(err, "An unexpected error occurred.")
 		logger.TechLog.Error(ctx, "request failed",
 			zap.String("method", info.FullMethod),
-			zap.String("code", cErr.ChorusCode.String()),
-			zap.String("message", cErr.Message),
-			zap.Error(cErr.CausedBy),
-			zap.String("stacktrace", cErr.StackTrace()),
+			zap.String("code", wrapped.ChorusCode.String()),
+			zap.String("message", wrapped.Message),
+			zap.Error(err),
+			zap.String("stacktrace", wrapped.StackTrace()),
 		)
-		return nil, cErr.ToGRPCStatus().Err()
+		return nil, wrapped.ToGRPCStatus(exposeStackTrace).Err()
 	}
-
-	// If it's already a gRPC status error, return it as is
-	if _, ok := status.FromError(err); ok {
-		return nil, err // Already a gRPC error
-	}
-
-	return nil, cerr.ErrInternal.Wrap(err, "An unexpected error occurred.").ToGRPCStatus().Err()
 }

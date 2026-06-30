@@ -207,14 +207,14 @@ config:
           type: internal
           enabled: true
           public_registration_enabled: false
-          button_text: "Login with Chorus"
+          button_text: "Login via local DB"
           icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 1
         keycloak:
           type: openid
           enabled: false
           main_source: false
-          button_text: "Login with CHUV"
+          button_text: "Login with Keycloak"
           icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 2
           openid:
@@ -236,22 +236,11 @@ config:
               - roles
         keycloakdev: {}
     steward:
-      init_tenant:
-        enabled: false
-        tenant_id: 1
-      init_user:
-        enabled: false
-        user_id: 1
+      tenant:
+        name: "default"
+      user:
         username: chorus
-        password: ""  # set in secret
-        roles:
-          - name: Authenticated
-            context:
-              user: 1
-      init_workspace:
-        enabled: false
-        workspace_id: 1
-        name: "Home workspace"
+        password: "" # set in secret
     mailer_service:
       smtp:
         user: smtpUser

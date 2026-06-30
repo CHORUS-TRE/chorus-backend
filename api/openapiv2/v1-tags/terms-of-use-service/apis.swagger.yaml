@@ -1,0 +1,403 @@
+swagger: "2.0"
+info:
+  title: chorus terms of use service
+  version: "1.0"
+  contact:
+    name: chorus terms of use service
+    url: https://github.com/CHORUS-TRE/chorus-backend
+    email: dev@chorus-tre.ch
+tags:
+  - name: TermsOfUseService
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /api/rest/v1/terms-of-use/acceptances:
+    get:
+      summary: List terms of use acceptances
+      description: Returns the acceptance history for the current user.
+      operationId: TermsOfUseService_ListTermsOfUseAcceptances
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListTermsOfUseAcceptancesReply'
+      tags:
+        - TermsOfUseService
+    post:
+      summary: Accept the current terms of use
+      description: Records the authenticated user's acceptance of the currently published terms of use version.
+      operationId: TermsOfUseService_AcceptTermsOfUse
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusAcceptTermsOfUseReply'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusAcceptTermsOfUseRequest'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/acceptances/status:
+    get:
+      summary: Get my terms of use status
+      description: Returns whether the authenticated user has accepted the currently published terms of use version.
+      operationId: TermsOfUseService_GetMyTermsOfUseStatus
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetMyTermsOfUseStatusReply'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions:
+    get:
+      summary: List terms of use versions
+      description: Returns all terms of use versions for the tenant.
+      operationId: TermsOfUseService_ListTermsOfUseVersions
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListTermsOfUseVersionsReply'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - TermsOfUseService
+    post:
+      summary: Create a terms of use version
+      description: Creates a new terms of use version in draft status.
+      operationId: TermsOfUseService_CreateTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateTermsOfUseVersionReply'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusCreateTermsOfUseVersionRequest'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions/current:
+    get:
+      summary: Get the current terms of use version
+      description: Returns the currently published terms of use version.
+      operationId: TermsOfUseService_GetCurrentTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetCurrentTermsOfUseVersionReply'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions/{id}:
+    get:
+      summary: Get a terms of use version
+      description: Returns a specific terms of use version by ID.
+      operationId: TermsOfUseService_GetTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetTermsOfUseVersionReply'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - TermsOfUseService
+    put:
+      summary: Update a terms of use version
+      description: Updates the content of a draft terms of use version. Published versions cannot be edited.
+      operationId: TermsOfUseService_UpdateTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateTermsOfUseVersionReply'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TermsOfUseServiceUpdateTermsOfUseVersionBody'
+      tags:
+        - TermsOfUseService
+  /api/rest/v1/terms-of-use/versions/{id}/publish:
+    post:
+      summary: Publish a terms of use version
+      description: Publishes a draft version, archiving any previously published version and updating platform settings.
+      operationId: TermsOfUseService_PublishTermsOfUseVersion
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusPublishTermsOfUseVersionReply'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TermsOfUseServicePublishTermsOfUseVersionBody'
+      tags:
+        - TermsOfUseService
+definitions:
+  TermsOfUseServicePublishTermsOfUseVersionBody:
+    type: object
+  TermsOfUseServiceUpdateTermsOfUseVersionBody:
+    type: object
+    properties:
+      content:
+        type: string
+  chorusAcceptTermsOfUseReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAcceptTermsOfUseResult'
+  chorusAcceptTermsOfUseRequest:
+    type: object
+  chorusAcceptTermsOfUseResult:
+    type: object
+    properties:
+      termsOfUseAcceptance:
+        $ref: '#/definitions/chorusTermsOfUseAcceptance'
+  chorusCreateTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateTermsOfUseVersionResult'
+  chorusCreateTermsOfUseVersionRequest:
+    type: object
+    properties:
+      content:
+        type: string
+  chorusCreateTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
+  chorusGetCurrentTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetCurrentTermsOfUseVersionResult'
+  chorusGetCurrentTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
+  chorusGetMyTermsOfUseStatusReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetMyTermsOfUseStatusResult'
+  chorusGetMyTermsOfUseStatusResult:
+    type: object
+    properties:
+      status:
+        $ref: '#/definitions/chorusTermsOfUseUserStatus'
+  chorusGetTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetTermsOfUseVersionResult'
+  chorusGetTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
+  chorusListTermsOfUseAcceptancesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListTermsOfUseAcceptancesResult'
+  chorusListTermsOfUseAcceptancesResult:
+    type: object
+    properties:
+      termsOfUseAcceptances:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusTermsOfUseAcceptance'
+  chorusListTermsOfUseVersionsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListTermsOfUseVersionsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListTermsOfUseVersionsResult:
+    type: object
+    properties:
+      termsOfUseVersions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusTermsOfUseVersion'
+  chorusPaginationQuery:
+    type: object
+    properties:
+      offset:
+        type: integer
+        format: int64
+        description: Optionally offset the number of results
+      limit:
+        type: integer
+        format: int64
+        description: Optionally limit the number of results (between 1 and 500)
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Optionally sort the results
+      query:
+        type: array
+        items:
+          type: string
+        description: Optionally filter the results
+        x-example:
+          - user_id=9999
+          - status=STATUS_CREATED,STATUS_CLOSED
+  chorusPaginationResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        format: int64
+        description: Total number of results
+      offset:
+        type: integer
+        format: int64
+        description: Offset used for pagination
+      limit:
+        type: integer
+        format: int64
+        description: Limit used for pagination
+      sort:
+        $ref: '#/definitions/chorusSort'
+        description: Sort order used for pagination
+  chorusPublishTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusPublishTermsOfUseVersionResult'
+  chorusPublishTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'
+  chorusSort:
+    type: object
+    properties:
+      order:
+        type: string
+      type:
+        type: string
+  chorusTermsOfUseAcceptance:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      userId:
+        type: string
+        format: uint64
+      termsOfUseVersionId:
+        type: string
+        format: uint64
+      acceptedAt:
+        type: string
+        format: date-time
+  chorusTermsOfUseUserStatus:
+    type: object
+    properties:
+      accepted:
+        type: boolean
+  chorusTermsOfUseVersion:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      content:
+        type: string
+      status:
+        $ref: '#/definitions/chorusTermsOfUseVersionStatus'
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusTermsOfUseVersionStatus:
+    type: string
+    enum:
+      - TERMS_OF_USE_VERSION_STATUS_DRAFT
+      - TERMS_OF_USE_VERSION_STATUS_PUBLISHED
+      - TERMS_OF_USE_VERSION_STATUS_ARCHIVED
+    default: TERMS_OF_USE_VERSION_STATUS_DRAFT
+  chorusUpdateTermsOfUseVersionReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateTermsOfUseVersionResult'
+  chorusUpdateTermsOfUseVersionResult:
+    type: object
+    properties:
+      termsOfUseVersion:
+        $ref: '#/definitions/chorusTermsOfUseVersion'

@@ -30,6 +30,9 @@ type ChorusUser struct {
 	// first name
 	FirstName string `json:"firstName,omitempty"`
 
+	// gids
+	Gids []string `json:"gids"`
+
 	// id
 	ID string `json:"id,omitempty"`
 
@@ -59,6 +62,9 @@ type ChorusUser struct {
 
 	// totp enabled
 	TotpEnabled bool `json:"totpEnabled,omitempty"`
+
+	// uid
+	UID string `json:"uid,omitempty"`
 
 	// updated at
 	// Format: date-time

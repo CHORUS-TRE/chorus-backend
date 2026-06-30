@@ -8,13 +8,12 @@ type (
 	// Config is main structure holding configurations for different components.
 	// All the parameters are parsed through a YAML file residing in the build path.
 	Config struct {
-		Daemon    Daemon              `yaml:"daemon"`
-		Log       Log                 `yaml:"log"`
-		Storage   Storage             `yaml:"storage"`
-		Clients   Clients             `yaml:"clients"`
-		Tenants   map[uint64]Tenant   `yaml:"tenants"`
-		Workflows map[string]Workflow `yaml:"workflows,omitempty"`
-		Services  Services            `yaml:"services"`
+		Daemon   Daemon            `yaml:"daemon"`
+		Log      Log               `yaml:"log"`
+		Storage  Storage           `yaml:"storage"`
+		Clients  Clients           `yaml:"clients"`
+		Tenants  map[uint64]Tenant `yaml:"tenants"`
+		Services Services          `yaml:"services"`
 	}
 
 	// Daemon holds the GRPC and HTTP server settings.
@@ -54,8 +53,9 @@ type (
 
 		Jobber Jobber `yaml:"jobber"`
 
-		PPROFEnabled bool   `yaml:"pprof_enabled"`
-		TenantID     uint64 `yaml:"tenant_id"`
+		PPROFEnabled bool `yaml:"pprof_enabled"`
+
+		ExposeErrorStackTrace bool `yaml:"expose_error_stack_trace"`
 
 		PrivateKeyFile string `yaml:"private_key_file"`
 		PrivateKey     string `yaml:"private_key"`
@@ -114,11 +114,6 @@ type (
 		BufferSize      int  `yaml:"buffersize,omitempty"`
 		RateLimit       int  `yaml:"ratelimit,omitempty"`
 		DisallowDropLog bool `yaml:"disallow_drop_log,omitempty"`
-	}
-
-	Workflow struct {
-		Job                    Job           `yaml:"job,omitempty"`
-		DefaultStepTryDuration time.Duration `yaml:"step_try_duration"`
 	}
 
 	Clients struct {
@@ -288,6 +283,9 @@ type (
 			Enabled       bool            `yaml:"enabled"`
 			AuthUIEnabled bool            `yaml:"auth_ui_enabled"`
 			Modes         map[string]Mode `yaml:"modes"`
+			SelfService   struct {
+				TenantID uint64 `yaml:"tenant_id"`
+			} `yaml:"self_service"`
 		} `yaml:"authentication_service"`
 
 		OpenIDConnectProvider struct {
@@ -325,6 +323,7 @@ type (
 			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
 			CreatorIsAdmin         bool          `yaml:"creator_is_admin"`
 			CreatorIsDataManager   bool          `yaml:"creator_is_data_manager"`
+			GIDOffset              uint64        `yaml:"gid_offset"`
 		} `yaml:"workspace_service"`
 
 		WorkspaceFileService struct {
@@ -341,31 +340,19 @@ type (
 		} `yaml:"approval_request_service"`
 
 		UserService struct {
-			RequireEmail bool `yaml:"require_email"`
+			RequireEmail bool   `yaml:"require_email"`
+			UIDOffset    uint64 `yaml:"uid_offset"`
 		} `yaml:"user_service"`
 
 		Steward struct {
-			InitTenant struct {
-				Enabled  bool   `yaml:"enabled"`
-				TenantID uint64 `yaml:"tenant_id"`
-			} `yaml:"init_tenant"`
+			Tenant struct {
+				Name string `yaml:"name"`
+			} `yaml:"tenant"`
 
-			InitUser struct {
-				Enabled  bool      `yaml:"enabled"`
-				UserID   uint64    `yaml:"user_id"`
+			User struct {
 				Username string    `yaml:"username"`
 				Password Sensitive `yaml:"password"`
-				Roles    []struct {
-					Name    string            `yaml:"name"`
-					Context map[string]string `yaml:"context"`
-				} `yaml:"roles"`
-			} `yaml:"init_user"`
-
-			InitWorkspace struct {
-				Enabled     bool   `yaml:"enabled"`
-				WorkspaceID uint64 `yaml:"workspace_id"`
-				Name        string `yaml:"name"`
-			} `yaml:"init_workspace"`
+			} `yaml:"user"`
 		} `yaml:"steward"`
 	}
 

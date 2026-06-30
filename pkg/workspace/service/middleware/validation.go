@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -28,9 +29,16 @@ func Validation(validate *val.Validate) func(service.Workspaceer) service.Worksp
 
 func (v validation) ListWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter model.WorkspaceFilter) ([]*model.Workspace, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, nil, err
+		return nil, nil, cerr.WrapValidationError(err)
 	}
 	return v.next.ListWorkspaces(ctx, tenantID, pagination, filter)
+}
+
+func (v validation) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+	if err := v.validate.Struct(pagination); err != nil {
+		return nil, nil, err
+	}
+	return v.next.ListPublicWorkspaces(ctx, tenantID, pagination)
 }
 
 func (v validation) GetWorkspace(ctx context.Context, tenantID, workspaceID uint64) (*model.Workspace, error) {
@@ -43,20 +51,20 @@ func (v validation) DeleteWorkspace(ctx context.Context, tenantID, workspaceID u
 
 func (v validation) UpdateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	if err := v.validate.Struct(workspace); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateWorkspace(ctx, workspace)
 }
 
 func (v validation) CreateWorkspace(ctx context.Context, workspace *model.Workspace) (*model.Workspace, error) {
 	if err := v.validate.Struct(workspace); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateWorkspace(ctx, workspace)
 }
 
-func (v validation) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
-	return v.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+func (v validation) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+	return v.next.AddUserRoleInWorkspace(ctx, tenantID, userID, role)
 }
 
 func (v validation) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
@@ -71,23 +79,27 @@ func (v validation) GetWorkspaceServiceInstance(ctx context.Context, tenantID, w
 	return v.next.GetWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
 }
 
+func (v validation) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	return v.next.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, workspaceServiceInstanceID)
+}
+
 func (v validation) ListWorkspaceServiceInstances(ctx context.Context, tenantID uint64, pagination *common_model.Pagination, filter service.WorkspaceServiceInstanceFilter) ([]*model.WorkspaceServiceInstance, *common_model.PaginationResult, error) {
 	if err := v.validate.Struct(pagination); err != nil {
-		return nil, nil, err
+		return nil, nil, cerr.WrapValidationError(err)
 	}
 	return v.next.ListWorkspaceServiceInstances(ctx, tenantID, pagination, filter)
 }
 
 func (v validation) CreateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
 	if err := v.validate.Struct(svc); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.CreateWorkspaceServiceInstance(ctx, svc)
 }
 
 func (v validation) UpdateWorkspaceServiceInstance(ctx context.Context, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
 	if err := v.validate.Struct(svc); err != nil {
-		return nil, err
+		return nil, cerr.WrapValidationError(err)
 	}
 	return v.next.UpdateWorkspaceServiceInstance(ctx, svc)
 }

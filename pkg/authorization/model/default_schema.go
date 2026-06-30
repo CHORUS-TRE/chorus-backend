@@ -27,11 +27,15 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionResetPassword,
 			PermissionCreateWorkspace,
 			PermissionListWorkspaces,
+			PermissionListPublicWorkspaces,
 			PermissionListWorkbenchs,
 			PermissionListApps,
 			PermissionListAppInstances,
 			PermissionListMyRequests,
 			PermissionAuditUser,
+			PermissionGetCurrentTermsOfUseVersion,
+			PermissionGetMyTermsOfUseStatus,
+			PermissionAcceptTermsOfUse,
 		},
 	)
 
@@ -43,7 +47,6 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionListUsers,
 			PermissionCreateRequest,
 			PermissionListWorkspaceServiceInstances,
-			PermissionGetWorkspaceServiceInstance,
 		},
 	)
 
@@ -53,6 +56,8 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionCreateWorkbench,
 			PermissionListFilesInWorkspace,
 			PermissionCreateRequest,
+			PermissionGetWorkspaceServiceInstance,
+			PermissionGetWorkspaceServiceInstanceSecret,
 		},
 	)
 
@@ -138,6 +143,11 @@ func GetDefaultSchema() AuthorizationSchema {
 		authenticatedPermissions,
 		[]PermissionName{
 			PermissionSetPlatformSettings,
+			PermissionListTermsOfUseVersions,
+			PermissionGetTermsOfUseVersion,
+			PermissionCreateTermsOfUseVersion,
+			PermissionUpdateTermsOfUseVersion,
+			PermissionPublishTermsOfUseVersion,
 		},
 	)
 
@@ -152,6 +162,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionGetUser,
 			PermissionDeleteUser,
 			PermissionResetPassword,
+			PermissionListTermsOfUseAcceptances,
 		},
 	)
 
@@ -259,6 +270,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", oneContext(RoleContextWorkbench)),
 
 			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListPublicWorkspaces, "Allow the user to list public workspaces", nil),
 			permissionDefinition(PermissionCreateWorkspace, "Allow the user to create a workspace", nil),
 			permissionDefinition(PermissionUpdateWorkspace, "Allow the user to update a workspace", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionGetWorkspace, "Allow the user to get a workspace", oneContext(RoleContextWorkspace)),
@@ -275,6 +287,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionCreateWorkspaceServiceInstance, "Allow the user to create a workspace service instance", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionUpdateWorkspaceServiceInstance, "Allow the user to update a workspace service instance", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionGetWorkspaceServiceInstance, "Allow the user to get a workspace service instance", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionGetWorkspaceServiceInstanceSecret, "Allow the user to get the secrets of a workspace service instance", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionDeleteWorkspaceServiceInstance, "Allow the user to delete a workspace service instance", oneContext(RoleContextWorkspace)),
 
 			permissionDefinition(PermissionListApps, "Allow the user to list apps", nil),
@@ -289,6 +302,16 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionCreateRequest, "Allow the user to create a request", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionApproveRequest, "Allow the user to approve a request", oneContext(RoleContextWorkspace)),
 			permissionDefinition(PermissionDeleteRequest, "Allow the user to delete a request", oneContext(RoleContextWorkspace)),
+
+			permissionDefinition(PermissionCreateTermsOfUseVersion, "Allow the user to create a terms of use version", nil),
+			permissionDefinition(PermissionUpdateTermsOfUseVersion, "Allow the user to update a terms of use version", nil),
+			permissionDefinition(PermissionPublishTermsOfUseVersion, "Allow the user to publish a terms of use version", nil),
+			permissionDefinition(PermissionGetTermsOfUseVersion, "Allow the user to get a terms of use version", nil),
+			permissionDefinition(PermissionListTermsOfUseVersions, "Allow the user to list terms of use versions", nil),
+			permissionDefinition(PermissionGetCurrentTermsOfUseVersion, "Allow the user to get the current terms of use version", nil),
+			permissionDefinition(PermissionListTermsOfUseAcceptances, "Allow the user to list terms of use acceptances", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionGetMyTermsOfUseStatus, "Allow the user to get his terms of use acceptance status", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionAcceptTermsOfUse, "Allow the user to accept the terms of use", oneContext(RoleContextUser)),
 		},
 		Roles: []*RoleDefinition{
 			roleDefinition(
@@ -420,13 +443,21 @@ func roleDefinition(name RoleName, description string, context map[ContextDimens
 }
 
 func inferRoleScope(context map[ContextDimension]ContextQuantifier) RoleScope {
-	if _, ok := context[RoleContextWorkbench]; ok {
+	_, hasUser := context[RoleContextUser]
+	_, hasWorkspace := context[RoleContextWorkspace]
+	_, hasWorkbench := context[RoleContextWorkbench]
+
+	// SuperAdmin carries all three dimensions
+	if hasUser && hasWorkspace && hasWorkbench {
+		return RoleScopeSystem
+	}
+	if hasWorkbench {
 		return RoleScopeWorkbench
 	}
-	if _, ok := context[RoleContextWorkspace]; ok {
+	if hasWorkspace {
 		return RoleScopeWorkspace
 	}
-	if _, ok := context[RoleContextUser]; ok {
+	if hasUser {
 		return RoleScopePlatform
 	}
 	return RoleScopePlatform

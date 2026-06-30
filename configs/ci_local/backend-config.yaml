@@ -104,22 +104,11 @@ services:
             - roles
       keycloakdev: {}
   steward:
-    init_tenant:
-      enabled: false
-      tenant_id: 1
-    init_user:
-      enabled: false
-      user_id: 1
+    tenant:
+      name: "default"
+    user:
       username: chorus
       password: "" # set in secret
-      roles:
-        - name: Authenticated
-          context:
-            user: 1
-    init_workspace:
-      enabled: false
-      workspace_id: 1
-      name: "Home workspace"
   mailer_service:
     smtp:
       user: smtpUser

@@ -6,6 +6,8 @@ package workspace_service
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -54,15 +56,17 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	WorkspaceServiceAddUserRoleInWorkspace(params *WorkspaceServiceAddUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceAddUserRoleInWorkspaceOK, error)
+
 	WorkspaceServiceCreateWorkspace(params *WorkspaceServiceCreateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceCreateWorkspaceOK, error)
 
 	WorkspaceServiceDeleteWorkspace(params *WorkspaceServiceDeleteWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceDeleteWorkspaceOK, error)
 
 	WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceGetWorkspaceOK, error)
 
-	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
+	WorkspaceServiceListPublicWorkspaces(params *WorkspaceServiceListPublicWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListPublicWorkspacesOK, error)
 
-	WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error)
+	WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListWorkspacesOK, error)
 
 	WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServiceRemoveUserFromWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceRemoveUserFromWorkspaceOK, error)
 
@@ -71,6 +75,46 @@ type ClientService interface {
 	WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceUpdateWorkspaceOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+WorkspaceServiceAddUserRoleInWorkspace adds a user s role in a workspace
+
+This endpoint adds a user's role in a workspace
+*/
+func (a *Client) WorkspaceServiceAddUserRoleInWorkspace(params *WorkspaceServiceAddUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceAddUserRoleInWorkspaceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceAddUserRoleInWorkspaceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_AddUserRoleInWorkspace",
+		Method:             "POST",
+		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceAddUserRoleInWorkspaceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceAddUserRoleInWorkspaceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_AddUserRoleInWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -108,8 +152,9 @@ func (a *Client) WorkspaceServiceCreateWorkspace(params *WorkspaceServiceCreateW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceCreateWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_CreateWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -147,8 +192,9 @@ func (a *Client) WorkspaceServiceDeleteWorkspace(params *WorkspaceServiceDeleteW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceDeleteWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_DeleteWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -186,8 +232,49 @@ func (a *Client) WorkspaceServiceGetWorkspace(params *WorkspaceServiceGetWorkspa
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceGetWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_GetWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+WorkspaceServiceListPublicWorkspaces lists public workspaces
+
+This endpoint returns a list of public workspaces
+*/
+func (a *Client) WorkspaceServiceListPublicWorkspaces(params *WorkspaceServiceListPublicWorkspacesParams, opts ...ClientOption) (*WorkspaceServiceListPublicWorkspacesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewWorkspaceServiceListPublicWorkspacesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "WorkspaceService_ListPublicWorkspaces",
+		Method:             "GET",
+		PathPattern:        "/api/rest/v1/workspaces/public",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &WorkspaceServiceListPublicWorkspacesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*WorkspaceServiceListPublicWorkspacesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_ListPublicWorkspaces: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -225,47 +312,9 @@ func (a *Client) WorkspaceServiceListWorkspaces(params *WorkspaceServiceListWork
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceListWorkspacesDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-WorkspaceServiceManageUserRoleInWorkspace manages a user s role in a workspace
-
-This endpoint manages a user's role in a workspace
-*/
-func (a *Client) WorkspaceServiceManageUserRoleInWorkspace(params *WorkspaceServiceManageUserRoleInWorkspaceParams, opts ...ClientOption) (*WorkspaceServiceManageUserRoleInWorkspaceOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewWorkspaceServiceManageUserRoleInWorkspaceParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "WorkspaceService_ManageUserRoleInWorkspace",
-		Method:             "POST",
-		PathPattern:        "/api/rest/v1/workspaces/{id}/user/{userId}/role",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &WorkspaceServiceManageUserRoleInWorkspaceReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*WorkspaceServiceManageUserRoleInWorkspaceOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceManageUserRoleInWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_ListWorkspaces: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -303,8 +352,9 @@ func (a *Client) WorkspaceServiceRemoveUserFromWorkspace(params *WorkspaceServic
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceRemoveUserFromWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_RemoveUserFromWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -342,8 +392,9 @@ func (a *Client) WorkspaceServiceRemoveUserRoleInWorkspace(params *WorkspaceServ
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceRemoveUserRoleInWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_RemoveUserRoleInWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -381,8 +432,9 @@ func (a *Client) WorkspaceServiceUpdateWorkspace(params *WorkspaceServiceUpdateW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*WorkspaceServiceUpdateWorkspaceDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for WorkspaceService_UpdateWorkspace: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 // SetTransport changes the transport on the client

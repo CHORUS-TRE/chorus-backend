@@ -31,14 +31,7 @@ func (o *AppServiceDeleteAppReader) ReadResponse(response runtime.ClientResponse
 		}
 		return result, nil
 	default:
-		result := NewAppServiceDeleteAppDefault(response.Code())
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
-		return nil, result
+		return nil, runtime.NewAPIError("[DELETE /api/rest/v1/apps/{id}] AppService_DeleteApp", response, response.Code())
 	}
 }
 
@@ -103,80 +96,6 @@ func (o *AppServiceDeleteAppOK) GetPayload() *models.ChorusDeleteAppReply {
 func (o *AppServiceDeleteAppOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ChorusDeleteAppReply)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
-		return err
-	}
-
-	return nil
-}
-
-// NewAppServiceDeleteAppDefault creates a AppServiceDeleteAppDefault with default headers values
-func NewAppServiceDeleteAppDefault(code int) *AppServiceDeleteAppDefault {
-	return &AppServiceDeleteAppDefault{
-		_statusCode: code,
-	}
-}
-
-/*
-AppServiceDeleteAppDefault describes a response with status code -1, with default header values.
-
-An unexpected error response.
-*/
-type AppServiceDeleteAppDefault struct {
-	_statusCode int
-
-	Payload *models.RPCStatus
-}
-
-// IsSuccess returns true when this app service delete app default response has a 2xx status code
-func (o *AppServiceDeleteAppDefault) IsSuccess() bool {
-	return o._statusCode/100 == 2
-}
-
-// IsRedirect returns true when this app service delete app default response has a 3xx status code
-func (o *AppServiceDeleteAppDefault) IsRedirect() bool {
-	return o._statusCode/100 == 3
-}
-
-// IsClientError returns true when this app service delete app default response has a 4xx status code
-func (o *AppServiceDeleteAppDefault) IsClientError() bool {
-	return o._statusCode/100 == 4
-}
-
-// IsServerError returns true when this app service delete app default response has a 5xx status code
-func (o *AppServiceDeleteAppDefault) IsServerError() bool {
-	return o._statusCode/100 == 5
-}
-
-// IsCode returns true when this app service delete app default response a status code equal to that given
-func (o *AppServiceDeleteAppDefault) IsCode(code int) bool {
-	return o._statusCode == code
-}
-
-// Code gets the status code for the app service delete app default response
-func (o *AppServiceDeleteAppDefault) Code() int {
-	return o._statusCode
-}
-
-func (o *AppServiceDeleteAppDefault) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/apps/{id}][%d] AppService_DeleteApp default %s", o._statusCode, payload)
-}
-
-func (o *AppServiceDeleteAppDefault) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /api/rest/v1/apps/{id}][%d] AppService_DeleteApp default %s", o._statusCode, payload)
-}
-
-func (o *AppServiceDeleteAppDefault) GetPayload() *models.RPCStatus {
-	return o.Payload
-}
-
-func (o *AppServiceDeleteAppDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.RPCStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

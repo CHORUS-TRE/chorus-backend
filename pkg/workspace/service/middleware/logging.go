@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -38,11 +37,31 @@ func (c workspaceServiceLogging) ListWorkspaces(ctx context.Context, tenantID ui
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to get workspaces: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Int("num_workspaces", len(res)),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+
+	return res, paginationRes, nil
+}
+
+func (c workspaceServiceLogging) ListPublicWorkspaces(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.PublicWorkspace, *common_model.PaginationResult, error) {
+	now := time.Now()
+
+	res, paginationRes, err := c.next.ListPublicWorkspaces(ctx, tenantID, pagination)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, nil, err
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Int("num_public_workspaces", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 
@@ -59,7 +78,7 @@ func (c workspaceServiceLogging) GetWorkspace(ctx context.Context, tenantID, wor
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return res, fmt.Errorf("unable to get workspace: %w", err)
+		return res, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -79,7 +98,7 @@ func (c workspaceServiceLogging) DeleteWorkspace(ctx context.Context, tenantID, 
 			logger.WithWorkspaceIDField(workspaceID),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete workspace: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -99,7 +118,7 @@ func (c workspaceServiceLogging) UpdateWorkspace(ctx context.Context, workspace 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to update workspace: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -119,7 +138,7 @@ func (c workspaceServiceLogging) CreateWorkspace(ctx context.Context, workspace 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create workspace: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -130,16 +149,16 @@ func (c workspaceServiceLogging) CreateWorkspace(ctx context.Context, workspace 
 	return newWorkspace, nil
 }
 
-func (c workspaceServiceLogging) ManageUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
+func (c workspaceServiceLogging) AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error {
 	now := time.Now()
 
-	err := c.next.ManageUserRoleInWorkspace(ctx, tenantID, userID, role)
+	err := c.next.AddUserRoleInWorkspace(ctx, tenantID, userID, role)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to manage user role in workspace: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -158,7 +177,7 @@ func (c workspaceServiceLogging) RemoveUserRoleInWorkspace(ctx context.Context, 
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to remove user role in workspace: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -177,7 +196,7 @@ func (c workspaceServiceLogging) RemoveUserFromWorkspace(ctx context.Context, te
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to remove user from workspace: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -197,11 +216,32 @@ func (c workspaceServiceLogging) GetWorkspaceServiceInstance(ctx context.Context
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to get workspace service instance: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return res, nil
+}
+
+func (c workspaceServiceLogging) GetWorkspaceServiceInstanceSecrets(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (map[string]string, error) {
+	now := time.Now()
+
+	res, err := c.next.GetWorkspaceServiceInstanceSecrets(ctx, tenantID, workspaceServiceInstanceID)
+	if err != nil {
+		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
+			zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+
+	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
+		zap.Uint64("workspace_service_instance_id", workspaceServiceInstanceID),
+		zap.Int("num_secrets", len(res)),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
 	return res, nil
@@ -216,7 +256,7 @@ func (c workspaceServiceLogging) ListWorkspaceServiceInstances(ctx context.Conte
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to list workspace service instances: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -235,7 +275,7 @@ func (c workspaceServiceLogging) CreateWorkspaceServiceInstance(ctx context.Cont
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create workspace service instance: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -255,7 +295,7 @@ func (c workspaceServiceLogging) UpdateWorkspaceServiceInstance(ctx context.Cont
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to update workspace service instance: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -275,7 +315,7 @@ func (c workspaceServiceLogging) DeleteWorkspaceServiceInstance(ctx context.Cont
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete workspace service instance: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,

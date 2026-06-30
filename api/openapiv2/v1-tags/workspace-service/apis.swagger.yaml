@@ -25,10 +25,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusListWorkspacesReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: pagination.offset
           description: Optionally offset the number of results
@@ -80,10 +76,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusCreateWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
@@ -101,16 +93,56 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusUpdateWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: body
           in: body
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspace'
+      tags:
+        - WorkspaceService
+  /api/rest/v1/workspaces/public:
+    get:
+      summary: List public workspaces
+      description: This endpoint returns a list of public workspaces
+      operationId: WorkspaceService_ListPublicWorkspaces
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListPublicWorkspacesReply'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}:
@@ -123,10 +155,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusGetWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -144,10 +172,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusDeleteWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -166,10 +190,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusRemoveUserFromWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -185,18 +205,14 @@ paths:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}/role:
     post:
-      summary: Manage a user's role in a workspace
-      description: This endpoint manages a user's role in a workspace
-      operationId: WorkspaceService_ManageUserRoleInWorkspace
+      summary: Add a user's role in a workspace
+      description: This endpoint adds a user's role in a workspace
+      operationId: WorkspaceService_AddUserRoleInWorkspace
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/chorusManageUserRoleInWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
+            $ref: '#/definitions/chorusAddUserRoleInWorkspaceReply'
       parameters:
         - name: id
           in: path
@@ -212,7 +228,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: '#/definitions/WorkspaceServiceManageUserRoleInWorkspaceBody'
+            $ref: '#/definitions/WorkspaceServiceAddUserRoleInWorkspaceBody'
       tags:
         - WorkspaceService
   /api/rest/v1/workspaces/{id}/user/{userId}/role/{roleName}:
@@ -225,10 +241,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/chorusRemoveUserRoleInWorkspaceReply'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/rpcStatus'
       parameters:
         - name: id
           in: path
@@ -247,11 +259,21 @@ paths:
       tags:
         - WorkspaceService
 definitions:
-  WorkspaceServiceManageUserRoleInWorkspaceBody:
+  WorkspaceServiceAddUserRoleInWorkspaceBody:
     type: object
     properties:
       role:
         $ref: '#/definitions/chorusRole'
+  chorusAddUserRoleInWorkspaceReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusAddUserRoleInWorkspaceResult'
+  chorusAddUserRoleInWorkspaceResult:
+    type: object
+    properties:
+      workspace:
+        $ref: '#/definitions/chorusWorkspace'
   chorusCreateWorkspaceReply:
     type: object
     properties:
@@ -279,6 +301,21 @@ definitions:
     properties:
       workspace:
         $ref: '#/definitions/chorusWorkspace'
+  chorusListPublicWorkspacesReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListPublicWorkspacesResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListPublicWorkspacesResult:
+    type: object
+    properties:
+      publicWorkspaces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusPublicWorkspace'
   chorusListWorkspacesReply:
     type: object
     properties:
@@ -294,16 +331,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/chorusWorkspace'
-  chorusManageUserRoleInWorkspaceReply:
-    type: object
-    properties:
-      result:
-        $ref: '#/definitions/chorusManageUserRoleInWorkspaceResult'
-  chorusManageUserRoleInWorkspaceResult:
-    type: object
-    properties:
-      workspace:
-        $ref: '#/definitions/chorusWorkspace'
   chorusPaginationQuery:
     type: object
     properties:
@@ -344,6 +371,37 @@ definitions:
       sort:
         $ref: '#/definitions/chorusSort'
         description: Sort order used for pagination
+  chorusPublicWorkspace:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      shortName:
+        type: string
+      description:
+        type: string
+      status:
+        $ref: '#/definitions/chorusWorkspaceStatus'
+      contactUsername:
+        type: string
+      contactFirstName:
+        type: string
+      contactLastName:
+        type: string
+      contactEmail:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusRemoveUserFromWorkspaceReply:
     type: object
     properties:
@@ -412,7 +470,7 @@ definitions:
       description:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/chorusWorkspaceStatus'
       isMain:
         type: boolean
       appInstanceIds:
@@ -425,12 +483,6 @@ definitions:
         items:
           type: string
           format: uint64
-      createdAt:
-        type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
       namespace:
         type: string
       networkPolicy:
@@ -445,6 +497,20 @@ definitions:
         type: string
       clipboard:
         type: string
+      gid:
+        type: string
+        format: uint64
+      visibility:
+        $ref: '#/definitions/chorusWorkspaceVisibility'
+      contactUserId:
+        type: string
+        format: uint64
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   chorusWorkspaceFilter:
     type: object
     properties:
@@ -453,22 +519,16 @@ definitions:
         items:
           type: string
           format: uint64
-  protobufAny:
-    type: object
-    properties:
-      '@type':
-        type: string
-    additionalProperties: {}
-  rpcStatus:
-    type: object
-    properties:
-      code:
-        type: integer
-        format: int32
-      message:
-        type: string
-      details:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/protobufAny'
+  chorusWorkspaceStatus:
+    type: string
+    enum:
+      - WORKSPACE_STATUS_ACTIVE
+      - WORKSPACE_STATUS_INACTIVE
+      - WORKSPACE_STATUS_DELETED
+    default: WORKSPACE_STATUS_ACTIVE
+  chorusWorkspaceVisibility:
+    type: string
+    enum:
+      - WORKSPACE_VISIBILITY_PRIVATE
+      - WORKSPACE_VISIBILITY_PUBLIC
+    default: WORKSPACE_VISIBILITY_PRIVATE

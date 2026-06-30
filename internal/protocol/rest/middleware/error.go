@@ -53,6 +53,9 @@ func CustomHTTPError(ctx context.Context, mux *runtime.ServeMux, marshaler runti
 				}
 				d["validationErrors"] = ve
 			}
+			if errorDetail.StackTrace != "" {
+				d["stackTrace"] = errorDetail.StackTrace
+			}
 			customErr.Details = append(customErr.Details, d)
 		}
 	}

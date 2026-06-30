@@ -3,28 +3,35 @@ package chorus;
 option go_package = ".;chorus";
 
 enum ChorusErrorCode {
-    // Default unspecified error
+    // Default unspecified error.
     CHORUS_ERROR_CODE_UNSPECIFIED = 0;
 
-    // Client errors
-    INVALID_REQUEST = 1;    // Malformed or missing request parameters
-    VALIDATION_ERROR = 2;   // Field-level validation failure
-    CONVERSION_ERROR = 3;   // Failed to convert between API and domain models
+    // Malformed or missing request parameters. HTTP 400.
+    INVALID_REQUEST = 1;
+    // Field-level validation failure; see validationErrors. HTTP 400.
+    VALIDATION_ERROR = 2;
+    // Failed to convert between API and domain models. HTTP 500.
+    CONVERSION_ERROR = 3;
 
-    // Resource errors
-    NOT_FOUND = 4;          // Requested resource does not exist
-    ALREADY_EXISTS = 5;     // Resource already exists
+    // Requested resource does not exist. HTTP 404.
+    NOT_FOUND = 4;
+    // Resource already exists. HTTP 409.
+    ALREADY_EXISTS = 5;
 
-    // Authentication & authorization errors
-    UNAUTHENTICATED = 6;      // No valid credentials provided
-    INVALID_CREDENTIALS = 7;  // Username/password mismatch
-    TWO_FACTOR_REQUIRED = 8;  // Valid credentials but 2FA step is needed
-    PERMISSION_DENIED = 9;    // Unauthorized request
+    // No valid credentials provided. HTTP 401.
+    UNAUTHENTICATED = 6;
+    // Username/password mismatch. HTTP 401.
+    INVALID_CREDENTIALS = 7;
+    // Valid credentials but 2FA is required. HTTP 400.
+    TWO_FACTOR_REQUIRED = 8;
+    // Authenticated but not authorized. HTTP 403.
+    PERMISSION_DENIED = 9;
 
-    // Server errors
-    INTERNAL_ERROR = 10;    // Unrecoverable server-side error
+    // Unrecoverable server-side error. HTTP 500.
+    INTERNAL_ERROR = 10;
 }
 
+// A single field-level validation failure.
 message ValidationError {
     // The field that failed validation (e.g. "FirstName", "Email")
     string field = 1;
@@ -32,15 +39,28 @@ message ValidationError {
     string reason = 2;
 }
 
+// A single error occurrence; Chorus errors return exactly one in ChorusErrorResponse.details.
 message ErrorDetail {
     // Chorus specific error code
     ChorusErrorCode chorusCode = 1;
     // Instance identifier (url)
     string instance = 2;
-    // A short human-readable summary of the problem
+    // Short human-readable summary
     string title = 3;
-    // A human-readable explanation specific to this occurrence of the problem
+    // Human-readable message for this occurrence
     string message = 4;
     // Field-level validation errors (only populated for VALIDATION_ERROR)
     repeated ValidationError validation_errors = 5;
+    // Debug-only stack trace; empty unless server has stacktrace exposure enabled.
+    string stack_trace = 6;
+}
+
+// ChorusErrorResponse is the JSON body returned for every API error.
+message ChorusErrorResponse {
+    // gRPC status code. The HTTP status is on the response status line.
+    int32 code = 1;
+    // Top-level human-readable error message
+    string message = 2;
+    // Error descriptors. For Chorus errors this contains exactly one ErrorDetail.
+    repeated ErrorDetail details = 3;
 }
