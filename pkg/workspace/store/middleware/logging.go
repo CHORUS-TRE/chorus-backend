@@ -319,7 +319,7 @@ func (c workspaceStorageLogging) DeleteWorkspaceServiceInstance(ctx context.Cont
 	return nil
 }
 
-func (c workspaceStorageLogging) UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[string]model.WorkspaceServiceInstanceStatusUpdate) error {
+func (c workspaceStorageLogging) UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
 	c.logger.Debug(ctx, "request started")
 	now := time.Now()
 

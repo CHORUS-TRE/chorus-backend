@@ -94,7 +94,7 @@ func (m *mockWorkspaceStore) DeleteWorkspaceServiceInstance(_ context.Context, _
 	return nil
 }
 
-func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstanceStatuses(_ context.Context, _ uint64, _ map[string]model.WorkspaceServiceInstanceStatusUpdate) error {
+func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstanceStatuses(_ context.Context, _ uint64, _ map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
 	return nil
 }
 
