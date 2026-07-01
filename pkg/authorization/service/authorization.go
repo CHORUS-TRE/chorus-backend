@@ -268,10 +268,21 @@ func (s *authorizationService) CanAssignRole(user []model.Role, roleName model.R
 	if !ok {
 		return false, fmt.Errorf("role %q not found in schema", roleName)
 	}
+
+	// User-role managers may delegate any non-system role
+	if definition.Scope != model.RoleScopeSystem && s.canManageUserRoles(user) {
+		return true, nil
+	}
+
 	if err := s.ensureUserCanGrantPermissions(user, definition.Permissions, assignmentContext); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func (s *authorizationService) canManageUserRoles(user []model.Role) bool {
+	allowed, err := s.IsUserAllowed(user, model.Permission{Name: model.PermissionManageUserRoles})
+	return err == nil && allowed
 }
 
 func (s *authorizationService) FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter) ([]uint64, error) {

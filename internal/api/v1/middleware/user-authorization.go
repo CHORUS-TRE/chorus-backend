@@ -148,9 +148,7 @@ func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *ch
 	if err != nil {
 		return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role name")
 	}
-	if c.IsRoleInScope(roleName, authorization.RoleScopeWorkspace, authorization.RoleScopeWorkbench) {
-		return nil, cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Role %q must be assigned through its scoped endpoint", roleName))
-	}
+
 	assignmentContext := authorization.Context{authorization.RoleContextUser: fmt.Sprintf("%d", req.UserId)}
 	for key, value := range req.Role.Context {
 		dimension, err := authorization.ToRoleContext(key)
