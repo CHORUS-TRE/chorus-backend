@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -37,7 +36,7 @@ func (c approvalRequestServiceLogging) GetApprovalRequest(ctx context.Context, t
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to get approval request: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -56,7 +55,7 @@ func (c approvalRequestServiceLogging) ListApprovalRequests(ctx context.Context,
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to list approval requests: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -75,7 +74,7 @@ func (c approvalRequestServiceLogging) CountMyApprovalRequests(ctx context.Conte
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to count my approval requests: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -94,7 +93,7 @@ func (c approvalRequestServiceLogging) CreateDataExtractionRequest(ctx context.C
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create data extraction request: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -113,7 +112,7 @@ func (c approvalRequestServiceLogging) CreateDataTransferRequest(ctx context.Con
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to create data transfer request: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -134,7 +133,7 @@ func (c approvalRequestServiceLogging) ApproveApprovalRequest(ctx context.Contex
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, fmt.Errorf("unable to approve approval request: %w", err)
+		return nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -155,7 +154,7 @@ func (c approvalRequestServiceLogging) DeleteApprovalRequest(ctx context.Context
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return fmt.Errorf("unable to delete approval request: %w", err)
+		return err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
@@ -176,7 +175,7 @@ func (c approvalRequestServiceLogging) DownloadApprovalRequestFile(ctx context.C
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, fmt.Errorf("unable to download approval request file: %w", err)
+		return nil, nil, err
 	}
 
 	c.logger.Info(ctx, logger.LoggerMessageRequestCompleted,
