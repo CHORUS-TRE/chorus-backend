@@ -548,7 +548,8 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 
 		_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
 		if err != nil {
-			if !strings.Contains(err.Error(), "a file already exists") {
+			var chorusErr *cerr.ChorusError
+			if !errors.As(err, &chorusErr) || chorusErr.ChorusCode != cerr.ErrAlreadyExists.ChorusCode {
 				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
 			}
 
