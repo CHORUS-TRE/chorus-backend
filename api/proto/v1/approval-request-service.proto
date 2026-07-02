@@ -38,7 +38,7 @@ message ListApprovalRequestsResult {
 message ApprovalRequestFilter {
     repeated ApprovalRequestStatus statusesIn = 1;
     repeated ApprovalRequestType typesIn = 2;
-    optional uint64 sourceWorkspaceId = 3;
+    optional uint64 workspaceId = 3;
     optional bool pendingApproval = 4;
     optional uint64 approverId = 5;
     optional uint64 requesterId = 6;

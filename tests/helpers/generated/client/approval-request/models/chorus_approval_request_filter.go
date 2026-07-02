@@ -28,14 +28,14 @@ type ChorusApprovalRequestFilter struct {
 	// requester Id
 	RequesterID string `json:"requesterId,omitempty"`
 
-	// source workspace Id
-	SourceWorkspaceID string `json:"sourceWorkspaceId,omitempty"`
-
 	// statuses in
 	StatusesIn []*ChorusApprovalRequestStatus `json:"statusesIn"`
 
 	// types in
 	TypesIn []*ChorusApprovalRequestType `json:"typesIn"`
+
+	// workspace Id
+	WorkspaceID string `json:"workspaceId,omitempty"`
 }
 
 // Validate validates this chorus approval request filter
