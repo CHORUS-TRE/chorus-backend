@@ -75,16 +75,16 @@ type ApprovalRequestServiceListApprovalRequestsParams struct {
 	// Format: uint64
 	FilterRequesterID *string
 
-	// FilterSourceWorkspaceID.
-	//
-	// Format: uint64
-	FilterSourceWorkspaceID *string
-
 	// FilterStatusesIn.
 	FilterStatusesIn []string
 
 	// FilterTypesIn.
 	FilterTypesIn []string
+
+	// FilterWorkspaceID.
+	//
+	// Format: uint64
+	FilterWorkspaceID *string
 
 	/* PaginationLimit.
 
@@ -200,17 +200,6 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterRequesterID(
 	o.FilterRequesterID = filterRequesterID
 }
 
-// WithFilterSourceWorkspaceID adds the filterSourceWorkspaceID to the approval request service list approval requests params
-func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterSourceWorkspaceID(filterSourceWorkspaceID *string) *ApprovalRequestServiceListApprovalRequestsParams {
-	o.SetFilterSourceWorkspaceID(filterSourceWorkspaceID)
-	return o
-}
-
-// SetFilterSourceWorkspaceID adds the filterSourceWorkspaceId to the approval request service list approval requests params
-func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterSourceWorkspaceID(filterSourceWorkspaceID *string) {
-	o.FilterSourceWorkspaceID = filterSourceWorkspaceID
-}
-
 // WithFilterStatusesIn adds the filterStatusesIn to the approval request service list approval requests params
 func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterStatusesIn(filterStatusesIn []string) *ApprovalRequestServiceListApprovalRequestsParams {
 	o.SetFilterStatusesIn(filterStatusesIn)
@@ -231,6 +220,17 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterTypesIn(fil
 // SetFilterTypesIn adds the filterTypesIn to the approval request service list approval requests params
 func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterTypesIn(filterTypesIn []string) {
 	o.FilterTypesIn = filterTypesIn
+}
+
+// WithFilterWorkspaceID adds the filterWorkspaceID to the approval request service list approval requests params
+func (o *ApprovalRequestServiceListApprovalRequestsParams) WithFilterWorkspaceID(filterWorkspaceID *string) *ApprovalRequestServiceListApprovalRequestsParams {
+	o.SetFilterWorkspaceID(filterWorkspaceID)
+	return o
+}
+
+// SetFilterWorkspaceID adds the filterWorkspaceId to the approval request service list approval requests params
+func (o *ApprovalRequestServiceListApprovalRequestsParams) SetFilterWorkspaceID(filterWorkspaceID *string) {
+	o.FilterWorkspaceID = filterWorkspaceID
 }
 
 // WithPaginationLimit adds the paginationLimit to the approval request service list approval requests params
@@ -347,23 +347,6 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) WriteToRequest(r runt
 		}
 	}
 
-	if o.FilterSourceWorkspaceID != nil {
-
-		// query param filter.sourceWorkspaceId
-		var qrFilterSourceWorkspaceID string
-
-		if o.FilterSourceWorkspaceID != nil {
-			qrFilterSourceWorkspaceID = *o.FilterSourceWorkspaceID
-		}
-		qFilterSourceWorkspaceID := qrFilterSourceWorkspaceID
-		if qFilterSourceWorkspaceID != "" {
-
-			if err := r.SetQueryParam("filter.sourceWorkspaceId", qFilterSourceWorkspaceID); err != nil {
-				return err
-			}
-		}
-	}
-
 	if o.FilterStatusesIn != nil {
 
 		// binding items for filter.statusesIn
@@ -383,6 +366,23 @@ func (o *ApprovalRequestServiceListApprovalRequestsParams) WriteToRequest(r runt
 		// query array param filter.typesIn
 		if err := r.SetQueryParam("filter.typesIn", joinedFilterTypesIn...); err != nil {
 			return err
+		}
+	}
+
+	if o.FilterWorkspaceID != nil {
+
+		// query param filter.workspaceId
+		var qrFilterWorkspaceID string
+
+		if o.FilterWorkspaceID != nil {
+			qrFilterWorkspaceID = *o.FilterWorkspaceID
+		}
+		qFilterWorkspaceID := qrFilterWorkspaceID
+		if qFilterWorkspaceID != "" {
+
+			if err := r.SetQueryParam("filter.workspaceId", qFilterWorkspaceID); err != nil {
+				return err
+			}
 		}
 	}
 

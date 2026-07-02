@@ -26,7 +26,7 @@ var _ ApprovalRequester = (*ApprovalRequestService)(nil)
 type ApprovalRequestFilter struct {
 	StatusesIn        *[]model.ApprovalRequestStatus
 	TypesIn           *[]model.ApprovalRequestType
-	SourceWorkspaceID *uint64
+	WorkspaceID *uint64
 	PendingApproval   *bool
 	ApproverID        *uint64
 	RequesterID       *uint64

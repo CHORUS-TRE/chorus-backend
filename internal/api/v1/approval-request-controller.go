@@ -77,8 +77,8 @@ func (c ApprovalRequestController) ListApprovalRequests(ctx context.Context, req
 			}
 			filter.TypesIn = &types
 		}
-		if req.Filter.SourceWorkspaceId != nil {
-			filter.SourceWorkspaceID = req.Filter.SourceWorkspaceId
+		if req.Filter.WorkspaceId != nil {
+			filter.WorkspaceID = req.Filter.WorkspaceId
 		}
 		if req.Filter.PendingApproval != nil {
 			filter.PendingApproval = req.Filter.PendingApproval
