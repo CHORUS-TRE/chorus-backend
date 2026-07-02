@@ -105,9 +105,10 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context, tenantID uin
 func bootstrapRolesFor(userID uint64) []user_model.UserRole {
 	return []user_model.UserRole{
 		{Role: authorization_model.NewRole(authorization_model.RoleAuthenticated, authorization_model.WithUser(userID))},
-		{Role: authorization_model.NewRole(authorization_model.RolePlatformSettingsManager, authorization_model.WithUser(userID))},
-		{Role: authorization_model.NewRole(authorization_model.RolePlateformUserManager, authorization_model.WithUser(userID))},
-		{Role: authorization_model.NewRole(authorization_model.RoleAppStoreAdmin, authorization_model.WithUser(userID))},
+		{Role: authorization_model.NewRole(authorization_model.RoleSuperAdmin,
+			authorization_model.WithUser(authorization_model.Wildcard),
+			authorization_model.WithWorkspace(authorization_model.Wildcard),
+			authorization_model.WithWorkbench(authorization_model.Wildcard))},
 	}
 }
 
