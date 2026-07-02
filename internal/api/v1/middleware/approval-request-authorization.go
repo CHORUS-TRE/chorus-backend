@@ -84,34 +84,31 @@ func (c approvalRequestControllerAuthorization) GetApprovalRequest(ctx context.C
 }
 
 func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context.Context, req *chorus.ListApprovalRequestsRequest) (*chorus.ListApprovalRequestsReply, error) {
-	userId, err := jwt_model.ExtractUserID(ctx)
+	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
 		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract user ID")
 	}
 
-	listMine := false
-	if req.Filter != nil && req.Filter.RequesterId != nil && *req.Filter.RequesterId == userId {
-		listMine = true
-	}
-	if req.Filter != nil && req.Filter.ApproverId != nil && *req.Filter.ApproverId == userId {
-		listMine = true
-	}
+	// Users filtering by their own requester/approver ID only need PermissionListMyRequests.
+	listMine := req.Filter != nil &&
+		((req.Filter.RequesterId != nil && *req.Filter.RequesterId == userID) ||
+			(req.Filter.ApproverId != nil && *req.Filter.ApproverId == userID))
 
-	if !listMine {
-		opts := []authorization.NewContextOption{}
-		if req.Filter != nil && req.Filter.SourceWorkspaceId != nil {
-			opts = append(opts, authorization.WithWorkspace(*req.Filter.SourceWorkspaceId))
-		}
-
-		err := c.IsAuthorized(ctx, authorization.PermissionListRequests, opts...)
-		if err != nil {
+	if listMine {
+		if err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests); err != nil {
 			return nil, err
 		}
-	} else {
-		err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests)
-		if err != nil {
-			return nil, err
-		}
+		return c.next.ListApprovalRequests(ctx, req)
+	}
+
+	// Broader listing (e.g. by workspace admin) requires PermissionListRequests,
+	// scoped to the workspace when one is provided.
+	opts := []authorization.NewContextOption{}
+	if req.Filter != nil && req.Filter.WorkspaceId != nil {
+		opts = append(opts, authorization.WithWorkspace(*req.Filter.WorkspaceId))
+	}
+	if err := c.IsAuthorized(ctx, authorization.PermissionListRequests, opts...); err != nil {
+		return nil, err
 	}
 
 	return c.next.ListApprovalRequests(ctx, req)
