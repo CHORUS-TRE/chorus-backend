@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"slices"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -43,9 +44,42 @@ func ApprovalRequestAuthorizing(logger *logger.ContextLogger, authorizer authori
 }
 
 func (c approvalRequestControllerAuthorization) GetApprovalRequest(ctx context.Context, req *chorus.GetApprovalRequestRequest) (*chorus.GetApprovalRequestReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithRequest(req.Id))
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+	}
+
+	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "approval request not found")
+	}
+
+	// The requester and any designated approver can always view the request.
+	isParticipant := approvalRequest.RequesterID == userID ||
+		slices.Contains(approvalRequest.AllApproverIDs(), userID)
+
+	// Workspace admins with PermissionGetRequest on any involved workspace can also view it.
+	hasWorkspaceAccess := func() bool {
+		sourceWorkspaceID := approvalRequest.GetSourceWorkspaceID()
+		if c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithWorkspace(sourceWorkspaceID)) == nil {
+			return true
+		}
+		if approvalRequest.Type == approval_request_model.ApprovalRequestTypeDataTransfer {
+			destinationWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
+			if c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithWorkspace(destinationWorkspaceID)) == nil {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !isParticipant && !hasWorkspaceAccess() {
+		return nil, status.Error(codes.PermissionDenied, "user does not have permission to get this request")
 	}
 
 	return c.next.GetApprovalRequest(ctx, req)
