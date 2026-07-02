@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
@@ -112,12 +114,12 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 
 	details := request.Details.DataExtractionDetails
 	if details == nil {
-		return nil, fmt.Errorf("invalid details type for data extraction request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Invalid details type for data extraction request")
 	}
 
 	approversByStep, canAutoApprove, err := s.findApproversForDataExtractionRequest(ctx, request.TenantID, request.RequesterID, details.SourceWorkspaceID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to find approvers: %w", err)
+		return nil, err
 	}
 
 	if canAutoApprove {
@@ -133,18 +135,18 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 
 	createdRequest, err := s.store.CreateApprovalRequest(ctx, request.TenantID, request)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create approval request: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to create approval request")
 	}
 
 	requestFiles, err := s.copyFilesToRequestStorage(ctx, createdRequest.ID, details.SourceWorkspaceID, filePaths)
 	if err != nil {
 		_ = s.store.DeleteApprovalRequest(ctx, request.TenantID, createdRequest.ID)
-		return nil, fmt.Errorf("unable to copy files to request storage: %w", err)
+		return nil, err
 	}
 
 	createdDetails := createdRequest.Details.DataExtractionDetails
 	if createdDetails == nil {
-		return nil, fmt.Errorf("invalid details type for data extraction request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Invalid details type for data extraction request")
 	}
 	createdDetails.Files = requestFiles
 
@@ -152,7 +154,7 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 	if err != nil {
 		_ = s.cleanupRequestStorage(ctx, createdRequest.ID)
 		_ = s.store.DeleteApprovalRequest(ctx, request.TenantID, createdRequest.ID)
-		return nil, fmt.Errorf("unable to update request with files: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to update approval request with files")
 	}
 
 	for _, approverID := range uniqueApproverIDs(approversByStep) {
@@ -191,14 +193,14 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 
 	approvers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filter)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to find approvers: %w", err)
+		return nil, false, err
 	}
 
 	if len(approvers) == 0 {
 		if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-			return nil, false, fmt.Errorf("no workspace data manager found for this workspace; please assign a data manager before creating approval requests")
+			return nil, false, cerr.ErrInvalidRequest.WithMessage("No workspace data manager found for this workspace; please assign a data manager before creating approval requests")
 		}
-		return nil, false, fmt.Errorf("no users with approval permission found for this workspace")
+		return nil, false, cerr.ErrInvalidRequest.WithMessage("No users with approval permission found for this workspace")
 	}
 
 	requesterCanApprove := containsID(approvers, requesterID)
@@ -223,16 +225,16 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 
 	details := request.Details.DataTransferDetails
 	if details == nil {
-		return nil, fmt.Errorf("invalid details type for data transfer request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Invalid details type for data transfer request")
 	}
 
 	if details.DestinationWorkspaceID == 0 {
-		return nil, fmt.Errorf("destination workspace ID is required for data transfer requests")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Destination workspace ID is required for data transfer requests")
 	}
 
 	approversByStep, canAutoApprove, err := s.findApproversForDataTransferRequest(ctx, request.TenantID, request.RequesterID, details.SourceWorkspaceID, details.DestinationWorkspaceID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to find approvers: %w", err)
+		return nil, err
 	}
 
 	if canAutoApprove {
@@ -248,18 +250,18 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 
 	createdRequest, err := s.store.CreateApprovalRequest(ctx, request.TenantID, request)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create approval request: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to create approval request")
 	}
 
 	requestFiles, err := s.copyFilesToRequestStorage(ctx, createdRequest.ID, details.SourceWorkspaceID, filePaths)
 	if err != nil {
 		_ = s.store.DeleteApprovalRequest(ctx, request.TenantID, createdRequest.ID)
-		return nil, fmt.Errorf("unable to copy files to request storage: %w", err)
+		return nil, err
 	}
 
 	createdDetails := createdRequest.Details.DataTransferDetails
 	if createdDetails == nil {
-		return nil, fmt.Errorf("invalid details type for data transfer request")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Invalid details type for data transfer request")
 	}
 	createdDetails.Files = requestFiles
 
@@ -267,12 +269,12 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 	if err != nil {
 		_ = s.cleanupRequestStorage(ctx, createdRequest.ID)
 		_ = s.store.DeleteApprovalRequest(ctx, request.TenantID, createdRequest.ID)
-		return nil, fmt.Errorf("unable to update request with files: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to update approval request with files")
 	}
 
 	if canAutoApprove {
 		if err := s.executeApprovedRequest(ctx, updatedRequest); err != nil {
-			return nil, fmt.Errorf("unable to execute auto-approved request: %w", err)
+			return nil, err
 		}
 	}
 
@@ -312,7 +314,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 
 	downloadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterDownload)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to find approvers: %w", err)
+		return nil, false, err
 	}
 
 	filterUpload := authorization_model.FindUsersWithPermissionFilter{
@@ -322,17 +324,17 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 
 	uploadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterUpload)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to find approvers: %w", err)
+		return nil, false, err
 	}
 
 	if len(downloadApprovers) == 0 {
 		if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-			return nil, false, fmt.Errorf("no workspace data manager found for the source workspace; please assign a data manager before creating approval requests")
+			return nil, false, cerr.ErrInvalidRequest.WithMessage("No workspace data manager found for the source workspace; please assign a data manager before creating approval requests")
 		}
-		return nil, false, fmt.Errorf("no users with download approval permission found for the source workspace")
+		return nil, false, cerr.ErrInvalidRequest.WithMessage("No users with download approval permission found for the source workspace")
 	}
 	if len(uploadApprovers) == 0 {
-		return nil, false, fmt.Errorf("no users with upload approval permission found for the destination workspace")
+		return nil, false, cerr.ErrInvalidRequest.WithMessage("No users with upload approval permission found for the destination workspace")
 	}
 
 	// The requester may self-approve only if they are authorized for every step.
@@ -373,18 +375,18 @@ func uniqueApproverIDs(approversByStep map[model.ApprovalStep][]uint64) []uint64
 func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64, approve bool) (*model.ApprovalRequest, error) {
 	request, err := s.store.GetApprovalRequest(ctx, tenantID, requestID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get request: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to get approval request")
 	}
 
 	if request.Status != model.ApprovalRequestStatusPending {
-		return nil, fmt.Errorf("request is not pending approval")
+		return nil, cerr.ErrInvalidRequest.WithMessage("Request is not pending approval")
 	}
 
 	// Determine which steps this user is entitled to decide on (and that have
 	// not already been decided). If empty, the user cannot act on this request.
 	stepsToDecide := request.StepsToApprove(userID)
 	if len(stepsToDecide) == 0 {
-		return nil, fmt.Errorf("user is not authorized to approve any pending step of this request")
+		return nil, cerr.ErrPermissionDenied.WithMessage("User is not authorized to approve any pending step of this request")
 	}
 
 	if request.StepDecisions == nil {
@@ -418,12 +420,12 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 
 	updatedRequest, err := s.store.UpdateApprovalRequest(ctx, tenantID, request)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update request: %w", err)
+		return nil, cerr.WrapStoreError(err, "Unable to update approval request")
 	}
 
 	if updatedRequest.Status == model.ApprovalRequestStatusApproved {
 		if err := s.executeApprovedRequest(ctx, updatedRequest); err != nil {
-			return nil, fmt.Errorf("unable to execute approved request: %w", err)
+			return nil, err
 		}
 	}
 
@@ -452,18 +454,21 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 func (s *ApprovalRequestService) DeleteApprovalRequest(ctx context.Context, tenantID, requestID, userID uint64) error {
 	request, err := s.store.GetApprovalRequest(ctx, tenantID, requestID)
 	if err != nil {
-		return fmt.Errorf("unable to get request: %w", err)
+		return cerr.WrapStoreError(err, "Unable to get approval request")
 	}
 
 	if !request.CanBeDeletedBy(userID) {
-		return fmt.Errorf("user is not authorized to delete this request")
+		return cerr.ErrPermissionDenied.WithMessage("User is not authorized to delete this request")
 	}
 
 	if err := s.cleanupRequestStorage(ctx, requestID); err != nil {
-		return fmt.Errorf("unable to cleanup request storage: %w", err)
+		return err
 	}
 
-	return s.store.DeleteApprovalRequest(ctx, tenantID, requestID)
+	if err := s.store.DeleteApprovalRequest(ctx, tenantID, requestID); err != nil {
+		return cerr.WrapStoreError(err, "Unable to delete approval request")
+	}
+	return nil
 }
 
 // copyFilesToRequestStorage copies files from the source workspace into the
@@ -480,11 +485,11 @@ func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, 
 
 		file, err := s.workspaceFileStore.GetWorkspaceFileWithContent(ctx, sourceWorkspaceID, filePath)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get source file %s: %w", filePath, err)
+			return nil, err
 		}
 
 		if file.IsDirectory {
-			return nil, fmt.Errorf("directories are not supported: %s", filePath)
+			return nil, cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Directories are not supported: %s", filePath))
 		}
 
 		destFile := &filestore.File{
@@ -495,7 +500,7 @@ func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, 
 
 		_, err = s.stagingFileStore.CreateFile(ctx, destFile)
 		if err != nil {
-			return nil, fmt.Errorf("unable to copy file %s to request storage: %w", filePath, err)
+			return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to copy file %s to request storage", filePath))
 		}
 
 		requestFiles = append(requestFiles, model.ApprovalRequestFile{
@@ -510,7 +515,10 @@ func (s *ApprovalRequestService) copyFilesToRequestStorage(ctx context.Context, 
 
 func (s *ApprovalRequestService) cleanupRequestStorage(ctx context.Context, requestID uint64) error {
 	requestDir := model.GetApprovalRequestStoragePath(requestID)
-	return s.stagingFileStore.DeleteDirectory(ctx, requestDir)
+	if err := s.stagingFileStore.DeleteDirectory(ctx, requestDir); err != nil {
+		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to cleanup request storage for request %d", requestID))
+	}
+	return nil
 }
 
 func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, request *model.ApprovalRequest) error {
@@ -521,11 +529,11 @@ func (s *ApprovalRequestService) executeApprovedRequest(ctx context.Context, req
 	case model.ApprovalRequestTypeDataTransfer:
 		details := request.Details.DataTransferDetails
 		if details == nil {
-			return fmt.Errorf("invalid details type for data transfer request")
+			return cerr.ErrInvalidRequest.WithMessage("Invalid details type for data transfer request")
 		}
 		return s.copyFilesToDestinationWorkspace(ctx, *details)
 	default:
-		return fmt.Errorf("unsupported request type: %s", request.Type)
+		return cerr.ErrInvalidRequest.WithMessage(fmt.Sprintf("Unsupported request type: %s", request.Type))
 	}
 }
 
@@ -537,7 +545,7 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 	for _, reqFile := range details.Files {
 		file, err := s.stagingFileStore.GetFile(ctx, reqFile.DestinationPath)
 		if err != nil {
-			return fmt.Errorf("unable to get file from request storage %s: %w", reqFile.DestinationPath, err)
+			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get file from request storage %s", reqFile.DestinationPath))
 		}
 
 		destFile := &filestore.File{
@@ -550,7 +558,7 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 		if err != nil {
 			var chorusErr *cerr.ChorusError
 			if !errors.As(err, &chorusErr) || chorusErr.ChorusCode != cerr.ErrAlreadyExists.ChorusCode {
-				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+				return err
 			}
 
 			destFile.Path = appendUUIDToFilename(destFile.Path)
@@ -559,7 +567,7 @@ func (s *ApprovalRequestService) copyFilesToDestinationWorkspace(ctx context.Con
 
 			_, err = s.workspaceFileStore.CreateWorkspaceFile(ctx, details.DestinationWorkspaceID, destFile)
 			if err != nil {
-				return fmt.Errorf("unable to copy file to destination workspace: %w", err)
+				return err
 			}
 		}
 	}
@@ -578,16 +586,16 @@ func appendUUIDToFilename(filePath string) string {
 func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context, tenantID, requestID uint64, filePath string) (*model.ApprovalRequestFile, []byte, error) {
 	request, err := s.store.GetApprovalRequest(ctx, tenantID, requestID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get request: %w", err)
+		return nil, nil, cerr.WrapStoreError(err, "Unable to get approval request")
 	}
 
 	if request.Type != model.ApprovalRequestTypeDataExtraction {
-		return nil, nil, fmt.Errorf("download is only available for data extraction requests")
+		return nil, nil, cerr.ErrInvalidRequest.WithMessage("Download is only available for data extraction requests")
 	}
 
 	details := request.Details.DataExtractionDetails
 	if details == nil {
-		return nil, nil, fmt.Errorf("invalid request details")
+		return nil, nil, cerr.ErrInvalidRequest.WithMessage("Invalid request details")
 	}
 
 	var requestFile *model.ApprovalRequestFile
@@ -599,12 +607,12 @@ func (s *ApprovalRequestService) DownloadApprovalRequestFile(ctx context.Context
 	}
 
 	if requestFile == nil {
-		return nil, nil, fmt.Errorf("file not found in request")
+		return nil, nil, cerr.ErrNotFound.WithMessage("File not found in request")
 	}
 
 	file, err := s.stagingFileStore.GetFile(ctx, requestFile.DestinationPath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get file from staging storage: %w", err)
+		return nil, nil, cerr.ErrInternal.Wrap(err, "Unable to get file from staging storage")
 	}
 
 	return requestFile, file.Content, nil
