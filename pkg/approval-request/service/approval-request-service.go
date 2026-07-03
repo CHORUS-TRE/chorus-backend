@@ -24,12 +24,12 @@ import (
 var _ ApprovalRequester = (*ApprovalRequestService)(nil)
 
 type ApprovalRequestFilter struct {
-	StatusesIn        *[]model.ApprovalRequestStatus
-	TypesIn           *[]model.ApprovalRequestType
-	WorkspaceID *uint64
-	PendingApproval   *bool
-	ApproverID        *uint64
-	RequesterID       *uint64
+	StatusesIn      *[]model.ApprovalRequestStatus
+	TypesIn         *[]model.ApprovalRequestType
+	WorkspaceID     *uint64
+	PendingApproval *bool
+	ApproverID      *uint64
+	RequesterID     *uint64
 }
 
 type ApprovalRequester interface {
@@ -405,10 +405,6 @@ func (s *ApprovalRequestService) ApproveApprovalRequest(ctx context.Context, ten
 			ApproverID: userID,
 			ApprovedAt: now,
 			Approve:    approve,
-		}
-		if !approve {
-			// A single rejection rejects the whole request; record only that step.
-			break
 		}
 	}
 
