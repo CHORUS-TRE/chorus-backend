@@ -737,7 +737,7 @@ func workspaceToK8sInput(ws *model.Workspace, svcs []*model.WorkspaceServiceInst
 		if state == "" {
 			state = model.ServiceInstanceStateRunning
 		}
-		services[svc.Name] = k8s.WorkspaceInputService{
+		inputService := k8s.WorkspaceInputService{
 			ID:    svc.ID,
 			Name:  svc.Name,
 			State: state.String(),
@@ -751,6 +751,9 @@ func workspaceToK8sInput(ws *model.Workspace, svcs []*model.WorkspaceServiceInst
 			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
 			ComputedValues:         map[string]string(svc.ComputedValues),
 		}
+		// Key by UID so a soft-deleted instance and a new instance sharing the
+		// same name don't overwrite each other.
+		services[inputService.UID()] = inputService
 	}
 
 	return k8s.WorkspaceInput{
