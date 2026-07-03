@@ -318,8 +318,12 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 	}
 
 	filterUpload := authorization_model.FindUsersWithPermissionFilter{
-		PermissionName: authorization_model.PermissionUploadFilesToWorkspace,
-		Context:        uploadWorkspaceContext,
+		PermissionName:          authorization_model.PermissionUploadFilesToWorkspace,
+		Context:                 uploadWorkspaceContext,
+		PreferExactContextMatch: true,
+	}
+	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
+		filterUpload.ViaRoles = []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager}
 	}
 
 	uploadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterUpload)
@@ -334,6 +338,9 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 		return nil, false, cerr.ErrInvalidRequest.WithMessage("No users with download approval permission found for the source workspace")
 	}
 	if len(uploadApprovers) == 0 {
+		if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
+			return nil, false, cerr.ErrInvalidRequest.WithMessage("No workspace data manager found for the destination workspace; please assign a data manager before creating approval requests")
+		}
 		return nil, false, cerr.ErrInvalidRequest.WithMessage("No users with upload approval permission found for the destination workspace")
 	}
 
