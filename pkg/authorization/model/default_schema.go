@@ -80,6 +80,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionDownloadFilesFromWorkspace,
 			PermissionManageUsersDataRoleInWorkspace,
 			PermissionCreateRequest,
+			PermissionListRequests,
 		},
 	)
 
