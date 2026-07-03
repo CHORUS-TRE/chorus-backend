@@ -198,8 +198,8 @@ func TestApprovalRequestStorage_ListApprovalRequests_WithApproverAndRequesterFil
 	require.Equal(t, uint64(1), pagination.Total)
 	require.Equal(t, request1.ID, requests[0].ID)
 
-	sourceWorkspaceID := uint64(202)
-	requests, _, err = store.ListApprovalRequests(ctx, fixtures.tenantID, fixtures.userIDs["alice"], nil, approval_request_service.ApprovalRequestFilter{SourceWorkspaceID: &sourceWorkspaceID})
+	workspaceID := uint64(202)
+	requests, _, err = store.ListApprovalRequests(ctx, fixtures.tenantID, fixtures.userIDs["alice"], nil, approval_request_service.ApprovalRequestFilter{WorkspaceID: &workspaceID})
 	require.NoError(t, err)
 	require.Len(t, requests, 1)
 	require.Equal(t, request2.ID, requests[0].ID)
