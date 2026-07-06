@@ -3,6 +3,7 @@ package k8s
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -12,10 +13,14 @@ const (
 	appInstanceNamePrefix        = "app-instance-"
 	maxAppInstanceNameLen        = 15
 	defaultAppName               = "unknown"
+
+	maxWorkspaceServiceNameLen = 20
+	defaultServiceName         = "unknown"
 )
 
 var appInstanceNameRegex = regexp.MustCompile("[^a-z0-9]+")
 var workbenchUsernameRegex = regexp.MustCompile("[^a-z0-9_]")
+var workspaceServiceNameRegex = regexp.MustCompile("[^a-z0-9]+")
 
 // ----------------------------------------------------------------
 // Models and related methods
@@ -102,11 +107,50 @@ func (a AppInstance) SanitizedAppName() string {
 // ----------------------------------------------------------------
 
 type WorkspaceInputService struct {
+	ID                     uint64                       `json:"-"`
+	Name                   string                       `json:"-"`
+	State                  string                       `json:"state,omitempty"`
 	Chart                  WorkspaceServiceChart        `json:"chart"`
 	Values                 map[string]any               `json:"values,omitempty"`
 	Credentials            *WorkspaceServiceCredentials `json:"credentials,omitempty"`
 	ConnectionInfoTemplate string                       `json:"connectionInfoTemplate,omitempty"`
 	ComputedValues         map[string]string            `json:"computedValues,omitempty"`
+}
+
+// UID returns a unique, id-recoverable key for the service within the Workspace CR
+// spec/status maps. The trailing "-<id>" lets the backend map operator-reported
+// statuses back to the correct service instance even when a service name is reused
+// across create/delete generations.
+func (s WorkspaceInputService) UID() string {
+	return fmt.Sprintf("%s-%d", s.SanitizedName(), s.ID)
+}
+
+// SanitizedName returns the service name reduced to a K8s/Helm-safe form.
+func (s WorkspaceInputService) SanitizedName() string {
+	name := strings.ToLower(s.Name)
+	name = workspaceServiceNameRegex.ReplaceAllString(name, "-")
+	name = strings.Trim(name, "-")
+	if len(name) > maxWorkspaceServiceNameLen {
+		name = strings.Trim(name[:maxWorkspaceServiceNameLen], "-")
+	}
+	if name == "" {
+		name = defaultServiceName
+	}
+	return name
+}
+
+// ParseWorkspaceServiceID extracts the service instance ID from a Workspace CR service
+// key produced by WorkspaceInputService.UID (i.e. "<name>-<id>").
+func ParseWorkspaceServiceID(key string) (uint64, error) {
+	idx := strings.LastIndex(key, "-")
+	if idx < 0 || idx == len(key)-1 {
+		return 0, fmt.Errorf("invalid workspace service key %q", key)
+	}
+	id, err := strconv.ParseUint(key[idx+1:], 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse workspace service ID from key %q: %w", key, err)
+	}
+	return id, nil
 }
 
 type WorkspaceInput struct {

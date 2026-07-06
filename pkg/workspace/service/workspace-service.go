@@ -72,7 +72,7 @@ type WorkspaceStore interface {
 	CreateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
 	UpdateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
 	DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) error
-	UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[string]model.WorkspaceServiceInstanceStatusUpdate) error
+	UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error
 }
 
 type Userer interface {
@@ -575,9 +575,12 @@ func (s *WorkspaceService) DeleteWorkspaceServiceInstance(ctx context.Context, t
 		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to get workspace service instance %v", workspaceServiceInstanceID))
 	}
 
-	err = s.store.DeleteWorkspaceServiceInstance(ctx, tenantID, workspaceServiceInstanceID)
+	// Set the desired state to Deleted
+	svc.State = model.ServiceInstanceStateDeleted
+
+	_, err = s.store.UpdateWorkspaceServiceInstance(ctx, tenantID, svc)
 	if err != nil {
-		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to delete workspace service instance %v", workspaceServiceInstanceID))
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to set workspace service instance %v state to Deleted", workspaceServiceInstanceID))
 	}
 
 	if err := s.syncWorkspaceToK8s(ctx, svc.WorkspaceID, svc.TenantID); err != nil {
@@ -632,9 +635,17 @@ func (s *WorkspaceService) SetClientWatchers() {
 			return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get workspace ID from namespace %s", wsOutput.Namespace))
 		}
 
-		serviceStatuses := map[string]model.WorkspaceServiceInstanceStatusUpdate{}
-		for name, ss := range wsOutput.ServiceStatuses {
-			serviceStatuses[name] = model.WorkspaceServiceInstanceStatusUpdate{
+		serviceStatuses := map[uint64]model.WorkspaceServiceInstanceStatusUpdate{}
+		statusByID := map[uint64]k8s.WorkspaceServiceStatusOutput{}
+		for key, ss := range wsOutput.ServiceStatuses {
+			id, err := k8s.ParseWorkspaceServiceID(key)
+			if err != nil {
+				logger.TechLog.Warn(ctx, "skipping workspace service status with unparseable key",
+					zap.String("namespace", wsOutput.Namespace), zap.String("serviceKey", key), zap.Error(err))
+				continue
+			}
+			statusByID[id] = ss
+			serviceStatuses[id] = model.WorkspaceServiceInstanceStatusUpdate{
 				Status:         ss.Status,
 				StatusMessage:  ss.Message,
 				ConnectionInfo: ss.ConnectionInfo,
@@ -658,10 +669,57 @@ func (s *WorkspaceService) SetClientWatchers() {
 			}
 		}
 
+		if err := s.finalizeDeletedServices(ctx, wsOutput.TenantID, workspaceID, statusByID); err != nil {
+			logger.TechLog.Error(ctx, "unable to finalize deleted workspace service instances from watcher",
+				zap.Uint64("workspaceID", workspaceID), zap.Error(err))
+			return err
+		}
+
 		return nil
 	}
 
 	s.k8sClient.RegisterOnUpdateWorkspaceHandler(watcher)
+}
+
+func (s *WorkspaceService) finalizeDeletedServices(ctx context.Context, tenantID, workspaceID uint64, statuses map[uint64]k8s.WorkspaceServiceStatusOutput) error {
+	svcs, err := s.store.ListWorkspaceServiceInstancesByWorkspace(ctx, workspaceID)
+	if err != nil {
+		return cerr.WrapStoreError(err, fmt.Sprintf("Unable to list workspace service instances for workspace %v", workspaceID))
+	}
+
+	removed := false
+	for _, svc := range svcs {
+		ss, ok := statuses[svc.ID]
+		if !ok {
+			continue
+		}
+		if svc.State != model.ServiceInstanceStateDeleted || ss.Status != model.ServiceInstanceStatusDeleted.String() {
+			continue
+		}
+
+		if err := s.store.DeleteWorkspaceServiceInstance(ctx, svc.TenantID, svc.ID); err != nil {
+			return cerr.WrapStoreError(err, fmt.Sprintf("Unable to delete workspace service instance %v", svc.ID))
+		}
+		removed = true
+
+		audit.Record(ctx, s.auditWriter, audit_model.AuditActionServiceInstanceDelete,
+			audit.WithTenantID(svc.TenantID),
+			audit.WithActorUsername("system"),
+			audit.WithWorkspaceID(svc.WorkspaceID),
+			audit.WithDescription(fmt.Sprintf("Service instance '%s' (ID %d) removed from workspace %d after deletion was observed.", svc.Name, svc.ID, svc.WorkspaceID)),
+			audit.WithDetail("service_instance_id", svc.ID),
+			audit.WithDetail("service_name", svc.Name),
+			audit.WithDetail("trigger", "k8s_watcher"),
+		)
+	}
+
+	if removed {
+		if err := s.syncWorkspaceToK8s(ctx, workspaceID, tenantID); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // workspaceToK8sInput converts a workspace model and its services to a K8s WorkspaceInput.
@@ -675,7 +733,14 @@ func workspaceToK8sInput(ws *model.Workspace, svcs []*model.WorkspaceServiceInst
 				Paths:      []string(svc.CredentialsPaths),
 			}
 		}
-		services[svc.Name] = k8s.WorkspaceInputService{
+		state := svc.State
+		if state == "" {
+			state = model.ServiceInstanceStateRunning
+		}
+		inputService := k8s.WorkspaceInputService{
+			ID:    svc.ID,
+			Name:  svc.Name,
+			State: state.String(),
 			Chart: k8s.WorkspaceServiceChart{
 				Registry:   svc.ChartRegistry,
 				Repository: svc.ChartRepository,
@@ -686,6 +751,9 @@ func workspaceToK8sInput(ws *model.Workspace, svcs []*model.WorkspaceServiceInst
 			ConnectionInfoTemplate: svc.ConnectionInfoTemplate,
 			ComputedValues:         map[string]string(svc.ComputedValues),
 		}
+		// Key by UID so a soft-deleted instance and a new instance sharing the
+		// same name don't overwrite each other.
+		services[inputService.UID()] = inputService
 	}
 
 	return k8s.WorkspaceInput{

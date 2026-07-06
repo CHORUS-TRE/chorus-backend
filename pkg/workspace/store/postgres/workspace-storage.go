@@ -223,17 +223,17 @@ func (s *WorkspaceStorage) UpdateWorkspaceStatus(ctx context.Context, tenantID u
 }
 
 // UpdateWorkspaceServiceInstanceStatuses batch-updates status fields for workspace service instances (from K8s watcher).
-func (s *WorkspaceStorage) UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[string]model.WorkspaceServiceInstanceStatusUpdate) error {
+func (s *WorkspaceStorage) UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
 	const query = `
 		UPDATE workspace_services
 		SET status = $3, statusmessage = $4, connectioninfo = $5, secretname = $6, updatedat = NOW()
-		WHERE workspaceid = $1 AND name = $2 AND deletedat IS NULL;
+		WHERE workspaceid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
-	for name, st := range statuses {
-		_, err := s.db.ExecContext(ctx, query, workspaceID, name, st.Status, st.StatusMessage, st.ConnectionInfo, st.SecretName)
+	for id, st := range statuses {
+		_, err := s.db.ExecContext(ctx, query, workspaceID, id, st.Status, st.StatusMessage, st.ConnectionInfo, st.SecretName)
 		if err != nil {
-			return fmt.Errorf("unable to update workspace service status %q: %w", name, err)
+			return fmt.Errorf("unable to update workspace service status %d: %w", id, err)
 		}
 	}
 

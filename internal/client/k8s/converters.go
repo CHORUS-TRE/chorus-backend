@@ -341,7 +341,7 @@ func (c *client) eventInterfaceToWorkspaceOutput(obj any) (WorkspaceOutput, erro
 
 func (c *client) workspaceInputToK8sWorkspace(workspace WorkspaceInput) K8sWorkspace {
 	services := make(map[string]WorkspaceK8sService, len(workspace.Services))
-	for name, svc := range workspace.Services {
+	for _, svc := range workspace.Services {
 		var creds *WorkspaceServiceCredentials
 		if svc.Credentials != nil {
 			creds = &WorkspaceServiceCredentials{
@@ -357,7 +357,8 @@ func (c *client) workspaceInputToK8sWorkspace(workspace WorkspaceInput) K8sWorks
 			}
 			values = &apiextensionsv1.JSON{Raw: raw}
 		}
-		services[name] = WorkspaceK8sService{
+		services[svc.UID()] = WorkspaceK8sService{
+			State: WorkspaceServiceState(svc.State),
 			Chart: WorkspaceServiceChart{
 				Registry:   svc.Chart.Registry,
 				Repository: svc.Chart.Repository,

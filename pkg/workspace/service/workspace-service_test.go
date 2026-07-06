@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 	k8s "github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -25,14 +27,27 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workspace/model"
 )
 
+func TestMain(m *testing.M) {
+	logger.TechLog = logger.NewNop()
+	logger.BizLog = logger.NewNop()
+	logger.SecLog = logger.NewNop()
+	os.Exit(m.Run())
+}
+
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
 
 type mockWorkspaceStore struct {
-	createWorkspace             func(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
-	listPublicWorkspaces        func(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
-	getWorkspaceServiceInstance func(ctx context.Context, tenantID, id uint64) (*model.WorkspaceServiceInstance, error)
+	createWorkspace                          func(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error)
+	listPublicWorkspaces                     func(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Workspace, *common_model.PaginationResult, error)
+	getWorkspace                             func(ctx context.Context, tenantID, id uint64) (*model.Workspace, error)
+	updateWorkspaceStatus                    func(ctx context.Context, tenantID, workspaceID uint64, status, message string) error
+	getWorkspaceServiceInstance              func(ctx context.Context, tenantID, id uint64) (*model.WorkspaceServiceInstance, error)
+	listWorkspaceServiceInstancesByWorkspace func(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceServiceInstance, error)
+	updateWorkspaceServiceInstance           func(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error)
+	deleteWorkspaceServiceInstance           func(ctx context.Context, tenantID, id uint64) error
+	updateWorkspaceServiceInstanceStatuses   func(ctx context.Context, workspaceID uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error
 }
 
 func (m *mockWorkspaceStore) CreateWorkspace(ctx context.Context, tenantID uint64, workspace *model.Workspace) (*model.Workspace, error) {
@@ -43,7 +58,10 @@ func (m *mockWorkspaceStore) ListPublicWorkspaces(ctx context.Context, tenantID 
 	return m.listPublicWorkspaces(ctx, tenantID, pagination)
 }
 
-func (m *mockWorkspaceStore) GetWorkspace(_ context.Context, _ uint64, _ uint64) (*model.Workspace, error) {
+func (m *mockWorkspaceStore) GetWorkspace(ctx context.Context, tenantID uint64, id uint64) (*model.Workspace, error) {
+	if m.getWorkspace != nil {
+		return m.getWorkspace(ctx, tenantID, id)
+	}
 	return nil, nil
 }
 
@@ -63,7 +81,10 @@ func (m *mockWorkspaceStore) DeleteWorkspace(_ context.Context, _ uint64, _ uint
 	return nil
 }
 
-func (m *mockWorkspaceStore) UpdateWorkspaceStatus(_ context.Context, _ uint64, _ uint64, _, _ string) error {
+func (m *mockWorkspaceStore) UpdateWorkspaceStatus(ctx context.Context, tenantID uint64, workspaceID uint64, status, message string) error {
+	if m.updateWorkspaceStatus != nil {
+		return m.updateWorkspaceStatus(ctx, tenantID, workspaceID, status, message)
+	}
 	return nil
 }
 
@@ -78,7 +99,10 @@ func (m *mockWorkspaceStore) ListWorkspaceServiceInstances(_ context.Context, _ 
 	return nil, nil, nil
 }
 
-func (m *mockWorkspaceStore) ListWorkspaceServiceInstancesByWorkspace(_ context.Context, _ uint64) ([]*model.WorkspaceServiceInstance, error) {
+func (m *mockWorkspaceStore) ListWorkspaceServiceInstancesByWorkspace(ctx context.Context, workspaceID uint64) ([]*model.WorkspaceServiceInstance, error) {
+	if m.listWorkspaceServiceInstancesByWorkspace != nil {
+		return m.listWorkspaceServiceInstancesByWorkspace(ctx, workspaceID)
+	}
 	return nil, nil
 }
 
@@ -86,15 +110,24 @@ func (m *mockWorkspaceStore) CreateWorkspaceServiceInstance(_ context.Context, _
 	return nil, nil
 }
 
-func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstance(_ context.Context, _ uint64, _ *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstance(ctx context.Context, tenantID uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+	if m.updateWorkspaceServiceInstance != nil {
+		return m.updateWorkspaceServiceInstance(ctx, tenantID, svc)
+	}
 	return nil, nil
 }
 
-func (m *mockWorkspaceStore) DeleteWorkspaceServiceInstance(_ context.Context, _, _ uint64) error {
+func (m *mockWorkspaceStore) DeleteWorkspaceServiceInstance(ctx context.Context, tenantID, id uint64) error {
+	if m.deleteWorkspaceServiceInstance != nil {
+		return m.deleteWorkspaceServiceInstance(ctx, tenantID, id)
+	}
 	return nil
 }
 
-func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstanceStatuses(_ context.Context, _ uint64, _ map[string]model.WorkspaceServiceInstanceStatusUpdate) error {
+func (m *mockWorkspaceStore) UpdateWorkspaceServiceInstanceStatuses(ctx context.Context, workspaceID uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
+	if m.updateWorkspaceServiceInstanceStatuses != nil {
+		return m.updateWorkspaceServiceInstanceStatuses(ctx, workspaceID, statuses)
+	}
 	return nil
 }
 
@@ -138,10 +171,15 @@ type mockK8s struct {
 	createWorkspaceErr error
 	getSecretData      map[string][]byte
 	getSecretErr       error
+	updatedWorkspaces  []k8s.WorkspaceInput
+	onUpdateWorkspace  func(k8s.WorkspaceOutput) error
 }
 
-func (m *mockK8s) CreateWorkspace(_ k8s.WorkspaceInput) error                   { return m.createWorkspaceErr }
-func (m *mockK8s) UpdateWorkspace(_ k8s.WorkspaceInput) error                   { return nil }
+func (m *mockK8s) CreateWorkspace(_ k8s.WorkspaceInput) error { return m.createWorkspaceErr }
+func (m *mockK8s) UpdateWorkspace(input k8s.WorkspaceInput) error {
+	m.updatedWorkspaces = append(m.updatedWorkspaces, input)
+	return nil
+}
 func (m *mockK8s) DeleteWorkspace(_ string) error                               { return nil }
 func (m *mockK8s) CreateWorkbench(_ k8s.Workbench) error                        { return nil }
 func (m *mockK8s) UpdateWorkbench(_ k8s.Workbench) error                        { return nil }
@@ -157,7 +195,8 @@ func (m *mockK8s) GetSecret(_, _ string) (map[string][]byte, error) {
 func (m *mockK8s) RegisterOnNewWorkbenchHandler(_ func(k8s.Workbench) error) error    { return nil }
 func (m *mockK8s) RegisterOnUpdateWorkbenchHandler(_ func(k8s.Workbench) error) error { return nil }
 func (m *mockK8s) RegisterOnDeleteWorkbenchHandler(_ func(k8s.Workbench) error) error { return nil }
-func (m *mockK8s) RegisterOnUpdateWorkspaceHandler(_ func(k8s.WorkspaceOutput) error) error {
+func (m *mockK8s) RegisterOnUpdateWorkspaceHandler(handler func(k8s.WorkspaceOutput) error) error {
+	m.onUpdateWorkspace = handler
 	return nil
 }
 
@@ -664,4 +703,286 @@ func TestRemoveUserFromWorkspace_NoRolesIsNoop(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Empty(t, userer.removedRoleIDs)
+}
+
+// ---------------------------------------------------------------------------
+// DeleteWorkspaceServiceInstance
+// ---------------------------------------------------------------------------
+
+func serviceInstance(id uint64) *model.WorkspaceServiceInstance {
+	return &model.WorkspaceServiceInstance{ID: id, TenantID: 1, WorkspaceID: 3, Name: "postgres"}
+}
+
+func TestDeleteWorkspaceServiceInstance_SoftDeletesAndSyncsToK8s(t *testing.T) {
+	inst := serviceInstance(7)
+	var updated *model.WorkspaceServiceInstance
+	store := &mockWorkspaceStore{
+		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+			return inst, nil
+		},
+		updateWorkspaceServiceInstance: func(_ context.Context, _ uint64, svc *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+			updated = svc
+			return svc, nil
+		},
+		deleteWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) error {
+			t.Fatal("store delete should not be called on soft delete")
+			return nil
+		},
+		getWorkspace: func(_ context.Context, _, _ uint64) (*model.Workspace, error) {
+			return &model.Workspace{ID: 3, TenantID: 1}, nil
+		},
+		listWorkspaceServiceInstancesByWorkspace: func(_ context.Context, _ uint64) ([]*model.WorkspaceServiceInstance, error) {
+			return []*model.WorkspaceServiceInstance{inst}, nil
+		},
+	}
+	k8sClient := &mockK8s{}
+
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	err := svc.DeleteWorkspaceServiceInstance(context.Background(), 1, 7)
+
+	require.NoError(t, err)
+	require.NotNil(t, updated)
+	assert.Equal(t, model.ServiceInstanceStateDeleted, updated.State)
+
+	require.Len(t, k8sClient.updatedWorkspaces, 1)
+	synced := k8sClient.updatedWorkspaces[0].Services
+	require.Contains(t, synced, "postgres-7")
+	assert.Equal(t, "Deleted", synced["postgres-7"].State)
+}
+
+func TestDeleteWorkspaceServiceInstance_PropagatesUpdateError(t *testing.T) {
+	store := &mockWorkspaceStore{
+		getWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) (*model.WorkspaceServiceInstance, error) {
+			return serviceInstance(7), nil
+		},
+		updateWorkspaceServiceInstance: func(_ context.Context, _ uint64, _ *model.WorkspaceServiceInstance) (*model.WorkspaceServiceInstance, error) {
+			return nil, errors.New("db down")
+		},
+	}
+	k8sClient := &mockK8s{}
+
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	err := svc.DeleteWorkspaceServiceInstance(context.Background(), 1, 7)
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "db down")
+	assert.Empty(t, k8sClient.updatedWorkspaces)
+}
+
+// ---------------------------------------------------------------------------
+// workspaceToK8sInput
+// ---------------------------------------------------------------------------
+
+func TestWorkspaceToK8sInput_KeysServicesByUID(t *testing.T) {
+	ws := &model.Workspace{ID: 3, TenantID: 1}
+	deleted := &model.WorkspaceServiceInstance{ID: 7, Name: "postgres", State: model.ServiceInstanceStateDeleted}
+	recreated := &model.WorkspaceServiceInstance{ID: 8, Name: "postgres"}
+
+	input := workspaceToK8sInput(ws, []*model.WorkspaceServiceInstance{deleted, recreated})
+
+	require.Len(t, input.Services, 2)
+	assert.Equal(t, "Deleted", input.Services["postgres-7"].State)
+	// An empty state defaults to Running.
+	assert.Equal(t, "Running", input.Services["postgres-8"].State)
+}
+
+// ---------------------------------------------------------------------------
+// Workspace watcher (SetClientWatchers)
+// ---------------------------------------------------------------------------
+
+func registerWatcher(t *testing.T, store WorkspaceStore, k8sClient *mockK8s) func(k8s.WorkspaceOutput) error {
+	t.Helper()
+	svc := newSvc(config.Config{}, store, k8sClient, &mockUserer{})
+	svc.SetClientWatchers()
+	require.NotNil(t, k8sClient.onUpdateWorkspace)
+	return k8sClient.onUpdateWorkspace
+}
+
+// reconciledOutput returns a WorkspaceOutput the watcher will process
+// (observed generation matches current generation).
+func reconciledOutput(statuses map[string]k8s.WorkspaceServiceStatusOutput) k8s.WorkspaceOutput {
+	return k8s.WorkspaceOutput{
+		Namespace:          "workspace3",
+		TenantID:           1,
+		CurrentGeneration:  2,
+		ObservedGeneration: 2,
+		ServiceStatuses:    statuses,
+	}
+}
+
+func TestWorkspaceWatcher_SkipsWhenOperatorHasNotReconciled(t *testing.T) {
+	store := &mockWorkspaceStore{
+		updateWorkspaceStatus: func(_ context.Context, _, _ uint64, _, _ string) error {
+			t.Fatal("workspace status should not be updated before reconciliation")
+			return nil
+		},
+	}
+
+	handler := registerWatcher(t, store, &mockK8s{})
+	err := handler(k8s.WorkspaceOutput{Namespace: "workspace3", CurrentGeneration: 2, ObservedGeneration: 1})
+
+	require.NoError(t, err)
+}
+
+func TestWorkspaceWatcher_UpdatesServiceStatusesKeyedByID(t *testing.T) {
+	var got map[uint64]model.WorkspaceServiceInstanceStatusUpdate
+	store := &mockWorkspaceStore{
+		updateWorkspaceServiceInstanceStatuses: func(_ context.Context, workspaceID uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
+			assert.Equal(t, uint64(3), workspaceID)
+			got = statuses
+			return nil
+		},
+	}
+
+	handler := registerWatcher(t, store, &mockK8s{})
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"postgres-12": {Status: "Running", Message: "ok", ConnectionInfo: "conn", SecretName: "sec"},
+	}))
+
+	require.NoError(t, err)
+	require.Contains(t, got, uint64(12))
+	assert.Equal(t, model.WorkspaceServiceInstanceStatusUpdate{
+		Status:         "Running",
+		StatusMessage:  "ok",
+		ConnectionInfo: "conn",
+		SecretName:     "sec",
+	}, got[12])
+}
+
+func TestWorkspaceWatcher_SkipsUnparseableServiceKeys(t *testing.T) {
+	var got map[uint64]model.WorkspaceServiceInstanceStatusUpdate
+	store := &mockWorkspaceStore{
+		updateWorkspaceServiceInstanceStatuses: func(_ context.Context, _ uint64, statuses map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
+			got = statuses
+			return nil
+		},
+	}
+
+	handler := registerWatcher(t, store, &mockK8s{})
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"postgres-12":  {Status: "Running"},
+		"noid":         {Status: "Running"},
+		"postgres-abc": {Status: "Running"},
+	}))
+
+	require.NoError(t, err)
+	require.Len(t, got, 1)
+	assert.Contains(t, got, uint64(12))
+}
+
+func TestWorkspaceWatcher_NoStatusUpdateWhenAllKeysUnparseable(t *testing.T) {
+	store := &mockWorkspaceStore{
+		updateWorkspaceServiceInstanceStatuses: func(_ context.Context, _ uint64, _ map[uint64]model.WorkspaceServiceInstanceStatusUpdate) error {
+			t.Fatal("statuses should not be updated when no key is parseable")
+			return nil
+		},
+	}
+
+	handler := registerWatcher(t, store, &mockK8s{})
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"noid": {Status: "Running"},
+	}))
+
+	require.NoError(t, err)
+}
+
+func TestWorkspaceWatcher_FinalizesDeletionWhenStateAndStatusDeleted(t *testing.T) {
+	inst := serviceInstance(12)
+	inst.State = model.ServiceInstanceStateDeleted
+
+	var deletedTenantID, deletedID uint64
+	store := &mockWorkspaceStore{
+		listWorkspaceServiceInstancesByWorkspace: func(_ context.Context, _ uint64) ([]*model.WorkspaceServiceInstance, error) {
+			return []*model.WorkspaceServiceInstance{inst}, nil
+		},
+		deleteWorkspaceServiceInstance: func(_ context.Context, tenantID, id uint64) error {
+			deletedTenantID, deletedID = tenantID, id
+			return nil
+		},
+		getWorkspace: func(_ context.Context, _, _ uint64) (*model.Workspace, error) {
+			return &model.Workspace{ID: 3, TenantID: 1}, nil
+		},
+	}
+	k8sClient := &mockK8s{}
+
+	handler := registerWatcher(t, store, k8sClient)
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"postgres-12": {Status: "Deleted"},
+	}))
+
+	require.NoError(t, err)
+	assert.Equal(t, uint64(1), deletedTenantID)
+	assert.Equal(t, uint64(12), deletedID)
+	// The workspace is re-synced to K8s after the instance is removed.
+	assert.Len(t, k8sClient.updatedWorkspaces, 1)
+}
+
+func TestWorkspaceWatcher_DoesNotFinalizeWhenStateNotDeleted(t *testing.T) {
+	inst := serviceInstance(12)
+	inst.State = model.ServiceInstanceStateRunning
+
+	store := &mockWorkspaceStore{
+		listWorkspaceServiceInstancesByWorkspace: func(_ context.Context, _ uint64) ([]*model.WorkspaceServiceInstance, error) {
+			return []*model.WorkspaceServiceInstance{inst}, nil
+		},
+		deleteWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) error {
+			t.Fatal("instance should not be deleted when its desired state is not Deleted")
+			return nil
+		},
+	}
+	k8sClient := &mockK8s{}
+
+	handler := registerWatcher(t, store, k8sClient)
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"postgres-12": {Status: "Deleted"},
+	}))
+
+	require.NoError(t, err)
+	assert.Empty(t, k8sClient.updatedWorkspaces)
+}
+
+func TestWorkspaceWatcher_DoesNotFinalizeWhenObservedStatusNotDeleted(t *testing.T) {
+	inst := serviceInstance(12)
+	inst.State = model.ServiceInstanceStateDeleted
+
+	store := &mockWorkspaceStore{
+		listWorkspaceServiceInstancesByWorkspace: func(_ context.Context, _ uint64) ([]*model.WorkspaceServiceInstance, error) {
+			return []*model.WorkspaceServiceInstance{inst}, nil
+		},
+		deleteWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) error {
+			t.Fatal("instance should not be deleted before the operator reports it Deleted")
+			return nil
+		},
+	}
+	k8sClient := &mockK8s{}
+
+	handler := registerWatcher(t, store, k8sClient)
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"postgres-12": {Status: "Running"},
+	}))
+
+	require.NoError(t, err)
+	assert.Empty(t, k8sClient.updatedWorkspaces)
+}
+
+func TestWorkspaceWatcher_PropagatesFinalizeDeleteError(t *testing.T) {
+	inst := serviceInstance(12)
+	inst.State = model.ServiceInstanceStateDeleted
+
+	store := &mockWorkspaceStore{
+		listWorkspaceServiceInstancesByWorkspace: func(_ context.Context, _ uint64) ([]*model.WorkspaceServiceInstance, error) {
+			return []*model.WorkspaceServiceInstance{inst}, nil
+		},
+		deleteWorkspaceServiceInstance: func(_ context.Context, _, _ uint64) error {
+			return errors.New("db down")
+		},
+	}
+
+	handler := registerWatcher(t, store, &mockK8s{})
+	err := handler(reconciledOutput(map[string]k8s.WorkspaceServiceStatusOutput{
+		"postgres-12": {Status: "Deleted"},
+	}))
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "db down")
 }
