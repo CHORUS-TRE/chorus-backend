@@ -363,7 +363,7 @@ paths:
               - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
               - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
           collectionFormat: multi
-        - name: filter.sourceWorkspaceId
+        - name: filter.workspaceId
           in: query
           required: false
           type: string
@@ -5171,6 +5171,10 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
+        - name: complianceMessage
+          in: query
+          required: false
+          type: string
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{oldPath}:
@@ -5374,6 +5378,10 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/chorusWorkspaceFile'
+        - name: complianceMessage
+          in: query
+          required: false
+          type: string
       tags:
         - WorkspaceFileService
   /api/rest/v1/workspaces/{workspaceId}/file/{path}/upload/{uploadId}:
@@ -5920,7 +5928,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/chorusApprovalRequestType'
-      sourceWorkspaceId:
+      workspaceId:
         type: string
         format: uint64
       pendingApproval:

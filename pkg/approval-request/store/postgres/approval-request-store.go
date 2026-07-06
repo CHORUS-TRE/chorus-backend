@@ -160,9 +160,9 @@ func (s *ApprovalRequestStorage) ListApprovalRequests(ctx context.Context, tenan
 		whereClause += fmt.Sprintf(" AND type = ANY($%d)", len(args))
 	}
 
-	if filter.SourceWorkspaceID != nil {
-		args = append(args, *filter.SourceWorkspaceID)
-		whereClause += fmt.Sprintf(" AND (details->'data_extraction_details'->>'source_workspace_id' = $%d::TEXT OR details->'data_transfer_details'->>'source_workspace_id' = $%d::TEXT)", len(args), len(args))
+	if filter.WorkspaceID != nil {
+		args = append(args, *filter.WorkspaceID)
+		whereClause += fmt.Sprintf(" AND (details->'data_extraction_details'->>'source_workspace_id' = $%d::TEXT OR details->'data_transfer_details'->>'source_workspace_id' = $%d::TEXT OR details->'data_transfer_details'->>'destination_workspace_id' = $%d::TEXT)", len(args), len(args), len(args))
 	}
 
 	if filter.PendingApproval != nil && *filter.PendingApproval {

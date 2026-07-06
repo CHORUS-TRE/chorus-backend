@@ -81,7 +81,7 @@ paths:
               - APPROVAL_REQUEST_TYPE_DATA_EXTRACTION
               - APPROVAL_REQUEST_TYPE_DATA_TRANSFER
           collectionFormat: multi
-        - name: filter.sourceWorkspaceId
+        - name: filter.workspaceId
           in: query
           required: false
           type: string
@@ -313,7 +313,7 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/chorusApprovalRequestType'
-      sourceWorkspaceId:
+      workspaceId:
         type: string
         format: uint64
       pendingApproval:

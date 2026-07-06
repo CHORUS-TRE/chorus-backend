@@ -82,6 +82,10 @@ func (c workspaceFileControllerAudit) CreateWorkspaceFile(ctx context.Context, r
 		audit.WithDetail("path", "/"+req.File.Path),
 	}
 
+	if req.ComplianceMessage != "" {
+		opts = append(opts, audit.WithDetail("compliance", req.ComplianceMessage))
+	}
+
 	if err != nil {
 		opts = append(opts,
 			audit.WithDescription(fmt.Sprintf("Failed to upload file /%s in workspace %d.", req.File.Path, req.WorkspaceId)),
@@ -156,6 +160,10 @@ func (c workspaceFileControllerAudit) InitiateWorkspaceFileUpload(ctx context.Co
 		audit.WithWorkspaceID(req.WorkspaceId),
 		audit.WithDetail("workspace_id", req.WorkspaceId),
 		audit.WithDetail("path", "/"+req.Path),
+	}
+
+	if req.ComplianceMessage != "" {
+		opts = append(opts, audit.WithDetail("compliance", req.ComplianceMessage))
 	}
 
 	if err != nil {

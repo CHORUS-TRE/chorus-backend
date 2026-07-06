@@ -63,6 +63,9 @@ WorkspaceFileServiceInitiateWorkspaceFileUploadParams contains all the parameter
 */
 type WorkspaceFileServiceInitiateWorkspaceFileUploadParams struct {
 
+	// ComplianceMessage.
+	ComplianceMessage *string
+
 	// File.
 	File *models.ChorusWorkspaceFile
 
@@ -127,6 +130,17 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetHTTPClient(cl
 	o.HTTPClient = client
 }
 
+// WithComplianceMessage adds the complianceMessage to the workspace file service initiate workspace file upload params
+func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WithComplianceMessage(complianceMessage *string) *WorkspaceFileServiceInitiateWorkspaceFileUploadParams {
+	o.SetComplianceMessage(complianceMessage)
+	return o
+}
+
+// SetComplianceMessage adds the complianceMessage to the workspace file service initiate workspace file upload params
+func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) SetComplianceMessage(complianceMessage *string) {
+	o.ComplianceMessage = complianceMessage
+}
+
 // WithFile adds the file to the workspace file service initiate workspace file upload params
 func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WithFile(file *models.ChorusWorkspaceFile) *WorkspaceFileServiceInitiateWorkspaceFileUploadParams {
 	o.SetFile(file)
@@ -167,6 +181,23 @@ func (o *WorkspaceFileServiceInitiateWorkspaceFileUploadParams) WriteToRequest(r
 		return err
 	}
 	var res []error
+
+	if o.ComplianceMessage != nil {
+
+		// query param complianceMessage
+		var qrComplianceMessage string
+
+		if o.ComplianceMessage != nil {
+			qrComplianceMessage = *o.ComplianceMessage
+		}
+		qComplianceMessage := qrComplianceMessage
+		if qComplianceMessage != "" {
+
+			if err := r.SetQueryParam("complianceMessage", qComplianceMessage); err != nil {
+				return err
+			}
+		}
+	}
 	if o.File != nil {
 		if err := r.SetBodyParam(o.File); err != nil {
 			return err

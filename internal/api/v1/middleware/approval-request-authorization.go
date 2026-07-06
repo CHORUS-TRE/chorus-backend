@@ -2,12 +2,11 @@ package middleware
 
 import (
 	"context"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"slices"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	approval_request_model "github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
@@ -43,43 +42,73 @@ func ApprovalRequestAuthorizing(logger *logger.ContextLogger, authorizer authori
 }
 
 func (c approvalRequestControllerAuthorization) GetApprovalRequest(ctx context.Context, req *chorus.GetApprovalRequestRequest) (*chorus.GetApprovalRequestReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithRequest(req.Id))
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract tenant ID")
+	}
+
+	userID, err := jwt_model.ExtractUserID(ctx)
+	if err != nil {
+		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract user ID")
+	}
+
+	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
+	if err != nil {
+		return nil, cerr.ErrNotFound.WithMessage("Approval request not found")
+	}
+
+	// The requester and any designated approver can always view the request.
+	isParticipant := approvalRequest.RequesterID == userID ||
+		slices.Contains(approvalRequest.AllApproverIDs(), userID)
+
+	// Workspace admins with PermissionGetRequest on any involved workspace can also view it.
+	hasWorkspaceAccess := func() bool {
+		sourceWorkspaceID := approvalRequest.GetSourceWorkspaceID()
+		if c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithWorkspace(sourceWorkspaceID)) == nil {
+			return true
+		}
+		if approvalRequest.Type == approval_request_model.ApprovalRequestTypeDataTransfer {
+			destinationWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
+			if c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithWorkspace(destinationWorkspaceID)) == nil {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !isParticipant && !hasWorkspaceAccess() {
+		return nil, cerr.ErrPermissionDenied.WithMessage("User does not have permission to get this request")
 	}
 
 	return c.next.GetApprovalRequest(ctx, req)
 }
 
 func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context.Context, req *chorus.ListApprovalRequestsRequest) (*chorus.ListApprovalRequestsReply, error) {
-	userId, err := jwt_model.ExtractUserID(ctx)
+	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract user ID")
 	}
 
-	listMine := false
-	if req.Filter != nil && req.Filter.RequesterId != nil && *req.Filter.RequesterId == userId {
-		listMine = true
-	}
-	if req.Filter != nil && req.Filter.ApproverId != nil && *req.Filter.ApproverId == userId {
-		listMine = true
-	}
+	// Users filtering by their own requester/approver ID only need PermissionListMyRequests.
+	listMine := req.Filter != nil &&
+		((req.Filter.RequesterId != nil && *req.Filter.RequesterId == userID) ||
+			(req.Filter.ApproverId != nil && *req.Filter.ApproverId == userID))
 
-	if !listMine {
-		opts := []authorization.NewContextOption{}
-		if req.Filter != nil && req.Filter.SourceWorkspaceId != nil {
-			opts = append(opts, authorization.WithWorkspace(*req.Filter.SourceWorkspaceId))
-		}
-
-		err := c.IsAuthorized(ctx, authorization.PermissionListRequests, opts...)
-		if err != nil {
+	if listMine {
+		if err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests); err != nil {
 			return nil, err
 		}
-	} else {
-		err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests)
-		if err != nil {
-			return nil, err
-		}
+		return c.next.ListApprovalRequests(ctx, req)
+	}
+
+	// Broader listing (e.g. by workspace admin) requires PermissionListRequests,
+	// scoped to the workspace when one is provided.
+	opts := []authorization.NewContextOption{}
+	if req.Filter != nil && req.Filter.WorkspaceId != nil {
+		opts = append(opts, authorization.WithWorkspace(*req.Filter.WorkspaceId))
+	}
+	if err := c.IsAuthorized(ctx, authorization.PermissionListRequests, opts...); err != nil {
+		return nil, err
 	}
 
 	return c.next.ListApprovalRequests(ctx, req)
@@ -120,12 +149,12 @@ func (c approvalRequestControllerAuthorization) CreateDataTransferRequest(ctx co
 func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx context.Context, req *chorus.ApproveApprovalRequestRequest) (*chorus.ApproveApprovalRequestReply, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract tenant ID")
 	}
 
 	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "approval request not found")
+		return nil, cerr.ErrNotFound.WithMessage("Approval request not found")
 	}
 
 	// A user may approve a request if they hold the permission of at least
@@ -153,11 +182,11 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 			}
 		}
 	default:
-		return nil, status.Error(codes.Internal, "unable to determine source workspace for approval request")
+		return nil, cerr.ErrInternal.WithMessage("Unable to determine source workspace for approval request")
 	}
 
 	if !canApprove {
-		return nil, status.Error(codes.PermissionDenied, "user does not have permission to approve any pending step of this request")
+		return nil, cerr.ErrPermissionDenied.WithMessage("User does not have permission to approve any pending step of this request")
 	}
 
 	return c.next.ApproveApprovalRequest(ctx, req)
@@ -175,21 +204,21 @@ func (c approvalRequestControllerAuthorization) DeleteApprovalRequest(ctx contex
 func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx context.Context, req *chorus.DownloadApprovalRequestFileRequest) (*chorus.DownloadApprovalRequestFileReply, error) {
 	tenantID, err := jwt_model.ExtractTenantID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "unable to extract tenant ID")
+		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract tenant ID")
 	}
 
 	userID, err := jwt_model.ExtractUserID(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "unable to extract user ID")
+		return nil, cerr.ErrUnauthenticated.WithMessage("Unable to extract user ID")
 	}
 
 	approvalRequest, err := c.resolver.GetApprovalRequest(ctx, tenantID, req.Id)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "approval request not found")
+		return nil, cerr.ErrNotFound.WithMessage("Approval request not found")
 	}
 
 	if approvalRequest.Type != approval_request_model.ApprovalRequestTypeDataExtraction {
-		return nil, status.Error(codes.PermissionDenied, "only data extraction requests have downloadable files")
+		return nil, cerr.ErrPermissionDenied.WithMessage("Only data extraction requests have downloadable files")
 	}
 
 	workspaceID := approvalRequest.GetSourceWorkspaceID()
@@ -197,14 +226,14 @@ func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx 
 	isPotentialApprover := err == nil
 
 	if !isPotentialApprover && approvalRequest.RequesterID != userID {
-		return nil, status.Error(codes.PermissionDenied, "user does not have permission to download files for this request")
+		return nil, cerr.ErrPermissionDenied.WithMessage("User does not have permission to download files for this request")
 	}
 
 	// potential approvers should be able to download files even if the request is not yet approved, so that they can
 	// review the files before approving. However, non-approvers should not be able to download files for unapproved requests.
 	if approvalRequest.Status != approval_request_model.ApprovalRequestStatusApproved {
 		if !isPotentialApprover {
-			return nil, status.Error(codes.PermissionDenied, "request is not approved")
+			return nil, cerr.ErrPermissionDenied.WithMessage("Request is not approved")
 		}
 	}
 
