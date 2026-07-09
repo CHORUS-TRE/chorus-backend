@@ -58,12 +58,12 @@ func (c workbenchControllerAudit) CreateWorkbench(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to create session '%s' in workspace %d.", req.Name, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to create session %q in workspace %d.", req.Name, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created session '%s' (ID %d) in workspace %d.", req.Name, res.Result.Workbench.Id, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Created session %q (ID %d) in workspace %d.", req.Name, res.Result.Workbench.Id, req.WorkspaceId)),
 			audit.WithWorkbenchID(res.Result.Workbench.Id),
 			audit.WithDetail("workbench_id", res.Result.Workbench.Id),
 		)
@@ -103,12 +103,12 @@ func (c workbenchControllerAudit) UpdateWorkbench(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to update session '%s' (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to update session %q (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated session '%s' (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Updated session %q (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
 		)
 	}
 
@@ -133,7 +133,7 @@ func (c workbenchControllerAudit) DeleteWorkbench(ctx context.Context, req *chor
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Deleted session '%s' (ID %d) from workspace %d.", res.Result.Workbench.Name, res.Result.Workbench.Id, res.Result.Workbench.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Deleted session %q (ID %d) from workspace %d.", res.Result.Workbench.Name, res.Result.Workbench.Id, res.Result.Workbench.WorkspaceId)),
 			audit.WithWorkspaceID(res.Result.Workbench.WorkspaceId),
 			audit.WithDetail("workbench_name", res.Result.Workbench.Name),
 			audit.WithDetail("workspace_id", res.Result.Workbench.WorkspaceId),
