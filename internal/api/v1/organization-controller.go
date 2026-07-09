@@ -159,25 +159,18 @@ func (c OrganizationController) UpdateOrganization(ctx context.Context, req *cho
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	svcReq := service.UpdateOrganizationReq{
+	organization, err := c.organization.UpdateOrganization(ctx, service.UpdateOrganizationReq{
 		TenantID:        tenantID,
 		ID:              req.Id,
 		Name:            req.Name,
 		Description:     req.Description,
+		Logo:            req.Logo,
 		LogoContentType: req.LogoContentType,
 		Country:         req.Country,
 		City:            req.City,
 		ContactUserID:   req.ContactUserId,
 		WebsiteURL:      req.WebsiteUrl,
-	}
-	// A wire-level absent Logo is indistinguishable from an explicit empty one with the
-	// current codegen (bytes fields aren't presence-tracked like scalar optionals are),
-	// so only a non-empty logo is treated as "replace the existing one".
-	if len(req.Logo) > 0 {
-		svcReq.Logo = &req.Logo
-	}
-
-	organization, err := c.organization.UpdateOrganization(ctx, svcReq)
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -144,36 +144,32 @@ func TestOrganizationService_UpdateOrganization_ProvidedLogoReplacesExisting(t *
 		TenantID:        testTenantID,
 		ID:              1,
 		Name:            "CHUV renamed",
-		Logo:            &newLogo,
+		Logo:            newLogo,
 		LogoContentType: &contentType,
 	})
 	require.NoError(t, err)
-	assert.True(t, gotUpdateLogo, "updateLogo must be true when the request provides a logo, even if the caller wants to clear it with an empty slice")
+	assert.True(t, gotUpdateLogo, "updateLogo must be true when the request provides non-empty logo bytes")
 	assert.Equal(t, newLogo, gotOrganization.Logo)
 }
 
-func TestOrganizationService_UpdateOrganization_ProvidedEmptyLogoClearsExisting(t *testing.T) {
+func TestOrganizationService_UpdateOrganization_EmptyLogoLeavesLogoUntouched(t *testing.T) {
 	var gotUpdateLogo bool
-	var gotOrganization *model.Organization
 	store := &mockOrganizationStore{
 		updateFn: func(_ context.Context, _ uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
-			gotOrganization = organization
 			gotUpdateLogo = updateLogo
 			return organization, nil
 		},
 	}
 	svc := NewOrganizationService(store)
 
-	emptyLogo := []byte{}
 	_, err := svc.UpdateOrganization(context.Background(), UpdateOrganizationReq{
 		TenantID: testTenantID,
 		ID:       1,
 		Name:     "CHUV",
-		Logo:     &emptyLogo,
+		Logo:     []byte{},
 	})
 	require.NoError(t, err)
-	assert.True(t, gotUpdateLogo)
-	assert.Empty(t, gotOrganization.Logo)
+	assert.False(t, gotUpdateLogo, "an empty logo is treated the same as an omitted one - there is no way to clear an existing logo")
 }
 
 func TestOrganizationService_DeleteOrganization(t *testing.T) {

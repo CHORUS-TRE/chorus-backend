@@ -50,8 +50,8 @@ func (v validation) CreateOrganization(ctx context.Context, req service.CreateOr
 	if err := v.validate.Struct(req); err != nil {
 		return nil, cerr.WrapValidationError(err)
 	}
-	if (len(req.Logo) > 0) != (req.LogoContentType != nil) {
-		return nil, cerr.ErrValidation.WithMessage("Logo and LogoContentType must be provided together")
+	if err := validateLogoContentTypePairing(req.Logo, req.LogoContentType); err != nil {
+		return nil, err
 	}
 	return v.next.CreateOrganization(ctx, req)
 }
@@ -60,13 +60,19 @@ func (v validation) UpdateOrganization(ctx context.Context, req service.UpdateOr
 	if err := v.validate.Struct(req); err != nil {
 		return nil, cerr.WrapValidationError(err)
 	}
-	// A non-nil Logo pointing at an empty slice means "clear the logo" and needs no
-	// content type; only a logo carrying actual bytes must be paired with one.
-	logoHasBytes := req.Logo != nil && len(*req.Logo) > 0
-	if logoHasBytes != (req.LogoContentType != nil) {
-		return nil, cerr.ErrValidation.WithMessage("Logo and LogoContentType must be provided together")
+	if err := validateLogoContentTypePairing(req.Logo, req.LogoContentType); err != nil {
+		return nil, err
 	}
 	return v.next.UpdateOrganization(ctx, req)
+}
+
+// validateLogoContentTypePairing enforces that logo bytes and their content type are
+// always provided together - an empty logo means "not provided", not "provided empty".
+func validateLogoContentTypePairing(logo []byte, logoContentType *string) error {
+	if (len(logo) > 0) != (logoContentType != nil) {
+		return cerr.ErrValidation.WithMessage("Logo and LogoContentType must be provided together")
+	}
+	return nil
 }
 
 func (v validation) DeleteOrganization(ctx context.Context, req service.DeleteOrganizationReq) error {

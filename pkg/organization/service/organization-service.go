@@ -51,10 +51,9 @@ type UpdateOrganizationReq struct {
 	Name        string  `validate:"required,generalstring,max=255"`
 	Description *string `validate:"omitempty,max=250,generalstring"`
 
-	// Logo is a pointer to a byte slice, not a plain byte slice: nil means "not provided,
-	// leave the existing logo untouched", distinct from a provided-but-empty slice which
-	// would clear it. The store only touches the logo columns when this is non-nil.
-	Logo            *[]byte `validate:"omitempty,max=524288"`
+	// An empty Logo means "not provided, leave the existing logo untouched" - there is
+	// no way to clear an existing logo, only add one or replace it with another.
+	Logo            []byte  `validate:"omitempty,max=524288"`
 	LogoContentType *string `validate:"omitempty,oneof=image/png image/jpeg image/webp"`
 
 	Country *string `validate:"omitempty,iso3166_1_alpha2"`
@@ -151,6 +150,7 @@ func (s *OrganizationService) UpdateOrganization(ctx context.Context, req Update
 		TenantID:        req.TenantID,
 		Name:            req.Name,
 		Description:     req.Description,
+		Logo:            req.Logo,
 		LogoContentType: req.LogoContentType,
 		Country:         req.Country,
 		City:            req.City,
@@ -158,10 +158,7 @@ func (s *OrganizationService) UpdateOrganization(ctx context.Context, req Update
 		WebsiteURL:      req.WebsiteURL,
 	}
 
-	updateLogo := req.Logo != nil
-	if updateLogo {
-		organization.Logo = *req.Logo
-	}
+	updateLogo := len(req.Logo) > 0
 
 	updatedOrganization, err := s.store.UpdateOrganization(ctx, req.TenantID, organization, updateLogo)
 	if err != nil {
