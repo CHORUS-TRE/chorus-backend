@@ -46,8 +46,7 @@ func (c organizationControllerAuthorization) GetOrganization(ctx context.Context
 	return c.next.GetOrganization(ctx, req)
 }
 
-// GetOrganizationLogo reuses PermissionGetOrganization: the logo is part of the
-// org's data and does not warrant a separate permission (per the design doc).
+// GetOrganizationLogo reuses PermissionGetOrganization
 func (c organizationControllerAuthorization) GetOrganizationLogo(ctx context.Context, req *chorus.GetOrganizationLogoRequest) (*httpbody.HttpBody, error) {
 	if err := c.IsAuthorized(ctx, authorization.PermissionGetOrganization); err != nil {
 		return nil, err
