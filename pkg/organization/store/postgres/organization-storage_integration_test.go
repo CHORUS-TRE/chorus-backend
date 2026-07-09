@@ -77,6 +77,24 @@ func TestOrganizationStorage_CreateAndGetOrganization(t *testing.T) {
 	require.Equal(t, "image/png", *contentType)
 }
 
+func TestOrganizationStorage_GetOrganizationLogo_NullColumnScansCleanly(t *testing.T) {
+	db, err := integration.GetDB()
+	require.NoError(t, err)
+	t.Cleanup(func() { integration.CleanupTables(db) })
+
+	setupOrganizationFixtures(t, db)
+	store := NewOrganizationStorage(db)
+	ctx := context.Background()
+
+	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{Name: "CHUV"})
+	require.NoError(t, err)
+
+	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
+	require.NoError(t, err, "a NULL logo column must scan cleanly into []byte, not error like it would for a plain string")
+	require.Empty(t, logo, "a NULL bytea column scans as an empty (but non-nil) []byte, not nil")
+	require.Nil(t, contentType)
+}
+
 func TestOrganizationStorage_GetOrganization_WrongTenantNotFound(t *testing.T) {
 	db, err := integration.GetDB()
 	require.NoError(t, err)
