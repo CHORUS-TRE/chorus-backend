@@ -26,10 +26,10 @@ This project is the backend of the chorus platform.
         mc alias set minio http://localhost:9000 minioadmin minioadmin
         mc mb minio/chorus-data
         ```
-1. launch go run 
+1. launch go run
     `go run cmd/chorus/main.go start | go run cmd/logger/main.go`
 1. go to localhost:5000/doc
-1. create tenant 
+1. create tenant
     a) get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
     b) init tenant 1 in openapi steward service
 1. create user
