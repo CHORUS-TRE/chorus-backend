@@ -1,0 +1,23 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+message Organization {
+    uint64 id = 1;
+
+    uint64 tenant_id = 2;
+
+    string name = 3;
+    string description = 4;
+
+    string country = 5;
+    string city = 6;
+
+    uint64 contact_user_id = 7;
+    string website_url = 8;
+
+    google.protobuf.Timestamp created_at = 9;
+    google.protobuf.Timestamp updated_at = 10;
+}

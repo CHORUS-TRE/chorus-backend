@@ -1,0 +1,164 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/api/annotations.proto";
+import "google/api/httpbody.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+import "common.proto";
+import "organization.proto";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "chorus organization service";
+        version: "1.0";
+        contact: {
+            name: "chorus organization service";
+            url: "https://github.com/CHORUS-TRE/chorus-backend";
+            email: "dev@chorus-tre.ch";
+        };
+    };
+    schemes: HTTP;
+    consumes: "application/json";
+    produces: "application/json";
+};
+
+message ListOrganizationsRequest {
+    PaginationQuery pagination = 1;
+}
+message ListOrganizationsReply {
+    ListOrganizationsResult result = 1;
+    optional PaginationResult pagination = 2;
+}
+message ListOrganizationsResult {
+    repeated Organization organizations = 1;
+}
+
+message GetOrganizationRequest {
+    uint64 id = 1;
+}
+message GetOrganizationReply {
+    GetOrganizationResult result = 1;
+}
+message GetOrganizationResult {
+    Organization organization = 1;
+}
+
+message GetOrganizationLogoRequest {
+    uint64 id = 1;
+}
+
+message CreateOrganizationRequest {
+    string name = 1;
+    optional string description = 2;
+    optional bytes logo = 3;
+    optional string logo_content_type = 4;
+    optional string country = 5;
+    optional string city = 6;
+    optional uint64 contact_user_id = 7;
+    optional string website_url = 8;
+}
+message CreateOrganizationReply {
+    CreateOrganizationResult result = 1;
+}
+message CreateOrganizationResult {
+    Organization organization = 1;
+}
+
+message UpdateOrganizationRequest {
+    uint64 id = 1;
+    string name = 2;
+    optional string description = 3;
+    optional bytes logo = 4;
+    optional string logo_content_type = 5;
+    optional string country = 6;
+    optional string city = 7;
+    optional uint64 contact_user_id = 8;
+    optional string website_url = 9;
+}
+message UpdateOrganizationReply {
+    UpdateOrganizationResult result = 1;
+}
+message UpdateOrganizationResult {
+    Organization organization = 1;
+}
+
+message DeleteOrganizationRequest {
+    uint64 id = 1;
+}
+message DeleteOrganizationReply {
+    DeleteOrganizationResult result = 1;
+}
+message DeleteOrganizationResult {}
+
+
+service OrganizationService {
+    rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/organizations"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "List organizations";
+            description: "This endpoint returns a list of active organizations";
+            tags: "OrganizationService";
+        };
+    };
+
+    rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationReply) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/organizations/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get an organization";
+            description: "This endpoint returns an organization's details, excluding the logo image data";
+            tags: "OrganizationService";
+        };
+    };
+
+    rpc GetOrganizationLogo(GetOrganizationLogoRequest) returns (google.api.HttpBody) {
+        option (google.api.http) = {
+            get: "/api/rest/v1/organizations/{id}/logo"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Get an organization's logo";
+            description: "This endpoint returns the raw logo image bytes with Content-Type and Cache-Control headers, suitable for direct use as an <img> src";
+            tags: "OrganizationService";
+        };
+    };
+
+    rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationReply) {
+        option (google.api.http) = {
+            post: "/api/rest/v1/organizations";
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Create an organization";
+            description: "This endpoint creates an organization. Requires the PlatformOrganizationManager role.";
+            tags: "OrganizationService";
+        };
+    };
+
+    rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationReply) {
+        option (google.api.http) = {
+            put: "/api/rest/v1/organizations/{id}";
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Update an organization";
+            description: "This endpoint updates an organization. Requires the PlatformOrganizationManager role.";
+            tags: "OrganizationService";
+        };
+    };
+
+    rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationReply) {
+        option (google.api.http) = {
+            delete: "/api/rest/v1/organizations/{id}"
+        };
+        option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+            summary: "Delete an organization";
+            description: "This endpoint soft-deletes an organization. Requires the PlatformOrganizationManager role.";
+            tags: "OrganizationService";
+        };
+    };
+}

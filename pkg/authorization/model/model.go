@@ -118,6 +118,12 @@ const (
 	PermissionCreateRequest  PermissionName = "createRequest"
 	PermissionApproveRequest PermissionName = "approveRequest"
 	PermissionDeleteRequest  PermissionName = "deleteRequest"
+
+	PermissionListOrganizations  PermissionName = "listOrganizations"
+	PermissionGetOrganization    PermissionName = "getOrganization"
+	PermissionCreateOrganization PermissionName = "createOrganization"
+	PermissionUpdateOrganization PermissionName = "updateOrganization"
+	PermissionDeleteOrganization PermissionName = "deleteOrganization"
 )
 
 func (p PermissionName) String() string {
@@ -298,6 +304,17 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionApproveRequest, nil
 	case string(PermissionDeleteRequest):
 		return PermissionDeleteRequest, nil
+
+	case string(PermissionListOrganizations):
+		return PermissionListOrganizations, nil
+	case string(PermissionGetOrganization):
+		return PermissionGetOrganization, nil
+	case string(PermissionCreateOrganization):
+		return PermissionCreateOrganization, nil
+	case string(PermissionUpdateOrganization):
+		return PermissionUpdateOrganization, nil
+	case string(PermissionDeleteOrganization):
+		return PermissionDeleteOrganization, nil
 	}
 
 	return "", fmt.Errorf("unknown permission type: %s", p)
@@ -426,6 +443,7 @@ const (
 	RoleAppStoreAdmin           RoleName = "AppStoreAdmin"
 	RoleDataManager             RoleName = "DataManager"
 	RoleSuperAdmin              RoleName = "SuperAdmin"
+	RolePlatformOrganizationManager RoleName = "PlatformOrganizationManager"
 )
 
 func (r RoleName) String() string {
@@ -468,6 +486,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleDataManager, nil
 	case string(RoleSuperAdmin):
 		return RoleSuperAdmin, nil
+	case string(RolePlatformOrganizationManager):
+		return RolePlatformOrganizationManager, nil
 	}
 
 	if strings.TrimSpace(r) == "" {
@@ -500,6 +520,7 @@ func GetAllRoles() []RoleName {
 		RoleAppStoreAdmin,
 		RoleDataManager,
 		RoleSuperAdmin,
+		RolePlatformOrganizationManager,
 	}
 }
 
