@@ -14,11 +14,11 @@ import (
 
 type organizationServiceLogging struct {
 	logger *logger.ContextLogger
-	next   service.Organizer
+	next   service.Organizationer
 }
 
-func Logging(logger *logger.ContextLogger) func(service.Organizer) service.Organizer {
-	return func(next service.Organizer) service.Organizer {
+func Logging(logger *logger.ContextLogger) func(service.Organizationer) service.Organizationer {
+	return func(next service.Organizationer) service.Organizationer {
 		return &organizationServiceLogging{
 			logger: logger,
 			next:   next,

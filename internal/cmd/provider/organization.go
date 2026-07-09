@@ -28,9 +28,9 @@ func ProvideOrganizationController() chorus.OrganizationServiceServer {
 }
 
 var organizationServiceOnce sync.Once
-var organizationService service.Organizer
+var organizationService service.Organizationer
 
-func ProvideOrganizationService() service.Organizer {
+func ProvideOrganizationService() service.Organizationer {
 	organizationServiceOnce.Do(func() {
 		organizationService = service.NewOrganizationService(ProvideOrganizationStore())
 		organizationService = service_mw.Logging(logger.BizLog)(organizationService)

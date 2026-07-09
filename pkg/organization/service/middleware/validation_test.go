@@ -16,37 +16,37 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/organization/service"
 )
 
-type stubOrganizer struct{}
+type stubOrganizationer struct{}
 
-func (stubOrganizer) ListOrganizations(_ context.Context, _ service.ListOrganizationsReq) ([]*model.Organization, *common_model.PaginationResult, error) {
+func (stubOrganizationer) ListOrganizations(_ context.Context, _ service.ListOrganizationsReq) ([]*model.Organization, *common_model.PaginationResult, error) {
 	return nil, &common_model.PaginationResult{}, nil
 }
-func (stubOrganizer) GetOrganization(_ context.Context, _ service.GetOrganizationReq) (*model.Organization, error) {
+func (stubOrganizationer) GetOrganization(_ context.Context, _ service.GetOrganizationReq) (*model.Organization, error) {
 	return &model.Organization{}, nil
 }
-func (stubOrganizer) GetOrganizationLogo(_ context.Context, _ service.GetOrganizationLogoReq) ([]byte, *string, error) {
+func (stubOrganizationer) GetOrganizationLogo(_ context.Context, _ service.GetOrganizationLogoReq) ([]byte, *string, error) {
 	return nil, nil, nil
 }
-func (stubOrganizer) CreateOrganization(_ context.Context, _ service.CreateOrganizationReq) (*model.Organization, error) {
+func (stubOrganizationer) CreateOrganization(_ context.Context, _ service.CreateOrganizationReq) (*model.Organization, error) {
 	return &model.Organization{}, nil
 }
-func (stubOrganizer) UpdateOrganization(_ context.Context, _ service.UpdateOrganizationReq) (*model.Organization, error) {
+func (stubOrganizationer) UpdateOrganization(_ context.Context, _ service.UpdateOrganizationReq) (*model.Organization, error) {
 	return &model.Organization{}, nil
 }
-func (stubOrganizer) DeleteOrganization(_ context.Context, _ service.DeleteOrganizationReq) error {
+func (stubOrganizationer) DeleteOrganization(_ context.Context, _ service.DeleteOrganizationReq) error {
 	return nil
 }
 
-func newTestValidationOrganizer() service.Organizer {
-	return Validation(chorus_validation.NewValidator())(stubOrganizer{})
+func newTestValidationOrganizationer() service.Organizationer {
+	return Validation(chorus_validation.NewValidator())(stubOrganizationer{})
 }
 
 func ptr[T any](v T) *T { return &v }
 
 func TestValidation_CreateOrganization_ValidRequestPasses(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
 		Name:            "ACME",
 		Description:     ptr("A description"),
@@ -61,17 +61,17 @@ func TestValidation_CreateOrganization_ValidRequestPasses(t *testing.T) {
 }
 
 func TestValidation_CreateOrganization_NameRequired(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{TenantID: 1})
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{TenantID: 1})
 
 	require.Error(t, err)
 }
 
 func TestValidation_CreateOrganization_DescriptionOver250CharsRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:    1,
 		Name:        "ACME",
 		Description: ptr(strings.Repeat("a", 251)),
@@ -81,9 +81,9 @@ func TestValidation_CreateOrganization_DescriptionOver250CharsRejected(t *testin
 }
 
 func TestValidation_CreateOrganization_DescriptionAt250CharsAccepted(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:    1,
 		Name:        "ACME",
 		Description: ptr(strings.Repeat("a", 250)),
@@ -93,10 +93,10 @@ func TestValidation_CreateOrganization_DescriptionAt250CharsAccepted(t *testing.
 }
 
 func TestValidation_CreateOrganization_InvalidCountryCodeRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
 	for _, country := range []string{"ZZ", "ch", "SUI", "1A"} {
-		_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+		_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 			TenantID: 1,
 			Name:     "ACME",
 			Country:  ptr(country),
@@ -106,10 +106,10 @@ func TestValidation_CreateOrganization_InvalidCountryCodeRejected(t *testing.T) 
 }
 
 func TestValidation_CreateOrganization_ValidCountryCodeAccepted(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
 	for _, country := range []string{"CH", "FR", "US"} {
-		_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+		_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 			TenantID: 1,
 			Name:     "ACME",
 			Country:  ptr(country),
@@ -119,9 +119,9 @@ func TestValidation_CreateOrganization_ValidCountryCodeAccepted(t *testing.T) {
 }
 
 func TestValidation_CreateOrganization_CityOver100CharsRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID: 1,
 		Name:     "ACME",
 		City:     ptr(strings.Repeat("a", 101)),
@@ -131,10 +131,10 @@ func TestValidation_CreateOrganization_CityOver100CharsRejected(t *testing.T) {
 }
 
 func TestValidation_CreateOrganization_WebsiteURLOver2048CharsRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
 	longURL := "https://example.com/" + strings.Repeat("a", 2048)
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:   1,
 		Name:       "ACME",
 		WebsiteURL: ptr(longURL),
@@ -144,9 +144,9 @@ func TestValidation_CreateOrganization_WebsiteURLOver2048CharsRejected(t *testin
 }
 
 func TestValidation_CreateOrganization_MalformedWebsiteURLRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:   1,
 		Name:       "ACME",
 		WebsiteURL: ptr("not a url"),
@@ -156,9 +156,9 @@ func TestValidation_CreateOrganization_MalformedWebsiteURLRejected(t *testing.T)
 }
 
 func TestValidation_CreateOrganization_LogoOver512KBRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
 		Name:            "ACME",
 		Logo:            make([]byte, 512*1024+1),
@@ -169,9 +169,9 @@ func TestValidation_CreateOrganization_LogoOver512KBRejected(t *testing.T) {
 }
 
 func TestValidation_CreateOrganization_LogoAt512KBAccepted(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
 		Name:            "ACME",
 		Logo:            make([]byte, 512*1024),
@@ -182,9 +182,9 @@ func TestValidation_CreateOrganization_LogoAt512KBAccepted(t *testing.T) {
 }
 
 func TestValidation_CreateOrganization_UnsupportedLogoContentTypeRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
 		Name:            "ACME",
 		Logo:            []byte{0x01},
@@ -195,9 +195,9 @@ func TestValidation_CreateOrganization_UnsupportedLogoContentTypeRejected(t *tes
 }
 
 func TestValidation_CreateOrganization_LogoWithoutContentTypeRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID: 1,
 		Name:     "ACME",
 		Logo:     []byte{0x01},
@@ -207,9 +207,9 @@ func TestValidation_CreateOrganization_LogoWithoutContentTypeRejected(t *testing
 }
 
 func TestValidation_CreateOrganization_ContentTypeWithoutLogoRejected(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
+	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
 		Name:            "ACME",
 		LogoContentType: ptr("image/png"),
@@ -219,9 +219,9 @@ func TestValidation_CreateOrganization_ContentTypeWithoutLogoRejected(t *testing
 }
 
 func TestValidation_UpdateOrganization_RequiresID(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.UpdateOrganization(context.Background(), service.UpdateOrganizationReq{
+	_, err := organizationer.UpdateOrganization(context.Background(), service.UpdateOrganizationReq{
 		Name: "ACME",
 	})
 
@@ -229,9 +229,9 @@ func TestValidation_UpdateOrganization_RequiresID(t *testing.T) {
 }
 
 func TestValidation_UpdateOrganization_OmittedLogoPassesValidation(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.UpdateOrganization(context.Background(), service.UpdateOrganizationReq{
+	_, err := organizationer.UpdateOrganization(context.Background(), service.UpdateOrganizationReq{
 		TenantID: 1,
 		ID:       1,
 		Name:     "ACME",
@@ -241,25 +241,25 @@ func TestValidation_UpdateOrganization_OmittedLogoPassesValidation(t *testing.T)
 }
 
 func TestValidation_GetOrganization_RequiresID(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, err := organizer.GetOrganization(context.Background(), service.GetOrganizationReq{TenantID: 1})
+	_, err := organizationer.GetOrganization(context.Background(), service.GetOrganizationReq{TenantID: 1})
 
 	require.Error(t, err)
 }
 
 func TestValidation_DeleteOrganization_RequiresID(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	err := organizer.DeleteOrganization(context.Background(), service.DeleteOrganizationReq{TenantID: 1})
+	err := organizationer.DeleteOrganization(context.Background(), service.DeleteOrganizationReq{TenantID: 1})
 
 	require.Error(t, err)
 }
 
 func TestValidation_ListOrganizations_NoFieldsRequired(t *testing.T) {
-	organizer := newTestValidationOrganizer()
+	organizationer := newTestValidationOrganizationer()
 
-	_, _, err := organizer.ListOrganizations(context.Background(), service.ListOrganizationsReq{TenantID: 1})
+	_, _, err := organizationer.ListOrganizations(context.Background(), service.ListOrganizationsReq{TenantID: 1})
 
 	assert.NoError(t, err)
 }

@@ -69,8 +69,8 @@ type DeleteOrganizationReq struct {
 	ID       uint64 `validate:"required,min=1"`
 }
 
-// Organizer defines the organization business logic.
-type Organizer interface {
+// Organizationer defines the organization business logic.
+type Organizationer interface {
 	ListOrganizations(ctx context.Context, req ListOrganizationsReq) ([]*model.Organization, *common_model.PaginationResult, error)
 	GetOrganization(ctx context.Context, req GetOrganizationReq) (*model.Organization, error)
 	GetOrganizationLogo(ctx context.Context, req GetOrganizationLogoReq) ([]byte, *string, error)

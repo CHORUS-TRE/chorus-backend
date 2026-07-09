@@ -12,12 +12,12 @@ import (
 )
 
 type validation struct {
-	next     service.Organizer
+	next     service.Organizationer
 	validate *val.Validate
 }
 
-func Validation(validate *val.Validate) func(service.Organizer) service.Organizer {
-	return func(next service.Organizer) service.Organizer {
+func Validation(validate *val.Validate) func(service.Organizationer) service.Organizationer {
+	return func(next service.Organizationer) service.Organizationer {
 		return &validation{
 			next:     next,
 			validate: validate,

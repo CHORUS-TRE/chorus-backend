@@ -23,10 +23,10 @@ var _ chorus.OrganizationServiceServer = (*OrganizationController)(nil)
 
 // OrganizationController is the organization service controller handler.
 type OrganizationController struct {
-	organization service.Organizer
+	organization service.Organizationer
 }
 
-func NewOrganizationController(organization service.Organizer) OrganizationController {
+func NewOrganizationController(organization service.Organizationer) OrganizationController {
 	return OrganizationController{organization: organization}
 }
 
