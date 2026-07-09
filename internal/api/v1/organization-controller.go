@@ -16,8 +16,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/organization/service"
 )
 
-// organizationLogoCacheControl matches the Cache-Control value specified in the design doc:
-// the browser caches the logo for 24h and serves it from cache without a network request.
+// The browser caches the logo for 24h and serves it from cache without a network request.
 const organizationLogoCacheControl = "max-age=86400"
 
 var _ chorus.OrganizationServiceServer = (*OrganizationController)(nil)
