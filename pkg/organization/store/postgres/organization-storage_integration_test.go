@@ -48,18 +48,18 @@ func TestOrganizationStorage_CreateAndGetOrganization(t *testing.T) {
 	ctx := context.Background()
 
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
-		Name:            "ACME",
+		Name:            "CHUV",
 		Description:     ptr("A description"),
 		Logo:            []byte{0x89, 0x50, 0x4E, 0x47},
 		LogoContentType: ptr("image/png"),
 		Country:         ptr("CH"),
 		City:            ptr("Lausanne"),
 		ContactUserID:   ptr(orgTestUserID),
-		WebsiteURL:      ptr("https://acme.example.com"),
+		WebsiteURL:      ptr("https://www.chuv.ch/"),
 	})
 	require.NoError(t, err)
 	require.NotZero(t, created.ID)
-	require.Equal(t, "ACME", created.Name)
+	require.Equal(t, "CHUV", created.Name)
 	require.Equal(t, "CH", *created.Country)
 	require.Equal(t, orgTestUserID, *created.ContactUserID)
 	require.Nil(t, created.Logo, "Create must not return the logo bytes, consistent with Get/List")
@@ -68,7 +68,7 @@ func TestOrganizationStorage_CreateAndGetOrganization(t *testing.T) {
 	fetched, err := store.GetOrganization(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
 	require.Equal(t, created.ID, fetched.ID)
-	require.Equal(t, "ACME", fetched.Name)
+	require.Equal(t, "CHUV", fetched.Name)
 	require.Nil(t, fetched.Logo, "GetOrganization must not return the logo bytes")
 
 	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
@@ -86,7 +86,7 @@ func TestOrganizationStorage_GetOrganization_WrongTenantNotFound(t *testing.T) {
 	store := NewOrganizationStorage(db)
 	ctx := context.Background()
 
-	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{Name: "ACME"})
+	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{Name: "CHUV"})
 	require.NoError(t, err)
 
 	_, err = store.GetOrganization(ctx, orgTestTenantID+1, created.ID)
@@ -152,7 +152,7 @@ func TestOrganizationStorage_UpdateOrganization_WithoutLogoPreservesExisting(t *
 	ctx := context.Background()
 
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
-		Name:            "ACME",
+		Name:            "CHUV",
 		Logo:            []byte{0x01, 0x02, 0x03},
 		LogoContentType: ptr("image/png"),
 	})
@@ -160,10 +160,10 @@ func TestOrganizationStorage_UpdateOrganization_WithoutLogoPreservesExisting(t *
 
 	updated, err := store.UpdateOrganization(ctx, orgTestTenantID, &model.Organization{
 		ID:   created.ID,
-		Name: "ACME Renamed",
+		Name: "CHUV Renamed",
 	}, false)
 	require.NoError(t, err)
-	require.Equal(t, "ACME Renamed", updated.Name)
+	require.Equal(t, "CHUV Renamed", updated.Name)
 
 	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
@@ -181,7 +181,7 @@ func TestOrganizationStorage_UpdateOrganization_WithLogoReplacesExisting(t *test
 	ctx := context.Background()
 
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
-		Name:            "ACME",
+		Name:            "CHUV",
 		Logo:            []byte{0x01, 0x02, 0x03},
 		LogoContentType: ptr("image/png"),
 	})
@@ -189,7 +189,7 @@ func TestOrganizationStorage_UpdateOrganization_WithLogoReplacesExisting(t *test
 
 	_, err = store.UpdateOrganization(ctx, orgTestTenantID, &model.Organization{
 		ID:              created.ID,
-		Name:            "ACME",
+		Name:            "CHUV",
 		Logo:            []byte{0xFF, 0xD8, 0xFF},
 		LogoContentType: ptr("image/jpeg"),
 	}, true)
@@ -210,7 +210,7 @@ func TestOrganizationStorage_DeleteOrganization_NotFoundReturnsErrNoRowsDeleted(
 	store := NewOrganizationStorage(db)
 	ctx := context.Background()
 
-	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{Name: "ACME"})
+	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{Name: "CHUV"})
 	require.NoError(t, err)
 
 	require.NoError(t, store.DeleteOrganization(ctx, orgTestTenantID, created.ID))

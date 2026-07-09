@@ -48,13 +48,13 @@ func TestValidation_CreateOrganization_ValidRequestPasses(t *testing.T) {
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
-		Name:            "ACME",
+		Name:            "CHUV",
 		Description:     ptr("A description"),
 		Logo:            []byte{0x89, 0x50, 0x4E, 0x47},
 		LogoContentType: ptr("image/png"),
 		Country:         ptr("CH"),
 		City:            ptr("Lausanne"),
-		WebsiteURL:      ptr("https://acme.example.com"),
+		WebsiteURL:      ptr("https://www.chuv.ch/"),
 	})
 
 	require.NoError(t, err)
@@ -73,7 +73,7 @@ func TestValidation_CreateOrganization_DescriptionOver250CharsRejected(t *testin
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:    1,
-		Name:        "ACME",
+		Name:        "CHUV",
 		Description: ptr(strings.Repeat("a", 251)),
 	})
 
@@ -85,7 +85,7 @@ func TestValidation_CreateOrganization_DescriptionAt250CharsAccepted(t *testing.
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:    1,
-		Name:        "ACME",
+		Name:        "CHUV",
 		Description: ptr(strings.Repeat("a", 250)),
 	})
 
@@ -98,7 +98,7 @@ func TestValidation_CreateOrganization_InvalidCountryCodeRejected(t *testing.T) 
 	for _, country := range []string{"ZZ", "ch", "SUI", "1A"} {
 		_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 			TenantID: 1,
-			Name:     "ACME",
+			Name:     "CHUV",
 			Country:  ptr(country),
 		})
 		require.Errorf(t, err, "country %q should have been rejected", country)
@@ -111,7 +111,7 @@ func TestValidation_CreateOrganization_ValidCountryCodeAccepted(t *testing.T) {
 	for _, country := range []string{"CH", "FR", "US"} {
 		_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 			TenantID: 1,
-			Name:     "ACME",
+			Name:     "CHUV",
 			Country:  ptr(country),
 		})
 		require.NoErrorf(t, err, "country %q should have been accepted", country)
@@ -123,7 +123,7 @@ func TestValidation_CreateOrganization_CityOver100CharsRejected(t *testing.T) {
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID: 1,
-		Name:     "ACME",
+		Name:     "CHUV",
 		City:     ptr(strings.Repeat("a", 101)),
 	})
 
@@ -136,7 +136,7 @@ func TestValidation_CreateOrganization_WebsiteURLOver2048CharsRejected(t *testin
 	longURL := "https://example.com/" + strings.Repeat("a", 2048)
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:   1,
-		Name:       "ACME",
+		Name:       "CHUV",
 		WebsiteURL: ptr(longURL),
 	})
 
@@ -148,7 +148,7 @@ func TestValidation_CreateOrganization_MalformedWebsiteURLRejected(t *testing.T)
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:   1,
-		Name:       "ACME",
+		Name:       "CHUV",
 		WebsiteURL: ptr("not a url"),
 	})
 
@@ -160,7 +160,7 @@ func TestValidation_CreateOrganization_LogoOver512KBRejected(t *testing.T) {
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
-		Name:            "ACME",
+		Name:            "CHUV",
 		Logo:            make([]byte, 512*1024+1),
 		LogoContentType: ptr("image/png"),
 	})
@@ -173,7 +173,7 @@ func TestValidation_CreateOrganization_LogoAt512KBAccepted(t *testing.T) {
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
-		Name:            "ACME",
+		Name:            "CHUV",
 		Logo:            make([]byte, 512*1024),
 		LogoContentType: ptr("image/png"),
 	})
@@ -186,7 +186,7 @@ func TestValidation_CreateOrganization_UnsupportedLogoContentTypeRejected(t *tes
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
-		Name:            "ACME",
+		Name:            "CHUV",
 		Logo:            []byte{0x01},
 		LogoContentType: ptr("application/pdf"),
 	})
@@ -199,7 +199,7 @@ func TestValidation_CreateOrganization_LogoWithoutContentTypeRejected(t *testing
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID: 1,
-		Name:     "ACME",
+		Name:     "CHUV",
 		Logo:     []byte{0x01},
 	})
 
@@ -211,7 +211,7 @@ func TestValidation_CreateOrganization_ContentTypeWithoutLogoRejected(t *testing
 
 	_, err := organizationer.CreateOrganization(context.Background(), service.CreateOrganizationReq{
 		TenantID:        1,
-		Name:            "ACME",
+		Name:            "CHUV",
 		LogoContentType: ptr("image/png"),
 	})
 
@@ -222,7 +222,7 @@ func TestValidation_UpdateOrganization_RequiresID(t *testing.T) {
 	organizationer := newTestValidationOrganizationer()
 
 	_, err := organizationer.UpdateOrganization(context.Background(), service.UpdateOrganizationReq{
-		Name: "ACME",
+		Name: "CHUV",
 	})
 
 	require.Error(t, err)
@@ -234,7 +234,7 @@ func TestValidation_UpdateOrganization_OmittedLogoPassesValidation(t *testing.T)
 	_, err := organizationer.UpdateOrganization(context.Background(), service.UpdateOrganizationReq{
 		TenantID: 1,
 		ID:       1,
-		Name:     "ACME",
+		Name:     "CHUV",
 	})
 
 	require.NoError(t, err)
