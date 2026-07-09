@@ -87,12 +87,12 @@ func (c workspaceServiceInstanceControllerAudit) CreateWorkspaceServiceInstance(
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to create service instance '%s' in workspace %d.", req.Name, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to create service instance %q in workspace %d.", req.Name, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created service instance '%s' (ID %d) in workspace %d.", req.Name, res.Result.WorkspaceServiceInstance.Id, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Created service instance %q (ID %d) in workspace %d.", req.Name, res.Result.WorkspaceServiceInstance.Id, req.WorkspaceId)),
 			audit.WithDetail("service_instance_id", res.Result.WorkspaceServiceInstance.Id),
 		)
 	}
@@ -114,12 +114,12 @@ func (c workspaceServiceInstanceControllerAudit) UpdateWorkspaceServiceInstance(
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to update service instance '%s' (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Failed to update service instance %q (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated service instance '%s' (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
+			audit.WithDescription(fmt.Sprintf("Updated service instance %q (ID %d) in workspace %d.", req.Name, req.Id, req.WorkspaceId)),
 		)
 	}
 

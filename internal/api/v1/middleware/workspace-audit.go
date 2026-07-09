@@ -69,12 +69,12 @@ func (c workspaceControllerAudit) CreateWorkspace(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to create workspace '%s'.", req.Name)),
+			audit.WithDescription(fmt.Sprintf("Failed to create workspace %q.", req.Name)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created workspace '%s' (ID %d).", req.Name, res.Result.Workspace.Id)),
+			audit.WithDescription(fmt.Sprintf("Created workspace %q (ID %d).", req.Name, res.Result.Workspace.Id)),
 			audit.WithWorkspaceID(res.Result.Workspace.Id),
 			audit.WithDetail("workspace_id", res.Result.Workspace.Id),
 		)
@@ -119,12 +119,12 @@ func (c workspaceControllerAudit) UpdateWorkspace(ctx context.Context, req *chor
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to update workspace '%s' (ID %d).", req.Name, req.Id)),
+			audit.WithDescription(fmt.Sprintf("Failed to update workspace %q (ID %d).", req.Name, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated workspace '%s' (ID %d).", req.Name, req.Id)),
+			audit.WithDescription(fmt.Sprintf("Updated workspace %q (ID %d).", req.Name, req.Id)),
 		)
 	}
 
