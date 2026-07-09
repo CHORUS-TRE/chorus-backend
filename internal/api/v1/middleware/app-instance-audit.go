@@ -76,7 +76,7 @@ func (c appInstanceControllerAudit) CreateAppInstance(ctx context.Context, req *
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to launch instance of app '%s' (ID %d).", req.AppName, req.AppId)),
+			audit.WithDescription(fmt.Sprintf("Failed to launch instance of app %q (ID %d).", req.AppName, req.AppId)),
 			audit.WithDetail("app_id", req.AppId),
 			audit.WithDetail("app_name", req.AppName),
 			audit.WithDetail("app_image_registry", req.AppDockerImageRegistry),
@@ -87,7 +87,7 @@ func (c appInstanceControllerAudit) CreateAppInstance(ctx context.Context, req *
 	} else {
 		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Launched instance of '%s' (version %s)", ai.AppName, ai.AppDockerImageTag)),
+			audit.WithDescription(fmt.Sprintf("Launched instance of %q (version %s)", ai.AppName, ai.AppDockerImageTag)),
 			audit.WithDetail("app_instance_id", ai.Id),
 			audit.WithDetail("app_id", ai.AppId),
 			audit.WithDetail("app_name", ai.AppName),
@@ -120,7 +120,7 @@ func (c appInstanceControllerAudit) UpdateAppInstance(ctx context.Context, req *
 	} else {
 		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated instance (ID %d) of '%s' (version %s).", ai.Id, ai.AppName, ai.AppDockerImageTag)),
+			audit.WithDescription(fmt.Sprintf("Updated instance (ID %d) of %q (version %s).", ai.Id, ai.AppName, ai.AppDockerImageTag)),
 			audit.WithDetail("app_id", ai.AppId),
 			audit.WithDetail("app_name", ai.AppName),
 			audit.WithDetail("app_image_registry", ai.AppDockerImageRegistry),
@@ -149,7 +149,7 @@ func (c appInstanceControllerAudit) DeleteAppInstance(ctx context.Context, req *
 	} else {
 		ai := res.Result.AppInstance
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Terminated instance of '%s' (version %s).", ai.AppName, ai.AppDockerImageTag)),
+			audit.WithDescription(fmt.Sprintf("Terminated instance of %q (version %s).", ai.AppName, ai.AppDockerImageTag)),
 			audit.WithWorkspaceID(ai.WorkspaceId),
 			audit.WithWorkbenchID(ai.WorkbenchId),
 			audit.WithDetail("app_id", ai.AppId),
