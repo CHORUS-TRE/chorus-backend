@@ -8,11 +8,11 @@ import (
 )
 
 func OrganizationFromBusiness(organization *model.Organization) (*chorus.Organization, error) {
-	createdAt, err := ToProtoTimestamp(organization.CreatedAt)
+	ca, err := ToProtoTimestamp(organization.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
 	}
-	updatedAt, err := ToProtoTimestamp(organization.UpdatedAt)
+	ua, err := ToProtoTimestamp(organization.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
@@ -22,8 +22,8 @@ func OrganizationFromBusiness(organization *model.Organization) (*chorus.Organiz
 		TenantId: organization.TenantID,
 		Name:     organization.Name,
 
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		CreatedAt: ca,
+		UpdatedAt: ua,
 	}
 
 	if organization.Description != nil {
