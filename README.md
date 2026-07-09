@@ -42,7 +42,7 @@ This project is the backend of the chorus platform.
 Create a complete service (here the workbench service)
 
 1. Interface
-    - create service & entity protocul buffer definitions in api/proto/v1/workbench-service.proto and api/proto/v1/workbench.proto
+    - create service & entity protocol buffer definitions in api/proto/v1/workbench-service.proto and api/proto/v1/workbench.proto
     - `./scripts/generate-protos.sh`
 
 1. Write the migration
