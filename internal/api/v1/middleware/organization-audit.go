@@ -70,12 +70,12 @@ func (c organizationControllerAudit) UpdateOrganization(ctx context.Context, req
 	opts := []audit.Option{audit.WithDetail("organization_id", req.GetId())}
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to update organization %d.", req.GetId())),
+			audit.WithDescription(fmt.Sprintf("Failed to update organization %q (ID %d).", req.GetName(), req.GetId())),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated organization %d.", req.GetId())),
+			audit.WithDescription(fmt.Sprintf("Updated organization %q (ID %d).", req.GetName(), req.GetId())),
 		)
 	}
 
