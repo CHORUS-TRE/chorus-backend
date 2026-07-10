@@ -22,24 +22,14 @@ func OrganizationFromBusiness(organization *model.Organization) (*chorus.Organiz
 		TenantId: organization.TenantID,
 		Name:     organization.Name,
 
+		Description:   derefOrZero(organization.Description),
+		Country:       derefOrZero(organization.Country),
+		City:          derefOrZero(organization.City),
+		ContactUserId: derefOrZero(organization.ContactUserID),
+		WebsiteUrl:    derefOrZero(organization.WebsiteURL),
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
-	}
-
-	if organization.Description != nil {
-		proto.Description = *organization.Description
-	}
-	if organization.Country != nil {
-		proto.Country = *organization.Country
-	}
-	if organization.City != nil {
-		proto.City = *organization.City
-	}
-	if organization.ContactUserID != nil {
-		proto.ContactUserId = *organization.ContactUserID
-	}
-	if organization.WebsiteURL != nil {
-		proto.WebsiteUrl = *organization.WebsiteURL
 	}
 
 	return proto, nil
