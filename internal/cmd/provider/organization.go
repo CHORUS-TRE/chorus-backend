@@ -21,8 +21,10 @@ var organizationController chorus.OrganizationServiceServer
 func ProvideOrganizationController() chorus.OrganizationServiceServer {
 	organizationControllerOnce.Do(func() {
 		organizationController = v1.NewOrganizationController(ProvideOrganizationService())
-		organizationController = ctrl_mw.NewOrganizationAuditMiddleware(ProvideAuditWriter())(organizationController)
 		organizationController = ctrl_mw.OrganizationAuthorizing(logger.SecLog, ProvideAuthorizer())(organizationController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			organizationController = ctrl_mw.NewOrganizationAuditMiddleware(ProvideAuditWriter())(organizationController)
+		}
 	})
 	return organizationController
 }
