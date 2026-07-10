@@ -84,9 +84,11 @@ type OrganizationStore interface {
 	GetOrganization(ctx context.Context, tenantID, id uint64) (*model.Organization, error)
 	GetOrganizationLogo(ctx context.Context, tenantID, id uint64) ([]byte, *string, error)
 	CreateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error)
-	UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error)
+	UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error)
 	DeleteOrganization(ctx context.Context, tenantID, id uint64) error
 }
+
+var _ Organizationer = (*OrganizationService)(nil)
 
 type OrganizationService struct {
 	store OrganizationStore
@@ -158,9 +160,7 @@ func (s *OrganizationService) UpdateOrganization(ctx context.Context, req Update
 		WebsiteURL:      req.WebsiteURL,
 	}
 
-	updateLogo := len(req.Logo) > 0
-
-	updatedOrganization, err := s.store.UpdateOrganization(ctx, req.TenantID, organization, updateLogo)
+	updatedOrganization, err := s.store.UpdateOrganization(ctx, req.TenantID, organization)
 	if err != nil {
 		return nil, cerr.WrapStoreError(err, fmt.Sprintf("Unable to update organization %v", req.ID))
 	}

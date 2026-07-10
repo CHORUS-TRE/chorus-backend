@@ -179,13 +179,13 @@ func TestOrganizationStorage_UpdateOrganization_WithoutLogoPreservesExisting(t *
 	updated, err := store.UpdateOrganization(ctx, orgTestTenantID, &model.Organization{
 		ID:   created.ID,
 		Name: "CHUV Renamed",
-	}, false)
+	})
 	require.NoError(t, err)
 	require.Equal(t, "CHUV Renamed", updated.Name)
 
 	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
-	require.Equal(t, []byte{0x01, 0x02, 0x03}, logo, "logo must be preserved when updateLogo is false")
+	require.Equal(t, []byte{0x01, 0x02, 0x03}, logo, "logo must be preserved when the update provides an empty Logo")
 	require.Equal(t, "image/png", *contentType)
 }
 
@@ -210,7 +210,7 @@ func TestOrganizationStorage_UpdateOrganization_WithLogoReplacesExisting(t *test
 		Name:            "CHUV",
 		Logo:            []byte{0xFF, 0xD8, 0xFF},
 		LogoContentType: ptr("image/jpeg"),
-	}, true)
+	})
 	require.NoError(t, err)
 
 	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)

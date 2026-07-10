@@ -110,11 +110,11 @@ func (c organizationStorageLogging) CreateOrganization(ctx context.Context, tena
 	return res, nil
 }
 
-func (c organizationStorageLogging) UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
+func (c organizationStorageLogging) UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {
 	c.logger.Debug(ctx, logger.LoggerMessageRequestStarted)
 	now := time.Now()
 
-	res, err := c.next.UpdateOrganization(ctx, tenantID, organization, updateLogo)
+	res, err := c.next.UpdateOrganization(ctx, tenantID, organization)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Uint64("organization_id", organization.ID),

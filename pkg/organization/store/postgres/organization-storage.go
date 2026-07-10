@@ -10,7 +10,10 @@ import (
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/common/storage"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/organization/model"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/organization/service"
 )
+
+var _ service.OrganizationStore = (*OrganizationStorage)(nil)
 
 // organizationColumns lists every column returned for a full Organization row,
 // deliberately excluding logo/logocontenttype: the logo is served separately
@@ -18,6 +21,24 @@ import (
 const organizationColumns = `
 	id, tenantid, name, description, country, city, contactuserid, websiteurl,
 	createdat, updatedat
+`
+
+const getOrganizationQuery = `
+	SELECT ` + organizationColumns + `
+	FROM organizations
+	WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
+`
+
+const listOrganizationsQuery = `
+	SELECT ` + organizationColumns + `
+	FROM organizations
+	WHERE tenantid = $1 AND deletedat IS NULL
+`
+
+const createOrganizationQuery = `
+	INSERT INTO organizations (tenantid, name, description, logo, logocontenttype, country, city, contactuserid, websiteurl, createdat, updatedat)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+	RETURNING ` + organizationColumns + `;
 `
 
 // OrganizationStorage is the handler through which a PostgresDB backend can be queried.
@@ -31,14 +52,8 @@ func NewOrganizationStorage(db *sqlx.DB) *OrganizationStorage {
 }
 
 func (s *OrganizationStorage) GetOrganization(ctx context.Context, tenantID, id uint64) (*model.Organization, error) {
-	query := fmt.Sprintf(`
-		SELECT %s
-		FROM organizations
-		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
-	`, organizationColumns)
-
 	var organization model.Organization
-	if err := s.db.GetContext(ctx, &organization, query, tenantID, id); err != nil {
+	if err := s.db.GetContext(ctx, &organization, getOrganizationQuery, tenantID, id); err != nil {
 		return nil, err
 	}
 
@@ -71,14 +86,8 @@ func (s *OrganizationStorage) ListOrganizations(ctx context.Context, tenantID ui
 		return nil, nil, err
 	}
 
-	query := fmt.Sprintf(`
-		SELECT %s
-		FROM organizations
-		WHERE tenantid = $1 AND deletedat IS NULL
-	`, organizationColumns)
-
 	clause, validatedPagination := storage.BuildPaginationClause(pagination, model.Organization{})
-	query += clause
+	query := listOrganizationsQuery + clause
 
 	paginationRes := &common_model.PaginationResult{Total: uint64(totalCount)}
 	if validatedPagination != nil {
@@ -96,14 +105,8 @@ func (s *OrganizationStorage) ListOrganizations(ctx context.Context, tenantID ui
 }
 
 func (s *OrganizationStorage) CreateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {
-	query := fmt.Sprintf(`
-		INSERT INTO organizations (tenantid, name, description, logo, logocontenttype, country, city, contactuserid, websiteurl, createdat, updatedat)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-		RETURNING %s;
-	`, organizationColumns)
-
 	var created model.Organization
-	err := s.db.GetContext(ctx, &created, query,
+	err := s.db.GetContext(ctx, &created, createOrganizationQuery,
 		tenantID, organization.Name, organization.Description, organization.Logo, organization.LogoContentType,
 		organization.Country, organization.City, organization.ContactUserID, organization.WebsiteURL,
 	)
@@ -114,13 +117,15 @@ func (s *OrganizationStorage) CreateOrganization(ctx context.Context, tenantID u
 	return &created, nil
 }
 
-func (s *OrganizationStorage) UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
+func (s *OrganizationStorage) UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {
 	setLogoClause := ""
 	args := []interface{}{
 		tenantID, organization.ID, organization.Name, organization.Description,
 		organization.Country, organization.City, organization.ContactUserID, organization.WebsiteURL,
 	}
-	if updateLogo {
+	// An empty Logo means "not provided, leave the existing logo untouched" (see
+	// UpdateOrganizationReq.Logo's doc comment) - only non-empty logo bytes are written.
+	if len(organization.Logo) > 0 {
 		setLogoClause = ", logo = $9, logocontenttype = $10"
 		args = append(args, organization.Logo, organization.LogoContentType)
 	}

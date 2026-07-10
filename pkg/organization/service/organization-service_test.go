@@ -21,7 +21,7 @@ type mockOrganizationStore struct {
 	getFn    func(ctx context.Context, tenantID, id uint64) (*model.Organization, error)
 	logoFn   func(ctx context.Context, tenantID, id uint64) ([]byte, *string, error)
 	createFn func(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error)
-	updateFn func(ctx context.Context, tenantID uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error)
+	updateFn func(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error)
 	deleteFn func(ctx context.Context, tenantID, id uint64) error
 }
 
@@ -41,8 +41,8 @@ func (m *mockOrganizationStore) CreateOrganization(ctx context.Context, tenantID
 	return m.createFn(ctx, tenantID, organization)
 }
 
-func (m *mockOrganizationStore) UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
-	return m.updateFn(ctx, tenantID, organization, updateLogo)
+func (m *mockOrganizationStore) UpdateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {
+	return m.updateFn(ctx, tenantID, organization)
 }
 
 func (m *mockOrganizationStore) DeleteOrganization(ctx context.Context, tenantID, id uint64) error {
@@ -103,36 +103,11 @@ func TestOrganizationService_CreateOrganization_PassesLogoThrough(t *testing.T) 
 	assert.Equal(t, &contentType, gotOrganization.LogoContentType)
 }
 
-func TestOrganizationService_UpdateOrganization_OmittedLogoLeavesLogoUntouched(t *testing.T) {
-	var gotUpdateLogo bool
+func TestOrganizationService_UpdateOrganization_PassesLogoThrough(t *testing.T) {
 	var gotOrganization *model.Organization
 	store := &mockOrganizationStore{
-		updateFn: func(_ context.Context, _ uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
+		updateFn: func(_ context.Context, _ uint64, organization *model.Organization) (*model.Organization, error) {
 			gotOrganization = organization
-			gotUpdateLogo = updateLogo
-			return organization, nil
-		},
-	}
-	svc := NewOrganizationService(store)
-
-	_, err := svc.UpdateOrganization(context.Background(), UpdateOrganizationReq{
-		TenantID: testTenantID,
-		ID:       1,
-		Name:     "CHUV renamed",
-		// Logo intentionally omitted (nil).
-	})
-	require.NoError(t, err)
-	assert.False(t, gotUpdateLogo, "updateLogo must be false when the request omits the logo, so the store preserves the existing one")
-	assert.Nil(t, gotOrganization.Logo)
-}
-
-func TestOrganizationService_UpdateOrganization_ProvidedLogoReplacesExisting(t *testing.T) {
-	var gotUpdateLogo bool
-	var gotOrganization *model.Organization
-	store := &mockOrganizationStore{
-		updateFn: func(_ context.Context, _ uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
-			gotOrganization = organization
-			gotUpdateLogo = updateLogo
 			return organization, nil
 		},
 	}
@@ -148,15 +123,15 @@ func TestOrganizationService_UpdateOrganization_ProvidedLogoReplacesExisting(t *
 		LogoContentType: &contentType,
 	})
 	require.NoError(t, err)
-	assert.True(t, gotUpdateLogo, "updateLogo must be true when the request provides non-empty logo bytes")
-	assert.Equal(t, newLogo, gotOrganization.Logo)
+	assert.Equal(t, newLogo, gotOrganization.Logo, "the service must pass Logo through to the store as-is - deciding whether to write it is the store's job, not the service's")
+	assert.Equal(t, &contentType, gotOrganization.LogoContentType)
 }
 
-func TestOrganizationService_UpdateOrganization_EmptyLogoLeavesLogoUntouched(t *testing.T) {
-	var gotUpdateLogo bool
+func TestOrganizationService_UpdateOrganization_OmittedLogoPassesThroughEmpty(t *testing.T) {
+	var gotOrganization *model.Organization
 	store := &mockOrganizationStore{
-		updateFn: func(_ context.Context, _ uint64, organization *model.Organization, updateLogo bool) (*model.Organization, error) {
-			gotUpdateLogo = updateLogo
+		updateFn: func(_ context.Context, _ uint64, organization *model.Organization) (*model.Organization, error) {
+			gotOrganization = organization
 			return organization, nil
 		},
 	}
@@ -165,11 +140,11 @@ func TestOrganizationService_UpdateOrganization_EmptyLogoLeavesLogoUntouched(t *
 	_, err := svc.UpdateOrganization(context.Background(), UpdateOrganizationReq{
 		TenantID: testTenantID,
 		ID:       1,
-		Name:     "CHUV",
-		Logo:     []byte{},
+		Name:     "CHUV renamed",
+		// Logo intentionally omitted.
 	})
 	require.NoError(t, err)
-	assert.False(t, gotUpdateLogo, "an empty logo is treated the same as an omitted one - there is no way to clear an existing logo")
+	assert.Empty(t, gotOrganization.Logo)
 }
 
 func TestOrganizationService_DeleteOrganization(t *testing.T) {
