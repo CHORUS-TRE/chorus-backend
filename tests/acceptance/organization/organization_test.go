@@ -5,6 +5,7 @@ package organization_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
@@ -157,23 +158,34 @@ var _ = Describe("organization service", func() {
 		})
 	})
 
+	// GetOrganizationLogo returns a raw google.api.HttpBody response (binary bytes with
+	// their own Content-Type), not a JSON-shaped payload, so it can't be exercised through
+	// the generated OpenAPI client the way the other endpoints are - that client picks its
+	// response consumer based on the Content-Type header, and has no consumer registered
+	// for arbitrary image types. A plain HTTP request is used instead.
 	Describe("get organization logo", func() {
 
 		Given("a valid jwt-token with the authenticated role", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.RoleAuthenticated.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)}))
+			token := helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.RoleAuthenticated.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)})
 
 			When("the route GET '/api/rest/v1/organizations/{id}/logo' is called", func() {
 				setupTables()
-				req := organization.NewOrganizationServiceGetOrganizationLogoParams().WithID(orgFixtureID)
 
-				c := helpers.OrganizationServiceHTTPClient()
-				resp, err := c.OrganizationService.OrganizationServiceGetOrganizationLogo(req, auth)
+				httpReq, reqErr := http.NewRequest(http.MethodGet, "http://"+helpers.ComponentURL()+"/api/rest/v1/organizations/"+orgFixtureID+"/logo", nil)
+				Expect(reqErr).Should(BeNil())
+				httpReq.Header.Set("Authorization", "Bearer "+token)
+
+				resp, err := http.DefaultClient.Do(httpReq)
 
 				Then("the raw logo bytes and content type should be returned", func() {
-					ExpectAPIErr(err).Should(BeNil())
-					Expect(resp.Payload.ContentType).Should(Equal("image/png"))
-					Expect([]byte(resp.Payload.Data)).Should(Equal([]byte{0x89, 0x50, 0x4E, 0x47}))
+					Expect(err).Should(BeNil())
+					defer resp.Body.Close()
+					Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+					Expect(resp.Header.Get("Content-Type")).Should(Equal("image/png"))
+					body, readErr := io.ReadAll(resp.Body)
+					Expect(readErr).Should(BeNil())
+					Expect(body).Should(Equal([]byte{0x89, 0x50, 0x4E, 0x47}))
 				})
 				cleanTables()
 			})
