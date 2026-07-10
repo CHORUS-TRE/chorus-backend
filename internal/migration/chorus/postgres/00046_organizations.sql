@@ -7,16 +7,16 @@ CREATE TABLE public.organizations (
     tenantid BIGINT NOT NULL,
 
     name        TEXT NOT NULL,
-    description TEXT CHECK (length(description) <= 250),
+    description TEXT,
 
     logo            BYTEA,
     logocontenttype TEXT,
 
-    country VARCHAR(2) CHECK (country ~ '^[A-Z]{2}$'),
-    city    TEXT CHECK (length(city) <= 100),
+    country VARCHAR(2),
+    city    TEXT,
 
     contactuserid BIGINT NULL,
-    websiteurl    TEXT CHECK (length(websiteurl) <= 2048),
+    websiteurl    TEXT,
 
     createdat TIMESTAMP NOT NULL DEFAULT NOW(),
     updatedat TIMESTAMP NOT NULL DEFAULT NOW(),
