@@ -478,6 +478,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RolePlatformSettingsManager, nil
 	case string(RolePlateformUserManager):
 		return RolePlateformUserManager, nil
+	case string(RolePlatformOrganizationManager):
+		return RolePlatformOrganizationManager, nil
 	case string(RolePlatformAuditor):
 		return RolePlatformAuditor, nil
 	case string(RoleAppStoreAdmin):
@@ -486,8 +488,6 @@ func ToRoleName(r string) (RoleName, error) {
 		return RoleDataManager, nil
 	case string(RoleSuperAdmin):
 		return RoleSuperAdmin, nil
-	case string(RolePlatformOrganizationManager):
-		return RolePlatformOrganizationManager, nil
 	}
 
 	if strings.TrimSpace(r) == "" {
@@ -516,11 +516,11 @@ func GetAllRoles() []RoleName {
 		RoleHealthchecker,
 		RolePlatformSettingsManager,
 		RolePlateformUserManager,
+		RolePlatformOrganizationManager,
 		RolePlatformAuditor,
 		RoleAppStoreAdmin,
 		RoleDataManager,
 		RoleSuperAdmin,
-		RolePlatformOrganizationManager,
 	}
 }
 
