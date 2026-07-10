@@ -27,6 +27,8 @@ CREATE TABLE public.organizations (
     CONSTRAINT contactusercon FOREIGN KEY (contactuserid) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE INDEX idx_organizations_tenantid ON organizations(tenantid) WHERE deletedat IS NULL;
+
 -- +migrate Down
 
 DROP TABLE IF EXISTS public.organizations;
