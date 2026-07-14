@@ -42,17 +42,14 @@ func (c OrganizationController) ListOrganizations(ctx context.Context, req *chor
 
 	pagination := converter.PaginationToBusiness(req.Pagination)
 
-	organizations, paginationRes, err := c.organization.ListOrganizations(ctx, service.ListOrganizationsReq{
-		TenantID:   tenantID,
-		Pagination: &pagination,
-	})
+	organizations, paginationRes, err := c.organization.ListOrganizations(ctx, tenantID, &pagination)
 	if err != nil {
 		return nil, err
 	}
 
-	protoOrganizations := make([]*chorus.Organization, 0, len(organizations))
+	protoOrganizations := make([]*chorus.OrganizationSummary, 0, len(organizations))
 	for _, organization := range organizations {
-		proto, err := converter.OrganizationFromBusiness(organization)
+		proto, err := converter.OrganizationSummaryFromBusiness(organization)
 		if err != nil {
 			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 		}
@@ -75,12 +72,12 @@ func (c OrganizationController) GetOrganization(ctx context.Context, req *chorus
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	organization, err := c.organization.GetOrganization(ctx, service.GetOrganizationReq{TenantID: tenantID, ID: req.Id})
+	organization, err := c.organization.GetOrganization(ctx, tenantID, req.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	proto, err := converter.OrganizationFromBusiness(organization)
+	proto, err := converter.OrganizationSummaryFromBusiness(organization)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 	}
@@ -98,11 +95,11 @@ func (c OrganizationController) GetOrganizationLogo(ctx context.Context, req *ch
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	logo, contentType, err := c.organization.GetOrganizationLogo(ctx, service.GetOrganizationLogoReq{TenantID: tenantID, ID: req.Id})
+	logo, err := c.organization.GetOrganizationLogo(ctx, tenantID, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	if len(logo) == 0 || contentType == nil {
+	if len(logo.Logo) == 0 || logo.LogoContentType == "" {
 		return nil, cerr.ErrNotFound.WithMessage(fmt.Sprintf("organization %d has no logo", req.Id))
 	}
 
@@ -111,12 +108,12 @@ func (c OrganizationController) GetOrganizationLogo(ctx context.Context, req *ch
 	}
 
 	return &httpbody.HttpBody{
-		ContentType: *contentType,
-		Data:        logo,
+		ContentType: logo.LogoContentType,
+		Data:        logo.Logo,
 	}, nil
 }
 
-func (c OrganizationController) CreateOrganization(ctx context.Context, req *chorus.CreateOrganizationRequest) (*chorus.CreateOrganizationReply, error) {
+func (c OrganizationController) CreateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.CreateOrganizationReply, error) {
 	if req == nil {
 		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
@@ -126,22 +123,15 @@ func (c OrganizationController) CreateOrganization(ctx context.Context, req *cho
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	organization, err := c.organization.CreateOrganization(ctx, service.CreateOrganizationReq{
-		TenantID:        tenantID,
-		Name:            req.Name,
-		Description:     req.Description,
-		Logo:            req.Logo,
-		LogoContentType: req.LogoContentType,
-		Country:         req.Country,
-		City:            req.City,
-		ContactUserID:   req.ContactUserId,
-		WebsiteURL:      req.WebsiteUrl,
-	})
+	organization := converter.OrganizationToBusiness(req)
+	organization.TenantID = tenantID
+
+	createdOrganization, err := c.organization.CreateOrganization(ctx, organization)
 	if err != nil {
 		return nil, err
 	}
 
-	proto, err := converter.OrganizationFromBusiness(organization)
+	proto, err := converter.OrganizationSummaryFromBusiness(createdOrganization)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 	}
@@ -149,7 +139,7 @@ func (c OrganizationController) CreateOrganization(ctx context.Context, req *cho
 	return &chorus.CreateOrganizationReply{Result: &chorus.CreateOrganizationResult{Organization: proto}}, nil
 }
 
-func (c OrganizationController) UpdateOrganization(ctx context.Context, req *chorus.UpdateOrganizationRequest) (*chorus.UpdateOrganizationReply, error) {
+func (c OrganizationController) UpdateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.UpdateOrganizationReply, error) {
 	if req == nil {
 		return nil, cerr.ErrInvalidRequest.WithMessage("Empty request")
 	}
@@ -159,23 +149,15 @@ func (c OrganizationController) UpdateOrganization(ctx context.Context, req *cho
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	organization, err := c.organization.UpdateOrganization(ctx, service.UpdateOrganizationReq{
-		TenantID:        tenantID,
-		ID:              req.Id,
-		Name:            req.Name,
-		Description:     req.Description,
-		Logo:            req.Logo,
-		LogoContentType: req.LogoContentType,
-		Country:         req.Country,
-		City:            req.City,
-		ContactUserID:   req.ContactUserId,
-		WebsiteURL:      req.WebsiteUrl,
-	})
+	organization := converter.OrganizationToBusiness(req)
+	organization.TenantID = tenantID
+
+	updatedOrganization, err := c.organization.UpdateOrganization(ctx, organization)
 	if err != nil {
 		return nil, err
 	}
 
-	proto, err := converter.OrganizationFromBusiness(organization)
+	proto, err := converter.OrganizationSummaryFromBusiness(updatedOrganization)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 	}
@@ -193,7 +175,7 @@ func (c OrganizationController) DeleteOrganization(ctx context.Context, req *cho
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	if err := c.organization.DeleteOrganization(ctx, service.DeleteOrganizationReq{TenantID: tenantID, ID: req.Id}); err != nil {
+	if err := c.organization.DeleteOrganization(ctx, tenantID, req.Id); err != nil {
 		return nil, err
 	}
 

@@ -8,21 +8,31 @@ type Organization struct {
 
 	TenantID uint64
 
-	Name        string
-	Description *string
+	Name        string  `validate:"required,generalstring,max=255"`
+	Description *string `validate:"omitempty,max=250,generalstring"`
 
-	Logo            []byte
-	LogoContentType *string
+	// Logo is nil when no logo is being written - there is no way to clear an
+	// existing logo via update, only add one or replace it with another.
+	Logo *OrganizationLogo
 
-	Country *string
-	City    *string
+	Country *string `validate:"omitempty,iso3166_1_alpha2"`
+	City    *string `validate:"omitempty,max=100,generalstring"`
 
 	ContactUserID *uint64
-	WebsiteURL    *string
+	WebsiteURL    *string `validate:"omitempty,max=2048,url"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+}
+
+// OrganizationLogo bundles the logo bytes with their content type so the two can
+// never be provided independently - the pair is validated together whenever this
+// struct is present (go-playground/validator dives into non-nil struct pointers
+// automatically), and skipped entirely when nil. max=524288 is 512 KB.
+type OrganizationLogo struct {
+	Logo            []byte `validate:"required,max=524288"`
+	LogoContentType string `validate:"required,oneof=image/png image/jpeg image/webp"`
 }
 
 func (Organization) IsValidSortType(sortType string) bool {

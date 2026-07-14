@@ -14,14 +14,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusOrganization Organization carries every field, including the logo. It is only used as the
-// input to CreateOrganization/UpdateOrganization - every read path (list, get,
-// and the replies of create/update) uses OrganizationSummary instead, which
-// omits the logo so its bytes are never inlined into a JSON response. Fetch
-// the logo separately via GetOrganizationLogo.
+// ChorusOrganizationSummary OrganizationSummary is Organization without the logo bytes.
 //
-// swagger:model chorusOrganization
-type ChorusOrganization struct {
+// swagger:model chorusOrganizationSummary
+type ChorusOrganizationSummary struct {
 
 	// city
 	City string `json:"city,omitempty"`
@@ -42,13 +38,6 @@ type ChorusOrganization struct {
 	// id
 	ID string `json:"id,omitempty"`
 
-	// logo
-	// Format: byte
-	Logo strfmt.Base64 `json:"logo,omitempty"`
-
-	// logo content type
-	LogoContentType string `json:"logoContentType,omitempty"`
-
 	// name
 	Name string `json:"name,omitempty"`
 
@@ -63,8 +52,8 @@ type ChorusOrganization struct {
 	WebsiteURL string `json:"websiteUrl,omitempty"`
 }
 
-// Validate validates this chorus organization
-func (m *ChorusOrganization) Validate(formats strfmt.Registry) error {
+// Validate validates this chorus organization summary
+func (m *ChorusOrganizationSummary) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCreatedAt(formats); err != nil {
@@ -81,7 +70,7 @@ func (m *ChorusOrganization) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusOrganization) validateCreatedAt(formats strfmt.Registry) error {
+func (m *ChorusOrganizationSummary) validateCreatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
@@ -93,7 +82,7 @@ func (m *ChorusOrganization) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ChorusOrganization) validateUpdatedAt(formats strfmt.Registry) error {
+func (m *ChorusOrganizationSummary) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
 	}
@@ -105,13 +94,13 @@ func (m *ChorusOrganization) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus organization based on context it is used
-func (m *ChorusOrganization) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this chorus organization summary based on context it is used
+func (m *ChorusOrganizationSummary) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ChorusOrganization) MarshalBinary() ([]byte, error) {
+func (m *ChorusOrganizationSummary) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -119,8 +108,8 @@ func (m *ChorusOrganization) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ChorusOrganization) UnmarshalBinary(b []byte) error {
-	var res ChorusOrganization
+func (m *ChorusOrganizationSummary) UnmarshalBinary(b []byte) error {
+	var res ChorusOrganizationSummary
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

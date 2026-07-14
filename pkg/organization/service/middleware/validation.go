@@ -25,59 +25,32 @@ func Validation(validate *val.Validate) func(service.Organizationer) service.Org
 	}
 }
 
-func (v validation) ListOrganizations(ctx context.Context, req service.ListOrganizationsReq) ([]*model.Organization, *common.PaginationResult, error) {
-	if err := v.validate.Struct(req); err != nil {
-		return nil, nil, cerr.WrapValidationError(err)
-	}
-	return v.next.ListOrganizations(ctx, req)
+func (v validation) ListOrganizations(ctx context.Context, tenantID uint64, pagination *common.Pagination) ([]*model.Organization, *common.PaginationResult, error) {
+	return v.next.ListOrganizations(ctx, tenantID, pagination)
 }
 
-func (v validation) GetOrganization(ctx context.Context, req service.GetOrganizationReq) (*model.Organization, error) {
-	if err := v.validate.Struct(req); err != nil {
+func (v validation) GetOrganization(ctx context.Context, tenantID, id uint64) (*model.Organization, error) {
+	return v.next.GetOrganization(ctx, tenantID, id)
+}
+
+func (v validation) GetOrganizationLogo(ctx context.Context, tenantID, id uint64) (*model.OrganizationLogo, error) {
+	return v.next.GetOrganizationLogo(ctx, tenantID, id)
+}
+
+func (v validation) CreateOrganization(ctx context.Context, organization *model.Organization) (*model.Organization, error) {
+	if err := v.validate.Struct(organization); err != nil {
 		return nil, cerr.WrapValidationError(err)
 	}
-	return v.next.GetOrganization(ctx, req)
+	return v.next.CreateOrganization(ctx, organization)
 }
 
-func (v validation) GetOrganizationLogo(ctx context.Context, req service.GetOrganizationLogoReq) ([]byte, *string, error) {
-	if err := v.validate.Struct(req); err != nil {
-		return nil, nil, cerr.WrapValidationError(err)
-	}
-	return v.next.GetOrganizationLogo(ctx, req)
-}
-
-func (v validation) CreateOrganization(ctx context.Context, req service.CreateOrganizationReq) (*model.Organization, error) {
-	if err := v.validate.Struct(req); err != nil {
+func (v validation) UpdateOrganization(ctx context.Context, organization *model.Organization) (*model.Organization, error) {
+	if err := v.validate.Struct(organization); err != nil {
 		return nil, cerr.WrapValidationError(err)
 	}
-	if err := validateLogoContentTypePairing(req.Logo, req.LogoContentType); err != nil {
-		return nil, err
-	}
-	return v.next.CreateOrganization(ctx, req)
+	return v.next.UpdateOrganization(ctx, organization)
 }
 
-func (v validation) UpdateOrganization(ctx context.Context, req service.UpdateOrganizationReq) (*model.Organization, error) {
-	if err := v.validate.Struct(req); err != nil {
-		return nil, cerr.WrapValidationError(err)
-	}
-	if err := validateLogoContentTypePairing(req.Logo, req.LogoContentType); err != nil {
-		return nil, err
-	}
-	return v.next.UpdateOrganization(ctx, req)
-}
-
-// validateLogoContentTypePairing enforces that logo bytes and their content type are
-// always provided together - an empty logo means "not provided", not "provided empty".
-func validateLogoContentTypePairing(logo []byte, logoContentType *string) error {
-	if (len(logo) > 0) != (logoContentType != nil) {
-		return cerr.ErrValidation.WithMessage("Logo and LogoContentType must be provided together")
-	}
-	return nil
-}
-
-func (v validation) DeleteOrganization(ctx context.Context, req service.DeleteOrganizationReq) error {
-	if err := v.validate.Struct(req); err != nil {
-		return cerr.WrapValidationError(err)
-	}
-	return v.next.DeleteOrganization(ctx, req)
+func (v validation) DeleteOrganization(ctx context.Context, tenantID, id uint64) error {
+	return v.next.DeleteOrganization(ctx, tenantID, id)
 }

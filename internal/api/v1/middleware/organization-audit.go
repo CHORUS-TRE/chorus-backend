@@ -43,7 +43,7 @@ func (c organizationControllerAudit) GetOrganizationLogo(ctx context.Context, re
 	return c.next.GetOrganizationLogo(ctx, req)
 }
 
-func (c organizationControllerAudit) CreateOrganization(ctx context.Context, req *chorus.CreateOrganizationRequest) (*chorus.CreateOrganizationReply, error) {
+func (c organizationControllerAudit) CreateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.CreateOrganizationReply, error) {
 	res, err := c.next.CreateOrganization(ctx, req)
 
 	opts := []audit.Option{}
@@ -64,7 +64,7 @@ func (c organizationControllerAudit) CreateOrganization(ctx context.Context, req
 	return res, err
 }
 
-func (c organizationControllerAudit) UpdateOrganization(ctx context.Context, req *chorus.UpdateOrganizationRequest) (*chorus.UpdateOrganizationReply, error) {
+func (c organizationControllerAudit) UpdateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.UpdateOrganizationReply, error) {
 	res, err := c.next.UpdateOrganization(ctx, req)
 
 	opts := []audit.Option{audit.WithDetail("organization_id", req.GetId())}

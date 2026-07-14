@@ -48,14 +48,13 @@ func TestOrganizationStorage_CreateAndGetOrganization(t *testing.T) {
 	ctx := context.Background()
 
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
-		Name:            "CHUV",
-		Description:     ptr("A description"),
-		Logo:            []byte{0x89, 0x50, 0x4E, 0x47},
-		LogoContentType: ptr("image/png"),
-		Country:         ptr("CH"),
-		City:            ptr("Lausanne"),
-		ContactUserID:   ptr(orgTestUserID),
-		WebsiteURL:      ptr("https://www.chuv.ch/"),
+		Name:          "CHUV",
+		Description:   ptr("A description"),
+		Logo:          &model.OrganizationLogo{Logo: []byte{0x89, 0x50, 0x4E, 0x47}, LogoContentType: "image/png"},
+		Country:       ptr("CH"),
+		City:          ptr("Lausanne"),
+		ContactUserID: ptr(orgTestUserID),
+		WebsiteURL:    ptr("https://www.chuv.ch/"),
 	})
 	require.NoError(t, err)
 	require.NotZero(t, created.ID)
@@ -63,7 +62,6 @@ func TestOrganizationStorage_CreateAndGetOrganization(t *testing.T) {
 	require.Equal(t, "CH", *created.Country)
 	require.Equal(t, orgTestUserID, *created.ContactUserID)
 	require.Nil(t, created.Logo, "Create must not return the logo bytes, consistent with Get/List")
-	require.Nil(t, created.LogoContentType)
 
 	fetched, err := store.GetOrganization(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
@@ -71,10 +69,10 @@ func TestOrganizationStorage_CreateAndGetOrganization(t *testing.T) {
 	require.Equal(t, "CHUV", fetched.Name)
 	require.Nil(t, fetched.Logo, "GetOrganization must not return the logo bytes")
 
-	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
+	logo, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
-	require.Equal(t, []byte{0x89, 0x50, 0x4E, 0x47}, logo)
-	require.Equal(t, "image/png", *contentType)
+	require.Equal(t, []byte{0x89, 0x50, 0x4E, 0x47}, logo.Logo)
+	require.Equal(t, "image/png", logo.LogoContentType)
 }
 
 func TestOrganizationStorage_GetOrganizationLogo_NullColumnScansCleanly(t *testing.T) {
@@ -89,10 +87,10 @@ func TestOrganizationStorage_GetOrganizationLogo_NullColumnScansCleanly(t *testi
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{Name: "CHUV"})
 	require.NoError(t, err)
 
-	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
+	logo, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err, "a NULL logo column must scan cleanly into []byte, not error like it would for a plain string")
-	require.Empty(t, logo, "a NULL bytea column scans as an empty (but non-nil) []byte, not nil")
-	require.Nil(t, contentType)
+	require.Empty(t, logo.Logo, "a NULL bytea column scans as an empty []byte")
+	require.Empty(t, logo.LogoContentType)
 }
 
 func TestOrganizationStorage_GetOrganization_WrongTenantNotFound(t *testing.T) {
@@ -170,9 +168,8 @@ func TestOrganizationStorage_UpdateOrganization_WithoutLogoPreservesExisting(t *
 	ctx := context.Background()
 
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
-		Name:            "CHUV",
-		Logo:            []byte{0x01, 0x02, 0x03},
-		LogoContentType: ptr("image/png"),
+		Name: "CHUV",
+		Logo: &model.OrganizationLogo{Logo: []byte{0x01, 0x02, 0x03}, LogoContentType: "image/png"},
 	})
 	require.NoError(t, err)
 
@@ -183,10 +180,10 @@ func TestOrganizationStorage_UpdateOrganization_WithoutLogoPreservesExisting(t *
 	require.NoError(t, err)
 	require.Equal(t, "CHUV Renamed", updated.Name)
 
-	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
+	logo, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
-	require.Equal(t, []byte{0x01, 0x02, 0x03}, logo, "logo must be preserved when the update provides an empty Logo")
-	require.Equal(t, "image/png", *contentType)
+	require.Equal(t, []byte{0x01, 0x02, 0x03}, logo.Logo, "logo must be preserved when the update omits Logo")
+	require.Equal(t, "image/png", logo.LogoContentType)
 }
 
 func TestOrganizationStorage_UpdateOrganization_WithLogoReplacesExisting(t *testing.T) {
@@ -199,24 +196,22 @@ func TestOrganizationStorage_UpdateOrganization_WithLogoReplacesExisting(t *test
 	ctx := context.Background()
 
 	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
-		Name:            "CHUV",
-		Logo:            []byte{0x01, 0x02, 0x03},
-		LogoContentType: ptr("image/png"),
+		Name: "CHUV",
+		Logo: &model.OrganizationLogo{Logo: []byte{0x01, 0x02, 0x03}, LogoContentType: "image/png"},
 	})
 	require.NoError(t, err)
 
 	_, err = store.UpdateOrganization(ctx, orgTestTenantID, &model.Organization{
-		ID:              created.ID,
-		Name:            "CHUV",
-		Logo:            []byte{0xFF, 0xD8, 0xFF},
-		LogoContentType: ptr("image/jpeg"),
+		ID:   created.ID,
+		Name: "CHUV",
+		Logo: &model.OrganizationLogo{Logo: []byte{0xFF, 0xD8, 0xFF}, LogoContentType: "image/jpeg"},
 	})
 	require.NoError(t, err)
 
-	logo, contentType, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
+	logo, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err)
-	require.Equal(t, []byte{0xFF, 0xD8, 0xFF}, logo)
-	require.Equal(t, "image/jpeg", *contentType)
+	require.Equal(t, []byte{0xFF, 0xD8, 0xFF}, logo.Logo)
+	require.Equal(t, "image/jpeg", logo.LogoContentType)
 }
 
 func TestOrganizationStorage_DeleteOrganization_NotFoundReturnsErrNoRowsDeleted(t *testing.T) {

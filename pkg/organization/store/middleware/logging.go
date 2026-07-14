@@ -68,25 +68,25 @@ func (c organizationStorageLogging) GetOrganization(ctx context.Context, tenantI
 	return res, nil
 }
 
-func (c organizationStorageLogging) GetOrganizationLogo(ctx context.Context, tenantID, id uint64) ([]byte, *string, error) {
+func (c organizationStorageLogging) GetOrganizationLogo(ctx context.Context, tenantID, id uint64) (*model.OrganizationLogo, error) {
 	c.logger.Debug(ctx, logger.LoggerMessageRequestStarted)
 	now := time.Now()
 
-	logo, contentType, err := c.next.GetOrganizationLogo(ctx, tenantID, id)
+	logo, err := c.next.GetOrganizationLogo(ctx, tenantID, id)
 	if err != nil {
 		c.logger.Error(ctx, logger.LoggerMessageRequestFailed,
 			zap.Uint64("organization_id", id),
 			zap.Error(err),
 			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 		)
-		return nil, nil, err
+		return nil, err
 	}
 
 	c.logger.Debug(ctx, logger.LoggerMessageRequestCompleted,
 		zap.Uint64("organization_id", id),
 		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
 	)
-	return logo, contentType, nil
+	return logo, nil
 }
 
 func (c organizationStorageLogging) CreateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {

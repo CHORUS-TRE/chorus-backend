@@ -20,7 +20,7 @@ import (
 type ChorusListOrganizationsResult struct {
 
 	// organizations
-	Organizations []*ChorusOrganization `json:"organizations"`
+	Organizations []*ChorusOrganizationSummary `json:"organizations"`
 }
 
 // Validate validates this chorus list organizations result

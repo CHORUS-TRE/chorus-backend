@@ -200,7 +200,7 @@ var _ = Describe("organization service", func() {
 
 			When("the route POST '/api/rest/v1/organizations' is called", func() {
 				req := organization.NewOrganizationServiceCreateOrganizationParams().WithBody(
-					&models.ChorusCreateOrganizationRequest{Name: "New Org"},
+					&models.ChorusOrganization{Name: "New Org"},
 				)
 
 				c := helpers.OrganizationServiceHTTPClient()
@@ -222,7 +222,7 @@ var _ = Describe("organization service", func() {
 				When("the route POST '/api/rest/v1/organizations' is called", func() {
 					setupBaseTables()
 					req := organization.NewOrganizationServiceCreateOrganizationParams().WithBody(
-						&models.ChorusCreateOrganizationRequest{Name: "New Org"},
+						&models.ChorusOrganization{Name: "New Org"},
 					)
 
 					c := helpers.OrganizationServiceHTTPClient()
@@ -244,7 +244,7 @@ var _ = Describe("organization service", func() {
 			When("the route POST '/api/rest/v1/organizations' is called", func() {
 				setupBaseTables()
 				req := organization.NewOrganizationServiceCreateOrganizationParams().WithBody(
-					&models.ChorusCreateOrganizationRequest{
+					&models.ChorusOrganization{
 						Name:        "EPFL",
 						Description: "A description",
 						Country:     "CH",

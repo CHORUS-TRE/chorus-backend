@@ -144,7 +144,7 @@ func local_request_OrganizationService_GetOrganizationLogo_0(ctx context.Context
 
 func request_OrganizationService_CreateOrganization_0(ctx context.Context, marshaler runtime.Marshaler, client OrganizationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CreateOrganizationRequest
+		protoReq Organization
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -156,7 +156,7 @@ func request_OrganizationService_CreateOrganization_0(ctx context.Context, marsh
 
 func local_request_OrganizationService_CreateOrganization_0(ctx context.Context, marshaler runtime.Marshaler, server OrganizationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CreateOrganizationRequest
+		protoReq Organization
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -168,7 +168,7 @@ func local_request_OrganizationService_CreateOrganization_0(ctx context.Context,
 
 func request_OrganizationService_UpdateOrganization_0(ctx context.Context, marshaler runtime.Marshaler, client OrganizationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateOrganizationRequest
+		protoReq Organization
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -189,7 +189,7 @@ func request_OrganizationService_UpdateOrganization_0(ctx context.Context, marsh
 
 func local_request_OrganizationService_UpdateOrganization_0(ctx context.Context, marshaler runtime.Marshaler, server OrganizationServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateOrganizationRequest
+		protoReq Organization
 		metadata runtime.ServerMetadata
 		err      error
 	)

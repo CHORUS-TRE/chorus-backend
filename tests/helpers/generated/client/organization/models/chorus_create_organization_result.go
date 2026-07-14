@@ -19,7 +19,7 @@ import (
 type ChorusCreateOrganizationResult struct {
 
 	// organization
-	Organization *ChorusOrganization `json:"organization,omitempty"`
+	Organization *ChorusOrganizationSummary `json:"organization,omitempty"`
 }
 
 // Validate validates this chorus create organization result

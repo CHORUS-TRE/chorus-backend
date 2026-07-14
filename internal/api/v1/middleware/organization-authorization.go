@@ -55,7 +55,7 @@ func (c organizationControllerAuthorization) GetOrganizationLogo(ctx context.Con
 	return c.next.GetOrganizationLogo(ctx, req)
 }
 
-func (c organizationControllerAuthorization) CreateOrganization(ctx context.Context, req *chorus.CreateOrganizationRequest) (*chorus.CreateOrganizationReply, error) {
+func (c organizationControllerAuthorization) CreateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.CreateOrganizationReply, error) {
 	if err := c.IsAuthorized(ctx, authorization.PermissionCreateOrganization); err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c organizationControllerAuthorization) CreateOrganization(ctx context.Cont
 	return c.next.CreateOrganization(ctx, req)
 }
 
-func (c organizationControllerAuthorization) UpdateOrganization(ctx context.Context, req *chorus.UpdateOrganizationRequest) (*chorus.UpdateOrganizationReply, error) {
+func (c organizationControllerAuthorization) UpdateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.UpdateOrganizationReply, error) {
 	if err := c.IsAuthorized(ctx, authorization.PermissionUpdateOrganization); err != nil {
 		return nil, err
 	}

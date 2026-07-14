@@ -32,7 +32,7 @@ message ListOrganizationsReply {
     optional PaginationResult pagination = 2;
 }
 message ListOrganizationsResult {
-    repeated Organization organizations = 1;
+    repeated OrganizationSummary organizations = 1;
 }
 
 message GetOrganizationRequest {
@@ -42,46 +42,25 @@ message GetOrganizationReply {
     GetOrganizationResult result = 1;
 }
 message GetOrganizationResult {
-    Organization organization = 1;
+    OrganizationSummary organization = 1;
 }
 
 message GetOrganizationLogoRequest {
     uint64 id = 1;
 }
 
-message CreateOrganizationRequest {
-    string name = 1;
-    optional string description = 2;
-    optional bytes logo = 3;
-    optional string logo_content_type = 4;
-    optional string country = 5;
-    optional string city = 6;
-    optional uint64 contact_user_id = 7;
-    optional string website_url = 8;
-}
 message CreateOrganizationReply {
     CreateOrganizationResult result = 1;
 }
 message CreateOrganizationResult {
-    Organization organization = 1;
+    OrganizationSummary organization = 1;
 }
 
-message UpdateOrganizationRequest {
-    uint64 id = 1;
-    string name = 2;
-    optional string description = 3;
-    optional bytes logo = 4;
-    optional string logo_content_type = 5;
-    optional string country = 6;
-    optional string city = 7;
-    optional uint64 contact_user_id = 8;
-    optional string website_url = 9;
-}
 message UpdateOrganizationReply {
     UpdateOrganizationResult result = 1;
 }
 message UpdateOrganizationResult {
-    Organization organization = 1;
+    OrganizationSummary organization = 1;
 }
 
 message DeleteOrganizationRequest {
@@ -127,7 +106,7 @@ service OrganizationService {
         };
     };
 
-    rpc CreateOrganization(CreateOrganizationRequest) returns (CreateOrganizationReply) {
+    rpc CreateOrganization(Organization) returns (CreateOrganizationReply) {
         option (google.api.http) = {
             post: "/api/rest/v1/organizations";
             body: "*"
@@ -139,7 +118,7 @@ service OrganizationService {
         };
     };
 
-    rpc UpdateOrganization(UpdateOrganizationRequest) returns (UpdateOrganizationReply) {
+    rpc UpdateOrganization(Organization) returns (UpdateOrganizationReply) {
         option (google.api.http) = {
             put: "/api/rest/v1/organizations/{id}";
             body: "*"

@@ -167,7 +167,7 @@ service WorkspaceService {
 
     rpc UpdateWorkspace(Workspace) returns (UpdateWorkspaceReply) {
         option (google.api.http) = {
-            put: "/api/rest/v1/workspaces";
+            put: "/api/rest/v1/workspaces/{id}";
             body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

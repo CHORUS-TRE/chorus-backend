@@ -60,22 +60,19 @@ func (s *OrganizationStorage) GetOrganization(ctx context.Context, tenantID, id 
 	return &organization, nil
 }
 
-func (s *OrganizationStorage) GetOrganizationLogo(ctx context.Context, tenantID, id uint64) ([]byte, *string, error) {
+func (s *OrganizationStorage) GetOrganizationLogo(ctx context.Context, tenantID, id uint64) (*model.OrganizationLogo, error) {
 	const query = `
 		SELECT logo, logocontenttype
 		FROM organizations
 		WHERE tenantid = $1 AND id = $2 AND deletedat IS NULL;
 	`
 
-	var row struct {
-		Logo            []byte
-		LogoContentType *string
-	}
-	if err := s.db.GetContext(ctx, &row, query, tenantID, id); err != nil {
-		return nil, nil, err
+	var logo model.OrganizationLogo
+	if err := s.db.GetContext(ctx, &logo, query, tenantID, id); err != nil {
+		return nil, err
 	}
 
-	return row.Logo, row.LogoContentType, nil
+	return &logo, nil
 }
 
 func (s *OrganizationStorage) ListOrganizations(ctx context.Context, tenantID uint64, pagination *common_model.Pagination) ([]*model.Organization, *common_model.PaginationResult, error) {
@@ -105,9 +102,16 @@ func (s *OrganizationStorage) ListOrganizations(ctx context.Context, tenantID ui
 }
 
 func (s *OrganizationStorage) CreateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {
+	var logo []byte
+	var logoContentType string
+	if organization.Logo != nil {
+		logo = organization.Logo.Logo
+		logoContentType = organization.Logo.LogoContentType
+	}
+
 	var created model.Organization
 	err := s.db.GetContext(ctx, &created, createOrganizationQuery,
-		tenantID, organization.Name, organization.Description, organization.Logo, organization.LogoContentType,
+		tenantID, organization.Name, organization.Description, logo, logoContentType,
 		organization.Country, organization.City, organization.ContactUserID, organization.WebsiteURL,
 	)
 	if err != nil {
@@ -123,11 +127,11 @@ func (s *OrganizationStorage) UpdateOrganization(ctx context.Context, tenantID u
 		tenantID, organization.ID, organization.Name, organization.Description,
 		organization.Country, organization.City, organization.ContactUserID, organization.WebsiteURL,
 	}
-	// An empty Logo means "not provided, leave the existing logo untouched" (see
-	// UpdateOrganizationReq.Logo's doc comment) - only non-empty logo bytes are written.
-	if len(organization.Logo) > 0 {
+	// A nil Logo means "not provided, leave the existing logo untouched" (see
+	// model.Organization.Logo's doc comment).
+	if organization.Logo != nil {
 		setLogoClause = ", logo = $9, logocontenttype = $10"
-		args = append(args, organization.Logo, organization.LogoContentType)
+		args = append(args, organization.Logo.Logo, organization.Logo.LogoContentType)
 	}
 
 	query := fmt.Sprintf(`

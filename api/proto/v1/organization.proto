@@ -4,7 +4,34 @@ option go_package = ".;chorus";
 
 import "google/protobuf/timestamp.proto";
 
+// Organization carries every field, including the logo. It is only used as the
+// input to CreateOrganization/UpdateOrganization - every read path (list, get,
+// and the replies of create/update) uses OrganizationSummary instead, which
+// omits the logo so its bytes are never inlined into a JSON response. Fetch
+// the logo separately via GetOrganizationLogo.
 message Organization {
+    uint64 id = 1;
+
+    uint64 tenant_id = 2;
+
+    string name = 3;
+    string description = 4;
+
+    bytes logo = 5;
+    string logo_content_type = 6;
+
+    string country = 7;
+    string city = 8;
+
+    uint64 contact_user_id = 9;
+    string website_url = 10;
+
+    google.protobuf.Timestamp created_at = 11;
+    google.protobuf.Timestamp updated_at = 12;
+}
+
+// OrganizationSummary is Organization without the logo bytes.
+message OrganizationSummary {
     uint64 id = 1;
 
     uint64 tenant_id = 2;

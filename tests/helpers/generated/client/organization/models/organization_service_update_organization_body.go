@@ -8,11 +8,17 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
-// OrganizationServiceUpdateOrganizationBody organization service update organization body
+// OrganizationServiceUpdateOrganizationBody Organization carries every field, including the logo. It is only used as the
+// input to CreateOrganization/UpdateOrganization - every read path (list, get,
+// and the replies of create/update) uses OrganizationSummary instead, which
+// omits the logo so its bytes are never inlined into a JSON response. Fetch
+// the logo separately via GetOrganizationLogo.
 //
 // swagger:model OrganizationServiceUpdateOrganizationBody
 type OrganizationServiceUpdateOrganizationBody struct {
@@ -25,6 +31,10 @@ type OrganizationServiceUpdateOrganizationBody struct {
 
 	// country
 	Country string `json:"country,omitempty"`
+
+	// created at
+	// Format: date-time
+	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -39,12 +49,56 @@ type OrganizationServiceUpdateOrganizationBody struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// tenant Id
+	TenantID string `json:"tenantId,omitempty"`
+
+	// updated at
+	// Format: date-time
+	UpdatedAt strfmt.DateTime `json:"updatedAt,omitempty"`
+
 	// website Url
 	WebsiteURL string `json:"websiteUrl,omitempty"`
 }
 
 // Validate validates this organization service update organization body
 func (m *OrganizationServiceUpdateOrganizationBody) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateCreatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUpdatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *OrganizationServiceUpdateOrganizationBody) validateCreatedAt(formats strfmt.Registry) error {
+	if swag.IsZero(m.CreatedAt) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *OrganizationServiceUpdateOrganizationBody) validateUpdatedAt(formats strfmt.Registry) error {
+	if swag.IsZero(m.UpdatedAt) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("updatedAt", "body", "date-time", m.UpdatedAt.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 

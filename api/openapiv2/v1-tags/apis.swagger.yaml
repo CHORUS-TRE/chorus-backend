@@ -2722,10 +2722,16 @@ paths:
             $ref: '#/definitions/chorusChorusErrorResponse'
       parameters:
         - name: body
+          description: |-
+            Organization carries every field, including the logo. It is only used as the
+            input to CreateOrganization/UpdateOrganization - every read path (list, get,
+            and the replies of create/update) uses OrganizationSummary instead, which
+            omits the logo so its bytes are never inlined into a JSON response. Fetch
+            the logo separately via GetOrganizationLogo.
           in: body
           required: true
           schema:
-            $ref: '#/definitions/chorusCreateOrganizationRequest'
+            $ref: '#/definitions/chorusOrganization'
       tags:
         - OrganizationService
   /api/rest/v1/organizations/{id}:
@@ -5946,6 +5952,9 @@ definitions:
   OrganizationServiceUpdateOrganizationBody:
     type: object
     properties:
+      tenantId:
+        type: string
+        format: uint64
       name:
         type: string
       description:
@@ -5964,6 +5973,18 @@ definitions:
         format: uint64
       websiteUrl:
         type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+    description: |-
+      Organization carries every field, including the logo. It is only used as the
+      input to CreateOrganization/UpdateOrganization - every read path (list, get,
+      and the replies of create/update) uses OrganizationSummary instead, which
+      omits the logo so its bytes are never inlined into a JSON response. Fetch
+      the logo separately via GetOrganizationLogo.
   TermsOfUseServicePublishTermsOfUseVersionBody:
     type: object
   TermsOfUseServiceUpdateTermsOfUseVersionBody:
@@ -6695,32 +6716,11 @@ definitions:
     properties:
       result:
         $ref: '#/definitions/chorusCreateOrganizationResult'
-  chorusCreateOrganizationRequest:
-    type: object
-    properties:
-      name:
-        type: string
-      description:
-        type: string
-      logo:
-        type: string
-        format: byte
-      logoContentType:
-        type: string
-      country:
-        type: string
-      city:
-        type: string
-      contactUserId:
-        type: string
-        format: uint64
-      websiteUrl:
-        type: string
   chorusCreateOrganizationResult:
     type: object
     properties:
       organization:
-        $ref: '#/definitions/chorusOrganization'
+        $ref: '#/definitions/chorusOrganizationSummary'
   chorusCreateTermsOfUseVersionReply:
     type: object
     properties:
@@ -7068,7 +7068,7 @@ definitions:
     type: object
     properties:
       organization:
-        $ref: '#/definitions/chorusOrganization'
+        $ref: '#/definitions/chorusOrganizationSummary'
   chorusGetPlatformSettingsReply:
     type: object
     properties:
@@ -7292,7 +7292,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/chorusOrganization'
+          $ref: '#/definitions/chorusOrganizationSummary'
   chorusListPermissionsReply:
     type: object
     properties:
@@ -7510,6 +7510,11 @@ definitions:
         type: string
       description:
         type: string
+      logo:
+        type: string
+        format: byte
+      logoContentType:
+        type: string
       country:
         type: string
       city:
@@ -7525,6 +7530,41 @@ definitions:
       updatedAt:
         type: string
         format: date-time
+    description: |-
+      Organization carries every field, including the logo. It is only used as the
+      input to CreateOrganization/UpdateOrganization - every read path (list, get,
+      and the replies of create/update) uses OrganizationSummary instead, which
+      omits the logo so its bytes are never inlined into a JSON response. Fetch
+      the logo separately via GetOrganizationLogo.
+  chorusOrganizationSummary:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      description:
+        type: string
+      country:
+        type: string
+      city:
+        type: string
+      contactUserId:
+        type: string
+        format: uint64
+      websiteUrl:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+    description: OrganizationSummary is Organization without the logo bytes.
   chorusPaginationQuery:
     type: object
     properties:
@@ -7829,7 +7869,7 @@ definitions:
     type: object
     properties:
       organization:
-        $ref: '#/definitions/chorusOrganization'
+        $ref: '#/definitions/chorusOrganizationSummary'
   chorusUpdatePasswordReply:
     type: object
     properties:

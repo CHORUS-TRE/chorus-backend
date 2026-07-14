@@ -63,8 +63,15 @@ OrganizationServiceCreateOrganizationParams contains all the parameters to send 
 */
 type OrganizationServiceCreateOrganizationParams struct {
 
-	// Body.
-	Body *models.ChorusCreateOrganizationRequest
+	/* Body.
+
+	     Organization carries every field, including the logo. It is only used as the
+	input to CreateOrganization/UpdateOrganization - every read path (list, get,
+	and the replies of create/update) uses OrganizationSummary instead, which
+	omits the logo so its bytes are never inlined into a JSON response. Fetch
+	the logo separately via GetOrganizationLogo.
+	*/
+	Body *models.ChorusOrganization
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +127,13 @@ func (o *OrganizationServiceCreateOrganizationParams) SetHTTPClient(client *http
 }
 
 // WithBody adds the body to the organization service create organization params
-func (o *OrganizationServiceCreateOrganizationParams) WithBody(body *models.ChorusCreateOrganizationRequest) *OrganizationServiceCreateOrganizationParams {
+func (o *OrganizationServiceCreateOrganizationParams) WithBody(body *models.ChorusOrganization) *OrganizationServiceCreateOrganizationParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the organization service create organization params
-func (o *OrganizationServiceCreateOrganizationParams) SetBody(body *models.ChorusCreateOrganizationRequest) {
+func (o *OrganizationServiceCreateOrganizationParams) SetBody(body *models.ChorusOrganization) {
 	o.Body = body
 }
 
