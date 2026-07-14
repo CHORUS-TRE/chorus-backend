@@ -12,7 +12,7 @@ CREATE TABLE public.organizations (
     logo            BYTEA,
     logocontenttype TEXT,
 
-    country VARCHAR(2),
+    country TEXT,
     city    TEXT,
 
     contactuserid BIGINT NULL,
