@@ -37,6 +37,7 @@ func ProvideOrganizationService() service.Organizationer {
 		organizationService = service.NewOrganizationService(ProvideOrganizationStore())
 		organizationService = service_mw.Logging(logger.BizLog)(organizationService)
 		organizationService = service_mw.Validation(ProvideValidator())(organizationService)
+		organizationService = service_mw.OrganizationCaching(logger.TechLog)(organizationService)
 	})
 	return organizationService
 }
