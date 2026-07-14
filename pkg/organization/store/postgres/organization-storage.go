@@ -71,6 +71,9 @@ func (s *OrganizationStorage) GetOrganizationLogo(ctx context.Context, tenantID,
 	if err := s.db.GetContext(ctx, &logo, query, tenantID, id); err != nil {
 		return nil, err
 	}
+	if logo.LogoContentType == "" {
+		return nil, nil
+	}
 
 	return &logo, nil
 }
@@ -102,12 +105,7 @@ func (s *OrganizationStorage) ListOrganizations(ctx context.Context, tenantID ui
 }
 
 func (s *OrganizationStorage) CreateOrganization(ctx context.Context, tenantID uint64, organization *model.Organization) (*model.Organization, error) {
-	var logo []byte
-	var logoContentType string
-	if organization.Logo != nil {
-		logo = organization.Logo.Logo
-		logoContentType = organization.Logo.LogoContentType
-	}
+	logo, logoContentType := organization.Logo.Unwrap()
 
 	var created model.Organization
 	err := s.db.GetContext(ctx, &created, createOrganizationQuery,
@@ -130,8 +128,9 @@ func (s *OrganizationStorage) UpdateOrganization(ctx context.Context, tenantID u
 	// A nil Logo means "not provided, leave the existing logo untouched" (see
 	// model.Organization.Logo's doc comment).
 	if organization.Logo != nil {
+		logo, logoContentType := organization.Logo.Unwrap()
 		setLogoClause = ", logo = $9, logocontenttype = $10"
-		args = append(args, organization.Logo.Logo, organization.Logo.LogoContentType)
+		args = append(args, logo, logoContentType)
 	}
 
 	query := fmt.Sprintf(`
