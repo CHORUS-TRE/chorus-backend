@@ -70,12 +70,6 @@ paths:
             $ref: '#/definitions/chorusCreateOrganizationReply'
       parameters:
         - name: body
-          description: |-
-            Organization carries every field, including the logo. It is only used as the
-            input to CreateOrganization/UpdateOrganization - every read path (list, get,
-            and the replies of create/update) uses OrganizationSummary instead, which
-            omits the logo so its bytes are never inlined into a JSON response. Fetch
-            the logo separately via GetOrganizationLogo.
           in: body
           required: true
           schema:
@@ -169,10 +163,7 @@ definitions:
       description:
         type: string
       logo:
-        type: string
-        format: byte
-      logoContentType:
-        type: string
+        $ref: '#/definitions/chorusOrganizationLogo'
       country:
         type: string
       city:
@@ -188,12 +179,6 @@ definitions:
       updatedAt:
         type: string
         format: date-time
-    description: |-
-      Organization carries every field, including the logo. It is only used as the
-      input to CreateOrganization/UpdateOrganization - every read path (list, get,
-      and the replies of create/update) uses OrganizationSummary instead, which
-      omits the logo so its bytes are never inlined into a JSON response. Fetch
-      the logo separately via GetOrganizationLogo.
   apiHttpBody:
     type: object
     properties:
@@ -261,7 +246,7 @@ definitions:
     type: object
     properties:
       organization:
-        $ref: '#/definitions/chorusOrganizationSummary'
+        $ref: '#/definitions/chorusOrganization'
   chorusDeleteOrganizationReply:
     type: object
     properties:
@@ -278,7 +263,7 @@ definitions:
     type: object
     properties:
       organization:
-        $ref: '#/definitions/chorusOrganizationSummary'
+        $ref: '#/definitions/chorusOrganization'
   chorusListOrganizationsReply:
     type: object
     properties:
@@ -293,7 +278,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/chorusOrganizationSummary'
+          $ref: '#/definitions/chorusOrganization'
   chorusOrganization:
     type: object
     properties:
@@ -308,10 +293,7 @@ definitions:
       description:
         type: string
       logo:
-        type: string
-        format: byte
-      logoContentType:
-        type: string
+        $ref: '#/definitions/chorusOrganizationLogo'
       country:
         type: string
       city:
@@ -327,41 +309,19 @@ definitions:
       updatedAt:
         type: string
         format: date-time
-    description: |-
-      Organization carries every field, including the logo. It is only used as the
-      input to CreateOrganization/UpdateOrganization - every read path (list, get,
-      and the replies of create/update) uses OrganizationSummary instead, which
-      omits the logo so its bytes are never inlined into a JSON response. Fetch
-      the logo separately via GetOrganizationLogo.
-  chorusOrganizationSummary:
+  chorusOrganizationLogo:
     type: object
     properties:
-      id:
+      data:
         type: string
-        format: uint64
-      tenantId:
+        format: byte
+      contentType:
         type: string
-        format: uint64
-      name:
-        type: string
-      description:
-        type: string
-      country:
-        type: string
-      city:
-        type: string
-      contactUserId:
-        type: string
-        format: uint64
-      websiteUrl:
-        type: string
-      createdAt:
-        type: string
-        format: date-time
-      updatedAt:
-        type: string
-        format: date-time
-    description: OrganizationSummary is Organization without the logo bytes.
+    description: |-
+      OrganizationLogo bundles the logo bytes with their content type so the two
+      always travel together. It is only ever populated in the request sent to
+      CreateOrganization/UpdateOrganization when adding or replacing a logo.
+      Fetch the logo bytes separately via GetOrganizationLogo.
   chorusPaginationQuery:
     type: object
     properties:
@@ -418,7 +378,7 @@ definitions:
     type: object
     properties:
       organization:
-        $ref: '#/definitions/chorusOrganizationSummary'
+        $ref: '#/definitions/chorusOrganization'
   protobufAny:
     type: object
     properties:

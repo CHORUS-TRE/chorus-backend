@@ -7,10 +7,12 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/organization/model"
 )
 
-// OrganizationSummaryFromBusiness converts a business Organization into its wire
-// representation without the logo, used for every read path (list, get, and the
-// replies of create/update) - see Organization's doc comment in organization.proto.
-func OrganizationSummaryFromBusiness(organization *model.Organization) (*chorus.OrganizationSummary, error) {
+// OrganizationFromBusiness converts a business Organization into its wire
+// representation, used for every reply (list, get, and the replies of
+// create/update). Logo is nil here in practice - none of the store queries
+// backing a reply ever load the logo bytes - see OrganizationLogo's doc
+// comment in organization.proto.
+func OrganizationFromBusiness(organization *model.Organization) (*chorus.Organization, error) {
 	ca, err := ToProtoTimestamp(organization.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert createdAt timestamp: %w", err)
@@ -20,7 +22,7 @@ func OrganizationSummaryFromBusiness(organization *model.Organization) (*chorus.
 		return nil, fmt.Errorf("unable to convert updatedAt timestamp: %w", err)
 	}
 
-	proto := &chorus.OrganizationSummary{
+	proto := &chorus.Organization{
 		Id:       organization.ID,
 		TenantId: organization.TenantID,
 		Name:     organization.Name,
@@ -35,13 +37,20 @@ func OrganizationSummaryFromBusiness(organization *model.Organization) (*chorus.
 		UpdatedAt: ua,
 	}
 
+	if organization.Logo != nil {
+		proto.Logo = &chorus.OrganizationLogo{
+			Data:        organization.Logo.Logo,
+			ContentType: organization.Logo.LogoContentType,
+		}
+	}
+
 	return proto, nil
 }
 
-// OrganizationToBusiness converts the wire Organization (the only message that
-// carries the logo) into its business representation, for use as the input to
-// CreateOrganization/UpdateOrganization. The caller is responsible for setting
-// TenantID from the authenticated context - it is never trusted from the client.
+// OrganizationToBusiness converts the wire Organization into its business
+// representation, for use as the input to CreateOrganization/UpdateOrganization.
+// The caller is responsible for setting TenantID from the authenticated context -
+// it is never trusted from the client.
 func OrganizationToBusiness(organization *chorus.Organization) *model.Organization {
 	business := &model.Organization{
 		ID:   organization.Id,
@@ -55,10 +64,10 @@ func OrganizationToBusiness(organization *chorus.Organization) *model.Organizati
 		WebsiteURL:    nonEmptyString(organization.WebsiteUrl),
 	}
 
-	if len(organization.Logo) > 0 || organization.LogoContentType != "" {
+	if organization.Logo != nil {
 		business.Logo = &model.OrganizationLogo{
-			Logo:            organization.Logo,
-			LogoContentType: organization.LogoContentType,
+			Logo:            organization.Logo.Data,
+			LogoContentType: organization.Logo.ContentType,
 		}
 	}
 

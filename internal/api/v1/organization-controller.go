@@ -47,9 +47,9 @@ func (c OrganizationController) ListOrganizations(ctx context.Context, req *chor
 		return nil, err
 	}
 
-	protoOrganizations := make([]*chorus.OrganizationSummary, 0, len(organizations))
+	protoOrganizations := make([]*chorus.Organization, 0, len(organizations))
 	for _, organization := range organizations {
-		proto, err := converter.OrganizationSummaryFromBusiness(organization)
+		proto, err := converter.OrganizationFromBusiness(organization)
 		if err != nil {
 			return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 		}
@@ -77,7 +77,7 @@ func (c OrganizationController) GetOrganization(ctx context.Context, req *chorus
 		return nil, err
 	}
 
-	proto, err := converter.OrganizationSummaryFromBusiness(organization)
+	proto, err := converter.OrganizationFromBusiness(organization)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 	}
@@ -131,7 +131,7 @@ func (c OrganizationController) CreateOrganization(ctx context.Context, req *cho
 		return nil, err
 	}
 
-	proto, err := converter.OrganizationSummaryFromBusiness(createdOrganization)
+	proto, err := converter.OrganizationFromBusiness(createdOrganization)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 	}
@@ -157,7 +157,7 @@ func (c OrganizationController) UpdateOrganization(ctx context.Context, req *cho
 		return nil, err
 	}
 
-	proto, err := converter.OrganizationSummaryFromBusiness(updatedOrganization)
+	proto, err := converter.OrganizationFromBusiness(updatedOrganization)
 	if err != nil {
 		return nil, cerr.ErrConversion.Wrap(err, "Failed to convert organization")
 	}

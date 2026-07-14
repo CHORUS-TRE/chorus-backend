@@ -63,14 +63,7 @@ OrganizationServiceCreateOrganizationParams contains all the parameters to send 
 */
 type OrganizationServiceCreateOrganizationParams struct {
 
-	/* Body.
-
-	     Organization carries every field, including the logo. It is only used as the
-	input to CreateOrganization/UpdateOrganization - every read path (list, get,
-	and the replies of create/update) uses OrganizationSummary instead, which
-	omits the logo so its bytes are never inlined into a JSON response. Fetch
-	the logo separately via GetOrganizationLogo.
-	*/
+	// Body.
 	Body *models.ChorusOrganization
 
 	timeout    time.Duration

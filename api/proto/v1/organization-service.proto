@@ -32,7 +32,7 @@ message ListOrganizationsReply {
     optional PaginationResult pagination = 2;
 }
 message ListOrganizationsResult {
-    repeated OrganizationSummary organizations = 1;
+    repeated Organization organizations = 1;
 }
 
 message GetOrganizationRequest {
@@ -42,7 +42,7 @@ message GetOrganizationReply {
     GetOrganizationResult result = 1;
 }
 message GetOrganizationResult {
-    OrganizationSummary organization = 1;
+    Organization organization = 1;
 }
 
 message GetOrganizationLogoRequest {
@@ -53,14 +53,14 @@ message CreateOrganizationReply {
     CreateOrganizationResult result = 1;
 }
 message CreateOrganizationResult {
-    OrganizationSummary organization = 1;
+    Organization organization = 1;
 }
 
 message UpdateOrganizationReply {
     UpdateOrganizationResult result = 1;
 }
 message UpdateOrganizationResult {
-    OrganizationSummary organization = 1;
+    Organization organization = 1;
 }
 
 message DeleteOrganizationRequest {

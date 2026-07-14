@@ -14,11 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// ChorusOrganization Organization carries every field, including the logo. It is only used as the
-// input to CreateOrganization/UpdateOrganization - every read path (list, get,
-// and the replies of create/update) uses OrganizationSummary instead, which
-// omits the logo so its bytes are never inlined into a JSON response. Fetch
-// the logo separately via GetOrganizationLogo.
+// ChorusOrganization chorus organization
 //
 // swagger:model chorusOrganization
 type ChorusOrganization struct {
@@ -43,11 +39,7 @@ type ChorusOrganization struct {
 	ID string `json:"id,omitempty"`
 
 	// logo
-	// Format: byte
-	Logo strfmt.Base64 `json:"logo,omitempty"`
-
-	// logo content type
-	LogoContentType string `json:"logoContentType,omitempty"`
+	Logo *ChorusOrganizationLogo `json:"logo,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
@@ -68,6 +60,10 @@ func (m *ChorusOrganization) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCreatedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateLogo(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -93,6 +89,25 @@ func (m *ChorusOrganization) validateCreatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *ChorusOrganization) validateLogo(formats strfmt.Registry) error {
+	if swag.IsZero(m.Logo) { // not required
+		return nil
+	}
+
+	if m.Logo != nil {
+		if err := m.Logo.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("logo")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("logo")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *ChorusOrganization) validateUpdatedAt(formats strfmt.Registry) error {
 	if swag.IsZero(m.UpdatedAt) { // not required
 		return nil
@@ -105,8 +120,38 @@ func (m *ChorusOrganization) validateUpdatedAt(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this chorus organization based on context it is used
+// ContextValidate validate this chorus organization based on the context it is used
 func (m *ChorusOrganization) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateLogo(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ChorusOrganization) contextValidateLogo(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Logo != nil {
+
+		if swag.IsZero(m.Logo) { // not required
+			return nil
+		}
+
+		if err := m.Logo.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("logo")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("logo")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
