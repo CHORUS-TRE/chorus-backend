@@ -99,7 +99,7 @@ func (c OrganizationController) GetOrganizationLogo(ctx context.Context, req *ch
 	if err != nil {
 		return nil, err
 	}
-	if len(logo.Logo) == 0 || logo.LogoContentType == "" {
+	if logo == nil {
 		return nil, cerr.ErrNotFound.WithMessage(fmt.Sprintf("organization %d has no logo", req.Id))
 	}
 
