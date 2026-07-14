@@ -155,6 +155,23 @@ var _ = Describe("organization service", func() {
 				})
 				cleanTables()
 			})
+
+			// The validation layer does not check that an ID is non-zero (consistent with
+			// other domains, e.g. workspace) - id 0 is left to the store, which naturally
+			// reports it as not found since no organization ever has id 0.
+			When("the route GET '/api/rest/v1/organizations/{id}' is called with id 0", func() {
+				setupTables()
+				req := organization.NewOrganizationServiceGetOrganizationParams().WithID("0")
+
+				c := helpers.OrganizationServiceHTTPClient()
+				_, err := c.OrganizationService.OrganizationServiceGetOrganization(req, auth)
+
+				Then("a not found error should be raised", func() {
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusNotFound)))
+				})
+				cleanTables()
+			})
 		})
 	})
 
@@ -330,6 +347,25 @@ var _ = Describe("organization service", func() {
 				})
 				cleanTables()
 			})
+
+			// The validation layer does not check that an ID is non-zero (consistent with
+			// other domains, e.g. workspace) - id 0 is left to the store, which naturally
+			// reports it as not found since no organization ever has id 0.
+			When("the route PUT '/api/rest/v1/organizations/{id}' is called with id 0", func() {
+				setupTables()
+				req := organization.NewOrganizationServiceUpdateOrganizationParams().WithID("0").WithBody(
+					&models.OrganizationServiceUpdateOrganizationBody{Name: "CHUV Renamed"},
+				)
+
+				c := helpers.OrganizationServiceHTTPClient()
+				_, err := c.OrganizationService.OrganizationServiceUpdateOrganization(req, auth)
+
+				Then("a not found error should be raised", func() {
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusNotFound)))
+				})
+				cleanTables()
+			})
 		})
 	})
 
@@ -387,6 +423,23 @@ var _ = Describe("organization service", func() {
 
 				Then("the organization should be deleted", func() {
 					ExpectAPIErr(err).Should(BeNil())
+				})
+				cleanTables()
+			})
+
+			// The validation layer does not check that an ID is non-zero (consistent with
+			// other domains, e.g. workspace) - id 0 is left to the store, which naturally
+			// reports it as not found since no organization ever has id 0.
+			When("the route DELETE '/api/rest/v1/organizations/{id}' is called with id 0", func() {
+				setupTables()
+				req := organization.NewOrganizationServiceDeleteOrganizationParams().WithID("0")
+
+				c := helpers.OrganizationServiceHTTPClient()
+				_, err := c.OrganizationService.OrganizationServiceDeleteOrganization(req, auth)
+
+				Then("a not found error should be raised", func() {
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusNotFound)))
 				})
 				cleanTables()
 			})
