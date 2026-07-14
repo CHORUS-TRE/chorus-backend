@@ -20,8 +20,10 @@ var termsOfUseController chorus.TermsOfUseServiceServer
 func ProvideTermsOfUseController() chorus.TermsOfUseServiceServer {
 	termsOfUseControllerOnce.Do(func() {
 		termsOfUseController = v1.NewTermsOfUseController(ProvideTermsOfUseService())
-		termsOfUseController = ctrl_mw.NewTermsOfUseAuditMiddleware(ProvideAuditWriter())(termsOfUseController)
 		termsOfUseController = ctrl_mw.TermsOfUseAuthorizing(logger.SecLog, ProvideAuthorizer())(termsOfUseController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			termsOfUseController = ctrl_mw.NewTermsOfUseAuditMiddleware(ProvideAuditWriter())(termsOfUseController)
+		}
 	})
 	return termsOfUseController
 }
