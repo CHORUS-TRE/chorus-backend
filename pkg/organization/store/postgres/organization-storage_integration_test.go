@@ -89,8 +89,7 @@ func TestOrganizationStorage_GetOrganizationLogo_NullColumnScansCleanly(t *testi
 
 	logo, err := store.GetOrganizationLogo(ctx, orgTestTenantID, created.ID)
 	require.NoError(t, err, "a NULL logo column must scan cleanly into []byte, not error like it would for a plain string")
-	require.Empty(t, logo.Logo, "a NULL bytea column scans as an empty []byte")
-	require.Empty(t, logo.LogoContentType)
+	require.Nil(t, logo, "no logo uploaded must report as nil, consistent with model.Organization.Logo's nil-means-absent convention")
 }
 
 func TestOrganizationStorage_GetOrganization_WrongTenantNotFound(t *testing.T) {
@@ -184,6 +183,49 @@ func TestOrganizationStorage_UpdateOrganization_WithoutLogoPreservesExisting(t *
 	require.NoError(t, err)
 	require.Equal(t, []byte{0x01, 0x02, 0x03}, logo.Logo, "logo must be preserved when the update omits Logo")
 	require.Equal(t, "image/png", logo.LogoContentType)
+}
+
+// TestOrganizationStorage_UpdateOrganization_OmittedOptionalFieldsAreCleared documents
+// that, unlike Logo, every other optional field follows full-replace PUT semantics:
+// omitting a field on update clears it rather than preserving the existing value.
+func TestOrganizationStorage_UpdateOrganization_OmittedOptionalFieldsAreCleared(t *testing.T) {
+	db, err := integration.GetDB()
+	require.NoError(t, err)
+	t.Cleanup(func() { integration.CleanupTables(db) })
+
+	setupOrganizationFixtures(t, db)
+	store := NewOrganizationStorage(db)
+	ctx := context.Background()
+
+	created, err := store.CreateOrganization(ctx, orgTestTenantID, &model.Organization{
+		Name:          "CHUV",
+		Description:   ptr("A description"),
+		Country:       ptr("CH"),
+		City:          ptr("Lausanne"),
+		ContactUserID: ptr(orgTestUserID),
+		WebsiteURL:    ptr("https://www.chuv.ch/"),
+	})
+	require.NoError(t, err)
+
+	updated, err := store.UpdateOrganization(ctx, orgTestTenantID, &model.Organization{
+		ID:   created.ID,
+		Name: "CHUV Renamed",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "CHUV Renamed", updated.Name)
+	require.Nil(t, updated.Description, "omitted Description must be cleared, not preserved")
+	require.Nil(t, updated.Country, "omitted Country must be cleared, not preserved")
+	require.Nil(t, updated.City, "omitted City must be cleared, not preserved")
+	require.Nil(t, updated.ContactUserID, "omitted ContactUserID must be cleared, not preserved")
+	require.Nil(t, updated.WebsiteURL, "omitted WebsiteURL must be cleared, not preserved")
+
+	fetched, err := store.GetOrganization(ctx, orgTestTenantID, created.ID)
+	require.NoError(t, err)
+	require.Nil(t, fetched.Description)
+	require.Nil(t, fetched.Country)
+	require.Nil(t, fetched.City)
+	require.Nil(t, fetched.ContactUserID)
+	require.Nil(t, fetched.WebsiteURL)
 }
 
 func TestOrganizationStorage_UpdateOrganization_WithLogoReplacesExisting(t *testing.T) {
