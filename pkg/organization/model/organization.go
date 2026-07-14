@@ -35,6 +35,14 @@ type OrganizationLogo struct {
 	LogoContentType string `validate:"required,oneof=image/png image/jpeg image/webp"`
 }
 
+// Unwrap returns the logo bytes and content type, or the zero values if l is nil.
+func (l *OrganizationLogo) Unwrap() ([]byte, string) {
+	if l == nil {
+		return nil, ""
+	}
+	return l.Logo, l.LogoContentType
+}
+
 func (Organization) IsValidSortType(sortType string) bool {
 	validSortTypes := map[string]bool{
 		"id":        true,
