@@ -19,6 +19,22 @@ func nonZeroUint64(v uint64) *uint64 {
 	return &v
 }
 
+func nonEmptyString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+// derefOrZero returns *p, or the zero value of T if p is nil.
+func derefOrZero[T any](p *T) T {
+	if p == nil {
+		var zero T
+		return zero
+	}
+	return *p
+}
+
 func ToProtoTimestamp(t time.Time) (*timestamp.Timestamp, error) {
 	if t.IsZero() {
 		return nil, nil

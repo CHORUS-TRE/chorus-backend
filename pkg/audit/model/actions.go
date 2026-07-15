@@ -99,6 +99,11 @@ const (
 	AuditActionTermsOfUseVersionPublish AuditAction = "PublishTermsOfUseVersion"
 	AuditActionTermsOfUseAccept         AuditAction = "AcceptTermsOfUse"
 
+	// Organization
+	AuditActionOrganizationCreate AuditAction = "CreateOrganization"
+	AuditActionOrganizationUpdate AuditAction = "UpdateOrganization"
+	AuditActionOrganizationDelete AuditAction = "DeleteOrganization"
+
 	// Admin
 	AuditActionTenantInitialize AuditAction = "InitializeTenant"
 

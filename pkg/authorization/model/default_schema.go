@@ -36,6 +36,8 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionGetCurrentTermsOfUseVersion,
 			PermissionGetMyTermsOfUseStatus,
 			PermissionAcceptTermsOfUse,
+			PermissionListOrganizations,
+			PermissionGetOrganization,
 		},
 	)
 
@@ -167,6 +169,15 @@ func GetDefaultSchema() AuthorizationSchema {
 		},
 	)
 
+	platformOrganizationManagerPermissions := permissionList(
+		authenticatedPermissions,
+		[]PermissionName{
+			PermissionCreateOrganization,
+			PermissionUpdateOrganization,
+			PermissionDeleteOrganization,
+		},
+	)
+
 	platformAuditorPermissions := permissionList(
 		authenticatedPermissions,
 		[]PermissionName{
@@ -207,6 +218,7 @@ func GetDefaultSchema() AuthorizationSchema {
 		authenticatedPermissions,
 		platformSettingsManagerPermissions,
 		platformUserManagerPermissions,
+		platformOrganizationManagerPermissions,
 		platformAuditorPermissions,
 		appStoreAdminPermissions,
 		dataManagerPermissions,
@@ -313,6 +325,12 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionListTermsOfUseAcceptances, "Allow the user to list terms of use acceptances", oneContext(RoleContextUser)),
 			permissionDefinition(PermissionGetMyTermsOfUseStatus, "Allow the user to get his terms of use acceptance status", oneContext(RoleContextUser)),
 			permissionDefinition(PermissionAcceptTermsOfUse, "Allow the user to accept the terms of use", oneContext(RoleContextUser)),
+
+			permissionDefinition(PermissionListOrganizations, "Allow the user to list organizations", nil),
+			permissionDefinition(PermissionGetOrganization, "Allow the user to get an organization", nil),
+			permissionDefinition(PermissionCreateOrganization, "Allow the user to create an organization", nil),
+			permissionDefinition(PermissionUpdateOrganization, "Allow the user to update an organization", nil),
+			permissionDefinition(PermissionDeleteOrganization, "Allow the user to delete an organization", nil),
 		},
 		Roles: []*RoleDefinition{
 			roleDefinition(
@@ -392,6 +410,12 @@ func GetDefaultSchema() AuthorizationSchema {
 				"Platform user managers can administer platform users and their roles",
 				anyContext(RoleContextUser),
 				platformUserManagerPermissions,
+			),
+			roleDefinition(
+				RolePlatformOrganizationManager,
+				"Platform organization managers can manage organizations",
+				anyContext(RoleContextUser),
+				platformOrganizationManagerPermissions,
 			),
 			roleDefinition(
 				RolePlatformAuditor,

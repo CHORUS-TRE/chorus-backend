@@ -1,0 +1,34 @@
+syntax = "proto3";
+package chorus;
+option go_package = ".;chorus";
+
+import "google/protobuf/timestamp.proto";
+
+// OrganizationLogo bundles the logo bytes with their content type so the two
+// always travel together. It is only ever populated in the request sent to
+// CreateOrganization/UpdateOrganization when adding or replacing a logo.
+// Fetch the logo bytes separately via GetOrganizationLogo.
+message OrganizationLogo {
+    bytes data = 1;
+    string content_type = 2;
+}
+
+message Organization {
+    uint64 id = 1;
+
+    uint64 tenant_id = 2;
+
+    string name = 3;
+    string description = 4;
+
+    OrganizationLogo logo = 5;
+
+    string country = 6;
+    string city = 7;
+
+    uint64 contact_user_id = 8;
+    string website_url = 9;
+
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+}

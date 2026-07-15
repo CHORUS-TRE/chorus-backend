@@ -16,6 +16,7 @@ tags:
   - name: DevstoreService
   - name: HealthService
   - name: NotificationService
+  - name: OrganizationService
   - name: PlatformSettingsService
   - name: StewardService
   - name: TermsOfUseService
@@ -2618,6 +2619,286 @@ paths:
             $ref: '#/definitions/chorusMarkNotificationsAsReadRequest'
       tags:
         - NotificationService
+  /api/rest/v1/organizations:
+    get:
+      summary: List organizations
+      description: This endpoint returns a list of active organizations
+      operationId: OrganizationService_ListOrganizations
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusListOrganizationsReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: pagination.offset
+          description: Optionally offset the number of results
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.limit
+          description: Optionally limit the number of results (between 1 and 500)
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: pagination.sort.order
+          in: query
+          required: false
+          type: string
+        - name: pagination.sort.type
+          in: query
+          required: false
+          type: string
+        - name: pagination.query
+          description: Optionally filter the results
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+          x-example:
+            - user_id=9999
+            - status=STATUS_CREATED,STATUS_CLOSED
+      tags:
+        - OrganizationService
+    post:
+      summary: Create an organization
+      description: This endpoint creates an organization. Requires the PlatformOrganizationManager role.
+      operationId: OrganizationService_CreateOrganization
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusCreateOrganizationReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/chorusOrganization'
+      tags:
+        - OrganizationService
+  /api/rest/v1/organizations/{id}:
+    get:
+      summary: Get an organization
+      description: This endpoint returns an organization's details, excluding the logo image data
+      operationId: OrganizationService_GetOrganization
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusGetOrganizationReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - OrganizationService
+    delete:
+      summary: Delete an organization
+      description: This endpoint soft-deletes an organization. Requires the PlatformOrganizationManager role.
+      operationId: OrganizationService_DeleteOrganization
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusDeleteOrganizationReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - OrganizationService
+    put:
+      summary: Update an organization
+      description: This endpoint updates an organization. Requires the PlatformOrganizationManager role.
+      operationId: OrganizationService_UpdateOrganization
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/chorusUpdateOrganizationReply'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/OrganizationServiceUpdateOrganizationBody'
+      tags:
+        - OrganizationService
+  /api/rest/v1/organizations/{id}/logo:
+    get:
+      summary: Get an organization's logo
+      description: This endpoint returns the raw logo image bytes with Content-Type and Cache-Control headers, suitable for direct use as an <img> src
+      operationId: OrganizationService_GetOrganizationLogo
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        "400":
+          description: 'Bad Request: indicates that the server cannot or will not process the request due to something that is perceived to be a client error (for example, malformed request syntax, invalid request message framing, or deceptive request routing)'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "401":
+          description: 'Unauthorized: indicates that the client request has not been completed because it lacks valid authentication credentials for the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "403":
+          description: 'Forbidden: indicates that the server understands the request but refuses to authorize it'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "404":
+          description: 'Not Found: indicates that the server cannot find the requested resource'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "500":
+          description: 'Internal Server Error: indicates that the server encountered an unexpected condition that prevented it from fulfilling the request'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+        "503":
+          description: 'Service Unavailable: indicates that the server is not ready to handle the request.'
+          schema:
+            $ref: '#/definitions/chorusChorusErrorResponse'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - OrganizationService
   /api/rest/v1/platform-settings:
     get:
       summary: Get platform settings
@@ -5662,6 +5943,33 @@ definitions:
         type: string
       value:
         type: string
+  OrganizationServiceUpdateOrganizationBody:
+    type: object
+    properties:
+      tenantId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      description:
+        type: string
+      logo:
+        $ref: '#/definitions/chorusOrganizationLogo'
+      country:
+        type: string
+      city:
+        type: string
+      contactUserId:
+        type: string
+        format: uint64
+      websiteUrl:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
   TermsOfUseServicePublishTermsOfUseVersionBody:
     type: object
   TermsOfUseServiceUpdateTermsOfUseVersionBody:
@@ -5687,6 +5995,64 @@ definitions:
     properties:
       role:
         $ref: '#/definitions/chorusRole'
+  apiHttpBody:
+    type: object
+    properties:
+      contentType:
+        type: string
+        description: The HTTP Content-Type header value specifying the content type of the body.
+      data:
+        type: string
+        format: byte
+        description: The HTTP request/response body as raw binary.
+      extensions:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/protobufAny'
+        description: |-
+          Application specific response metadata. Must be set in the first response
+          for streaming APIs.
+    description: |-
+      Message that represents an arbitrary HTTP body. It should only be used for
+      payload formats that can't be represented as JSON, such as raw binary or
+      an HTML page.
+
+
+      This message can be used both in streaming and non-streaming API methods in
+      the request as well as the response.
+
+      It can be used as a top-level request field, which is convenient if one
+      wants to extract parameters from either the URL or HTTP template into the
+      request fields and also want access to the raw HTTP body.
+
+      Example:
+
+          message GetResourceRequest {
+            // A unique request id.
+            string request_id = 1;
+
+            // The raw HTTP body is bound to this field.
+            google.api.HttpBody http_body = 2;
+          }
+
+          service ResourceService {
+            rpc GetResource(GetResourceRequest) returns (google.api.HttpBody);
+            rpc UpdateResource(google.api.HttpBody) returns
+            (google.protobuf.Empty);
+          }
+
+      Example with streaming methods:
+
+          service CaldavService {
+            rpc GetCalendar(stream google.api.HttpBody)
+              returns (stream google.api.HttpBody);
+            rpc UpdateCalendar(stream google.api.HttpBody)
+              returns (stream google.api.HttpBody);
+          }
+
+      Use of this type only changes how the request and response bodies are
+      handled, all other features will continue to work unchanged.
   chorusAbortWorkspaceFileUploadReply:
     type: object
     properties:
@@ -6330,6 +6696,16 @@ definitions:
     properties:
       role:
         $ref: '#/definitions/chorusAuthorizationRole'
+  chorusCreateOrganizationReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusCreateOrganizationResult'
+  chorusCreateOrganizationResult:
+    type: object
+    properties:
+      organization:
+        $ref: '#/definitions/chorusOrganization'
   chorusCreateTermsOfUseVersionReply:
     type: object
     properties:
@@ -6470,6 +6846,13 @@ definitions:
       result:
         $ref: '#/definitions/chorusDeleteEntryResult'
   chorusDeleteEntryResult:
+    type: object
+  chorusDeleteOrganizationReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusDeleteOrganizationResult'
+  chorusDeleteOrganizationResult:
     type: object
   chorusDeleteUserReply:
     type: object
@@ -6661,6 +7044,16 @@ definitions:
       totalItems:
         type: integer
         format: int64
+  chorusGetOrganizationReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusGetOrganizationResult'
+  chorusGetOrganizationResult:
+    type: object
+    properties:
+      organization:
+        $ref: '#/definitions/chorusOrganization'
   chorusGetPlatformSettingsReply:
     type: object
     properties:
@@ -6870,6 +7263,21 @@ definitions:
         type: object
         additionalProperties:
           type: string
+  chorusListOrganizationsReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusListOrganizationsResult'
+      pagination:
+        $ref: '#/definitions/chorusPaginationResult'
+  chorusListOrganizationsResult:
+    type: object
+    properties:
+      organizations:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/chorusOrganization'
   chorusListPermissionsReply:
     type: object
     properties:
@@ -7074,6 +7482,49 @@ definitions:
     properties:
       id:
         type: string
+  chorusOrganization:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      tenantId:
+        type: string
+        format: uint64
+      name:
+        type: string
+      description:
+        type: string
+      logo:
+        $ref: '#/definitions/chorusOrganizationLogo'
+      country:
+        type: string
+      city:
+        type: string
+      contactUserId:
+        type: string
+        format: uint64
+      websiteUrl:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+  chorusOrganizationLogo:
+    type: object
+    properties:
+      data:
+        type: string
+        format: byte
+      contentType:
+        type: string
+    description: |-
+      OrganizationLogo bundles the logo bytes with their content type so the two
+      always travel together. It is only ever populated in the request sent to
+      CreateOrganization/UpdateOrganization when adding or replacing a logo.
+      Fetch the logo bytes separately via GetOrganizationLogo.
   chorusPaginationQuery:
     type: object
     properties:
@@ -7369,6 +7820,16 @@ definitions:
     properties:
       app:
         $ref: '#/definitions/chorusApp'
+  chorusUpdateOrganizationReply:
+    type: object
+    properties:
+      result:
+        $ref: '#/definitions/chorusUpdateOrganizationResult'
+  chorusUpdateOrganizationResult:
+    type: object
+    properties:
+      organization:
+        $ref: '#/definitions/chorusOrganization'
   chorusUpdatePasswordReply:
     type: object
     properties:
@@ -7808,6 +8269,114 @@ definitions:
       - WORKSPACE_VISIBILITY_PRIVATE
       - WORKSPACE_VISIBILITY_PUBLIC
     default: WORKSPACE_VISIBILITY_PRIVATE
+  protobufAny:
+    type: object
+    properties:
+      '@type':
+        type: string
+        description: |-
+          A URL/resource name whose content describes the type of the
+          serialized protocol buffer message.
+
+          For URLs which use the scheme `http`, `https`, or no scheme, the
+          following restrictions and interpretations apply:
+
+          * If no scheme is provided, `https` is assumed.
+          * The last segment of the URL's path must represent the fully
+            qualified name of the type (as in `path/google.protobuf.Duration`).
+            The name should be in a canonical form (e.g., leading "." is
+            not accepted).
+          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+            value in binary format, or produce an error.
+          * Applications are allowed to cache lookup results based on the
+            URL, or have them precompiled into a binary to avoid any
+            lookup. Therefore, binary compatibility needs to be preserved
+            on changes to types. (Use versioned type names to manage
+            breaking changes.)
+
+          Schemes other than `http`, `https` (or the empty scheme) might be
+          used with implementation specific semantics.
+    additionalProperties: {}
+    description: |-
+      `Any` contains an arbitrary serialized protocol buffer message along with a
+      URL that describes the type of the serialized message.
+
+      Protobuf library provides support to pack/unpack Any values in the form
+      of utility functions or additional generated methods of the Any type.
+
+      Example 1: Pack and unpack a message in C++.
+
+          Foo foo = ...;
+          Any any;
+          any.PackFrom(foo);
+          ...
+          if (any.UnpackTo(&foo)) {
+            ...
+          }
+
+      Example 2: Pack and unpack a message in Java.
+
+          Foo foo = ...;
+          Any any = Any.pack(foo);
+          ...
+          if (any.is(Foo.class)) {
+            foo = any.unpack(Foo.class);
+          }
+
+       Example 3: Pack and unpack a message in Python.
+
+          foo = Foo(...)
+          any = Any()
+          any.Pack(foo)
+          ...
+          if any.Is(Foo.DESCRIPTOR):
+            any.Unpack(foo)
+            ...
+
+       Example 4: Pack and unpack a message in Go
+
+           foo := &pb.Foo{...}
+           any, err := ptypes.MarshalAny(foo)
+           ...
+           foo := &pb.Foo{}
+           if err := ptypes.UnmarshalAny(any, foo); err != nil {
+             ...
+           }
+
+      The pack methods provided by protobuf library will by default use
+      'type.googleapis.com/full.type.name' as the type URL and the unpack
+      methods only use the fully qualified type name after the last '/'
+      in the type URL, for example "foo.bar.com/x/y.z" will yield type
+      name "y.z".
+
+
+      JSON
+      ====
+      The JSON representation of an `Any` value uses the regular
+      representation of the deserialized, embedded message, with an
+      additional field `@type` which contains the type URL. Example:
+
+          package google.profile;
+          message Person {
+            string first_name = 1;
+            string last_name = 2;
+          }
+
+          {
+            "@type": "type.googleapis.com/google.profile.Person",
+            "firstName": <string>,
+            "lastName": <string>
+          }
+
+      If the embedded message type is well-known and has a custom JSON
+      representation, that representation will be embedded adding a field
+      `value` which holds the custom JSON in addition to the `@type`
+      field. Example (for message [google.protobuf.Duration][]):
+
+          {
+            "@type": "type.googleapis.com/google.protobuf.Duration",
+            "value": "1.212s"
+          }
 securityDefinitions:
   bearer:
     type: apiKey
