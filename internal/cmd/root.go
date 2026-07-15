@@ -38,7 +38,7 @@ var rootCmd = &cobra.Command{
 	Use:   componentName,
 	Short: descriptionShort,
 	Long:  descriptionLong,
-	Run:   startCmd.Run,
+	RunE:  startCmd.RunE,
 }
 
 func init() {
