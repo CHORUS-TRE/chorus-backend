@@ -118,6 +118,12 @@ const (
 	PermissionCreateRequest  PermissionName = "createRequest"
 	PermissionApproveRequest PermissionName = "approveRequest"
 	PermissionDeleteRequest  PermissionName = "deleteRequest"
+
+	PermissionListOrganizations  PermissionName = "listOrganizations"
+	PermissionGetOrganization    PermissionName = "getOrganization"
+	PermissionCreateOrganization PermissionName = "createOrganization"
+	PermissionUpdateOrganization PermissionName = "updateOrganization"
+	PermissionDeleteOrganization PermissionName = "deleteOrganization"
 )
 
 func (p PermissionName) String() string {
@@ -298,6 +304,17 @@ func ToPermissionName(p string) (PermissionName, error) {
 		return PermissionApproveRequest, nil
 	case string(PermissionDeleteRequest):
 		return PermissionDeleteRequest, nil
+
+	case string(PermissionListOrganizations):
+		return PermissionListOrganizations, nil
+	case string(PermissionGetOrganization):
+		return PermissionGetOrganization, nil
+	case string(PermissionCreateOrganization):
+		return PermissionCreateOrganization, nil
+	case string(PermissionUpdateOrganization):
+		return PermissionUpdateOrganization, nil
+	case string(PermissionDeleteOrganization):
+		return PermissionDeleteOrganization, nil
 	}
 
 	return "", fmt.Errorf("unknown permission type: %s", p)
@@ -409,23 +426,24 @@ type Role struct {
 type RoleName string
 
 const (
-	RolePublic                  RoleName = "Public"
-	RoleAuthenticated           RoleName = "Authenticated"
-	RoleWorkspaceGuest          RoleName = "WorkspaceGuest"
-	RoleWorkspaceMember         RoleName = "WorkspaceMember"
-	RoleWorkspaceMaintainer     RoleName = "WorkspaceMaintainer"
-	RoleWorkspaceDataManager    RoleName = "WorkspaceDataManager"
-	RoleWorkspaceAdmin          RoleName = "WorkspaceAdmin"
-	RoleWorkbenchViewer         RoleName = "WorkbenchViewer"
-	RoleWorkbenchMember         RoleName = "WorkbenchMember"
-	RoleWorkbenchAdmin          RoleName = "WorkbenchAdmin"
-	RoleHealthchecker           RoleName = "Healthchecker"
-	RolePlatformSettingsManager RoleName = "PlatformSettingsManager"
-	RolePlateformUserManager    RoleName = "PlateformUserManager"
-	RolePlatformAuditor         RoleName = "PlatformAuditor"
-	RoleAppStoreAdmin           RoleName = "AppStoreAdmin"
-	RoleDataManager             RoleName = "DataManager"
-	RoleSuperAdmin              RoleName = "SuperAdmin"
+	RolePublic                      RoleName = "Public"
+	RoleAuthenticated               RoleName = "Authenticated"
+	RoleWorkspaceGuest              RoleName = "WorkspaceGuest"
+	RoleWorkspaceMember             RoleName = "WorkspaceMember"
+	RoleWorkspaceMaintainer         RoleName = "WorkspaceMaintainer"
+	RoleWorkspaceDataManager        RoleName = "WorkspaceDataManager"
+	RoleWorkspaceAdmin              RoleName = "WorkspaceAdmin"
+	RoleWorkbenchViewer             RoleName = "WorkbenchViewer"
+	RoleWorkbenchMember             RoleName = "WorkbenchMember"
+	RoleWorkbenchAdmin              RoleName = "WorkbenchAdmin"
+	RoleHealthchecker               RoleName = "Healthchecker"
+	RolePlatformSettingsManager     RoleName = "PlatformSettingsManager"
+	RolePlateformUserManager        RoleName = "PlateformUserManager"
+	RolePlatformOrganizationManager RoleName = "PlatformOrganizationManager"
+	RolePlatformAuditor             RoleName = "PlatformAuditor"
+	RoleAppStoreAdmin               RoleName = "AppStoreAdmin"
+	RoleDataManager                 RoleName = "DataManager"
+	RoleSuperAdmin                  RoleName = "SuperAdmin"
 )
 
 func (r RoleName) String() string {
@@ -460,6 +478,8 @@ func ToRoleName(r string) (RoleName, error) {
 		return RolePlatformSettingsManager, nil
 	case string(RolePlateformUserManager):
 		return RolePlateformUserManager, nil
+	case string(RolePlatformOrganizationManager):
+		return RolePlatformOrganizationManager, nil
 	case string(RolePlatformAuditor):
 		return RolePlatformAuditor, nil
 	case string(RoleAppStoreAdmin):
@@ -496,6 +516,7 @@ func GetAllRoles() []RoleName {
 		RoleHealthchecker,
 		RolePlatformSettingsManager,
 		RolePlateformUserManager,
+		RolePlatformOrganizationManager,
 		RolePlatformAuditor,
 		RoleAppStoreAdmin,
 		RoleDataManager,

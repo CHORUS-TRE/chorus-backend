@@ -10,6 +10,7 @@ import (
 	auth_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/authentication/client"
 	health_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/health/client"
 	notification_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/notification/client"
+	organization_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/organization/client"
 	steward_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/steward/client"
 	user_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/user/client"
 	workspace_client "github.com/CHORUS-TRE/chorus-backend/tests/helpers/generated/client/workspace/client"
@@ -44,4 +45,8 @@ func StewardServiceHTTPClient() *steward_client.ChorusStewardService {
 
 func WorkspaceServiceHTTPClient() *workspace_client.ChorusWorkspaceService {
 	return workspace_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
+}
+
+func OrganizationServiceHTTPClient() *organization_client.ChorusOrganizationService {
+	return organization_client.New(openapi.NewNopCloserClientTransport(ComponentURL(), "", schemes, logger.TechLog), strfmt.Default)
 }
