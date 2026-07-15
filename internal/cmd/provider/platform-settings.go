@@ -34,8 +34,10 @@ var platformSettingsController chorus.PlatformSettingsServiceServer
 func ProvidePlatformSettingsController() chorus.PlatformSettingsServiceServer {
 	platformSettingsControllerOnce.Do(func() {
 		platformSettingsController = v1.NewPlatformSettingsController(ProvidePlatformSettings())
-		platformSettingsController = ctrl_mw.NewPlatformSettingsAuditMiddleware(ProvideAuditWriter())(platformSettingsController)
 		platformSettingsController = ctrl_mw.PlatformSettingsAuthorizing(logger.SecLog, ProvideAuthorizer())(platformSettingsController)
+		if ProvideConfig().Services.AuditService.Enabled {
+			platformSettingsController = ctrl_mw.NewPlatformSettingsAuditMiddleware(ProvideAuditWriter())(platformSettingsController)
+		}
 	})
 	return platformSettingsController
 }
