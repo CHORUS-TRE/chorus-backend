@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -20,7 +21,7 @@ import (
 
 // InitServer initializes a HTTP-server and returns an empty request multiplexer
 // for a GRPC gateway and a configuration object.
-func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, authorizer authorization_service.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory, oidcidpService oidcidp_service.OIDCProviderService) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
+func InitServer(ctx context.Context, cfg config.Config, version string, started <-chan struct{}, pw middleware.ProxyWorkbenchHandler, authorizer authorization_service.Authorizer, workbenchResolver ctrl_mw.WorkbenchResolver, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory, oidcidpService oidcidp_service.OIDCProviderService) (http.Handler, *runtime.ServeMux, []grpc.DialOption) {
 
 	mux := runtime.NewServeMux(
 		runtime.WithMetadata(middleware.CorrelationIDMetadata),
@@ -50,7 +51,7 @@ func InitServer(ctx context.Context, cfg config.Config, version string, started 
 	handler = oidcidpService.AddOIDCMiddleware(handler)
 	handler = middleware.AddCORS(handler, cfg)
 	if cfg.Services.WorkbenchService.StreamProxyEnabled {
-		handler = middleware.AddProxyWorkbench(handler, pw, cfg, authorizer, keyFunc, claimsFactory)
+		handler = middleware.AddProxyWorkbench(handler, pw, cfg, authorizer, workbenchResolver, keyFunc, claimsFactory)
 	}
 	if cfg.Services.AuthenticationService.AuthUIEnabled {
 		handler = middleware.AddAuthUI(handler)
