@@ -1,10 +1,5 @@
 package service
 
-// policy.go is the minimal authorization kernel: expanding a user's roles
-// into contextual permissions and matching a permission check against them.
-// It is pure — plain functions over plain maps, no service state, no I/O —
-// so it can be exhaustively unit-tested.
-
 import (
 	"fmt"
 
@@ -13,7 +8,11 @@ import (
 
 // expandUserPermissions expands the user's roles into permissions, each
 // carrying the context values the granting role binds for the dimensions the
-// permission requires.
+// permission requires. A dimension the role definition quantifies as
+// ContextQuantifierAny expands to the wildcard; other dimensions take the
+// concrete value of the role assignment. A permission that requires context
+// but receives none from a role is not granted by that role (fail closed):
+// an empty context would otherwise match any resource in the matcher.
 func expandUserPermissions(
 	roles map[model.RoleName]*model.RoleDefinition,
 	permissions map[model.PermissionName]model.PermissionDefinition,
@@ -32,9 +31,16 @@ func expandUserPermissions(
 				Context: make(model.Context, len(permissionDefinition.RequiredContextDimensions)),
 			}
 			for _, dimension := range permissionDefinition.RequiredContextDimensions {
-				if actualValue, ok := role.Context[dimension]; ok {
+				if quantifier, ok := definition.RequiredContextDimensions[dimension]; ok && quantifier == model.ContextQuantifierAny {
+					permission.Context[dimension] = model.Wildcard
+					continue
+				}
+				if actualValue, ok := role.Context[dimension]; ok && actualValue != "" {
 					permission.Context[dimension] = actualValue
 				}
+			}
+			if len(permissionDefinition.RequiredContextDimensions) > 0 && len(permission.Context) == 0 {
+				continue
 			}
 			expanded = append(expanded, permission)
 		}
