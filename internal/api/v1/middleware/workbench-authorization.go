@@ -5,21 +5,31 @@ import (
 	"fmt"
 	"strconv"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
+	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
+	workbench_model "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
 
 var _ chorus.WorkbenchServiceServer = (*workbenchControllerAuthorization)(nil)
 
-type workbenchControllerAuthorization struct {
-	Authorization
-	next chorus.WorkbenchServiceServer
+type WorkbenchResolver interface {
+	GetWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) (*workbench_model.Workbench, error)
 }
 
-func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher) func(chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
+type workbenchControllerAuthorization struct {
+	Authorization
+	resolver WorkbenchResolver
+	next     chorus.WorkbenchServiceServer
+}
+
+func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization_service.Authorizer, cfg config.Config, refresher Refresher, resolver WorkbenchResolver) func(chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
 	return func(next chorus.WorkbenchServiceServer) chorus.WorkbenchServiceServer {
 		return &workbenchControllerAuthorization{
 			Authorization: Authorization{
@@ -28,9 +38,25 @@ func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization
 				cfg:        cfg,
 				refresher:  refresher,
 			},
-			next: next,
+			resolver: resolver,
+			next:     next,
 		}
 	}
+}
+
+// resolveWorkspaceID returns the parent workspace of a workbench
+func (c workbenchControllerAuthorization) resolveWorkspaceID(ctx context.Context, workbenchID uint64) (uint64, error) {
+	tenantID, err := jwt_model.ExtractTenantID(ctx)
+	if err != nil {
+		return 0, status.Error(codes.InvalidArgument, "could not extract tenant id from jwt-token")
+	}
+
+	workbench, err := c.resolver.GetWorkbench(ctx, tenantID, workbenchID)
+	if err != nil {
+		return 0, status.Errorf(codes.NotFound, "unable to resolve workbench %v: %v", workbenchID, err)
+	}
+
+	return workbench.WorkspaceID, nil
 }
 
 func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
@@ -76,7 +102,15 @@ func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(req.Id))
+	workspaceID, err := c.resolveWorkspaceID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionGetWorkbench,
+		authorization.WithWorkbench(req.Id),
+		authorization.WithWorkspace(workspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +138,15 @@ func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.UpdateWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkbench, authorization.WithWorkbench(req.Id))
+	workspaceID, err := c.resolveWorkspaceID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionUpdateWorkbench,
+		authorization.WithWorkbench(req.Id),
+		authorization.WithWorkspace(workspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +155,15 @@ func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, req *chorus.DeleteWorkbenchRequest) (*chorus.DeleteWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteWorkbench, authorization.WithWorkbench(req.Id))
+	workspaceID, err := c.resolveWorkspaceID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionDeleteWorkbench,
+		authorization.WithWorkbench(req.Id),
+		authorization.WithWorkspace(workspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -131,13 +181,22 @@ func (c workbenchControllerAuthorization) AddUserRoleInWorkbench(ctx context.Con
 		return nil, fmt.Errorf("role %q is not a workbench role", roleName)
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
+	workspaceID, err := c.resolveWorkspaceID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench,
+		authorization.WithWorkbench(req.Id),
+		authorization.WithWorkspace(workspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	assignmentContext := authorization.Context{
 		authorization.RoleContextWorkbench: fmt.Sprintf("%d", req.Id),
+		authorization.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
 		authorization.RoleContextUser:      fmt.Sprintf("%d", req.UserId),
 	}
 	if err := c.CanAssignRole(ctx, roleName, assignmentContext); err != nil {
@@ -148,7 +207,15 @@ func (c workbenchControllerAuthorization) AddUserRoleInWorkbench(ctx context.Con
 }
 
 func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench, authorization.WithWorkbench(req.Id))
+	workspaceID, err := c.resolveWorkspaceID(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkbench,
+		authorization.WithWorkbench(req.Id),
+		authorization.WithWorkspace(workspaceID),
+	)
 	if err != nil {
 		return nil, err
 	}
