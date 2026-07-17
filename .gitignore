@@ -45,3 +45,6 @@ CLAUDE.md
 
 # Local secrets files
 configs/dev/local.yaml
+
+# Coverage files
+tests/coverage
