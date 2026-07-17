@@ -97,6 +97,18 @@ func TestIsUserAllowedDefaultSchemaContextMatrix(t *testing.T) {
 			permission: model.NewPermission(model.PermissionStreamWorkbench, model.WithWorkbench(42), model.WithWorkspace(5)),
 			allowed:    false,
 		},
+		{
+			name:       "authenticated user passes the listAppInstances gate (checked without context)",
+			user:       []model.Role{{Name: model.RoleAuthenticated, Context: model.Context{model.RoleContextUser: "7"}}},
+			permission: model.NewPermission(model.PermissionListAppInstances),
+			allowed:    true,
+		},
+		{
+			name:       "workbench viewer passes the listAppInstances gate (checked without context)",
+			user:       []model.Role{workbenchViewer},
+			permission: model.NewPermission(model.PermissionListAppInstances),
+			allowed:    true,
+		},
 	}
 
 	for _, tt := range tests {

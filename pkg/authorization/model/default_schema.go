@@ -267,7 +267,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionAuditPlatform, "Allow the user to audit the platform", nil),
 			permissionDefinition(PermissionManageDynamicRoles, "Allow the user to create dynamic roles", nil),
 
-			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", oneContext(RoleContextWorkbench)),
+			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", nil),
 			permissionDefinition(PermissionCreateAppInstance, "Allow the user to create an app instance", oneContext(RoleContextWorkbench)),
 			permissionDefinition(PermissionUpdateAppInstance, "Allow the user to update an app instance", oneContext(RoleContextWorkbench)),
 			permissionDefinition(PermissionGetAppInstance, "Allow the user to get an app instance", oneContext(RoleContextWorkbench)),
@@ -282,7 +282,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionAuditWorkbench, "Allow the user to audit a workbench", workbenchOrWorkspaceContext()),
 			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", workbenchOrWorkspaceContext()),
 
-			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", nil),
 			permissionDefinition(PermissionListPublicWorkspaces, "Allow the user to list public workspaces", nil),
 			permissionDefinition(PermissionCreateWorkspace, "Allow the user to create a workspace", nil),
 			permissionDefinition(PermissionUpdateWorkspace, "Allow the user to update a workspace", oneContext(RoleContextWorkspace)),
