@@ -199,6 +199,38 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 	}
 }
 
+// TestWorkspaceAdminCanAssignWorkspaceRoles guards the grant check against
+// the role's inherited user-scoped permissions: they confer nothing in a
+// workspace assignment, so the caller must not be required to hold them.
+func TestWorkspaceAdminCanAssignWorkspaceRoles(t *testing.T) {
+	schema := model.GetDefaultSchema()
+	policy, err := newTestAuthorizationService(&schema)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	admin := []model.Role{{Name: model.RoleWorkspaceAdmin, Context: model.Context{model.RoleContextWorkspace: "5"}}}
+
+	allowed, err := policy.CanAssignRole(admin, model.RoleWorkspaceMember, model.Context{
+		model.RoleContextWorkspace: "5",
+		model.RoleContextUser:      "77",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !allowed {
+		t.Fatal("workspace admin must be able to assign a workspace role in their own workspace")
+	}
+
+	allowed, err = policy.CanAssignRole(admin, model.RoleWorkspaceMember, model.Context{
+		model.RoleContextWorkspace: "9",
+		model.RoleContextUser:      "77",
+	})
+	if err == nil && allowed {
+		t.Fatal("workspace admin must not assign a workspace role in a foreign workspace")
+	}
+}
+
 func TestDefaultSchemaSuperAdminGrantsEveryPermission(t *testing.T) {
 	schema := model.GetDefaultSchema()
 	policy, err := newTestAuthorizationService(&schema)

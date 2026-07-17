@@ -163,7 +163,7 @@ func (s *authorizationService) CreateDynamicRole(ctx context.Context, user []mod
 	if err := s.ensurePermissionsFitScope(normalizedRole); err != nil {
 		return nil, err
 	}
-	if err := s.ensureUserCanGrantPermissions(user, normalizedRole.Permissions, validationContext); err != nil {
+	if err := s.ensureUserCanGrantPermissions(user, normalizedRole, validationContext); err != nil {
 		return nil, err
 	}
 	if err := s.store.CreateDynamicRole(ctx, normalizedRole); err != nil {
@@ -278,7 +278,7 @@ func (s *authorizationService) CanAssignRole(user []model.Role, roleName model.R
 		return true, nil
 	}
 
-	if err := s.ensureUserCanGrantPermissions(user, definition.Permissions, assignmentContext); err != nil {
+	if err := s.ensureUserCanGrantPermissions(user, definition, assignmentContext); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -294,10 +294,18 @@ func (s *authorizationService) FindUsersWithPermission(ctx context.Context, tena
 }
 
 // ensureUserCanGrantPermissions verifies the user holds, in the assignment
-// context, every permission they are about to grant.
-func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, permissions []model.PermissionName, assignmentContext model.Context) error {
+// context, every permission the role would actually confer. A permission
+// whose required dimensions the role does not bind confers nothing on the
+// grantee (the fail-closed expansion drops it), so the caller does not need
+// to hold it — e.g. a workspace role's inherited user-scoped permissions.
+func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, role *model.RoleDefinition, assignmentContext model.Context) error {
+	roleDimensions := map[model.ContextDimension]bool{}
+	for dimension := range role.RequiredContextDimensions {
+		roleDimensions[dimension] = true
+	}
+
 	seen := map[model.PermissionName]bool{}
-	for _, permissionName := range permissions {
+	for _, permissionName := range role.Permissions {
 		if seen[permissionName] {
 			continue
 		}
@@ -306,6 +314,10 @@ func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, 
 		permissionDefinition, ok := s.PermissionMap[permissionName]
 		if !ok {
 			return fmt.Errorf("unknown permission: %s", permissionName)
+		}
+
+		if len(permissionDefinition.RequiredContextDimensions) > 0 && !anyDimensionIn(permissionDefinition.RequiredContextDimensions, roleDimensions) {
+			continue
 		}
 
 		permission := permissionForContext(permissionDefinition, assignmentContext)
@@ -319,6 +331,15 @@ func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, 
 		}
 	}
 	return nil
+}
+
+func anyDimensionIn(dimensions []model.ContextDimension, set map[model.ContextDimension]bool) bool {
+	for _, dimension := range dimensions {
+		if set[dimension] {
+			return true
+		}
+	}
+	return false
 }
 
 // ensurePermissionsFitScope verifies every permission of the role only
