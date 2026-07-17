@@ -2,23 +2,36 @@ package model
 
 import (
 	"fmt"
-	"net/url"
-	"sort"
-	"strings"
 )
 
-const Wildcard = "*"
-
-type ContextQuantifier string
-
-const (
-	ContextQuantifierOne ContextQuantifier = "x"
-	ContextQuantifierAny ContextQuantifier = "*"
-)
-
+// AuthorizationSchema is the full declared authorization model: every
+// permission and every role. The default schema is declared in
+// default_schema.go; dynamic roles are added at runtime from the store.
 type AuthorizationSchema struct {
 	Roles       []*RoleDefinition
 	Permissions []PermissionDefinition
+}
+
+// RoleDefinition declares what a role grants: its permissions and the
+// context dimensions an assignment must bind. See Role for the assignment
+// counterpart carried by users.
+type RoleDefinition struct {
+	Name        RoleName
+	Description string
+	Scope       RoleScope
+	Dynamic     bool
+
+	RequiredContextDimensions map[ContextDimension]ContextQuantifier
+	Permissions               []PermissionName
+}
+
+// PermissionDefinition declares a permission and the context dimensions a
+// check against it requires. See Permission for the check counterpart.
+type PermissionDefinition struct {
+	Name        PermissionName
+	Description string
+
+	RequiredContextDimensions []ContextDimension
 }
 
 type RoleScope string
@@ -46,57 +59,4 @@ func ToRoleScope(scope string) (RoleScope, error) {
 		return RoleScopeWorkbench, nil
 	}
 	return "", fmt.Errorf("unknown role scope: %s", scope)
-}
-
-type RoleDefinition struct {
-	Name        RoleName
-	Description string
-	Scope       RoleScope
-	Dynamic     bool
-
-	RequiredContextDimensions map[ContextDimension]ContextQuantifier
-	Permissions               []PermissionName
-}
-
-type PermissionDefinition struct {
-	Name        PermissionName
-	Description string
-
-	RequiredContextDimensions []ContextDimension
-}
-
-func (r Role) String() string {
-	if len(r.Context) == 0 {
-		return r.Name.String()
-	}
-
-	return fmt.Sprintf("%s@%s", r.Name, r.Context.String())
-}
-
-func (p Permission) String() string {
-	if len(p.Context) == 0 {
-		return p.Name.String()
-	}
-
-	return fmt.Sprintf("%s@%s", p.Name, p.Context.String())
-}
-
-func (c Context) String() string {
-	var parts []string
-	for k, v := range c {
-		parts = append(parts, fmt.Sprintf("%s=%s", k, url.QueryEscape(v)))
-	}
-	sort.Strings(parts)
-	return strings.Join(parts, "&")
-}
-
-func (p Permission) Copy() Permission {
-	newContext := make(Context, len(p.Context))
-	for k, v := range p.Context {
-		newContext[k] = v
-	}
-	return Permission{
-		Name:    p.Name,
-		Context: newContext,
-	}
 }
