@@ -7,7 +7,6 @@ FROM harbor.build.chorus-tre.ch/docker_proxy/library/ubuntu:24.04 AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Go
