@@ -29,45 +29,21 @@ WORKDIR /chorus
 # Copy go.mod and go.sum first for better layer caching
 COPY go.mod go.sum ./
 
-# Download Go modules with private repository authentication
 # This layer will be cached unless go.mod or go.sum changes
 RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=cache,target="/chorus/.cache/go-mod" \
-    --mount=type=secret,id=GIT_USERNAME \
-    --mount=type=secret,id=GIT_PASSWORD \
-    if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
-        echo "Downloading private dependencies..." && \
-        u="$(cat /run/secrets/GIT_USERNAME)" && \
-        p="$(cat /run/secrets/GIT_PASSWORD)" && \
-        GOPRIVATE=github.com/CHORUS-TRE/* \
-        GIT_CONFIG_COUNT=1 \
-        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadOf \
-        GIT_CONFIG_VALUE_0=https://github.com/ \
-        go mod download; \
-    else \
-        go mod download; \
-    fi
+    go mod download
 
 # Copy the rest of the source code
 COPY . .
 
 # Build the application
+ARG VERSION=""
+ARG GIT_COMMIT=""
+
 RUN --mount=type=cache,target="/chorus/.cache/go-build" \
     --mount=type=cache,target="/chorus/.cache/go-mod" \
-    --mount=type=secret,id=GIT_USERNAME \
-    --mount=type=secret,id=GIT_PASSWORD \
-    if [ -f /run/secrets/GIT_USERNAME ] && [ -f /run/secrets/GIT_PASSWORD ]; then \
-        echo "Building with private dependencies..." && \
-        u="$(cat /run/secrets/GIT_USERNAME)" && \
-        p="$(cat /run/secrets/GIT_PASSWORD)" && \
-        GOPRIVATE=github.com/CHORUS-TRE/* \
-        GIT_CONFIG_COUNT=1 \
-        GIT_CONFIG_KEY_0=url."https://${u}:${p}@github.com/".insteadOf \
-        GIT_CONFIG_VALUE_0=https://github.com/ \
-        go build -trimpath -ldflags "$LD_FLAGS" -o /usr/local/bin/chorus ./cmd/chorus; \
-    else \
-         go build -trimpath -ldflags "$LD_FLAGS" -o /usr/local/bin/chorus ./cmd/chorus; \
-    fi
+    go build -trimpath -ldflags "-s -w -X github.com/CHORUS-TRE/chorus-backend/internal/cmd/provider.version=${VERSION} -X github.com/CHORUS-TRE/chorus-backend/internal/cmd/provider.gitCommit=${GIT_COMMIT}" -o /usr/local/bin/chorus ./cmd/chorus
 
 # Runtime stage - minimal image with only the binary and runtime dependencies
 FROM harbor.build.chorus-tre.ch/docker_proxy/library/ubuntu:24.04
