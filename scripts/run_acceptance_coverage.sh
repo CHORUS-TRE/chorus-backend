@@ -48,6 +48,9 @@ TEST_CONFIG_FILE="$CONFIG" go test -count=1 -p 1 --tags acceptance "$TARGET" -ar
 kill -INT "$BACKEND_PID"
 wait "$BACKEND_PID" || true
 
+# Delete binary
+rm bin/chorus-cov
+
 go tool covdata textfmt -i="$RAW_DIR" -o "$COVERAGE_DIR/acceptance.out"
 go tool cover -func="$COVERAGE_DIR/acceptance.out" | tail -1
 echo "details: make coverage-html REPORT=acceptance"
