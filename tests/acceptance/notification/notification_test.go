@@ -24,21 +24,29 @@ func getAuthAsClientOpts(t string) func(*runtime.ClientOperation) {
 	}
 }
 
+func validUserAuth() func(*runtime.ClientOperation) {
+	return getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
+}
+
 var _ = Describe("notification service", func() {
+
+	AfterEach(func() {
+		cleanTables()
+	})
+
 	Describe("count unread notifications", func() {
-		helpers.Setup()
 
 		Given("an invalid jwt-token", func() {
 
-			auth := getAuthAsClientOpts("invalid")
-
 			When("the route GET '/api/rest/v1/notifications/count' is called", func() {
-				req := notification.NewNotificationServiceCountUnreadNotificationsParams()
-
-				c := helpers.NotificationServiceHTTPClient()
-				_, err := c.NotificationService.NotificationServiceCountUnreadNotifications(req, auth)
 
 				Then("an authentication error should be raised", func() {
+					auth := getAuthAsClientOpts("invalid")
+					req := notification.NewNotificationServiceCountUnreadNotificationsParams()
+
+					c := helpers.NotificationServiceHTTPClient()
+					_, err := c.NotificationService.NotificationServiceCountUnreadNotifications(req, auth)
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
@@ -47,38 +55,35 @@ var _ = Describe("notification service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
-
 			When("the route GET '/api/rest/v1/notifications/count' is called", func() {
-				setupTables()
-				req := notification.NewNotificationServiceCountUnreadNotificationsParams()
-
-				c := helpers.NotificationServiceHTTPClient()
-				resp, err := c.NotificationService.NotificationServiceCountUnreadNotifications(req, auth)
 
 				Then("notifications should be returned", func() {
+					setupTables()
+					req := notification.NewNotificationServiceCountUnreadNotificationsParams()
+
+					c := helpers.NotificationServiceHTTPClient()
+					resp, err := c.NotificationService.NotificationServiceCountUnreadNotifications(req, validUserAuth())
+
 					ExpectAPIErr(err).Should(BeNil())
 					Expect(resp.Payload.Result).Should(Equal(int64(2)))
 				})
-				cleanTables()
 			})
 		})
 	})
 
 	Describe("mark notification as read", func() {
-		helpers.Setup()
 
 		Given("an invalid jwt-token", func() {
 
-			auth := getAuthAsClientOpts("invalid")
-
 			When("the route POST '/api/rest/v1/notifications/read' is called", func() {
-				req := notification.NewNotificationServiceMarkNotificationsAsReadParams()
-
-				c := helpers.NotificationServiceHTTPClient()
-				_, err := c.NotificationService.NotificationServiceMarkNotificationsAsRead(req, auth)
 
 				Then("an authentication error should be raised", func() {
+					auth := getAuthAsClientOpts("invalid")
+					req := notification.NewNotificationServiceMarkNotificationsAsReadParams()
+
+					c := helpers.NotificationServiceHTTPClient()
+					_, err := c.NotificationService.NotificationServiceMarkNotificationsAsRead(req, auth)
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
@@ -87,38 +92,36 @@ var _ = Describe("notification service", func() {
 
 		Given("a valid jwt-token", func() {
 
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
-
 			When("the route POST '/api/rest/v1/notifications/read' is called", func() {
-				setupTables()
-				req := notification.NewNotificationServiceMarkNotificationsAsReadParams().WithBody(
-					&models.ChorusMarkNotificationsAsReadRequest{
-						NotificationIds: []string{"88888-notEnoughFunds"},
-					})
-
-				c := helpers.NotificationServiceHTTPClient()
-				_, err := c.NotificationService.NotificationServiceMarkNotificationsAsRead(req, auth)
 
 				Then("notifications should be marked as read", func() {
+					setupTables()
+					req := notification.NewNotificationServiceMarkNotificationsAsReadParams().WithBody(
+						&models.ChorusMarkNotificationsAsReadRequest{
+							NotificationIds: []string{"88888-notEnoughFunds"},
+						})
+
+					c := helpers.NotificationServiceHTTPClient()
+					_, err := c.NotificationService.NotificationServiceMarkNotificationsAsRead(req, validUserAuth())
+
 					ExpectAPIErr(err).Should(BeNil())
 				})
-				cleanTables()
 			})
 
 			When("then route POST '/api/rest/v1/notifications/read' is called with mark all checked", func() {
-				setupTables()
-				req := notification.NewNotificationServiceMarkNotificationsAsReadParams().WithBody(
-					&models.ChorusMarkNotificationsAsReadRequest{
-						MarkAll: true,
-					})
-
-				c := helpers.NotificationServiceHTTPClient()
-				_, err := c.NotificationService.NotificationServiceMarkNotificationsAsRead(req, auth)
 
 				Then("notifications should be marked as read", func() {
+					setupTables()
+					req := notification.NewNotificationServiceMarkNotificationsAsReadParams().WithBody(
+						&models.ChorusMarkNotificationsAsReadRequest{
+							MarkAll: true,
+						})
+
+					c := helpers.NotificationServiceHTTPClient()
+					_, err := c.NotificationService.NotificationServiceMarkNotificationsAsRead(req, validUserAuth())
+
 					ExpectAPIErr(err).Should(BeNil())
 				})
-				cleanTables()
 			})
 		})
 	})
@@ -127,15 +130,15 @@ var _ = Describe("notification service", func() {
 
 		Given("an invalid jwt-token", func() {
 
-			auth := getAuthAsClientOpts("invalid")
-
 			When("the route GET '/api/rest/v1/notifications/{id}' is called", func() {
-				req := notification.NewNotificationServiceGetNotificationsParams()
-
-				c := helpers.NotificationServiceHTTPClient()
-				_, err := c.NotificationService.NotificationServiceGetNotifications(req, auth)
 
 				Then("an authentication error should be raised", func() {
+					auth := getAuthAsClientOpts("invalid")
+					req := notification.NewNotificationServiceGetNotificationsParams()
+
+					c := helpers.NotificationServiceHTTPClient()
+					_, err := c.NotificationService.NotificationServiceGetNotifications(req, auth)
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
@@ -146,95 +149,55 @@ var _ = Describe("notification service", func() {
 
 			Given("a valid request", func() {
 
-				auth := getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
-
 				When("the route GET '/api/rest/v1/notifications' is called with default params", func() {
-					setupTables()
-					offset, limit, order, sortType := int64(0), int64(10), "desc", "CREATEDAT"
-					req := notification.NewNotificationServiceGetNotificationsParams().
-						WithIsRead(nil).WithPaginationOffset(&offset).
-						WithPaginationLimit(&limit).WithPaginationSortOrder(&order).WithPaginationSortType(&sortType)
-
-					c := helpers.NotificationServiceHTTPClient()
-					res, err := c.NotificationService.NotificationServiceGetNotifications(req, auth)
 
 					Then("all notifications should be returned in createdat sort order desc", func() {
+						setupTables()
+						offset, limit, order, sortType := int64(0), int64(10), "desc", "CREATEDAT"
+						req := notification.NewNotificationServiceGetNotificationsParams().
+							WithIsRead(nil).WithPaginationOffset(&offset).
+							WithPaginationLimit(&limit).WithPaginationSortOrder(&order).WithPaginationSortType(&sortType)
+
+						c := helpers.NotificationServiceHTTPClient()
+						res, err := c.NotificationService.NotificationServiceGetNotifications(req, validUserAuth())
+
 						ExpectAPIErr(err).Should(BeNil())
 						Expect(len(res.Payload.Result)).Should(Equal(4))
 						Expect(res.Payload.TotalItems).Should(Equal(int64(4)))
 						Expect(res.Payload.Result[0].ID).Should(Equal("88888-notEnoughFunds"))
 						Expect(res.Payload.Result[1].ID).Should(Equal("88889-notEnoughFunds"))
 					})
-					cleanTables()
 				})
-				When("the route GET '/api/rest/v1/notifications' is called with default params and limit 2", func() {
-					setupTables()
-					query, offset, limit, order, sortType := []string{""}, int64(0), int64(2), "desc", "CREATEDAT"
-					req := notification.NewNotificationServiceGetNotificationsParams().
-						WithPaginationQuery(query).WithIsRead(nil).WithPaginationOffset(&offset).
-						WithPaginationLimit(&limit).WithPaginationSortOrder(&order).WithPaginationSortType(&sortType)
 
-					c := helpers.NotificationServiceHTTPClient()
-					res, err := c.NotificationService.NotificationServiceGetNotifications(req, auth)
+				When("the route GET '/api/rest/v1/notifications' is called with default params and limit 2", func() {
 
 					Then("all notifications should be returned in createdat sort order desc", func() {
+						setupTables()
+						query, offset, limit, order, sortType := []string{""}, int64(0), int64(2), "desc", "CREATEDAT"
+						req := notification.NewNotificationServiceGetNotificationsParams().
+							WithPaginationQuery(query).WithIsRead(nil).WithPaginationOffset(&offset).
+							WithPaginationLimit(&limit).WithPaginationSortOrder(&order).WithPaginationSortType(&sortType)
+
+						c := helpers.NotificationServiceHTTPClient()
+						res, err := c.NotificationService.NotificationServiceGetNotifications(req, validUserAuth())
+
 						ExpectAPIErr(err).Should(BeNil())
 						Expect(len(res.Payload.Result)).Should(Equal(2))
 						Expect(res.Payload.TotalItems).Should(Equal(int64(4)))
 						Expect(res.Payload.Result[0].ID).Should(Equal("88888-notEnoughFunds"))
 						Expect(res.Payload.Result[1].ID).Should(Equal("88889-notEnoughFunds"))
 					})
-					cleanTables()
 				})
-				// When("the route GET '/api/rest/v1/notifications' is called with isRead to false", func() {
-				// 	Skip("todo fix is read filter")
 
-				// 	setupTables()
-				// 	query, offset, limit, order, sortType := []string{""}, int64(0), int64(10), "desc", "CREATEDAT"
-				// 	isRead := false
-				// 	req := notification.NewNotificationServiceGetNotificationsParams().
-				// 		WithPaginationQuery(query).WithIsRead(&isRead).WithPaginationOffset(&offset).
-				// 		WithPaginationLimit(&limit).WithPaginationSortOrder(&order).WithPaginationSortType(&sortType)
+				// TODO fix the isRead filter, then reintroduce the spec:
+				// GET '/api/rest/v1/notifications' with isRead=false should
+				// only return unread notifications (88888-notEnoughFunds,
+				// 88889-err2 in the fixtures).
 
-				// 	c := helpers.NotificationServiceHTTPClient()
-				// 	res, err := c.NotificationService.NotificationServiceGetNotifications(req, auth)
-
-				// 	for i, notification := range res.Payload.Result {
-				// 		fmt.Println("--- dump notif", i)
-				// 		fmt.Println(notification.TenantID, notification.ID, notification.Message, notification.ReadAt)
-				// 	}
-
-				// 	Then("only unread notifications should be returned", func() {
-				// 		ExpectAPIErr(err).Should(BeNil())
-				// 		Expect(len(res.Payload.Result)).Should(Equal(2))
-				// 		Expect(res.Payload.TotalItems).Should(Equal(int64(2)))
-				// 		Expect(res.Payload.Result[0].ID).Should(Equal("88888-notEnoughFunds"))
-				// 		Expect(res.Payload.Result[1].ID).Should(Equal("88889-err2"))
-				// 	})
-				// 	cleanTables()
-				// })
-
-				// When("the route GET '/api/rest/v1/notifications' is called with query 'notEnoughFunds'", func() {
-				// 	Skip("todo fix sort type")
-
-				// 	setupTables()
-				// 	query, offset, limit, order, sortType := []string{"notEnoughFunds"}, int64(0), int64(10), "desc", "CREATEDAT"
-				// 	req := notification.NewNotificationServiceGetNotificationsParams().
-				// 		WithPaginationQuery(query).WithIsRead(nil).WithPaginationOffset(&offset).
-				// 		WithPaginationLimit(&limit).WithPaginationSortOrder(&order).WithPaginationSortType(&sortType)
-
-				// 	c := helpers.NotificationServiceHTTPClient()
-				// 	res, err := c.NotificationService.NotificationServiceGetNotifications(req, auth)
-
-				// 	Then("only notifications with id containing 'notEnoughFunds' should be returned", func() {
-				// 		ExpectAPIErr(err).Should(BeNil())
-				// 		Expect(len(res.Payload.Result)).Should(Equal(2))
-				// 		Expect(res.Payload.TotalItems).Should(Equal(int64(2)))
-				// 		Expect(res.Payload.Result[0].ID).Should(Equal("88888-notEnoughFunds"))
-				// 		Expect(res.Payload.Result[1].ID).Should(Equal("88889-notEnoughFunds"))
-				// 	})
-				// 	cleanTables()
-				// })
+				// TODO fix the sort type, then reintroduce the spec:
+				// GET '/api/rest/v1/notifications' with query 'notEnoughFunds'
+				// should only return notifications whose id contains it
+				// (88888-notEnoughFunds, 88889-notEnoughFunds in the fixtures).
 			})
 		})
 	})
@@ -246,7 +209,7 @@ func setupTables() {
 	q := `
 	INSERT INTO tenants(id, name) VALUES (88888, 'tenant test');
 	INSERT INTO users (id, tenantid, username) VALUES (88888, 88888, 'manager01'), (88889, 88888, 'manager02');
-	INSERT INTO notifications (id, tenantid, userid, message, createdat) VALUES 
+	INSERT INTO notifications (id, tenantid, userid, message, createdat) VALUES
 		('88888-notEnoughFunds', 88888, 88888, 'Fail: err1', now()),
 		('88889-notEnoughFunds', 88888, 88888, 'Fail: err1', '2020-03-08T15:51:50'),
 		('88889-err2', 88888, 88888, 'Fail: err2', '2020-03-07T15:51:50'),

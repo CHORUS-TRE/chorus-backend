@@ -15,22 +15,25 @@ import (
 )
 
 var _ = Describe("chorus infos", func() {
-	helpers.Setup()
 
 	Describe("get the info of chorus", func() {
 
 		Given("a browser/curl", func() {
 
 			When("the route 'GET /' is called", func() {
-				defer GinkgoRecover()
+				var infosReply *provider.Info
+				var err error
 
-				infosReply, err := getInfos()
+				BeforeEach(func() {
+					infosReply, err = getInfos()
+				})
 
 				Then("it should not error", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				Then("it should return the info of the chorus", func() {
+					Expect(err).NotTo(HaveOccurred())
 					Expect(infosReply.Name).Should(Equal("chorus"))
 					Expect(infosReply.GoVersion).Should(BeZero())
 				})

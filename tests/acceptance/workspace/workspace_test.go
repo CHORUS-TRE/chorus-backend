@@ -24,53 +24,60 @@ func getAuthAsClientOpts(t string) func(*runtime.ClientOperation) {
 	}
 }
 
+func workspaceAdminAuth() func(*runtime.ClientOperation) {
+	return getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleWorkspaceAdmin.String(), map[string]string{"workspace": "80001"}))
+}
+
+func authenticatedAuth(userID uint64) func(*runtime.ClientOperation) {
+	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": fmt.Sprintf("%d", userID)}))
+}
+
 var _ = Describe("workspace service", func() {
-	helpers.Setup()
+
+	BeforeEach(func() {
+		setupTables()
+		DeferCleanup(cleanTables)
+	})
 
 	Describe("get workspace", func() {
 
 		Given("no jwt-token", func() {
 			When("GET /api/rest/v1/workspaces/{id} is called", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
-				c := helpers.WorkspaceServiceHTTPClient()
-				_, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, getAuthAsClientOpts("invalid"))
 
 				Then("an authentication error is returned", func() {
+					req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, getAuthAsClientOpts("invalid"))
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
-				cleanTables()
 			})
 		})
 
 		Given("a valid jwt-token with no access to the workspace", func() {
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
-
 			When("GET /api/rest/v1/workspaces/{id} is called", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
-				c := helpers.WorkspaceServiceHTTPClient()
-				_, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, auth)
 
 				Then("a permission error is returned", func() {
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
+					req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, auth)
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusForbidden)))
 				})
-				cleanTables()
 			})
 		})
 
 		Given("a valid jwt-token with WorkspaceAdmin role on the workspace", func() {
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleWorkspaceAdmin.String(), map[string]string{"workspace": "80001"}))
-
 			When("GET /api/rest/v1/workspaces/{id} is called", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
-				c := helpers.WorkspaceServiceHTTPClient()
-				resp, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, auth)
 
 				Then("the workspace is returned with correct fields", func() {
+					req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, workspaceAdminAuth())
+
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
 					Expect(ws.Name).Should(Equal("Private WS"))
@@ -78,7 +85,6 @@ var _ = Describe("workspace service", func() {
 					Expect(ws.Description).Should(Equal("A private workspace"))
 					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPRIVATE))
 				})
-				cleanTables()
 			})
 		})
 	})
@@ -87,29 +93,27 @@ var _ = Describe("workspace service", func() {
 
 		Given("no jwt-token", func() {
 			When("GET /api/rest/v1/workspaces/public is called", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
-				c := helpers.WorkspaceServiceHTTPClient()
-				_, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, getAuthAsClientOpts("invalid"))
 
 				Then("an authentication error is returned", func() {
+					req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, getAuthAsClientOpts("invalid"))
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
-				cleanTables()
 			})
 		})
 
 		Given("a valid jwt-token with Authenticated role", func() {
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
-
 			When("GET /api/rest/v1/workspaces/public is called", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
-				c := helpers.WorkspaceServiceHTTPClient()
-				resp, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, auth)
 
 				Then("only the public workspace is returned", func() {
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
+					req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, auth)
+
 					ExpectAPIErr(err).Should(BeNil())
 					workspaces := resp.Payload.Result.PublicWorkspaces
 					Expect(workspaces).Should(HaveLen(1))
@@ -117,7 +121,6 @@ var _ = Describe("workspace service", func() {
 					Expect(workspaces[0].Name).Should(Equal("Public WS"))
 					Expect(workspaces[0].ShortName).Should(Equal("public-ws"))
 				})
-				cleanTables()
 			})
 		})
 	})
@@ -126,33 +129,30 @@ var _ = Describe("workspace service", func() {
 
 		Given("no jwt-token", func() {
 			When("POST /api/rest/v1/workspaces is called", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
-					&workspace_models.ChorusWorkspace{Name: "New WS", ShortName: "new-ws"},
-				)
-				c := helpers.WorkspaceServiceHTTPClient()
-				_, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, getAuthAsClientOpts("invalid"))
 
 				Then("an authentication error is returned", func() {
+					req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+						&workspace_models.ChorusWorkspace{Name: "New WS", ShortName: "new-ws"},
+					)
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, getAuthAsClientOpts("invalid"))
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
-				cleanTables()
 			})
 		})
 
 		Given("a valid jwt-token with Authenticated role", func() {
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
-
 			When("POST /api/rest/v1/workspaces is called without explicit visibility", func() {
-				setupTables()
-				req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
-					&workspace_models.ChorusWorkspace{Name: "Default WS", ShortName: "default-ws", Description: "No explicit visibility"},
-				)
-				c := helpers.WorkspaceServiceHTTPClient()
-				resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, auth)
 
 				Then("workspace is created with correct defaults (requester as owner, status is active, private visibility)", func() {
+					req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+						&workspace_models.ChorusWorkspace{Name: "Default WS", ShortName: "default-ws", Description: "No explicit visibility"},
+					)
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, authenticatedAuth(90000))
+
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
 					Expect(ws.Name).Should(Equal("Default WS"))
@@ -160,25 +160,23 @@ var _ = Describe("workspace service", func() {
 					Expect(*ws.Status).Should(Equal(workspace_models.ChorusWorkspaceStatusWORKSPACESTATUSACTIVE))
 					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPRIVATE))
 				})
-				cleanTables()
 			})
 
 			When("POST /api/rest/v1/workspaces is called with visibility=public", func() {
-				setupTables()
-				visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
-				req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
-					&workspace_models.ChorusWorkspace{Name: "Public WS 2", ShortName: "public-ws-2", Visibility: &visPublic},
-				)
-				c := helpers.WorkspaceServiceHTTPClient()
-				resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, auth)
 
 				Then("workspace is created with public visibility", func() {
+					visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
+					req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+						&workspace_models.ChorusWorkspace{Name: "Public WS 2", ShortName: "public-ws-2", Visibility: &visPublic},
+					)
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, authenticatedAuth(90000))
+
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
 					Expect(ws.Name).Should(Equal("Public WS 2"))
 					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC))
 				})
-				cleanTables()
 			})
 		})
 	})
@@ -186,23 +184,20 @@ var _ = Describe("workspace service", func() {
 	Describe("update workspace", func() {
 
 		Given("a valid jwt-token with WorkspaceAdmin role on the workspace", func() {
-			auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleWorkspaceAdmin.String(), map[string]string{"workspace": "80001"}))
-
 			When("PUT /api/rest/v1/workspaces/{id} changes visibility to public", func() {
-				setupTables()
-				visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
-				req := workspace_svc.NewWorkspaceServiceUpdateWorkspaceParams().WithBody(
-					&workspace_models.ChorusWorkspace{ID: "80001", Name: "Private WS", ShortName: "private-ws", Visibility: &visPublic},
-				)
-				c := helpers.WorkspaceServiceHTTPClient()
-				resp, err := c.WorkspaceService.WorkspaceServiceUpdateWorkspace(req, auth)
 
 				Then("workspace visibility is updated to public", func() {
+					visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
+					req := workspace_svc.NewWorkspaceServiceUpdateWorkspaceParams().WithBody(
+						&workspace_models.ChorusWorkspace{ID: "80001", Name: "Private WS", ShortName: "private-ws", Visibility: &visPublic},
+					)
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceUpdateWorkspace(req, workspaceAdminAuth())
+
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
 					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC))
 				})
-				cleanTables()
 			})
 		})
 	})

@@ -26,8 +26,8 @@ This project is the backend of the chorus platform.
         mc alias set minio http://localhost:9000 minioadmin minioadmin
         mc mb minio/chorus-data
         ```
-1. launch go run
-    `go run cmd/chorus/main.go start | go run cmd/logger/main.go`
+1. launch the backend
+    `make run` (or `go run cmd/chorus/main.go start | go run cmd/logger/main.go`)
 1. go to localhost:5000/doc
 1. create tenant
     a) get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
@@ -43,7 +43,7 @@ Create a complete service (here the workbench service)
 
 1. Interface
     - create service & entity protocol buffer definitions in api/proto/v1/workbench-service.proto and api/proto/v1/workbench.proto
-    - `./scripts/generate-protos.sh`
+    - `make protos`
 
 1. Write the migration
     - implement migration in internal/migration/chorus/postgres/00003_workbench.sql
@@ -76,42 +76,57 @@ Create a complete service (here the workbench service)
 
 1. Tests
 
+    All test tiers are driven through make (see `make help` for every target).
+    Coverage profiles land in `tests/coverage/` and can be browsed with
+    `make coverage-html REPORT=unit|integration|acceptance`.
+
     **Unit Tests**
 
-    Run all unit tests
+    Run all unit tests (writes `tests/coverage/unit.out`)
     ```bash
-    ./scripts/run_unit_test.sh
+    make test-unit
     ```
 
-    Run unit tests for a specific package
+    Run unit tests for a specific domain
     ```bash
-    ./scripts/run_unit_test.sh workspace
+    make test-unit PKG=workspace
+    ```
+
+    **Integration Tests**
+
+    Store tests against an embedded postgres, no dependencies needed
+    (writes `tests/coverage/integration.out`)
+    ```bash
+    make test-integration
     ```
 
     **Acceptance Tests**
 
-    Log in to your postgres db
-    ```bash
-    docker exec -it chorus-backend-dev-container-postgres-1 psql -U admin chorus
-    ```
-
-    Create dedicated database
-    ```bash
-    CREATE DATABASE chorus_ci;
-    ```
+    The suites talk to a backend over HTTP and need the `chorus_ci` database
+    (created automatically by the dev-container init script; for an older
+    postgres volume, create it once with `CREATE DATABASE chorus_ci;`).
 
     In a shell, launch the backend (CI flavour)
     ```bash
     ./scripts/run_backend_ci.sh
     ```
 
-    In another shell, run the all the acceptance tests
+    In another shell, run all the acceptance suites
     ```bash
-    ./scripts/run_acceptance_test.sh
+    make test-acceptance
     ```
-    Or, run the acceptance tests for a specific package
+    Or a single suite
     ```bash
-    ./scripts/run_acceptance_test.sh workspace
+    make test-acceptance SUITE=workspace
+    ```
+
+    **Acceptance Coverage**
+
+    Runs the suites against a self-managed, coverage-instrumented backend —
+    no separate shell needed, but the port 5000 must be free
+    (writes `tests/coverage/acceptance.out`)
+    ```bash
+    make test-acceptance-coverage
     ```
 
 ## License and Usage Restrictions
