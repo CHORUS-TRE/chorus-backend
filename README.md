@@ -19,7 +19,7 @@ This project is the backend of the chorus platform.
 1. install go
 1. pull repo
 1. requirements
-    * postgres & minio `docker compose -f .devcontainer/compose.yml up -d`
+    * postgres & minio `make deps` (or `docker compose -f docker/compose.yml up -d`; `make deps-down` / `make deps-clean` to stop, optionally wiping volumes)
     * kind `./scripts/create-local-cluster.sh`
     * setup minio `mc` client with the following commands:
         ```
@@ -30,8 +30,8 @@ This project is the backend of the chorus platform.
     `make run` (or `go run cmd/chorus/main.go start | go run cmd/logger/main.go`)
 1. go to localhost:5000/doc
 1. create tenant
-    a) get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
-    b) init tenant 1 in openapi steward service
+    A. get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
+    B. init tenant 1 in openapi steward service
 1. create user
 1. login
 1. test with get my user

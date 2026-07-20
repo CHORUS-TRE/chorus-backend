@@ -10,16 +10,19 @@ SUITE ?=
 UNIT_TARGET       = $(if $(PKG),./pkg/$(PKG)/service,./...)
 ACCEPTANCE_TARGET = $(if $(SUITE),./tests/acceptance/$(SUITE),./tests/acceptance/...)
 
-.PHONY: help deps deps-down build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean
+.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-26s\033[0m %s\n", $$1, $$2}'
 
 deps: ## Start local dependencies (postgres, minio)
-	docker compose -f .devcontainer/compose.yml up -d
+	docker compose -f docker/compose.yml up -d
 
 deps-down: ## Stop local dependencies
-	docker compose -f .devcontainer/compose.yml down
+	docker compose -f docker/compose.yml down
+
+deps-clean: ## Stop local dependencies and remove their volumes (postgres/minio data)
+	docker compose -f docker/compose.yml down -v
 
 build: ## Build the backend binary into bin/chorus
 	go build -o bin/chorus ./cmd/chorus
