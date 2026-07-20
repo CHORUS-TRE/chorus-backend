@@ -267,22 +267,22 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionAuditPlatform, "Allow the user to audit the platform", nil),
 			permissionDefinition(PermissionManageDynamicRoles, "Allow the user to create dynamic roles", nil),
 
-			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", oneContext(RoleContextWorkbench)),
+			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", nil),
 			permissionDefinition(PermissionCreateAppInstance, "Allow the user to create an app instance", oneContext(RoleContextWorkbench)),
 			permissionDefinition(PermissionUpdateAppInstance, "Allow the user to update an app instance", oneContext(RoleContextWorkbench)),
 			permissionDefinition(PermissionGetAppInstance, "Allow the user to get an app instance", oneContext(RoleContextWorkbench)),
 			permissionDefinition(PermissionDeleteAppInstance, "Allow the user to delete an app instance", oneContext(RoleContextWorkbench)),
 
-			permissionDefinition(PermissionListWorkbenchs, "Allow the user to list workbenchs", oneContext(RoleContextWorkbench)),
+			permissionDefinition(PermissionListWorkbenchs, "Allow the user to list workbenchs", nil),
 			permissionDefinition(PermissionCreateWorkbench, "Allow the user to create a workbench", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionUpdateWorkbench, "Allow the user to update a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionGetWorkbench, "Allow the user to get a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionStreamWorkbench, "Allow the user to stream a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionDeleteWorkbench, "Allow the user to delete a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionAuditWorkbench, "Allow the user to audit a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", oneContext(RoleContextWorkbench)),
+			permissionDefinition(PermissionUpdateWorkbench, "Allow the user to update a workbench", workbenchOrWorkspaceContext()),
+			permissionDefinition(PermissionGetWorkbench, "Allow the user to get a workbench", workbenchOrWorkspaceContext()),
+			permissionDefinition(PermissionStreamWorkbench, "Allow the user to stream a workbench", workbenchOrWorkspaceContext()),
+			permissionDefinition(PermissionDeleteWorkbench, "Allow the user to delete a workbench", workbenchOrWorkspaceContext()),
+			permissionDefinition(PermissionAuditWorkbench, "Allow the user to audit a workbench", workbenchOrWorkspaceContext()),
+			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", workbenchOrWorkspaceContext()),
 
-			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", nil),
 			permissionDefinition(PermissionListPublicWorkspaces, "Allow the user to list public workspaces", nil),
 			permissionDefinition(PermissionCreateWorkspace, "Allow the user to create a workspace", nil),
 			permissionDefinition(PermissionUpdateWorkspace, "Allow the user to update a workspace", oneContext(RoleContextWorkspace)),
@@ -517,6 +517,13 @@ func contextDimensions(context map[ContextDimension]ContextQuantifier) []Context
 
 func oneContext(context ContextDimension) map[ContextDimension]ContextQuantifier {
 	return map[ContextDimension]ContextQuantifier{context: ContextQuantifierOne}
+}
+
+func workbenchOrWorkspaceContext() map[ContextDimension]ContextQuantifier {
+	return map[ContextDimension]ContextQuantifier{
+		RoleContextWorkbench: ContextQuantifierOne,
+		RoleContextWorkspace: ContextQuantifierOne,
+	}
 }
 
 func anyContext(context ContextDimension) map[ContextDimension]ContextQuantifier {

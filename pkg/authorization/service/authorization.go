@@ -32,10 +32,46 @@ type Authorizer interface {
 	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter) ([]uint64, error)
 }
 
+// authStructures is the schema in lookup form, rebuilt on every schema
+// reload and handed to the policy kernel for decisions.
 type authStructures struct {
 	PermissionMap           map[model.PermissionName]model.PermissionDefinition
 	RoleMap                 map[model.RoleName]*model.RoleDefinition
 	RolesGrantingPermission map[model.PermissionName][]model.RoleName
+}
+
+func extractAuthorizationStructures(schema *model.AuthorizationSchema) (authStructures, error) {
+	permissionMap := make(map[model.PermissionName]model.PermissionDefinition, len(schema.Permissions))
+	for _, permission := range schema.Permissions {
+		if _, ok := permissionMap[permission.Name]; ok {
+			return authStructures{}, fmt.Errorf("duplicate permission name %s", permission.Name)
+		}
+		permissionMap[permission.Name] = permission
+	}
+
+	roleMap := make(map[model.RoleName]*model.RoleDefinition, len(schema.Roles))
+	for _, role := range schema.Roles {
+		if _, ok := roleMap[role.Name]; ok {
+			return authStructures{}, fmt.Errorf("duplicate role name %s", role.Name)
+		}
+		roleMap[role.Name] = role
+	}
+
+	rolesGrantingPermission := make(map[model.PermissionName][]model.RoleName)
+	for _, role := range schema.Roles {
+		for _, permission := range role.Permissions {
+			if _, ok := permissionMap[permission]; !ok {
+				return authStructures{}, fmt.Errorf("role %s has unknown permission %s", role.Name, permission)
+			}
+			rolesGrantingPermission[permission] = append(rolesGrantingPermission[permission], role.Name)
+		}
+	}
+
+	return authStructures{
+		PermissionMap:           permissionMap,
+		RoleMap:                 roleMap,
+		RolesGrantingPermission: rolesGrantingPermission,
+	}, nil
 }
 
 type authorizationService struct {
@@ -127,7 +163,7 @@ func (s *authorizationService) CreateDynamicRole(ctx context.Context, user []mod
 	if err := s.ensurePermissionsFitScope(normalizedRole); err != nil {
 		return nil, err
 	}
-	if err := s.ensureUserCanGrantPermissions(user, normalizedRole.Permissions, validationContext); err != nil {
+	if err := s.ensureUserCanGrantPermissions(user, normalizedRole, validationContext); err != nil {
 		return nil, err
 	}
 	if err := s.store.CreateDynamicRole(ctx, normalizedRole); err != nil {
@@ -139,6 +175,8 @@ func (s *authorizationService) CreateDynamicRole(ctx context.Context, user []mod
 	return normalizedRole, nil
 }
 
+// GetUserPermissions returns the deduplicated permission names the user's
+// roles grant, without context.
 func (s *authorizationService) GetUserPermissions(user []model.Role) ([]model.Permission, error) {
 	permissions := make([]model.Permission, 0)
 	seen := map[model.PermissionName]bool{}
@@ -158,51 +196,15 @@ func (s *authorizationService) GetUserPermissions(user []model.Role) ([]model.Pe
 	return permissions, nil
 }
 
-func (s *authorizationService) getUserPermissionsWithContext(user []model.Role) ([]model.Permission, error) {
-	permissions := make([]model.Permission, 0)
-	for _, role := range user {
-		definition, ok := s.RoleMap[role.Name]
-		if !ok {
-			return nil, fmt.Errorf("role %q not found in schema", role.Name)
-		}
-		for _, permissionName := range definition.Permissions {
-			permissionDefinition := s.PermissionMap[permissionName]
-			permission := model.Permission{
-				Name:    permissionName,
-				Context: make(model.Context, len(permissionDefinition.RequiredContextDimensions)),
-			}
-			for _, dimension := range permissionDefinition.RequiredContextDimensions {
-				if actualValue, ok := role.Context[dimension]; ok {
-					permission.Context[dimension] = actualValue
-				}
-			}
-			permissions = append(permissions, permission)
-		}
-	}
-	return permissions, nil
-}
-
 func (s *authorizationService) IsUserAllowed(user []model.Role, permission model.Permission) (bool, error) {
-	if _, ok := s.PermissionMap[permission.Name]; !ok {
-		return false, fmt.Errorf("unknown permission: %s", permission)
-	}
-	permissions, err := s.getUserPermissionsWithContext(user)
-	if err != nil {
-		return false, err
-	}
-	for _, userPermission := range permissions {
-		if isPermissionIdentical(userPermission, permission) {
-			return true, nil
-		}
-	}
-	return false, nil
+	return isUserAllowed(s.RoleMap, s.PermissionMap, user, permission)
 }
 
 func (s *authorizationService) ExplainIsUserAllowed(user []model.Role, permission model.Permission) string {
 	if _, ok := s.PermissionMap[permission.Name]; !ok {
 		return fmt.Sprintf("unknown permission: %s", permission)
 	}
-	permissions, err := s.getUserPermissionsWithContext(user)
+	permissions, err := expandUserPermissions(s.RoleMap, s.PermissionMap, user)
 	if err != nil {
 		return fmt.Sprintf("error expanding user roles: %v", err)
 	}
@@ -217,11 +219,13 @@ func (s *authorizationService) ExplainIsUserAllowed(user []model.Role, permissio
 	return explanations
 }
 
+// GetContextListForPermission returns the distinct contexts in which the
+// user holds the given permission.
 func (s *authorizationService) GetContextListForPermission(user []model.Role, permissionName model.PermissionName) ([]model.Context, error) {
 	if _, ok := s.PermissionMap[permissionName]; !ok {
 		return nil, fmt.Errorf("unknown permission: %s", permissionName)
 	}
-	permissions, err := s.getUserPermissionsWithContext(user)
+	permissions, err := expandUserPermissions(s.RoleMap, s.PermissionMap, user)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +278,7 @@ func (s *authorizationService) CanAssignRole(user []model.Role, roleName model.R
 		return true, nil
 	}
 
-	if err := s.ensureUserCanGrantPermissions(user, definition.Permissions, assignmentContext); err != nil {
+	if err := s.ensureUserCanGrantPermissions(user, definition, assignmentContext); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -289,9 +293,19 @@ func (s *authorizationService) FindUsersWithPermission(ctx context.Context, tena
 	return s.store.FindUsersWithPermission(ctx, tenantID, filter, s.RolesGrantingPermission[filter.PermissionName])
 }
 
-func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, permissions []model.PermissionName, assignmentContext model.Context) error {
+// ensureUserCanGrantPermissions verifies the user holds, in the assignment
+// context, every permission the role would actually confer. A permission
+// whose required dimensions the role does not bind confers nothing on the
+// grantee (the fail-closed expansion drops it), so the caller does not need
+// to hold it — e.g. a workspace role's inherited user-scoped permissions.
+func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, role *model.RoleDefinition, assignmentContext model.Context) error {
+	roleDimensions := map[model.ContextDimension]bool{}
+	for dimension := range role.RequiredContextDimensions {
+		roleDimensions[dimension] = true
+	}
+
 	seen := map[model.PermissionName]bool{}
-	for _, permissionName := range permissions {
+	for _, permissionName := range role.Permissions {
 		if seen[permissionName] {
 			continue
 		}
@@ -300,6 +314,10 @@ func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, 
 		permissionDefinition, ok := s.PermissionMap[permissionName]
 		if !ok {
 			return fmt.Errorf("unknown permission: %s", permissionName)
+		}
+
+		if len(permissionDefinition.RequiredContextDimensions) > 0 && !anyDimensionIn(permissionDefinition.RequiredContextDimensions, roleDimensions) {
+			continue
 		}
 
 		permission := permissionForContext(permissionDefinition, assignmentContext)
@@ -315,6 +333,17 @@ func (s *authorizationService) ensureUserCanGrantPermissions(user []model.Role, 
 	return nil
 }
 
+func anyDimensionIn(dimensions []model.ContextDimension, set map[model.ContextDimension]bool) bool {
+	for _, dimension := range dimensions {
+		if set[dimension] {
+			return true
+		}
+	}
+	return false
+}
+
+// ensurePermissionsFitScope verifies every permission of the role only
+// requires context dimensions the role scope provides.
 func (s *authorizationService) ensurePermissionsFitScope(role *model.RoleDefinition) error {
 	roleDimensions := map[model.ContextDimension]bool{}
 	for dimension := range role.RequiredContextDimensions {
@@ -335,72 +364,8 @@ func (s *authorizationService) ensurePermissionsFitScope(role *model.RoleDefinit
 	return nil
 }
 
-func extractAuthorizationStructures(schema *model.AuthorizationSchema) (authStructures, error) {
-	permissionMap := make(map[model.PermissionName]model.PermissionDefinition, len(schema.Permissions))
-	for _, permission := range schema.Permissions {
-		if _, ok := permissionMap[permission.Name]; ok {
-			return authStructures{}, fmt.Errorf("duplicate permission name %s", permission.Name)
-		}
-		permissionMap[permission.Name] = permission
-	}
-
-	roleMap := make(map[model.RoleName]*model.RoleDefinition, len(schema.Roles))
-	for _, role := range schema.Roles {
-		if _, ok := roleMap[role.Name]; ok {
-			return authStructures{}, fmt.Errorf("duplicate role name %s", role.Name)
-		}
-		roleMap[role.Name] = role
-	}
-
-	rolesGrantingPermission := make(map[model.PermissionName][]model.RoleName)
-	for _, role := range schema.Roles {
-		for _, permission := range role.Permissions {
-			if _, ok := permissionMap[permission]; !ok {
-				return authStructures{}, fmt.Errorf("role %s has unknown permission %s", role.Name, permission)
-			}
-			rolesGrantingPermission[permission] = append(rolesGrantingPermission[permission], role.Name)
-		}
-	}
-
-	return authStructures{
-		PermissionMap:           permissionMap,
-		RoleMap:                 roleMap,
-		RolesGrantingPermission: rolesGrantingPermission,
-	}, nil
-}
-
-func isPermissionIdentical(userPermission, permission model.Permission) bool {
-	if userPermission.Name != permission.Name {
-		return false
-	}
-	for dimension, value := range userPermission.Context {
-		if value != model.Wildcard && value != permission.Context[dimension] {
-			return false
-		}
-	}
-	return true
-}
-
-func explainIsPermissionIdentical(userPermission, permission model.Permission) (bool, string) {
-	format := func(res bool) (bool, string) {
-		comparison := "=="
-		if !res {
-			comparison = "!="
-		}
-		return res, fmt.Sprintf("%s %s %s", userPermission.String(), comparison, permission.String())
-	}
-
-	if userPermission.Name != permission.Name {
-		return format(false)
-	}
-	for dimension, value := range userPermission.Context {
-		if value != model.Wildcard && value != permission.Context[dimension] {
-			return format(false)
-		}
-	}
-	return format(true)
-}
-
+// permissionForContext builds the permission check for a definition, keeping
+// only the context values the permission requires.
 func permissionForContext(definition model.PermissionDefinition, assignmentContext model.Context) model.Permission {
 	permission := model.Permission{
 		Name:    definition.Name,

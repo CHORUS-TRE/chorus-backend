@@ -23,7 +23,7 @@ import (
 
 type ProxyWorkbenchHandler func(ctx context.Context, tenantID, workbenchID uint64, w http.ResponseWriter, r *http.Request) error
 
-func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Config, authorizer authorization_service.Authorizer, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
+func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Config, authorizer authorization_service.Authorizer, resolver middleware.WorkbenchResolver, keyFunc jwt_go.Keyfunc, claimsFactory jwt_model.ClaimsFactory) http.Handler {
 	reg := regexp.MustCompile(`^/api/rest/v1/workbenches/([0-9]+)/stream`)
 
 	auth := middleware.NewAuthorization(logger.TechLog, cfg, authorizer, nil)
@@ -46,24 +46,44 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Conf
 
 		workbenchID, err := strconv.ParseUint(m[1], 10, 32)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to parse workbenchID", zap.Error(err))
-			h.ServeHTTP(w, r)
+			logger.TechLog.Error(ctx, "unable to parse workbenchID", zap.Error(err))
+			http.Error(w, "invalid workbench id", http.StatusBadRequest)
 			return
 		}
 
 		ctx = GetContextWithAuth(ctx, r, keyFunc, claimsFactory)
 
-		err = auth.IsAuthorized(ctx, authorization.PermissionStreamWorkbench, authorization.WithWorkbench(workbenchID))
+		tenantID, err := jwt_model.ExtractTenantID(ctx)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
-			h.ServeHTTP(w, r)
+			logger.TechLog.Error(ctx, "unable to extract tenant id", zap.Error(err))
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		err = pw(ctx, 1, workbenchID, w, r.WithContext(ctx))
+		// The workbench permission is checked against both the workbench and
+		// its parent workspace, so workspace-scoped roles are pinned to their
+		// own workspace's workbenches.
+		workbench, err := resolver.GetWorkbench(ctx, tenantID, workbenchID)
 		if err != nil {
-			logger.TechLog.Error(context.Background(), "unable to proxy", zap.Error(err))
-			h.ServeHTTP(w, r)
+			logger.TechLog.Error(ctx, "unable to resolve workbench", zap.Error(err))
+			http.Error(w, "workbench not found", http.StatusNotFound)
+			return
+		}
+
+		err = auth.IsAuthorized(ctx, authorization.PermissionStreamWorkbench,
+			authorization.WithWorkbench(workbenchID),
+			authorization.WithWorkspace(workbench.WorkspaceID),
+		)
+		if err != nil {
+			logger.TechLog.Error(ctx, "stream workbench authorization denied", zap.Error(err))
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+
+		err = pw(ctx, tenantID, workbenchID, w, r.WithContext(ctx))
+		if err != nil {
+			logger.TechLog.Error(ctx, "unable to proxy", zap.Error(err))
+			http.Error(w, "unable to proxy workbench stream", http.StatusBadGateway)
 			return
 		}
 	})
