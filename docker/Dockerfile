@@ -48,7 +48,7 @@ RUN --mount=type=cache,target="/chorus/.cache/go-build" \
 FROM harbor.build.chorus-tre.ch/docker_proxy/library/ubuntu:24.04
 
 LABEL org.opencontainers.image.source="https://github.com/CHORUS-TRE/chorus-backend"
-LABEL org.opencontainers.image.description="Chorus backend"
+LABEL org.opencontainers.image.description="CHORUS Backend"
 LABEL org.opencontainers.image.vendor="CHORUS-TRE"
 
 # Create non-root user
