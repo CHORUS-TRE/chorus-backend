@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"runtime"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/component"
@@ -14,7 +15,6 @@ var (
 	componentID   = "" // componentID is a unique ID generated at startup.
 	version       = "" // version is set by the compiler.
 	gitCommit     = "" // gitCommit is set by the compiler.
-	goVersion     = "" // goVersion is set by the compiler.
 )
 
 type Info struct {
@@ -41,6 +41,6 @@ func ProvideComponentInfo() *Info {
 		RuntimeEnvironment: component.RuntimeEnvironment,
 		ComponentID:        componentID,
 		Commit:             gitCommit,
-		GoVersion:          goVersion,
+		GoVersion:          runtime.Version(),
 	}
 }
