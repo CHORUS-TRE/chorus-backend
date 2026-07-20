@@ -96,10 +96,11 @@ COPY --from=builder /usr/local/bin/chorus /usr/local/bin/chorus
 # Switch to non-root user
 USER chorus
 
-# Health check using the HTTP health endpoint
-# Adjust the port if your application uses a different port
+# HEALTHCHECK_PORT must match daemon.http.port in the mounted config.yaml.
+ARG HEALTHCHECK_PORT=5000
+ENV HEALTHCHECK_PORT=${HEALTHCHECK_PORT}
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=5 \
-    CMD curl -f http://localhost:5000/api/rest/v1/health || exit 1
+    CMD curl -f http://localhost:${HEALTHCHECK_PORT}/api/rest/v1/health || exit 1
 
 ENTRYPOINT ["chorus"]
 CMD ["start", "--config", "/config/config.yaml"]
