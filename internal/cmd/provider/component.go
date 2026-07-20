@@ -9,10 +9,10 @@ import (
 )
 
 // The following are descriptional parameters that described a
-// particular instance of a chorus component.
+// particular instance of a chorus component. version and gitCommit
+// are set by the compiler; componentName is a static constant.
 var (
 	componentName = "chorus"
-	componentID   = "" // componentID is a unique ID generated at startup.
 	version       = "" // version is set by the compiler.
 	gitCommit     = "" // gitCommit is set by the compiler.
 )
@@ -26,12 +26,16 @@ type Info struct {
 	GoVersion          string `json:"-"`
 }
 
-var componentInfoOnce sync.Once
+// componentID is generated once at runtime (not by the compiler), the
+// first time ProvideComponentInfo is called.
+var (
+	componentID       string
+	componentInfoOnce sync.Once
+)
 
 // ProvideComponentInfo returns the component Information.
 func ProvideComponentInfo() *Info {
 	componentInfoOnce.Do(func() {
-		// Generate uuid for component.
 		componentID = uuid.Next()
 	})
 
