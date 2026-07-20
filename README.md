@@ -30,8 +30,8 @@ This project is the backend of the chorus platform.
     `make run` (or `go run cmd/chorus/main.go start | go run cmd/logger/main.go`)
 1. go to localhost:5000/doc
 1. create tenant
-    a. get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
-    b. init tenant 1 in openapi steward service
+    A. get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
+    B. init tenant 1 in openapi steward service
 1. create user
 1. login
 1. test with get my user
