@@ -27,7 +27,11 @@ const (
 )
 
 var _ = Describe("authentication service", func() {
-	helpers.Setup()
+
+	BeforeEach(func() {
+		setupTables()
+		DeferCleanup(cleanTables)
+	})
 
 	Describe("authenticate user", func() {
 
@@ -35,22 +39,20 @@ var _ = Describe("authentication service", func() {
 
 			When("the route POST '/api/rest/v1/authentication/token' is called", func() {
 
-				setupTables()
-				req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
-					&models.ChorusCredentials{
-						Username: "incognito",
-						Password: "superpassword",
-					},
-				)
-
-				c := helpers.AuthenticationServiceHTTPClient()
-				_, err := c.AuthenticationService.AuthenticationServiceAuthenticate(req)
-
 				Then("an authentication error should be raised", func() {
+					req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
+						&models.ChorusCredentials{
+							Username: "incognito",
+							Password: "superpassword",
+						},
+					)
+
+					c := helpers.AuthenticationServiceHTTPClient()
+					_, err := c.AuthenticationService.AuthenticationServiceAuthenticate(req)
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
-				cleanTables()
 			})
 		})
 
@@ -58,23 +60,20 @@ var _ = Describe("authentication service", func() {
 
 			When("the route POST '/api/rest/v1/authentication/token' is called", func() {
 
-				setupTables()
-
-				req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
-					&models.ChorusCredentials{
-						Username: "jadoe",
-						Password: janePasswordHash,
-					},
-				)
-
-				c := helpers.AuthenticationServiceHTTPClient()
-				_, err := c.AuthenticationService.AuthenticationServiceAuthenticate(req)
-
 				Then("an authentication error should be raised", func() {
+					req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
+						&models.ChorusCredentials{
+							Username: "jadoe",
+							Password: janePasswordHash,
+						},
+					)
+
+					c := helpers.AuthenticationServiceHTTPClient()
+					_, err := c.AuthenticationService.AuthenticationServiceAuthenticate(req)
+
 					ExpectAPIErr(err).ShouldNot(BeNil())
 					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusUnauthorized)))
 				})
-				cleanTables()
 			})
 		})
 
@@ -82,25 +81,22 @@ var _ = Describe("authentication service", func() {
 
 			When("the route POST '/api/rest/v1/authentication/token' is called", func() {
 
-				setupTables()
-
-				code, _ := totp.GenerateCode(hmotoTOTPSecret, time.Now())
-				req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
-					&models.ChorusCredentials{
-						Username: "hmoto",
-						Password: hmotoPassword,
-						Totp:     code,
-					},
-				)
-
-				c := helpers.AuthenticationServiceHTTPClient()
-				resp, err := c.AuthenticationService.AuthenticationServiceAuthenticate(req)
-
 				Then("a jwt-token should be returned", func() {
+					code, _ := totp.GenerateCode(hmotoTOTPSecret, time.Now())
+					req := authentication.NewAuthenticationServiceAuthenticateParams().WithBody(
+						&models.ChorusCredentials{
+							Username: "hmoto",
+							Password: hmotoPassword,
+							Totp:     code,
+						},
+					)
+
+					c := helpers.AuthenticationServiceHTTPClient()
+					resp, err := c.AuthenticationService.AuthenticationServiceAuthenticate(req)
+
 					ExpectAPIErr(err).Should(BeNil())
 					Expect(resp.Payload.Result.Token).ShouldNot(Equal(""))
 				})
-				cleanTables()
 			})
 		})
 	})
@@ -123,8 +119,6 @@ func setupTables() {
 	INSERT INTO user_role (id, userid, roleid) VALUES(99883, 97882, (SELECT id FROM role_definitions WHERE name='Authenticated'));
 	`
 	helpers.Populate(q)
-
-	helpers.Dump("SELECT * FROM users WHERE tenantid = 88888")
 }
 
 func cleanTables() {

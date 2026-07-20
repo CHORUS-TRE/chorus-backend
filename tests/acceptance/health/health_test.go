@@ -13,17 +13,16 @@ var _ = Describe("health service", func() {
 
 	Describe("get health check", func() {
 
-		helpers.Setup()
-
 		Given("any user", func() {
 
 			When("the route GET '/api/rest/v1/health is called", func() {
-				req := health.NewHealthServiceGetHealthCheckParams()
-
-				c := helpers.HealthServiceHTTPClient()
-				_, err := c.HealthService.HealthServiceGetHealthCheck(req)
 
 				Then("a reply with success status should be returned", func() {
+					req := health.NewHealthServiceGetHealthCheckParams()
+
+					c := helpers.HealthServiceHTTPClient()
+					_, err := c.HealthService.HealthServiceGetHealthCheck(req)
+
 					ExpectAPIErr(err).Should(BeNil())
 				})
 			})
