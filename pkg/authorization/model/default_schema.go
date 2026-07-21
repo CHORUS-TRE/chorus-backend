@@ -254,64 +254,64 @@ func GetDefaultSchema() AuthorizationSchema {
 
 			permissionDefinition(PermissionInitializeTenant, "Allow the user to initialize the tenant", nil),
 
-			permissionDefinition(PermissionListNotifications, "Allow the user to list notifications", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionCountUnreadNotifications, "Allow the user to count unread notifications", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionMarkNotificationAsRead, "Allow the user to mark a notification as read", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionListNotifications, "Allow the user to list notifications", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionCountUnreadNotifications, "Allow the user to count unread notifications", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionMarkNotificationAsRead, "Allow the user to mark a notification as read", contexts(one(RoleContextUser))),
 
-			permissionDefinition(PermissionListUsers, "Allow the user to list users", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionListUsers, "Allow the user to list users", contexts(one(RoleContextUser))),
 			permissionDefinition(PermissionSearchUsers, "Allow the user to search users", nil),
 			permissionDefinition(PermissionCreateUser, "Allow the user to create a user", nil),
-			permissionDefinition(PermissionUpdateUser, "Allow the user to update a user", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionGetMyOwnUser, "Allow the user to get his own user", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionUpdatePassword, "Allow the user to update his password", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionEnableTotp, "Allow the user to enable TOTP", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionResetTotp, "Allow the user to reset TOTP", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionGetUser, "Allow the user to get a user", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionDeleteUser, "Allow the user to delete a user", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionResetPassword, "Allow the user to reset a user's password", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionManageUserRoles, "Allow the user to manage user roles", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionAuditUser, "Allow the user to audit users", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionUpdateUser, "Allow the user to update a user", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionGetMyOwnUser, "Allow the user to get his own user", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionUpdatePassword, "Allow the user to update his password", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionEnableTotp, "Allow the user to enable TOTP", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionResetTotp, "Allow the user to reset TOTP", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionGetUser, "Allow the user to get a user", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionDeleteUser, "Allow the user to delete a user", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionResetPassword, "Allow the user to reset a user's password", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionManageUserRoles, "Allow the user to manage user roles", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionAuditUser, "Allow the user to audit users", contexts(one(RoleContextUser))),
 
 			permissionDefinition(PermissionGetPlatformSettings, "Allow the user to get platform settings", nil),
 			permissionDefinition(PermissionSetPlatformSettings, "Allow the user to set platform settings", nil),
 			permissionDefinition(PermissionAuditPlatform, "Allow the user to audit the platform", nil),
 			permissionDefinition(PermissionManageDynamicRoles, "Allow the user to create dynamic roles", nil),
 
-			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionCreateAppInstance, "Allow the user to create an app instance", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionUpdateAppInstance, "Allow the user to update an app instance", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionGetAppInstance, "Allow the user to get an app instance", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionDeleteAppInstance, "Allow the user to delete an app instance", oneContext(RoleContextWorkbench)),
+			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionCreateAppInstance, "Allow the user to create an app instance", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionUpdateAppInstance, "Allow the user to update an app instance", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionGetAppInstance, "Allow the user to get an app instance", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionDeleteAppInstance, "Allow the user to delete an app instance", contexts(one(RoleContextWorkbench))),
 
-			permissionDefinition(PermissionListWorkbenchs, "Allow the user to list workbenchs", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionCreateWorkbench, "Allow the user to create a workbench", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionUpdateWorkbench, "Allow the user to update a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionGetWorkbench, "Allow the user to get a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionStreamWorkbench, "Allow the user to stream a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionDeleteWorkbench, "Allow the user to delete a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionAuditWorkbench, "Allow the user to audit a workbench", oneContext(RoleContextWorkbench)),
-			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", oneContext(RoleContextWorkbench)),
+			permissionDefinition(PermissionListWorkbenchs, "Allow the user to list workbenchs", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionCreateWorkbench, "Allow the user to create a workbench", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionUpdateWorkbench, "Allow the user to update a workbench", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionGetWorkbench, "Allow the user to get a workbench", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionStreamWorkbench, "Allow the user to stream a workbench", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionDeleteWorkbench, "Allow the user to delete a workbench", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionAuditWorkbench, "Allow the user to audit a workbench", contexts(one(RoleContextWorkbench))),
+			permissionDefinition(PermissionManageUsersInWorkbench, "Allow the user to manage users in a workbench", contexts(one(RoleContextWorkbench))),
 
-			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListWorkspaces, "Allow the user to list workspaces", contexts(one(RoleContextWorkspace))),
 			permissionDefinition(PermissionListPublicWorkspaces, "Allow the user to list public workspaces", nil),
 			permissionDefinition(PermissionCreateWorkspace, "Allow the user to create a workspace", nil),
-			permissionDefinition(PermissionUpdateWorkspace, "Allow the user to update a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionGetWorkspace, "Allow the user to get a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionDeleteWorkspace, "Allow the user to delete a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionManageUsersInWorkspace, "Allow the user to manage users in a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionManageUsersDataRoleInWorkspace, "Allow the user to manage users' data role in a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionListFilesInWorkspace, "Allow the user to list files in a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionUploadFilesToWorkspace, "Allow the user to upload files to a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionDownloadFilesFromWorkspace, "Allow the user to download files from a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionModifyFilesInWorkspace, "Allow the user to modify files in a workspace", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionAuditWorkspace, "Allow the user to audit a workspace", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionUpdateWorkspace, "Allow the user to update a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionGetWorkspace, "Allow the user to get a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionDeleteWorkspace, "Allow the user to delete a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionManageUsersInWorkspace, "Allow the user to manage users in a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionManageUsersDataRoleInWorkspace, "Allow the user to manage users' data role in a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionListFilesInWorkspace, "Allow the user to list files in a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionUploadFilesToWorkspace, "Allow the user to upload files to a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionDownloadFilesFromWorkspace, "Allow the user to download files from a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionModifyFilesInWorkspace, "Allow the user to modify files in a workspace", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionAuditWorkspace, "Allow the user to audit a workspace", contexts(one(RoleContextWorkspace))),
 
-			permissionDefinition(PermissionListWorkspaceServiceInstances, "Allow the user to list workspace service instances", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionCreateWorkspaceServiceInstance, "Allow the user to create a workspace service instance", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionUpdateWorkspaceServiceInstance, "Allow the user to update a workspace service instance", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionGetWorkspaceServiceInstance, "Allow the user to get a workspace service instance", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionGetWorkspaceServiceInstanceSecret, "Allow the user to get the secrets of a workspace service instance", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionDeleteWorkspaceServiceInstance, "Allow the user to delete a workspace service instance", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListWorkspaceServiceInstances, "Allow the user to list workspace service instances", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionCreateWorkspaceServiceInstance, "Allow the user to create a workspace service instance", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionUpdateWorkspaceServiceInstance, "Allow the user to update a workspace service instance", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionGetWorkspaceServiceInstance, "Allow the user to get a workspace service instance", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionGetWorkspaceServiceInstanceSecret, "Allow the user to get the secrets of a workspace service instance", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionDeleteWorkspaceServiceInstance, "Allow the user to delete a workspace service instance", contexts(one(RoleContextWorkspace))),
 
 			permissionDefinition(PermissionListApps, "Allow the user to list apps", nil),
 			permissionDefinition(PermissionCreateApp, "Allow the user to create an app", nil),
@@ -319,12 +319,12 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionGetApp, "Allow the user to get an app", nil),
 			permissionDefinition(PermissionDeleteApp, "Allow the user to delete an app", nil),
 
-			permissionDefinition(PermissionListRequests, "Allow the user to list requests", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionListRequests, "Allow the user to list requests", contexts(one(RoleContextWorkspace))),
 			permissionDefinition(PermissionListMyRequests, "Allow the user to list his requests", nil),
-			permissionDefinition(PermissionGetRequest, "Allow the user to get a request", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionCreateRequest, "Allow the user to create a request", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionApproveRequest, "Allow the user to approve a request", oneContext(RoleContextWorkspace)),
-			permissionDefinition(PermissionDeleteRequest, "Allow the user to delete a request", oneContext(RoleContextWorkspace)),
+			permissionDefinition(PermissionGetRequest, "Allow the user to get a request", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionCreateRequest, "Allow the user to create a request", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionApproveRequest, "Allow the user to approve a request", contexts(one(RoleContextWorkspace))),
+			permissionDefinition(PermissionDeleteRequest, "Allow the user to delete a request", contexts(one(RoleContextWorkspace))),
 
 			permissionDefinition(PermissionCreateTermsOfUseVersion, "Allow the user to create a terms of use version", nil),
 			permissionDefinition(PermissionUpdateTermsOfUseVersion, "Allow the user to update a terms of use version", nil),
@@ -332,9 +332,9 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionGetTermsOfUseVersion, "Allow the user to get a terms of use version", nil),
 			permissionDefinition(PermissionListTermsOfUseVersions, "Allow the user to list terms of use versions", nil),
 			permissionDefinition(PermissionGetCurrentTermsOfUseVersion, "Allow the user to get the current terms of use version", nil),
-			permissionDefinition(PermissionListTermsOfUseAcceptances, "Allow the user to list terms of use acceptances", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionGetMyTermsOfUseStatus, "Allow the user to get his terms of use acceptance status", oneContext(RoleContextUser)),
-			permissionDefinition(PermissionAcceptTermsOfUse, "Allow the user to accept the terms of use", oneContext(RoleContextUser)),
+			permissionDefinition(PermissionListTermsOfUseAcceptances, "Allow the user to list terms of use acceptances", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionGetMyTermsOfUseStatus, "Allow the user to get his terms of use acceptance status", contexts(one(RoleContextUser))),
+			permissionDefinition(PermissionAcceptTermsOfUse, "Allow the user to accept the terms of use", contexts(one(RoleContextUser))),
 
 			permissionDefinition(PermissionListOrganizations, "Allow the user to list organizations", nil),
 			permissionDefinition(PermissionGetOrganization, "Allow the user to get an organization", nil),
@@ -346,91 +346,106 @@ func GetDefaultSchema() AuthorizationSchema {
 			roleDefinition(
 				RolePublic,
 				"Public users can authenticate and read public platform settings",
+				RoleScopePlatform,
 				nil,
 				publicPermissions,
 			),
 			roleDefinition(
 				RoleAuthenticated,
 				"Authenticated users can manage their own session, profile, notifications, and base resources",
-				oneContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(one(RoleContextUser)),
 				authenticatedPermissions,
 			),
 			roleDefinition(
 				RoleWorkspaceGuest,
 				"Workspace guests can view workspace metadata and create requests",
-				oneContext(RoleContextWorkspace),
+				RoleScopeWorkspace,
+				contexts(one(RoleContextWorkspace)),
 				workspaceGuestPermissions,
 			),
 			roleDefinition(
 				RoleWorkspaceMember,
 				"Workspace members can create workbenches and list workspace files",
-				oneContext(RoleContextWorkspace),
+				RoleScopeWorkspace,
+				contexts(one(RoleContextWorkspace)),
 				workspaceMemberPermissions,
 			),
 			roleDefinition(
 				RoleWorkspaceMaintainer,
 				"Workspace maintainers can update workspace metadata and manage workspace files",
-				oneContext(RoleContextWorkspace),
+				RoleScopeWorkspace,
+				contexts(one(RoleContextWorkspace)),
 				workspaceMaintainerPermissions,
 			),
 			roleDefinition(
 				RoleWorkspaceDataManager,
 				"Workspace data managers can manage workspace files and data-manager assignments",
-				oneContext(RoleContextWorkspace),
+				RoleScopeWorkspace,
+				contexts(one(RoleContextWorkspace)),
 				workspaceDataManagerPermissions,
 			),
 			roleDefinition(
 				RoleWorkspaceAdmin,
 				"Workspace admins can administer workspace users, requests, workbenches, files, and services",
-				oneContext(RoleContextWorkspace),
+				RoleScopeWorkspace,
+				contexts(one(RoleContextWorkspace)),
 				workspaceAdminPermissions,
 			),
 			roleDefinition(
 				RoleWorkbenchViewer,
 				"Workbench viewers can view and stream workbenches",
-				oneContext(RoleContextWorkbench),
+				RoleScopeWorkbench,
+				contexts(one(RoleContextWorkbench)),
 				workbenchViewerPermissions,
 			),
 			roleDefinition(
 				RoleWorkbenchMember,
 				"Workbench members can update workbenches and manage app instances",
-				oneContext(RoleContextWorkbench),
+				RoleScopeWorkbench,
+				contexts(one(RoleContextWorkbench)),
 				workbenchMemberPermissions,
 			),
 			roleDefinition(
 				RoleWorkbenchAdmin,
 				"Workbench admins can administer workbenches and their users",
-				oneContext(RoleContextWorkbench),
+				RoleScopeWorkbench,
+				contexts(one(RoleContextWorkbench)),
 				workbenchAdminPermissions,
 			),
 			roleDefinition(
 				RoleHealthchecker,
 				"Healthcheckers can read healthcheck status",
-				anyContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextUser)),
 				healthcheckerPermissions,
 			),
 			roleDefinition(
 				RolePlatformSettingsManager,
 				"Platform settings managers can manage platform settings",
-				anyContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextUser)),
 				platformSettingsManagerPermissions,
 			),
 			roleDefinition(
 				RolePlatformUserManager,
 				"Platform user managers can administer platform users and their roles",
-				anyContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextUser)),
 				platformUserManagerPermissions,
 			),
 			roleDefinition(
 				RolePlatformOrganizationManager,
 				"Platform organization managers can manage organizations",
-				anyContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextUser)),
 				platformOrganizationManagerPermissions,
 			),
 			roleDefinition(
 				RolePlatformAuditor,
 				"Platform auditors can audit the platform",
-				anyContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextUser)),
 				platformAuditorPermissions,
 			),
 			roleDefinition(
@@ -442,23 +457,22 @@ func GetDefaultSchema() AuthorizationSchema {
 			roleDefinition(
 				RoleAppStoreAdmin,
 				"App store admins can administer apps",
-				anyContext(RoleContextUser),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextUser)),
 				appStoreAdminPermissions,
 			),
 			roleDefinition(
 				RolePlatformDataManager,
 				"Data managers can manage workspace data across workspaces",
-				anyContext(RoleContextWorkspace),
+				RoleScopePlatform,
+				contexts(wildcard(RoleContextWorkspace)),
 				dataManagerPermissions,
 			),
 			roleDefinition(
 				RoleSuperAdmin,
 				"Super admins can perform all platform, workspace, and workbench actions",
-				map[ContextDimension]ContextQuantifier{
-					RoleContextUser:      ContextQuantifierAny,
-					RoleContextWorkspace: ContextQuantifierAny,
-					RoleContextWorkbench: ContextQuantifierAny,
-				},
+				RoleScopeSystem,
+				contexts(wildcard(RoleContextUser), wildcard(RoleContextWorkspace), wildcard(RoleContextWorkbench)),
 				superAdminPermissions,
 			),
 		},
@@ -473,35 +487,14 @@ func permissionDefinition(name PermissionName, description string, context map[C
 	}
 }
 
-func roleDefinition(name RoleName, description string, context map[ContextDimension]ContextQuantifier, permissions []PermissionName) *RoleDefinition {
+func roleDefinition(name RoleName, description string, scope RoleScope, context map[ContextDimension]ContextQuantifier, permissions []PermissionName) *RoleDefinition {
 	return &RoleDefinition{
 		Name:                      name,
 		Description:               description,
-		Scope:                     inferRoleScope(context),
+		Scope:                     scope,
 		RequiredContextDimensions: context,
 		Permissions:               append([]PermissionName(nil), permissions...),
 	}
-}
-
-func inferRoleScope(context map[ContextDimension]ContextQuantifier) RoleScope {
-	_, hasUser := context[RoleContextUser]
-	_, hasWorkspace := context[RoleContextWorkspace]
-	_, hasWorkbench := context[RoleContextWorkbench]
-
-	// SuperAdmin carries all three dimensions
-	if hasUser && hasWorkspace && hasWorkbench {
-		return RoleScopeSystem
-	}
-	if hasWorkbench {
-		return RoleScopeWorkbench
-	}
-	if hasWorkspace {
-		return RoleScopeWorkspace
-	}
-	if hasUser {
-		return RoleScopePlatform
-	}
-	return RoleScopePlatform
 }
 
 func permissionList(permissionGroups ...[]PermissionName) []PermissionName {
@@ -531,10 +524,26 @@ func contextDimensions(context map[ContextDimension]ContextQuantifier) []Context
 	return result
 }
 
-func oneContext(context ContextDimension) map[ContextDimension]ContextQuantifier {
-	return map[ContextDimension]ContextQuantifier{context: ContextQuantifierOne}
+// one declares a dimension the role binds to a concrete value
+func one(dim ContextDimension) map[ContextDimension]ContextQuantifier {
+	return map[ContextDimension]ContextQuantifier{dim: ContextQuantifierOne}
 }
 
-func anyContext(context ContextDimension) map[ContextDimension]ContextQuantifier {
-	return map[ContextDimension]ContextQuantifier{context: ContextQuantifierAny}
+// wildcard declares a dimension the role binds to "*" (any value)
+func wildcard(dim ContextDimension) map[ContextDimension]ContextQuantifier {
+	return map[ContextDimension]ContextQuantifier{dim: ContextQuantifierAny}
+}
+
+// contexts merges one()/wildcard() declarations into a single required-context map
+func contexts(dims ...map[ContextDimension]ContextQuantifier) map[ContextDimension]ContextQuantifier {
+	if len(dims) == 0 {
+		return nil
+	}
+	merged := make(map[ContextDimension]ContextQuantifier, len(dims))
+	for _, dim := range dims {
+		for k, v := range dim {
+			merged[k] = v
+		}
+	}
+	return merged
 }
