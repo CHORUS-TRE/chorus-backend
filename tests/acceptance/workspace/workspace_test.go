@@ -220,6 +220,54 @@ var _ = Describe("workspace service", func() {
 				})
 			})
 		})
+
+		Given("a valid jwt-token with PlatformWorkspaceManager role, on a workspace it does not administer", func() {
+			When("PUT /api/rest/v1/workspaces/{id} changes visibility to public", func() {
+
+				Then("workspace visibility is updated to public", func() {
+					visPublic := workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC
+					req := workspace_svc.NewWorkspaceServiceUpdateWorkspaceParams().WithBody(
+						&workspace_models.ChorusWorkspace{ID: "80001", Name: "Private WS", ShortName: "private-ws", Visibility: &visPublic},
+					)
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceUpdateWorkspace(req, platformWorkspaceManagerAuth(90001))
+
+					ExpectAPIErr(err).Should(BeNil())
+					ws := resp.Payload.Result.Workspace
+					Expect(*ws.Visibility).Should(Equal(workspace_models.ChorusWorkspaceVisibilityWORKSPACEVISIBILITYPUBLIC))
+				})
+			})
+		})
+	})
+
+	Describe("delete workspace", func() {
+
+		Given("a valid jwt-token with only the Authenticated role", func() {
+			When("DELETE /api/rest/v1/workspaces/{id} is called", func() {
+
+				Then("a permission error is returned", func() {
+					req := workspace_svc.NewWorkspaceServiceDeleteWorkspaceParams().WithID("80002")
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceDeleteWorkspace(req, authenticatedAuth(90001))
+
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusForbidden)))
+				})
+			})
+		})
+
+		Given("a valid jwt-token with PlatformWorkspaceManager role, on a workspace it does not administer", func() {
+			When("DELETE /api/rest/v1/workspaces/{id} is called", func() {
+
+				Then("the workspace is deleted", func() {
+					req := workspace_svc.NewWorkspaceServiceDeleteWorkspaceParams().WithID("80002")
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceDeleteWorkspace(req, platformWorkspaceManagerAuth(90001))
+
+					ExpectAPIErr(err).Should(BeNil())
+				})
+			})
+		})
 	})
 })
 

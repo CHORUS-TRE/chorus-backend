@@ -188,6 +188,8 @@ func GetDefaultSchema() AuthorizationSchema {
 		authenticatedPermissions,
 		[]PermissionName{
 			PermissionCreateWorkspace,
+			PermissionUpdateWorkspace,
+			PermissionDeleteWorkspace,
 		},
 	)
 
@@ -432,7 +434,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			),
 			roleDefinition(
 				RolePlatformWorkspaceManager,
-				"Platform workspace managers can create workspaces",
+				"Platform workspace managers can create, update, and delete any workspace",
 				anyContext(RoleContextUser),
 				platformWorkspaceManagerPermissions,
 			),
