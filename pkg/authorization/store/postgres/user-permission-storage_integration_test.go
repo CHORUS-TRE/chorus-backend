@@ -25,7 +25,8 @@ func testRolesGrantingPermissions() map[authorization_model.PermissionName][]aut
 			authorization_model.RoleWorkspaceGuest,
 		},
 		authorization_model.PermissionCreateWorkspace: {
-			authorization_model.RoleAuthenticated,
+			authorization_model.RolePlatformWorkspaceManager,
+			authorization_model.RoleSuperAdmin,
 		},
 		authorization_model.PermissionApproveRequest: {
 			authorization_model.RoleWorkspaceDataManager,
@@ -154,9 +155,9 @@ func TestUserPermissionStorage_FindUsersWithPermission_NoContext(t *testing.T) {
 
 	fixtures := setupTestFixtures(t, db)
 
-	assignRole(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["Authenticated"])
-	assignRole(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["Authenticated"])
-	assignRole(t, db, &fixtures, fixtures.userIDs["inactive_user"], fixtures.roleIDs["Authenticated"])
+	assignRole(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["PlatformWorkspaceManager"])
+	assignRole(t, db, &fixtures, fixtures.userIDs["bob"], fixtures.roleIDs["PlatformWorkspaceManager"])
+	assignRole(t, db, &fixtures, fixtures.userIDs["inactive_user"], fixtures.roleIDs["PlatformWorkspaceManager"])
 
 	store := NewUserPermissionStorage(db)
 
@@ -333,8 +334,8 @@ func TestUserPermissionStorage_FindUsersWithPermission_MultiTenant(t *testing.T)
 	`, testUserOtherID, testTenant2ID)
 	require.NoError(t, err)
 
-	assignRole(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["Authenticated"])
-	assignRole(t, db, &fixtures, testUserOtherID, fixtures.roleIDs["Authenticated"])
+	assignRole(t, db, &fixtures, fixtures.userIDs["alice"], fixtures.roleIDs["PlatformWorkspaceManager"])
+	assignRole(t, db, &fixtures, testUserOtherID, fixtures.roleIDs["PlatformWorkspaceManager"])
 
 	store := NewUserPermissionStorage(db)
 
