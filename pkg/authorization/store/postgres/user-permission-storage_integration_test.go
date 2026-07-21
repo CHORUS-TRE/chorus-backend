@@ -186,7 +186,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_WithContext(t *testing.T)
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
-			authorization_model.RoleContextWorkspace: "100",
+			authorization_model.ContextWorkspace: "100",
 		},
 	})
 	require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_WithWildcardContext(t *te
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
-			authorization_model.RoleContextWorkspace: "999",
+			authorization_model.ContextWorkspace: "999",
 		},
 	})
 	require.NoError(t, err)
@@ -235,7 +235,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_ViaRolesFilter(t *testing
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionApproveRequest,
 		Context: authorization_model.Context{
-			authorization_model.RoleContextWorkspace: "100",
+			authorization_model.ContextWorkspace: "100",
 		},
 		ViaRoles: []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager},
 	})
@@ -260,7 +260,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_PreferExactContextMatch(t
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
-			authorization_model.RoleContextWorkspace: "100",
+			authorization_model.ContextWorkspace: "100",
 		},
 		PreferExactContextMatch: true,
 	})
@@ -284,7 +284,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_PreferExactContextMatch_F
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionListWorkspaces,
 		Context: authorization_model.Context{
-			authorization_model.RoleContextWorkspace: "999",
+			authorization_model.ContextWorkspace: "999",
 		},
 		PreferExactContextMatch: true,
 	})
@@ -308,7 +308,7 @@ func TestUserPermissionStorage_FindUsersWithPermission_NoMatchingViaRoles(t *tes
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, authorization_model.FindUsersWithPermissionFilter{
 		PermissionName: authorization_model.PermissionApproveRequest,
 		Context: authorization_model.Context{
-			authorization_model.RoleContextWorkspace: "100",
+			authorization_model.ContextWorkspace: "100",
 		},
 		ViaRoles: []authorization_model.RoleName{authorization_model.RoleWorkbenchAdmin},
 	})

@@ -88,7 +88,7 @@ func workbenchRole(id, workbenchID uint64, name authorization_model.RoleName) us
 		Role: authorization_model.Role{
 			Name: name,
 			Context: authorization_model.Context{
-				authorization_model.RoleContextWorkbench: fmt.Sprintf("%d", workbenchID),
+				authorization_model.ContextWorkbench: fmt.Sprintf("%d", workbenchID),
 			},
 		},
 	}
@@ -160,7 +160,7 @@ func TestAddUserRoleInWorkbench_InvalidWorkbenchContext(t *testing.T) {
 	userer := &mockUserer{getUser: userWithRoles()}
 
 	role := workbenchRole(0, 0, authorization_model.RoleWorkbenchAdmin)
-	role.Context[authorization_model.RoleContextWorkbench] = "not-a-number"
+	role.Context[authorization_model.ContextWorkbench] = "not-a-number"
 
 	svc := newSvc(&mockWorkbenchStore{}, userer)
 	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, role)

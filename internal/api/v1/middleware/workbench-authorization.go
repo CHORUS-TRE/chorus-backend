@@ -52,7 +52,7 @@ func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, r
 		}
 
 		for _, attr := range attrs {
-			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
+			if workspaceIDStr, ok := attr[authorization.ContextWorkspace]; ok {
 				if workspaceIDStr == "" {
 					continue
 				}
@@ -137,8 +137,8 @@ func (c workbenchControllerAuthorization) AddUserRoleInWorkbench(ctx context.Con
 	}
 
 	assignmentContext := authorization.Context{
-		authorization.RoleContextWorkbench: fmt.Sprintf("%d", req.Id),
-		authorization.RoleContextUser:      fmt.Sprintf("%d", req.UserId),
+		authorization.ContextWorkbench: fmt.Sprintf("%d", req.Id),
+		authorization.ContextUser:      fmt.Sprintf("%d", req.UserId),
 	}
 	if err := c.CanAssignRole(ctx, roleName, assignmentContext); err != nil {
 		return nil, err

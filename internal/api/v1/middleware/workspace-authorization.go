@@ -57,7 +57,7 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 		}
 
 		for _, attr := range attrs {
-			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
+			if workspaceIDStr, ok := attr[authorization.ContextWorkspace]; ok {
 				if workspaceIDStr == "" {
 					continue
 				}
@@ -161,8 +161,8 @@ func (c workspaceControllerAuthorization) AddUserRoleInWorkspace(ctx context.Con
 	}
 
 	assignmentContext := authorization.Context{
-		authorization.RoleContextWorkspace: fmt.Sprintf("%d", req.Id),
-		authorization.RoleContextUser:      fmt.Sprintf("%d", req.UserId),
+		authorization.ContextWorkspace: fmt.Sprintf("%d", req.Id),
+		authorization.ContextUser:      fmt.Sprintf("%d", req.UserId),
 	}
 	if err := c.CanAssignRole(ctx, roleName, assignmentContext); err != nil {
 		return nil, err

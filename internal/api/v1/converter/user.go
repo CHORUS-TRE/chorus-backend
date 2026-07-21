@@ -30,7 +30,7 @@ func UserFromBusiness(user *model.User, uidOffset, gidOffset uint64) (*chorus.Us
 	seen := make(map[uint64]struct{})
 	var gids []uint64
 	for _, r := range user.Roles {
-		wsIDStr, ok := r.Context[authorization_model.RoleContextWorkspace]
+		wsIDStr, ok := r.Context[authorization_model.ContextWorkspace]
 		if !ok || wsIDStr == "" {
 			continue
 		}

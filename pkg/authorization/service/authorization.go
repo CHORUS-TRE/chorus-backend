@@ -361,7 +361,7 @@ func permissionForContext(definition model.PermissionDefinition, assignmentConte
 func requiredContextForScope(scope model.RoleScope) map[model.ContextDimension]model.ContextQuantifier {
 	switch scope {
 	case model.RoleScopeWorkspace:
-		return map[model.ContextDimension]model.ContextQuantifier{model.RoleContextWorkspace: model.ContextQuantifierOne}
+		return map[model.ContextDimension]model.ContextQuantifier{model.ContextWorkspace: model.ContextQuantifierOne}
 	default:
 		return nil
 	}

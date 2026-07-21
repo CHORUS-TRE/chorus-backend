@@ -51,7 +51,7 @@ func DynamicRoleToBusiness(role *chorus.AuthorizationRole) (*authorization_model
 func ContextToBusiness(raw map[string]string) (authorization_model.Context, error) {
 	ctx := make(authorization_model.Context, len(raw))
 	for key, value := range raw {
-		dimension, err := authorization_model.ToRoleContext(key)
+		dimension, err := authorization_model.ToContextDimension(key)
 		if err != nil {
 			return nil, fmt.Errorf("invalid context dimension %q: %w", key, err)
 		}

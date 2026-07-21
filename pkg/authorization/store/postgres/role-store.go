@@ -147,7 +147,7 @@ FROM role_definitions_required_contexts`); err != nil {
 	}
 	contextsByRole := map[uint64]map[model.ContextDimension]model.ContextQuantifier{}
 	for _, row := range ctxRows {
-		dimension, err := model.ToRoleContext(row.Dimension)
+		dimension, err := model.ToContextDimension(row.Dimension)
 		if err != nil {
 			return nil, err
 		}

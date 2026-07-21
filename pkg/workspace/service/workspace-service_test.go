@@ -252,7 +252,7 @@ func wsRole(id, workspaceID uint64, name authorization_model.RoleName) user_mode
 		Role: authorization_model.Role{
 			Name: name,
 			Context: authorization_model.Context{
-				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
+				authorization_model.ContextWorkspace: fmt.Sprintf("%d", workspaceID),
 			},
 		},
 	}
@@ -264,8 +264,8 @@ func wbRole(id, workspaceID, workbenchID uint64, name authorization_model.RoleNa
 		Role: authorization_model.Role{
 			Name: name,
 			Context: authorization_model.Context{
-				authorization_model.RoleContextWorkspace: fmt.Sprintf("%d", workspaceID),
-				authorization_model.RoleContextWorkbench: fmt.Sprintf("%d", workbenchID),
+				authorization_model.ContextWorkspace: fmt.Sprintf("%d", workspaceID),
+				authorization_model.ContextWorkbench: fmt.Sprintf("%d", workbenchID),
 			},
 		},
 	}
