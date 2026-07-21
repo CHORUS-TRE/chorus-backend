@@ -67,6 +67,7 @@ const (
 	RolePlateformUserManager        RoleName = "PlateformUserManager"
 	RolePlatformOrganizationManager RoleName = "PlatformOrganizationManager"
 	RolePlatformAuditor             RoleName = "PlatformAuditor"
+	RolePlatformWorkspaceManager    RoleName = "PlatformWorkspaceManager"
 	RoleAppStoreAdmin               RoleName = "AppStoreAdmin"
 	RoleDataManager                 RoleName = "DataManager"
 	RoleSuperAdmin                  RoleName = "SuperAdmin"
@@ -120,6 +121,7 @@ func GetAllRoles() []RoleName {
 		RolePlateformUserManager,
 		RolePlatformOrganizationManager,
 		RolePlatformAuditor,
+		RolePlatformWorkspaceManager,
 		RoleAppStoreAdmin,
 		RoleDataManager,
 		RoleSuperAdmin,

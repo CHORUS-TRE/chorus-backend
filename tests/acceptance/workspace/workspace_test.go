@@ -32,6 +32,10 @@ func authenticatedAuth(userID uint64) func(*runtime.ClientOperation) {
 	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": fmt.Sprintf("%d", userID)}))
 }
 
+func platformWorkspaceManagerAuth(userID uint64) func(*runtime.ClientOperation) {
+	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RolePlatformWorkspaceManager.String(), map[string]string{}))
+}
+
 var _ = Describe("workspace service", func() {
 
 	BeforeEach(func() {
@@ -143,7 +147,23 @@ var _ = Describe("workspace service", func() {
 			})
 		})
 
-		Given("a valid jwt-token with Authenticated role", func() {
+		Given("a valid jwt-token with only the Authenticated role", func() {
+			When("POST /api/rest/v1/workspaces is called", func() {
+
+				Then("a permission error is returned", func() {
+					req := workspace_svc.NewWorkspaceServiceCreateWorkspaceParams().WithBody(
+						&workspace_models.ChorusWorkspace{Name: "Default WS", ShortName: "default-ws"},
+					)
+					c := helpers.WorkspaceServiceHTTPClient()
+					_, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, authenticatedAuth(90000))
+
+					ExpectAPIErr(err).ShouldNot(BeNil())
+					Expect(err.Error()).Should(ContainSubstring(fmt.Sprintf("%v", http.StatusForbidden)))
+				})
+			})
+		})
+
+		Given("a valid jwt-token with PlatformWorkspaceManager role", func() {
 			When("POST /api/rest/v1/workspaces is called without explicit visibility", func() {
 
 				Then("workspace is created with correct defaults (requester as owner, status is active, private visibility)", func() {
@@ -151,7 +171,7 @@ var _ = Describe("workspace service", func() {
 						&workspace_models.ChorusWorkspace{Name: "Default WS", ShortName: "default-ws", Description: "No explicit visibility"},
 					)
 					c := helpers.WorkspaceServiceHTTPClient()
-					resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, authenticatedAuth(90000))
+					resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, platformWorkspaceManagerAuth(90000))
 
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
@@ -170,7 +190,7 @@ var _ = Describe("workspace service", func() {
 						&workspace_models.ChorusWorkspace{Name: "Public WS 2", ShortName: "public-ws-2", Visibility: &visPublic},
 					)
 					c := helpers.WorkspaceServiceHTTPClient()
-					resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, authenticatedAuth(90000))
+					resp, err := c.WorkspaceService.WorkspaceServiceCreateWorkspace(req, platformWorkspaceManagerAuth(90000))
 
 					ExpectAPIErr(err).Should(BeNil())
 					ws := resp.Payload.Result.Workspace
