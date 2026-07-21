@@ -188,6 +188,7 @@ func GetDefaultSchema() AuthorizationSchema {
 		authenticatedPermissions,
 		[]PermissionName{
 			PermissionCreateWorkspace,
+			PermissionGetWorkspace,
 			PermissionUpdateWorkspace,
 			PermissionDeleteWorkspace,
 		},
@@ -415,7 +416,7 @@ func GetDefaultSchema() AuthorizationSchema {
 				platformSettingsManagerPermissions,
 			),
 			roleDefinition(
-				RolePlateformUserManager,
+				RolePlatformUserManager,
 				"Platform user managers can administer platform users and their roles",
 				anyContext(RoleContextUser),
 				platformUserManagerPermissions,
@@ -434,7 +435,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			),
 			roleDefinition(
 				RolePlatformWorkspaceManager,
-				"Platform workspace managers can create, update, and delete any workspace",
+				"Platform workspace managers can create, get, update, and delete any workspace",
 				nil,
 				platformWorkspaceManagerPermissions,
 			),
@@ -445,7 +446,7 @@ func GetDefaultSchema() AuthorizationSchema {
 				appStoreAdminPermissions,
 			),
 			roleDefinition(
-				RoleDataManager,
+				RolePlatformDataManager,
 				"Data managers can manage workspace data across workspaces",
 				anyContext(RoleContextWorkspace),
 				dataManagerPermissions,

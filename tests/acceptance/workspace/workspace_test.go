@@ -91,6 +91,22 @@ var _ = Describe("workspace service", func() {
 				})
 			})
 		})
+
+		Given("a valid jwt-token with PlatformWorkspaceManager role, on a workspace it does not administer", func() {
+			When("GET /api/rest/v1/workspaces/{id} is called", func() {
+
+				Then("the workspace is returned with correct fields", func() {
+					req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, platformWorkspaceManagerAuth(90001))
+
+					ExpectAPIErr(err).Should(BeNil())
+					ws := resp.Payload.Result.Workspace
+					Expect(ws.Name).Should(Equal("Private WS"))
+					Expect(ws.ShortName).Should(Equal("private-ws"))
+				})
+			})
+		})
 	})
 
 	Describe("list public workspaces", func() {
