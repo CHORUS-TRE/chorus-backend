@@ -25,7 +25,6 @@ func GetDefaultSchema() AuthorizationSchema {
 			PermissionEnableTotp,
 			PermissionResetTotp,
 			PermissionResetPassword,
-			PermissionCreateWorkspace,
 			PermissionListWorkspaces,
 			PermissionListPublicWorkspaces,
 			PermissionListWorkbenchs,
@@ -185,6 +184,15 @@ func GetDefaultSchema() AuthorizationSchema {
 		},
 	)
 
+	platformWorkspaceManagerPermissions := permissionList(
+		authenticatedPermissions,
+		[]PermissionName{
+			PermissionCreateWorkspace,
+			PermissionUpdateWorkspace,
+			PermissionDeleteWorkspace,
+		},
+	)
+
 	appStoreAdminPermissions := permissionList(
 		authenticatedPermissions,
 		[]PermissionName{
@@ -220,6 +228,7 @@ func GetDefaultSchema() AuthorizationSchema {
 		platformUserManagerPermissions,
 		platformOrganizationManagerPermissions,
 		platformAuditorPermissions,
+		platformWorkspaceManagerPermissions,
 		appStoreAdminPermissions,
 		dataManagerPermissions,
 		workspaceAdminPermissions,
@@ -422,6 +431,12 @@ func GetDefaultSchema() AuthorizationSchema {
 				"Platform auditors can audit the platform",
 				anyContext(RoleContextUser),
 				platformAuditorPermissions,
+			),
+			roleDefinition(
+				RolePlatformWorkspaceManager,
+				"Platform workspace managers can create, update, and delete any workspace",
+				nil,
+				platformWorkspaceManagerPermissions,
 			),
 			roleDefinition(
 				RoleAppStoreAdmin,
