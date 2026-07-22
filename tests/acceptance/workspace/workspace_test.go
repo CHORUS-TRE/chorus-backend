@@ -33,7 +33,7 @@ func authenticatedAuth(userID uint64) func(*runtime.ClientOperation) {
 }
 
 func platformWorkspaceManagerAuth(userID uint64) func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RolePlatformWorkspaceManager.String(), map[string]string{}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RolePlatformWorkspaceManager.String(), map[string]string{"workspace": "*"}))
 }
 
 var _ = Describe("workspace service", func() {
@@ -104,6 +104,24 @@ var _ = Describe("workspace service", func() {
 					ws := resp.Payload.Result.Workspace
 					Expect(ws.Name).Should(Equal("Private WS"))
 					Expect(ws.ShortName).Should(Equal("private-ws"))
+				})
+			})
+		})
+	})
+
+	Describe("list workspaces", func() {
+
+		Given("a valid jwt-token with PlatformWorkspaceManager role", func() {
+			When("GET /api/rest/v1/workspaces is called with no filter", func() {
+
+				Then("every workspace is returned", func() {
+					req := workspace_svc.NewWorkspaceServiceListWorkspacesParams()
+					c := helpers.WorkspaceServiceHTTPClient()
+					resp, err := c.WorkspaceService.WorkspaceServiceListWorkspaces(req, platformWorkspaceManagerAuth(90001))
+
+					ExpectAPIErr(err).Should(BeNil())
+					workspaces := resp.Payload.Result.Workspaces
+					Expect(workspaces).Should(HaveLen(2))
 				})
 			})
 		})
