@@ -679,7 +679,7 @@ var _ = Describe("user service", func() {
 				When("the route POST '/api/rest/v1/users' is called", func() {
 
 					Then("a validation error should be raised", func() {
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlateformUserManager), map[string]string{}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlatformUserManager), map[string]string{}))
 
 						req := user.NewUserServiceCreateUserParams().WithBody(
 							&models.ChorusUser{
@@ -707,7 +707,7 @@ var _ = Describe("user service", func() {
 
 					Then("a user should be returned", func() {
 						setupBaseTables()
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlateformUserManager), map[string]string{}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlatformUserManager), map[string]string{}))
 
 						req := user.NewUserServiceCreateUserParams().WithBody(
 							&models.ChorusUser{
