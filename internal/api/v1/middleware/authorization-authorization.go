@@ -53,7 +53,7 @@ func (c authorizationControllerAuthorization) CreateDynamicRole(ctx context.Cont
 
 	switch scope {
 	case authorization.RoleScopeWorkspace:
-		workspaceID := req.ValidationContext[authorization.RoleContextWorkspace.String()]
+		workspaceID := req.ValidationContext[authorization.ContextWorkspace.String()]
 		if workspaceID == "" {
 			return nil, fmt.Errorf("workspace-scoped dynamic roles require workspace validation context")
 		}

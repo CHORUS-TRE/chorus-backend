@@ -164,7 +164,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 		Permissions: []model.PermissionDefinition{
 			{
 				Name:                      model.PermissionGetWorkspace,
-				RequiredContextDimensions: []model.ContextDimension{model.RoleContextWorkspace},
+				RequiredContextDimensions: []model.ContextDimension{model.ContextWorkspace},
 			},
 		},
 		Roles: []*model.RoleDefinition{
@@ -179,7 +179,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 	}
 
 	allowed, err := policy.IsUserAllowed(
-		[]model.Role{{Name: model.RoleWorkspaceAdmin, Context: model.Context{model.RoleContextWorkspace: "42"}}},
+		[]model.Role{{Name: model.RoleWorkspaceAdmin, Context: model.Context{model.ContextWorkspace: "42"}}},
 		model.NewPermission(model.PermissionGetWorkspace, model.WithWorkspace(42)),
 	)
 	if err != nil {
@@ -190,7 +190,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 	}
 
 	allowed, err = policy.IsUserAllowed(
-		[]model.Role{{Name: model.RoleWorkspaceGuest, Context: model.Context{model.RoleContextWorkspace: "42"}}},
+		[]model.Role{{Name: model.RoleWorkspaceGuest, Context: model.Context{model.ContextWorkspace: "42"}}},
 		model.NewPermission(model.PermissionGetWorkspace, model.WithWorkspace(42)),
 	)
 	if err != nil {

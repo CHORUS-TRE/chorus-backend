@@ -38,32 +38,32 @@ type NewContextOption func(*Context)
 
 func WithWorkspace(workspace any) NewContextOption {
 	return func(c *Context) {
-		(*c)[RoleContextWorkspace] = fmt.Sprintf("%v", workspace)
+		(*c)[ContextWorkspace] = fmt.Sprintf("%v", workspace)
 	}
 }
 
 func WithWorkbench(workbench any) NewContextOption {
 	return func(c *Context) {
-		(*c)[RoleContextWorkbench] = fmt.Sprintf("%v", workbench)
+		(*c)[ContextWorkbench] = fmt.Sprintf("%v", workbench)
 	}
 }
 
 func WithRequest(request any) NewContextOption {
 	return func(c *Context) {
-		(*c)[RoleContextRequest] = fmt.Sprintf("%v", request)
+		(*c)[ContextRequest] = fmt.Sprintf("%v", request)
 	}
 }
 
 func WithUser(user any) NewContextOption {
 	return func(c *Context) {
-		(*c)[RoleContextUser] = fmt.Sprintf("%v", user)
+		(*c)[ContextUser] = fmt.Sprintf("%v", user)
 	}
 }
 
 func WithUserFromCtx(ctx context.Context) NewContextOption {
 	uID := ""
 	f := func(c *Context) {
-		(*c)[RoleContextUser] = uID
+		(*c)[ContextUser] = uID
 	}
 
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
@@ -79,29 +79,29 @@ func WithUserFromCtx(ctx context.Context) NewContextOption {
 type ContextDimension string
 
 const (
-	RoleContextWorkspace ContextDimension = "workspace"
-	RoleContextWorkbench ContextDimension = "workbench"
-	RoleContextRequest   ContextDimension = "request"
-	RoleContextUser      ContextDimension = "user"
+	ContextWorkspace ContextDimension = "workspace"
+	ContextWorkbench ContextDimension = "workbench"
+	ContextRequest   ContextDimension = "request"
+	ContextUser      ContextDimension = "user"
 )
 
 func (r ContextDimension) String() string {
 	return string(r)
 }
 
-func ToRoleContext(r string) (ContextDimension, error) {
+func ToContextDimension(r string) (ContextDimension, error) {
 	switch r {
-	case string(RoleContextWorkspace):
-		return RoleContextWorkspace, nil
-	case string(RoleContextWorkbench):
-		return RoleContextWorkbench, nil
-	case string(RoleContextRequest):
-		return RoleContextRequest, nil
-	case string(RoleContextUser):
-		return RoleContextUser, nil
+	case string(ContextWorkspace):
+		return ContextWorkspace, nil
+	case string(ContextWorkbench):
+		return ContextWorkbench, nil
+	case string(ContextRequest):
+		return ContextRequest, nil
+	case string(ContextUser):
+		return ContextUser, nil
 	}
 
-	return "", fmt.Errorf("unknown role context type: %s", r)
+	return "", fmt.Errorf("unknown context dimension: %s", r)
 }
 
 // ContextQuantifier expresses how many values of a dimension a role

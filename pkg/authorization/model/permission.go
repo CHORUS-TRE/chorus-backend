@@ -154,7 +154,7 @@ func ToPermission(p string, c map[string]string) (Permission, error) {
 
 	ctx := make(Context)
 	for k, v := range c {
-		cd, err := ToRoleContext(k)
+		cd, err := ToContextDimension(k)
 		if err != nil {
 			return Permission{}, fmt.Errorf("invalid context dimension in permission: %s", err)
 		}

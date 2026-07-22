@@ -149,9 +149,9 @@ func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *ch
 		return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role name")
 	}
 
-	assignmentContext := authorization.Context{authorization.RoleContextUser: fmt.Sprintf("%d", req.UserId)}
+	assignmentContext := authorization.Context{authorization.ContextUser: fmt.Sprintf("%d", req.UserId)}
 	for key, value := range req.Role.Context {
-		dimension, err := authorization.ToRoleContext(key)
+		dimension, err := authorization.ToContextDimension(key)
 		if err != nil {
 			return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role context")
 		}

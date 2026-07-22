@@ -67,7 +67,7 @@ func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context
 		}
 
 		for _, attr := range attrs {
-			if workbenchIDStr, ok := attr[authorization.RoleContextWorkbench]; ok {
+			if workbenchIDStr, ok := attr[authorization.ContextWorkbench]; ok {
 				if workbenchIDStr == "" {
 					continue
 				}

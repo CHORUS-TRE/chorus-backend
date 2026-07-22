@@ -60,7 +60,7 @@ func (c workspaceServiceInstanceControllerAuthorization) ListWorkspaceServiceIns
 		}
 
 		for _, attr := range attrs {
-			if workspaceIDStr, ok := attr[authorization.RoleContextWorkspace]; ok {
+			if workspaceIDStr, ok := attr[authorization.ContextWorkspace]; ok {
 				if workspaceIDStr == "" {
 					continue
 				}
