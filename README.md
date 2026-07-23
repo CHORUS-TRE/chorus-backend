@@ -19,21 +19,33 @@ This project is the backend of the chorus platform.
 1. install go
 1. pull repo
 1. requirements
-    * postgres & minio `make deps` (or `docker compose -f docker/compose.yml up -d`; `make deps-down` / `make deps-clean` to stop, optionally wiping volumes)
-    * kind `./scripts/create-local-cluster.sh`
-    * setup minio `mc` client with the following commands:
+    * postgres and minio, run `make deps`
+    * a running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box
+1. config
+    * export the full default config and override any of it in `configs/config.yaml`:
+        ```bash
+        make export-default-config > configs/config.yaml
         ```
-        mc alias set minio http://localhost:9000 minioadmin minioadmin
-        mc mb minio/chorus-data
+    * generate a private key and paste it into `daemon.private_key` in `configs/config.yaml`:
+        ```bash
+        openssl ecparam -name prime256v1 -genkey -noout
         ```
+    * generate a JWKS and paste it into `services.openid_connect_provider.jwks` in `configs/config.yaml`:
+        ```bash
+        make jwks
+        ```
+    * compare your `configs/config.yaml` with the default config:
+       ```bash
+       make diff-config
+       ```
+    * optional: trim `configs/config.yaml` down to only the fields you actually changed (backs up to `configs/config.yaml.bak` first):
+       ```bash
+       make trim-config
+       ```
 1. launch the backend
-    `make run` (or `go run cmd/chorus/main.go start | go run cmd/logger/main.go`)
-1. go to localhost:5000/doc
-1. create tenant
-    A. get jwt `TEST_CONFIG_FILE="./configs/dev/chorus.yaml" go run --tags=unit ./tests/steward/getadmintoken/main.go`
-    B. init tenant 1 in openapi steward service
-1. create user
-1. login
+    * use `make run` if you generated an overriding `configs/config.yaml` file in the previous step
+1. go to localhost:5000/doc (port my differ depending on your config)
+1. login with default user or create a new user
 1. test with get my user
 
 

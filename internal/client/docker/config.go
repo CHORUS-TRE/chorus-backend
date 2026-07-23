@@ -22,7 +22,7 @@ func getDockerClientConfig(cfg config.Config) (DockerClientConfig, error) {
 		registryCfg := DockerRegistryConfig{
 			Registry: secret.Registry,
 			Username: secret.Username,
-			Password: secret.Password,
+			Password: secret.Password.PlainText(),
 		}
 
 		registries[secret.Registry] = registryCfg

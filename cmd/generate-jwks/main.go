@@ -6,15 +6,22 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/go-jose/go-jose/v4"
 )
 
 func main() {
-	// Generate RSA keypair
-	privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
+	printPublicKey := flag.Bool("public-key", false, "also print the public key as a one-line PEM body (for registering with an external Keycloak instance)")
+	flag.Parse()
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Fatalf("unable to generate RSA key: %v", err)
+	}
 
 	jwk := jose.JSONWebKey{
 		Key:       privateKey,
@@ -23,48 +30,36 @@ func main() {
 		Use:       "sig",
 	}
 
-	b, _ := json.MarshalIndent(jwk, "", "  ")
+	jwks := struct {
+		Keys []jose.JSONWebKey `json:"keys"`
+	}{Keys: []jose.JSONWebKey{jwk}}
+
+	b, err := json.MarshalIndent(jwks, "", "  ")
+	if err != nil {
+		log.Fatalf("unable to marshal JWKS: %v", err)
+	}
 	fmt.Println(string(b))
 
-	pub := privateKey.PublicKey
-	der, err := x509.MarshalPKIXPublicKey(&pub) // SubjectPublicKeyInfo
-	if err != nil {
-		log.Fatal(err)
+	if *printPublicKey {
+		der, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+		if err != nil {
+			log.Fatalf("unable to marshal public key: %v", err)
+		}
+		block := &pem.Block{Type: "PUBLIC KEY", Bytes: der}
+		fmt.Println("\nPUBLIC KEY (Keycloak one-liner body):")
+		fmt.Println(pemBodyOneLine(block))
 	}
-
-	block := &pem.Block{Type: "PUBLIC KEY", Bytes: der}
-	fmt.Println("\nPUBLIC KEY (Keycloak one-liner body):")
-	fmt.Println(pemBodyOneLine(block))
 }
 
+// pemBodyOneLine strips a PEM block's BEGIN/END header/footer and newlines,
+// leaving just the base64 body as a single line.
 func pemBodyOneLine(block *pem.Block) string {
-	p := pem.EncodeToMemory(block)
-	// p includes headers + line breaks; strip them
-	out := make([]byte, 0, len(p))
-	lines := bytesSplitLines(p)
-	for _, ln := range lines {
-		if len(ln) == 0 {
+	var sb strings.Builder
+	for line := range strings.SplitSeq(string(pem.EncodeToMemory(block)), "\n") {
+		if line == "" || strings.HasPrefix(line, "-----") {
 			continue
 		}
-		if ln[0] == '-' { // BEGIN/END
-			continue
-		}
-		out = append(out, ln...)
+		sb.WriteString(line)
 	}
-	return string(out)
-}
-
-func bytesSplitLines(b []byte) [][]byte {
-	var res [][]byte
-	start := 0
-	for i := 0; i < len(b); i++ {
-		if b[i] == '\n' {
-			res = append(res, b[start:i])
-			start = i + 1
-		}
-	}
-	if start < len(b) {
-		res = append(res, b[start:])
-	}
-	return res
+	return sb.String()
 }

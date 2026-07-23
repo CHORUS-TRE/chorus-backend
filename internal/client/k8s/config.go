@@ -35,7 +35,7 @@ func getK8sConfig(cfg config.Config) (restConfig *rest.Config, err error) {
 }
 
 func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
-	config, err := clientcmd.Load(([]byte)(cfg.Clients.K8sClient.KubeConfig))
+	config, err := clientcmd.LoadFromFile(cfg.Clients.K8sClient.KubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error loading kubeconfig: %w", err)
 	}
@@ -77,7 +77,7 @@ func getK8sConfigFromServiceAccountPath(cfg config.Config) (*rest.Config, error)
 }
 
 func getK8sConfigFromServiceAccount(cfg config.Config) (*rest.Config, error) {
-	token := cfg.Clients.K8sClient.Token
+	token := cfg.Clients.K8sClient.Token.PlainText()
 	caCert := cfg.Clients.K8sClient.CA
 	apiServer := cfg.Clients.K8sClient.APIServer
 

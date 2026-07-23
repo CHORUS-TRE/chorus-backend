@@ -16,7 +16,6 @@ daemon:
   salt: 1234
  
 storage:
-  description: This is a description
   datastores:
     chorus:
       type: postgres

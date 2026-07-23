@@ -8,17 +8,28 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var exportConfigCmd = &cobra.Command{
+var exportDefaultConfigCmd = &cobra.Command{
 	Use:   "export-default-config",
-	Short: "export configuration",
-	Long:  `export the full configuration options, with the default values`,
+	Short: "export the code-level default configuration",
+	Long:  `export the full configuration options, with the default values only`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runExportDefaultConfig()
 	},
 }
 
+var exportCurrentConfigCmd = &cobra.Command{
+	Use:     "export-current-config",
+	Short:   "export the currently resolved configuration",
+	Long:    `export the configuration as it resolves from the given --config file(s) merged with the code-level defaults`,
+	PreRunE: func(cmd *cobra.Command, args []string) error { return initConfig() },
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runExportCurrentConfig()
+	},
+}
+
 func init() {
-	rootCmd.AddCommand(exportConfigCmd)
+	rootCmd.AddCommand(exportDefaultConfigCmd)
+	rootCmd.AddCommand(exportCurrentConfigCmd)
 }
 
 // runExportDefaultConfig outputs the default configuration structure to stdout.
@@ -32,8 +43,8 @@ func runExportDefaultConfig() error {
 	return nil
 }
 
-// runExportConfig outputs the loaded configuration to stdout.
-func runExportConfig() error {
+// runExportCurrentConfig outputs the loaded configuration to stdout.
+func runExportCurrentConfig() error {
 	cfg := provider.ProvideConfig()
 
 	out, err := yaml.Marshal(cfg)

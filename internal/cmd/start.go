@@ -24,8 +24,9 @@ import (
 
 // startCmd represents the command that boots the servers.
 var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "start chorus server",
+	Use:     "start",
+	Short:   "start chorus server",
+	PreRunE: func(cmd *cobra.Command, args []string) error { return initConfig() },
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runServer()
 	},
@@ -44,7 +45,7 @@ func runServer() error {
 	}()
 
 	cfg := provider.ProvideConfig()
-	err := runExportConfig()
+	err := runExportCurrentConfig()
 	if err != nil {
 		return fmt.Errorf("unable to export config: %w", err)
 	}
