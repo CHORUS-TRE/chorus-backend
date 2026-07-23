@@ -28,7 +28,22 @@ build: ## Build the backend binary into bin/chorus
 	go build -o bin/chorus ./cmd/chorus
 
 run: ## Run the backend with the dev config
-	go run ./cmd/chorus/main.go start | go run ./cmd/logger/main.go
+	go run ./cmd/chorus/main.go start --config configs/config.yaml | go run ./cmd/logger/main.go
+
+export-default-config: ## Print the code-level default configuration
+	@go run ./cmd/chorus/main.go export-default-config
+
+diff-config: ## Show drift between configs/config.yaml and the code-level defaults
+	@go run ./cmd/chorus/main.go diff-config --config configs/config.yaml
+
+jwks: ## Generate a JWKS for services.openid_connect_provider.jwks (add -public-key for the Keycloak one-liner too)
+	@go run ./cmd/generate-jwks
+
+trim-config: ## Remove fields from configs/config.yaml that are redundant with the code-level defaults (backs up to configs/config.yaml.bak first)
+	@cp configs/config.yaml configs/config.yaml.bak
+	@go run ./cmd/chorus/main.go trim-config --config configs/config.yaml > configs/config.yaml.tmp
+	@mv configs/config.yaml.tmp configs/config.yaml
+	@echo "Trimmed configs/config.yaml (previous version backed up to configs/config.yaml.bak)"
 
 protos: ## Regenerate protobuf / gateway / openapi code
 	./scripts/generate-protos.sh

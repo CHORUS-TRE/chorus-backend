@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/cmd/provider"
 	"github.com/CHORUS-TRE/chorus-backend/internal/component"
@@ -21,43 +22,28 @@ const (
 	descriptionLong  = `chorus is the backend for the chorus platform.`
 )
 
-const (
-	configDevPath     = "./configs/dev"
-	configDevFilename = "chorus"
-)
-
-var configDevOverridePaths = []string{
-	"./configs/dev/files/kind.yaml",
-	"./configs/dev/local.yaml",
-}
-
-var configFilename = ""
-var configOverrideFilenames = []string{}
+// configFilenames holds every --config occurrence, in order.
+// If empty, no file is loaded at all and the server runs
+// on provider.SetDefaultConfig()'s code-level defaults alone.
+var configFilenames = []string{}
 
 var rootCmd = &cobra.Command{
-	Use:   componentName,
-	Short: descriptionShort,
-	Long:  descriptionLong,
-	RunE:  startCmd.RunE,
+	Use:     componentName,
+	Short:   descriptionShort,
+	Long:    descriptionLong,
+	RunE:    startCmd.RunE,
+	PreRunE: func(cmd *cobra.Command, args []string) error { return initConfig() },
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
 	rootCmd.Version = "v"
 	rootCmd.SetVersionTemplate(getVersion())
 
-	rootCmd.PersistentFlags().StringVar(
-		&configFilename,
+	rootCmd.PersistentFlags().StringArrayVar(
+		&configFilenames,
 		"config",
-		"",
-		"config file path (default is ./configs/dev/chorus.yaml)",
-	)
-	rootCmd.PersistentFlags().StringSliceVar(
-		&configOverrideFilenames,
-		"config-override",
 		[]string{},
-		"config override file path (useful for secrets)",
+		"config file path, repeatable (later files override earlier ones); omit entirely to run on code-level defaults only",
 	)
 	rootCmd.PersistentFlags().StringVar(
 		&component.RuntimeEnvironment,
@@ -65,48 +51,44 @@ func init() {
 		"",
 		"the runtime environment, e.g. INT, ACC, PROD...",
 	)
-	err := viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
+	err := viper.BindPFlag("runtime-environment", rootCmd.PersistentFlags().Lookup("runtime-environment"))
 	if err != nil {
 		panic(err)
 	}
-	err = viper.BindPFlag("runtime-environment", rootCmd.PersistentFlags().Lookup("runtime-environment"))
-	if err != nil {
-		panic(err)
-	}
+
+	// Environment variables always apply on top of whatever files were (or
+	// weren't) loaded, e.g. CHORUS_DAEMON_JWT_SECRET -> daemon.jwt.secret.
+	// This is optional, not required: config files may still hold secret
+	// values directly where that's simpler (local dev, CI).
+	viper.SetEnvPrefix("CHORUS")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
 }
 
-func initConfig() {
-	if configFilename != "" {
-		viper.SetConfigFile(configFilename)
-	} else {
-		viper.AddConfigPath(configDevPath)
-		viper.SetConfigName(configDevFilename)
-
-		if len(configOverrideFilenames) == 0 {
-			for _, path := range configDevOverridePaths {
-				if _, err := os.Stat(path); err == nil {
-					configOverrideFilenames = append(configOverrideFilenames, path)
-				}
-			}
-		}
+// initConfig loads every file in configFilenames, in order: the first is
+// read as the base, the rest are merged on top.
+func initConfig() error {
+	if len(configFilenames) == 0 {
+		fmt.Println("No --config passed, running on code-level defaults only")
+		return nil
 	}
 
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	} else {
-		fmt.Fprintf(os.Stderr, "Error reading config file %v: %v", viper.ConfigFileUsed(), err)
-		os.Exit(1)
-	}
+	for i, f := range configFilenames {
+		viper.SetConfigFile(f)
 
-	for _, configOverrideFilename := range configOverrideFilenames {
-		viper.SetConfigFile(configOverrideFilename)
-		if err := viper.MergeInConfig(); err == nil {
-			fmt.Println("Using additional config file:", viper.ConfigFileUsed())
+		var err error
+		if i == 0 {
+			err = viper.ReadInConfig()
 		} else {
-			fmt.Fprintf(os.Stderr, "Error merging config file %v: %v", viper.ConfigFileUsed(), err)
-			os.Exit(1)
+			err = viper.MergeInConfig()
 		}
+		if err != nil {
+			return fmt.Errorf("unable to load config file %v: %w", f, err)
+		}
+		fmt.Println("Using config file:", f)
 	}
+
+	return nil
 }
 
 func getVersion() string {

@@ -123,7 +123,7 @@ func NewAuthenticationService(cfg config.Config, userer Userer, store Authentica
 
 			oauthConfigs[mode.OpenID.ID] = &oauth2.Config{
 				ClientID:     mode.OpenID.ClientID,
-				ClientSecret: mode.OpenID.ClientSecret,
+				ClientSecret: mode.OpenID.ClientSecret.PlainText(),
 				Endpoint: oauth2.Endpoint{
 					AuthURL:  mode.OpenID.AuthorizeURL,
 					TokenURL: mode.OpenID.TokenURL,

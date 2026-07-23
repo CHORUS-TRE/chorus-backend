@@ -33,8 +33,6 @@ func TestDecodeStorage(t *testing.T) {
 	cfg := config(t)
 
 	// Storage
-	require.Equal(t, "This is a description", cfg.Storage.Description)
-
 	s := cfg.Storage.Datastores["chorus"]
 	require.Equal(t, "postgres", s.Type)
 	require.Equal(t, "localhost", s.Host)

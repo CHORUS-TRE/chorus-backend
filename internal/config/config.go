@@ -40,7 +40,7 @@ type (
 		} `yaml:"http"`
 
 		JWT struct {
-			Secret         Sensitive     `yaml:"secret"`
+			Secret         Sensitive     `yaml:"secret" validate:"required"`
 			ExpirationTime time.Duration `yaml:"expiration_time"`
 			MaxRefreshTime time.Duration `yaml:"max_refresh_time"`
 		} `yaml:"jwt"`
@@ -57,9 +57,8 @@ type (
 
 		ExposeErrorStackTrace bool `yaml:"expose_error_stack_trace"`
 
-		PrivateKeyFile string `yaml:"private_key_file"`
-		PrivateKey     string `yaml:"private_key"`
-		PublicKeyFile  string `yaml:"public_key_file"`
+		PrivateKeyFile string `yaml:"private_key_file" validate:"required_without=PrivateKey"`
+		PrivateKey     string `yaml:"private_key" validate:"required_without=PrivateKeyFile"`
 		Salt           string `yaml:"salt"`
 
 		Metrics struct {
@@ -81,92 +80,92 @@ type (
 	Logger struct {
 		Enabled bool `yaml:"enabled"`
 
-		Type     string `yaml:"type"`
-		Level    string `yaml:"level"`
-		Category string `yaml:"category"`
+		Type     string `yaml:"type" validate:"oneof=stdout file redis opensearch graylog"`
+		Level    string `yaml:"level" validate:"oneof=debug info warn error"`
+		Category string `yaml:"category" validate:"oneof=technical business security"`
 
 		// File
-		Path       string `yaml:"path,omitempty"`
-		MaxSize    int    `yaml:"max_size,omitempty"`
-		MaxBackups int    `yaml:"max_backups,omitempty"`
-		MaxAge     int    `yaml:"max_age,omitempty"`
+		Path       string `yaml:"path"`
+		MaxSize    int    `yaml:"max_size"`
+		MaxBackups int    `yaml:"max_backups"`
+		MaxAge     int    `yaml:"max_age"`
 
 		// Redis
-		Host     string    `yaml:"host,omitempty"`
-		Port     string    `yaml:"port,omitempty"`
-		Database int       `yaml:"database,omitempty"`
-		Password Sensitive `yaml:"password,omitempty"`
-		Key      string    `yaml:"key,omitempty"`
+		Host     string    `yaml:"host"`
+		Port     string    `yaml:"port"`
+		Database int       `yaml:"database"`
+		Password Sensitive `yaml:"password"`
+		Key      string    `yaml:"key"`
 
 		// Graylog
-		GraylogTimeout                        time.Duration `yaml:"graylogtimeout,omitempty"`
-		GraylogHost                           string        `yaml:"grayloghost,omitempty"`
-		GraylogBulkReceiving                  bool          `yaml:"graylogbulkreceiving,omitempty"`
-		GraylogAuthorizeSelfSignedCertificate bool          `yaml:"graylogauthorizeselfsignedcertificate,omitempty"`
+		GraylogTimeout                        time.Duration `yaml:"graylogtimeout"`
+		GraylogHost                           string        `yaml:"grayloghost"`
+		GraylogBulkReceiving                  bool          `yaml:"graylogbulkreceiving"`
+		GraylogAuthorizeSelfSignedCertificate bool          `yaml:"graylogauthorizeselfsignedcertificate"`
 
 		// OpenSearch
-		OpenSearchAddresses []string  `yaml:"osaddresses,omitempty"`
-		OpenSearchUsername  string    `yaml:"osusername,omitempty"`
-		OpenSearchPassword  Sensitive `yaml:"ospassword,omitempty"`
-		OpenSearchIndexName string    `yaml:"osindexname,omitempty"`
+		OpenSearchAddresses []string  `yaml:"osaddresses"`
+		OpenSearchUsername  string    `yaml:"osusername"`
+		OpenSearchPassword  Sensitive `yaml:"ospassword"`
+		OpenSearchIndexName string    `yaml:"osindexname"`
 
 		// for elasticsearch logger.
-		BufferSize      int  `yaml:"buffersize,omitempty"`
-		RateLimit       int  `yaml:"ratelimit,omitempty"`
-		DisallowDropLog bool `yaml:"disallow_drop_log,omitempty"`
+		BufferSize      int  `yaml:"buffersize"`
+		RateLimit       int  `yaml:"ratelimit"`
+		DisallowDropLog bool `yaml:"disallow_drop_log"`
 	}
 
 	Clients struct {
-		K8sClient    K8sClient    `yaml:"k8s_client,omitempty"`
-		DockerClient DockerClient `yaml:"docker_client,omitempty"`
-		HarborClient HarborClient `yaml:"harbor_client,omitempty"`
+		K8sClient    K8sClient    `yaml:"k8s_client"`
+		DockerClient DockerClient `yaml:"docker_client"`
+		HarborClient HarborClient `yaml:"harbor_client"`
 	}
 
 	K8sClient struct {
-		Enabled bool `yaml:"enabled,omitempty"` // if true, the client will be used to connect to the k8s cluster
+		Enabled bool `yaml:"enabled"` // if true, the client will be used to connect to the k8s cluster
 
-		KubeConfig string `yaml:"kube_config,omitempty"` // either provide a kubeconfig
+		KubeConfig string `yaml:"kube_config"` // either provide a path to a kubeconfig file
 
-		APIServer                string `yaml:"api_server,omitempty"`     // or a service account api server
-		ServiceAccountSecretPath string `yaml:"sa_secret_path,omitempty"` // and a service account secret path
-		ServiceAccountOverrideCA string `yaml:"sa_override_ca,omitempty"` // optional CA crt content to override the one provided in the service account secret, useful for private clusters with custom CAs
-		Token                    string `yaml:"token,omitempty"`          // or a service account token
-		CA                       string `yaml:"ca,omitempty"`             // and service account ca
+		APIServer                string    `yaml:"api_server"`     // or a service account api server
+		ServiceAccountSecretPath string    `yaml:"sa_secret_path"` // and a service account secret path
+		ServiceAccountOverrideCA string    `yaml:"sa_override_ca"` // optional CA crt content to override the one provided in the service account secret, useful for private clusters with custom CAs
+		Token                    Sensitive `yaml:"token"`          // or a service account token
+		CA                       string    `yaml:"ca"`             // and service account ca
 
-		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets,omitempty"`
-		ImagePullSecretName string            `yaml:"image_pull_secret_name,omitempty"`
+		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets"`
+		ImagePullSecretName string            `yaml:"image_pull_secret_name"`
 
-		ServerVersion        string `yaml:"server_version,omitempty"`
-		InitContainerVersion string `yaml:"init_container_version,omitempty"`
-		AddUserDetails       bool   `yaml:"add_user_details,omitempty"`
+		ServerVersion        string `yaml:"server_version"`
+		InitContainerVersion string `yaml:"init_container_version"`
+		AddUserDetails       bool   `yaml:"add_user_details"`
 
-		InsecureTLS bool `yaml:"insecure_tls,omitempty"` // if true, TLS certificate verification is skipped (testing only)
+		InsecureTLS bool `yaml:"insecure_tls"` // if true, TLS certificate verification is skipped (testing only)
 
-		IsWatcher bool `yaml:"is_watcher,omitempty"` // if true, the client will watch for changes in the cluster
+		IsWatcher bool `yaml:"is_watcher"` // if true, the client will watch for changes in the cluster
 
-		DefaultRegistry   string `yaml:"default_registry,omitempty"`
-		DefaultRepository string `yaml:"default_repository,omitempty"`
+		DefaultRegistry   string `yaml:"default_registry"`
+		DefaultRepository string `yaml:"default_repository"`
 	}
 
 	DockerClient struct {
-		Enabled bool `yaml:"enabled,omitempty"`
+		Enabled bool `yaml:"enabled"`
 	}
 
 	HarborClient struct {
-		Enabled            bool      `yaml:"enabled,omitempty"`
-		URL                string    `yaml:"url,omitempty"`
-		Username           string    `yaml:"username,omitempty"`
-		Password           Sensitive `yaml:"password,omitempty"`
-		Project            string    `yaml:"project,omitempty"`
-		LabelPrefixes      []string  `yaml:"label_prefixes,omitempty"`
-		PageSize           int       `yaml:"page_size,omitempty"`
-		MaxParallelFetches uint64    `yaml:"max_parallel_fetches,omitempty"`
+		Enabled            bool      `yaml:"enabled"`
+		URL                string    `yaml:"url"`
+		Username           string    `yaml:"username"`
+		Password           Sensitive `yaml:"password"`
+		Project            string    `yaml:"project"`
+		LabelPrefixes      []string  `yaml:"label_prefixes"`
+		PageSize           int       `yaml:"page_size"`
+		MaxParallelFetches uint64    `yaml:"max_parallel_fetches"`
 	}
 
 	ImagePullSecret struct {
-		Registry string `yaml:"registry,omitempty"`
-		Username string `yaml:"username,omitempty"`
-		Password string `yaml:"password,omitempty"`
+		Registry string    `yaml:"registry"`
+		Username string    `yaml:"username"`
+		Password Sensitive `yaml:"password"`
 	}
 
 	Tenant struct {
@@ -212,17 +211,15 @@ type (
 	}
 
 	Storage struct {
-		Description string               `yaml:"description,omitempty"`
-		Datastores  map[string]Datastore `yaml:"datastores,omitempty"`
-		FileStores  map[string]FileStore `yaml:"file_stores,omitempty"`
+		Datastores map[string]Datastore `yaml:"datastores"`
+		FileStores map[string]FileStore `yaml:"file_stores"`
 	}
 
 	Datastore struct {
-		// 'postgres'
-		Type           string        `yaml:"type"`
+		Type           string        `yaml:"type" validate:"oneof=postgres"`
 		Host           string        `yaml:"host"`
-		Instance       string        `yaml:"instance"` // When instance is set, the port is not used.
-		Port           string        `yaml:"port"`
+		Instance       string        `yaml:"instance" validate:"required_without=Port"` // When instance is set, the port is not used.
+		Port           string        `yaml:"port" validate:"required_without=Instance"`
 		Username       string        `yaml:"username"`
 		Password       Sensitive     `yaml:"password"`
 		Database       string        `yaml:"database"`
@@ -236,20 +233,20 @@ type (
 	}
 
 	FileStore struct {
-		Type        string               `yaml:"type"` // "minio" or "disk"
-		MinioConfig FileStoreMinioConfig `yaml:"minio_config,omitempty"`
-		DiskConfig  FileStoreDiskConfig  `yaml:"disk_config,omitempty"`
+		Type        string               `yaml:"type" validate:"oneof=minio disk"`
+		MinioConfig FileStoreMinioConfig `yaml:"minio_config"`
+		DiskConfig  FileStoreDiskConfig  `yaml:"disk_config"`
 	}
 
 	FileStoreMinioConfig struct {
 		Enabled bool `yaml:"enabled"`
 
-		Endpoint        string    `yaml:"endpoint,omitempty"`
-		AccessKeyID     string    `yaml:"access_key_id,omitempty"`
-		SecretAccessKey Sensitive `yaml:"secret_access_key,omitempty"`
+		Endpoint        string    `yaml:"endpoint"`
+		AccessKeyID     string    `yaml:"access_key_id"`
+		SecretAccessKey Sensitive `yaml:"secret_access_key"`
 
-		BucketName string `yaml:"bucket_name,omitempty"`
-		UseSSL     bool   `yaml:"use_ssl,omitempty"`
+		BucketName string `yaml:"bucket_name"`
+		UseSSL     bool   `yaml:"use_ssl"`
 
 		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size"`
 		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size"`
@@ -275,8 +272,8 @@ type (
 				Port             string    `yaml:"port"`
 				Authentication   string    `yaml:"authentication"`
 				InsecureMode     bool      `yaml:"insecure_mode"`
-				CertificatesRepo string    `yaml:"certificates_repo,omitempty"`
-				ServerName       string    `yaml:"server_name,omitempty"`
+				CertificatesRepo string    `yaml:"certificates_repo"`
+				ServerName       string    `yaml:"server_name"`
 			} `yaml:"smtp"`
 		} `yaml:"mailer_service"`
 
@@ -359,39 +356,39 @@ type (
 
 	WorkspaceFileStore struct {
 		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
-		WorkspacePrefix string `yaml:"workspace_prefix,omitempty"`
-		Description     string `yaml:"description,omitempty"`
-		Order           uint   `yaml:"order,omitempty"`
+		WorkspacePrefix string `yaml:"workspace_prefix"`
+		Description     string `yaml:"description"`
+		Order           uint   `yaml:"order"`
 	}
 
 	Mode struct {
-		Type                      string `yaml:"type"`
+		Type                      string `yaml:"type" validate:"oneof=internal openid"`
 		Enabled                   bool   `yaml:"enabled"`
 		MainSource                bool   `yaml:"main_source"`
-		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled,omitempty"`
-		OpenID                    OpenID `yaml:"openid,omitempty"`
-		ButtonText                string `yaml:"button_text,omitempty"`
-		IconURL                   string `yaml:"icon_url,omitempty"`
-		Order                     uint   `yaml:"order,omitempty"`
+		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled"`
+		OpenID                    OpenID `yaml:"openid"`
+		ButtonText                string `yaml:"button_text"`
+		IconURL                   string `yaml:"icon_url"`
+		Order                     uint   `yaml:"order"`
 	}
 
 	OpenID struct {
-		ID                        string   `yaml:"id"`
-		ChorusBackendHost         string   `yaml:"chorus_backend_host"`
-		EnableFrontendRedirect    bool     `yaml:"enable_frontend_redirect"`
-		ChorusFrontendRedirectURL string   `yaml:"chorus_frontend_redirect_url"`
-		AuthorizeURL              string   `yaml:"authorize_url"`
-		TokenURL                  string   `yaml:"token_url"`
-		UserInfoURL               string   `yaml:"user_info_url"`
-		FinalURLFormat            string   `yaml:"final_url_format"`
-		LogoutURL                 string   `yaml:"logout_url"`
-		UserNameClaim             string   `yaml:"user_name_claim"`
-		EmailClaim                string   `yaml:"email_claim"`
-		ClientID                  string   `yaml:"client_id"`
-		ClientSecret              string   `yaml:"client_secret"`
-		Scopes                    []string `yaml:"scopes"`
-		InsecureSkipTLS           bool     `yaml:"insecure_skip_tls"`
-		CustomCA                  string   `yaml:"custom_ca"`
+		ID                        string    `yaml:"id"`
+		ChorusBackendHost         string    `yaml:"chorus_backend_host"`
+		EnableFrontendRedirect    bool      `yaml:"enable_frontend_redirect"`
+		ChorusFrontendRedirectURL string    `yaml:"chorus_frontend_redirect_url"`
+		AuthorizeURL              string    `yaml:"authorize_url"`
+		TokenURL                  string    `yaml:"token_url"`
+		UserInfoURL               string    `yaml:"user_info_url"`
+		FinalURLFormat            string    `yaml:"final_url_format"`
+		LogoutURL                 string    `yaml:"logout_url"`
+		UserNameClaim             string    `yaml:"user_name_claim"`
+		EmailClaim                string    `yaml:"email_claim"`
+		ClientID                  string    `yaml:"client_id"`
+		ClientSecret              Sensitive `yaml:"client_secret"`
+		Scopes                    []string  `yaml:"scopes"`
+		InsecureSkipTLS           bool      `yaml:"insecure_skip_tls"`
+		CustomCA                  string    `yaml:"custom_ca"`
 	}
 
 	OpenIDConnectProviderClient struct {
@@ -424,7 +421,7 @@ type (
 		// configured user. Only enable this for trusted service accounts that
 		// need to act as a specific user (e.g. CI/CD pipelines, automation
 		// bots). Never expose the client secret of a user-delegation client.
-		UserDelegation *UserDelegationConfig `yaml:"user_delegation,omitempty"`
+		UserDelegation *UserDelegationConfig `yaml:"user_delegation"`
 
 		IsFederated                bool     `yaml:"is_federated"`
 		FederationRegistrationType string   `yaml:"federation_registration_type"` // automatic or explicit
@@ -444,7 +441,7 @@ type (
 		ResponseTypes     []string `yaml:"response_types"` // code, id_token, token, code id_token, code token, id_token token, code id_token token
 		PublicJWKSURI     string   `yaml:"jwks_uri"`
 		// PublicJWKS        *JSONWebKeySet `yaml:"jwks"`
-		// ScopeIDs contains the scopes available to the client separeted by spaces.
+		// ScopeIDs contains the scopes available to the client separated by spaces.
 		ScopeIDs string `yaml:"scope"`
 		//...
 
