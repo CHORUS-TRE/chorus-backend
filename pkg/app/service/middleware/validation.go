@@ -41,7 +41,7 @@ func (v validation) DeleteApp(ctx context.Context, tenantID, appID uint64) error
 
 func (v validation) UpdateApp(ctx context.Context, app *model.App) (*model.App, error) {
 	if err := v.validate.Struct(app); err != nil {
-		return v.next.UpdateApp(ctx, app)
+		return nil, err
 	}
 	return v.next.UpdateApp(ctx, app)
 }
