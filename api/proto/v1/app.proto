@@ -35,6 +35,12 @@ message App {
     string stabilityStatus = 23;
     string category = 24;
 
+    // Web-service apps: the operator runs the image as a sidecar on this port/path
+    // and composes a shared kiosk shell to render it. Empty for ordinary apps.
+    string webServicePort = 27;
+    string webServicePath = 28;
+    string webServiceTokenParam = 29;
+
     google.protobuf.Timestamp createdAt = 25;
     google.protobuf.Timestamp updatedAt = 26;
 }

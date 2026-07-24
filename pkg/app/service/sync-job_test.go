@@ -58,6 +58,36 @@ func TestHarborAppToModels_SingleApp(t *testing.T) {
 	assert.Equal(t, "data:image/png;base64,xxx", app.IconURL)
 	// A single app has no per-app browser config URL.
 	assert.Empty(t, app.BrowserConfigURL)
+	// Not a web-service app: no web-service labels.
+	assert.Empty(t, app.WebServicePort)
+	assert.Empty(t, app.WebServicePath)
+	assert.Empty(t, app.WebServiceTokenParam)
+}
+
+func TestHarborAppToModels_WebServiceApp(t *testing.T) {
+	ha := harbor.App{
+		Repository: "jupyterlab",
+		Tag:        "4.6.1-1",
+		Labels: map[string]string{
+			"ch.chorus-tre.app.name":                    "jupyterlab",
+			"ch.chorus-tre.app.stability":               "ready",
+			"org.opencontainers.image.title":            "JupyterLab",
+			"ch.chorus-tre.app.web-service.port":        "8888",
+			"ch.chorus-tre.app.web-service.path":        "/lab",
+			"ch.chorus-tre.app.web-service.token-param": "token",
+		},
+	}
+
+	j := &AppSyncJob{registry: testRegistry}
+	apps := j.harborAppToModels(ha, 1, 1)
+
+	require.Len(t, apps, 1)
+	app := apps[0]
+
+	assert.Equal(t, "JupyterLab", app.Name)
+	assert.Equal(t, "8888", app.WebServicePort)
+	assert.Equal(t, "/lab", app.WebServicePath)
+	assert.Equal(t, "token", app.WebServiceTokenParam)
 }
 
 func TestHarborAppToModels_KioskMultiApp(t *testing.T) {

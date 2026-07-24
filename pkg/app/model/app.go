@@ -35,6 +35,12 @@ type App struct {
 	StabilityStatus              AppStabilityStatus
 	Category                     string
 
+	// Web-service apps: when WebServicePort is set the operator runs the image as a
+	// sidecar on that port/path and composes a shared kiosk shell to render it.
+	WebServicePort       string
+	WebServicePath       string
+	WebServiceTokenParam string
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time

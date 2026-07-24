@@ -77,6 +77,10 @@ type AppInstance struct {
 	MinMemory             string
 	MaxEphemeralStorage   string
 	MinEphemeralStorage   string
+
+	WebServicePort       string
+	WebServicePath       string
+	WebServiceTokenParam string
 }
 
 func (a AppInstance) UID() string {
