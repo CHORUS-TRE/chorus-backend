@@ -126,6 +126,25 @@ func (c *client) appInstanceToK8sWorkbenchApp(app AppInstance) WorkbenchApp {
 		w.BrowserConfig.JWTToken = app.BrowserConfigJWTToken
 	}
 
+	// Web-service app: the operator composes a service sidecar + kiosk shell. The
+	// port must be a valid TCP port (1-65535); the operator CRD enforces the same
+	// bound, so a value outside it would be rejected at patch time and wedge the
+	// workbench. An empty port means the app is not a web-service app; a non-empty
+	// but unusable value is ignored (WebService left unset) and logged.
+	if app.WebServicePort != "" {
+		if port, err := strconv.Atoi(app.WebServicePort); err == nil && port > 0 && port <= 65535 {
+			w.WebService = &WebServiceConfig{
+				Port:       port,
+				Path:       app.WebServicePath,
+				TokenParam: app.WebServiceTokenParam,
+			}
+		} else {
+			logger.TechLog.Warn(context.Background(), "ignoring invalid web-service port for app",
+				zap.String("appImage", app.AppImage),
+				zap.String("webServicePort", app.WebServicePort))
+		}
+	}
+
 	if app.MaxCPU != "" || app.MinCPU != "" || app.MaxMemory != "" || app.MinMemory != "" || app.MaxEphemeralStorage != "" || app.MinEphemeralStorage != "" {
 		w.Resources = &corev1.ResourceRequirements{}
 		if app.MaxCPU != "" {
@@ -269,6 +288,11 @@ func (c *client) k8sWorkbenchAppToAppInstance(w WorkbenchApp) (AppInstance, erro
 	}
 	if w.BrowserConfig != nil {
 		app.BrowserConfigURL = w.BrowserConfig.URL
+	}
+	if w.WebService != nil {
+		app.WebServicePort = strconv.Itoa(w.WebService.Port)
+		app.WebServicePath = w.WebService.Path
+		app.WebServiceTokenParam = w.WebService.TokenParam
 	}
 
 	if w.Resources != nil {

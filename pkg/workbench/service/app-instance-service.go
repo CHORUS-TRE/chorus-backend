@@ -130,6 +130,10 @@ func (s *WorkbenchService) getK8sAppInstance(ctx context.Context, appInstance *m
 		MinMemory:           app.MinMemory,
 		MaxEphemeralStorage: app.MaxEphemeralStorage,
 		MinEphemeralStorage: app.MinEphemeralStorage,
+
+		WebServicePort:       app.WebServicePort,
+		WebServicePath:       app.WebServicePath,
+		WebServiceTokenParam: app.WebServiceTokenParam,
 	}
 
 	return clientApp, nil

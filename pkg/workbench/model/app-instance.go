@@ -44,6 +44,10 @@ type AppInstance struct {
 	AppMinEphemeralStorage *string
 	AppIconURL             *string
 
+	AppWebServicePort       *string
+	AppWebServicePath       *string
+	AppWebServiceTokenParam *string
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
@@ -71,6 +75,10 @@ func (a *AppInstance) ToK8sAppInstance() k8s.AppInstance {
 		MinMemory:           utils.ToString(a.AppMinMemory),
 		MaxEphemeralStorage: utils.ToString(a.AppMaxEphemeralStorage),
 		MinEphemeralStorage: utils.ToString(a.AppMinEphemeralStorage),
+
+		WebServicePort:       utils.ToString(a.AppWebServicePort),
+		WebServicePath:       utils.ToString(a.AppWebServicePath),
+		WebServiceTokenParam: utils.ToString(a.AppWebServiceTokenParam),
 	}
 }
 

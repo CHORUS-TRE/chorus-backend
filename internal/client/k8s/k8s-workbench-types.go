@@ -32,6 +32,15 @@ type BrowserConfig struct {
 	JWTURL   string `json:"jwtUrl,omitempty"`
 	JWTToken string `json:"jwtToken,omitempty"`
 }
+
+// WebServiceConfig mirrors the operator's default.chorus-tre.ch/v1alpha1
+// WorkbenchApp.webService. When set, the operator runs the app image as a service
+// sidecar on Port+Path and composes a shared kiosk shell to render it.
+type WebServiceConfig struct {
+	Port       int    `json:"port"`
+	Path       string `json:"path,omitempty"`
+	TokenParam string `json:"tokenParam,omitempty"`
+}
 type InitContainerConfig struct {
 	Version string `json:"version,omitempty"`
 }
@@ -42,6 +51,7 @@ type WorkbenchApp struct {
 	ShmSize       *resource.Quantity           `json:"shmSize,omitempty"`
 	Resources     *corev1.ResourceRequirements `json:"resources,omitempty"`
 	BrowserConfig *BrowserConfig               `json:"browserConfig,omitempty"`
+	WebService    *WebServiceConfig            `json:"webService,omitempty"`
 }
 type WorkbenchSpec struct {
 	Server           WorkbenchServer         `json:"server,omitempty"`
