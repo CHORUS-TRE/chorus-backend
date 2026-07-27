@@ -195,13 +195,6 @@ type (
 		RateLimitMBps     uint64    `yaml:"rate_limit_mbps"`
 	}
 
-	PublicStorage struct {
-		URL          string    `yaml:"url"`
-		Bucket       string    `yaml:"bucket"`
-		AccessKey    string    `yaml:"access_key"`
-		AccessSecret Sensitive `yaml:"access_secret"`
-	}
-
 	// IPWhitelist is a configuration to allow only a subset of IP addresses to
 	// reach the HTTP endpoints.
 	IPWhitelist struct {
