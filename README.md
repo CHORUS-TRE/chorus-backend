@@ -14,39 +14,68 @@ This project is the backend of the chorus platform.
 - **JWT Generation**: Implements JSON Web Tokens for secure data transmission.
 - **Authorization Middlewares**: Ensures secure access control within the application.
 
+## Requirements
+
+### Kubernetes
+
+A running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
+
+The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like any other setting (see [Configuration](#configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.k8s_client` fields individually:
+
+- `api_server` — the service account API server URL
+- `sa_secret_path` — path to the service account secret
+- `sa_override_ca` — CA certificate content, optional, for private clusters with custom CAs
+- `token` — the service account token
+- `ca` — the service account CA
+
+### Object Storage
+
+MinIO — run `make deps` to start it locally.
+
+### Postgresql
+
+Postgres — run `make deps` to start it locally.
+
 ## Launching
 
-1. install go
-1. pull repo
-1. requirements
-    * postgres and minio, run `make deps`
-    * a running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box
-1. config
-    * export the full default config and override any of it in `configs/config.yaml`:
+1. Install [go](https://go.dev/doc/install)
+1. Download this repository
+1. Make sure the [requirements](#requirements) are met — kubeconfig in place, `make deps` running
+1. Configure your environment
+    * Export the full default config and override any of it in `configs/config.yaml`:
         ```bash
         make export-default-config > configs/config.yaml
         ```
-    * generate a private key and paste it into `daemon.private_key` in `configs/config.yaml`:
+    * Generate a private key and paste it into `daemon.private_key` in `configs/config.yaml`:
         ```bash
         openssl ecparam -name prime256v1 -genkey -noout
         ```
-    * generate a JWKS and paste it into `services.openid_connect_provider.jwks` in `configs/config.yaml`:
+    * Generate a JWKS and paste it into `services.openid_connect_provider.jwks` in `configs/config.yaml`:
         ```bash
         make jwks
         ```
-    * compare your `configs/config.yaml` with the default config:
+    * Compare your `configs/config.yaml` with the default config:
        ```bash
        make diff-config
        ```
-    * optional: trim `configs/config.yaml` down to only the fields you actually changed (backs up to `configs/config.yaml.bak` first):
+    * Optional: trim `configs/config.yaml` down to only the fields you actually changed (backs up to `configs/config.yaml.bak` first):
        ```bash
        make trim-config
        ```
-1. launch the backend
-    * use `make run` if you generated an overriding `configs/config.yaml` file in the previous step
-1. go to localhost:5000/doc (port my differ depending on your config)
-1. login with default user or create a new user
-1. test with get my user
+1. Launch the backend
+    ```bash
+    make run
+    ```
+1. Browse to [localhost:5000/doc](localhost:5000/doc) (port my differ depending on your config)
+1. Import the [swagger documentation](api/openapiv2/v1-tags/apis.swagger.yaml) into a new [Postman collection](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-from-swagger)
+1. Authenticate with the default user to retrieve a bearer token
+1. Save the bearer token in a collection-wide variable named ```token```
+1. [Configure the collection-wide authorization](https://learning.postman.com/docs/use/use-collections/create-collections#configure-a-collection)
+    ```
+    Auth Type: Bearer Token
+    Token: {{token}}
+    ```
+1. Now you can play around and send request to the chorus backend server running locally
 
 ## Configuration
 
@@ -65,7 +94,6 @@ go run ./cmd/chorus/main.go start \
 
 Environment variables use the dotted config path, uppercased, with `.` replaced by `_`, prefixed with `CHORUS_`: `storage.datastores.chorus.database` → `CHORUS_STORAGE_DATASTORES_CHORUS_DATABASE`.
 
-Because many field names already contain underscores, this mapping isn't reversible in general: `test.hello_world` and `test.hello.world` both produce `CHORUS_TEST_HELLO_WORLD`. If two real config paths ever collided like that, setting the env var would set both at once, with no way to target just one — there's no such collision anywhere in the current schema (checked directly against every field), but it's worth keeping in mind before naming a new field. `--set` and `--config` don't have this ambiguity, since they use the dotted path directly — prefer those over an environment variable whenever a path might be ambiguous.
 
 ## Developer doc.
 
@@ -136,12 +164,15 @@ Create a complete service (here the workbench service)
     (created automatically by the dev-container init script; for an older
     postgres volume, create it once with `CREATE DATABASE chorus_ci;`).
 
-    In a shell, launch the backend (CI flavour)
-    ```bash
-    ./scripts/run_backend_ci.sh
-    ```
+    There's no separate CI config file — acceptance testing reuses
+    `CONFIG_FILE` (default `configs/config.yaml`), with a handful of overrides
+    (`chorus_ci` database, a separate disk file-store path, docker/k8s clients
+    disabled) applied via `--set`. See `CONFIG_FILE`/`ACCEPTANCE_CONFIG_SET`
+    at the top of `scripts/run_acceptance_tests.sh` to change the defaults.
 
-    In another shell, run all the acceptance suites
+    `make test-acceptance` is self-managed: it builds the backend, starts it,
+    runs the suite, then stops it — one command, using whatever
+    `daemon.http.port` is set in `CONFIG_FILE`
     ```bash
     make test-acceptance
     ```
@@ -152,8 +183,7 @@ Create a complete service (here the workbench service)
 
     **Acceptance Coverage**
 
-    Runs the suites against a self-managed, coverage-instrumented backend —
-    no separate shell needed, but the port 5000 must be free
+    Same self-managed flow, against a coverage-instrumented backend
     (writes `tests/coverage/acceptance.out`)
     ```bash
     make test-acceptance-coverage
