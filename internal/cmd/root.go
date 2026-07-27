@@ -65,12 +65,7 @@ func init() {
 	viper.AutomaticEnv()
 }
 
-// initConfig loads every file in configFilenames, in order: the first is
-// read as the base, the rest are merged on top.
 func initConfig() error {
-	if len(configFilenames) == 0 {
-		fmt.Println("No --config passed, running on code-level defaults only")
-	}
 
 	for i, f := range configFilenames {
 		viper.SetConfigFile(f)
