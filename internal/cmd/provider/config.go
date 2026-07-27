@@ -41,13 +41,9 @@ func ProvideConfig() config.Config {
 	return cfg
 }
 
-// validateConfig fails fast on configuration that would otherwise boot the
-// server with silently empty required fields (JWT secret, signing keys).
-// Datastore credentials are intentionally not checked here: the primary
-// "chorus" datastore is looked up by name (provider.ProvideMainDB ->
-// ProvideDB("chorus")) rather than being its own named struct field, so it
-// can't carry `validate` tags directly — that failure surfaces later, in
-// ProvideDB, when the datastore is actually used.
+// validateConfig fails fast on empty required fields (JWT secret, signing keys).
+// Datastore credentials aren't struct fields (looked up by name via ProvideDB),
+// so they can't carry `validate` tags and fail later instead.
 func validateConfig(cfg config.Config) error {
 	return ProvideValidator().Struct(cfg)
 }
@@ -88,6 +84,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.grpc.port", "5555")
 	v.SetDefault("daemon.grpc.max_recv_msg_size", 1073741824) // 1 GiB
 	v.SetDefault("daemon.grpc.max_send_msg_size", 1073741824) // 1 GiB
+	v.SetDefault("daemon.jwt.secret", "")
 	v.SetDefault("daemon.jwt.expiration_time", "72h")
 	v.SetDefault("daemon.jwt.max_refresh_time", "4320h") // 180 days
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
@@ -95,6 +92,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.expose_error_stack_trace", true)
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
+	v.SetDefault("daemon.metrics.authentication.password", "")
 
 	// Jobber
 	v.SetDefault("daemon.jobber.enabled", true)
@@ -117,6 +115,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.chorus.max_connections", 10)
 	v.SetDefault("storage.datastores.chorus.max_lifetime", 10*time.Second)
 	v.SetDefault("storage.datastores.chorus.ssl.enabled", false)
+	v.SetDefault("storage.datastores.chorus.password", "")
 	v.SetDefault("storage.datastores.audit.type", "postgres")
 	v.SetDefault("storage.datastores.audit.host", "127.0.0.1")
 	v.SetDefault("storage.datastores.audit.port", "5432")
@@ -125,10 +124,12 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.audit.max_connections", 10)
 	v.SetDefault("storage.datastores.audit.max_lifetime", 10*time.Second)
 	v.SetDefault("storage.datastores.audit.ssl.enabled", false)
+	v.SetDefault("storage.datastores.audit.password", "")
 	v.SetDefault("storage.file_stores.s3.type", "minio")
 	v.SetDefault("storage.file_stores.s3.minio_config.enabled", true)
 	v.SetDefault("storage.file_stores.s3.minio_config.endpoint", "localhost:9000")
 	v.SetDefault("storage.file_stores.s3.minio_config.access_key_id", "minioadmin")
+	v.SetDefault("storage.file_stores.s3.minio_config.secret_access_key", "")
 	v.SetDefault("storage.file_stores.s3.minio_config.bucket_name", "chorus-data")
 	v.SetDefault("storage.file_stores.s3.minio_config.use_ssl", false)
 	v.SetDefault("storage.file_stores.s3.minio_config.multipart_min_part_size", 5242880)    // 5MB
@@ -164,16 +165,19 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.logout_url", "http://localhost:8080/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.user_name_claim", "preferred_username")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.client_id", "chorus")
+	v.SetDefault("services.authentication_service.modes.keycloak.openid.client_secret", "")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.scopes", []string{"openid", "profile", "email", "roles"})
 	v.SetDefault("services.approval_request_service.staging_file_store_name", "disk")
 	v.SetDefault("services.mailer_service.smtp.host", "smtp-relay.sendinblue.com")
 	v.SetDefault("services.mailer_service.smtp.port", "587")
 	v.SetDefault("services.mailer_service.smtp.user", "smtpUser")
+	v.SetDefault("services.mailer_service.smtp.password", "")
 	v.SetDefault("services.mailer_service.smtp.authentication", "none")
 	v.SetDefault("services.mailer_service.smtp.insecure_mode", false)
 	v.SetDefault("services.openid_connect_provider.enabled", true)
 	v.SetDefault("services.openid_connect_provider.issuer_url", "http://localhost:5000/openid-connect")
 	v.SetDefault("services.openid_connect_provider.frontend_interactions_url", "http://localhost:5000/auth-ui")
+	v.SetDefault("services.openid_connect_provider.jwks", "")
 	v.SetDefault("services.openid_connect_provider.scopes", []string{"openid", "profile", "email", "roles"})
 	v.SetDefault("services.workspace_service.enable_kill_fixed_timeout", false)
 	v.SetDefault("services.workspace_service.kill_fixed_timeout", time.Hour)
@@ -210,6 +214,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.round_tripper.max_transient_retry", 3)
 	v.SetDefault("services.steward.tenant.name", "default")
 	v.SetDefault("services.steward.user.username", "chorus")
+	v.SetDefault("services.steward.user.password", "")
 
 	// Clients
 	v.SetDefault("clients.docker_client.enabled", true)
@@ -222,6 +227,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.k8s_client.image_pull_secret_name", "regcred")
 	v.SetDefault("clients.k8s_client.default_registry", "")
 	v.SetDefault("clients.k8s_client.default_repository", "apps")
+	v.SetDefault("clients.k8s_client.token", "")
 	// Default to the conventional kubeconfig path,
 	// leave unset if file does not exist
 	if home, err := os.UserHomeDir(); err == nil {
@@ -239,6 +245,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.harbor_client.page_size", 100)
 	v.SetDefault("clients.harbor_client.max_parallel_fetches", 16)
 	v.SetDefault("clients.harbor_client.username", "")
+	v.SetDefault("clients.harbor_client.password", "")
 
 	// Loggers
 	v.SetDefault("log.loggers.stdout_technical.enabled", true)
