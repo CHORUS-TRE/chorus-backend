@@ -48,6 +48,24 @@ This project is the backend of the chorus platform.
 1. login with default user or create a new user
 1. test with get my user
 
+## Configuration
+
+Configuration resolves in this order — later wins:
+
+1. code-level defaults (`provider.SetDefaultConfig()`, see `make export-default-config`)
+2. `--config <file>`, repeatable — later files override earlier ones
+3. `CHORUS_*` environment variables
+4. `--set path.to.key=value`, repeatable
+
+```bash
+go run ./cmd/chorus/main.go start \
+  --config configs/config.yaml \
+  --set storage.datastores.chorus.database=chorus_ci
+```
+
+Environment variables use the dotted config path, uppercased, with `.` replaced by `_`, prefixed with `CHORUS_`: `storage.datastores.chorus.database` → `CHORUS_STORAGE_DATASTORES_CHORUS_DATABASE`.
+
+Because many field names already contain underscores, this mapping isn't reversible in general: `test.hello_world` and `test.hello.world` both produce `CHORUS_TEST_HELLO_WORLD`. If two real config paths ever collided like that, setting the env var would set both at once, with no way to target just one — there's no such collision anywhere in the current schema (checked directly against every field), but it's worth keeping in mind before naming a new field. `--set` and `--config` don't have this ambiguity, since they use the dotted path directly — prefer those over an environment variable whenever a path might be ambiguous.
 
 ## Developer doc.
 
