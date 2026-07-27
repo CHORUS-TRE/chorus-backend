@@ -22,10 +22,8 @@ const (
 	descriptionLong  = `chorus is the backend for the chorus platform.`
 )
 
-// configFilenames holds every --config occurrence, in order.
-// If empty, no file is loaded at all and the server runs
-// on provider.SetDefaultConfig()'s code-level defaults alone.
 var configFilenames = []string{}
+var setValues = []string{}
 
 var rootCmd = &cobra.Command{
 	Use:     componentName,
@@ -45,6 +43,12 @@ func init() {
 		[]string{},
 		"config file path, repeatable (later files override earlier ones); omit entirely to run on code-level defaults only",
 	)
+	rootCmd.PersistentFlags().StringArrayVar(
+		&setValues,
+		"set",
+		[]string{},
+		"override a config value, repeatable: --set path.to.key=value",
+	)
 	rootCmd.PersistentFlags().StringVar(
 		&component.RuntimeEnvironment,
 		"runtime-environment",
@@ -56,10 +60,6 @@ func init() {
 		panic(err)
 	}
 
-	// Environment variables always apply on top of whatever files were (or
-	// weren't) loaded, e.g. CHORUS_DAEMON_JWT_SECRET -> daemon.jwt.secret.
-	// This is optional, not required: config files may still hold secret
-	// values directly where that's simpler (local dev, CI).
 	viper.SetEnvPrefix("CHORUS")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
@@ -70,7 +70,6 @@ func init() {
 func initConfig() error {
 	if len(configFilenames) == 0 {
 		fmt.Println("No --config passed, running on code-level defaults only")
-		return nil
 	}
 
 	for i, f := range configFilenames {
@@ -86,6 +85,14 @@ func initConfig() error {
 			return fmt.Errorf("unable to load config file %v: %w", f, err)
 		}
 		fmt.Println("Using config file:", f)
+	}
+
+	for _, kv := range setValues {
+		k, v, ok := strings.Cut(kv, "=")
+		if !ok {
+			return fmt.Errorf("invalid --set %q: expected key=value", kv)
+		}
+		viper.Set(k, v)
 	}
 
 	return nil
