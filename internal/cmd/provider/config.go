@@ -250,9 +250,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.jobber.jitter", 0.2)
 	v.SetDefault("daemon.jobber.lock_store", "postgres")
 
-	// Daemon - Pprof
-	v.SetDefault("daemon.pprof_enabled", false)
-
 	// Daemon - Error Stack Trace
 	v.SetDefault("daemon.expose_error_stack_trace", true)
 
