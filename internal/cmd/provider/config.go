@@ -120,6 +120,10 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is %s)", path, sibling, value)
 	case "oneof":
 		return fmt.Sprintf("FAIL '%s' must be one of: %s", path, fe.Param())
+	case "ne":
+		return fmt.Sprintf("FAIL '%s' must not be '%s'", path, fe.Param())
+	case "min":
+		return fmt.Sprintf("FAIL '%s' must contain at least %s entry/entries", path, fe.Param())
 	default:
 		return fmt.Sprintf("FAIL '%s' failed '%s' validation", path, fe.Tag())
 	}
@@ -381,12 +385,14 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authentication_service.enabled", true)
 	v.SetDefault("services.authentication_service.auth_ui_enabled", true)
 	v.SetDefault("services.authentication_service.self_service.tenant_id", 1)
+
 	v.SetDefault("services.authentication_service.modes.internal.type", "internal")
 	v.SetDefault("services.authentication_service.modes.internal.enabled", true)
 	v.SetDefault("services.authentication_service.modes.internal.main_source", true)
 	v.SetDefault("services.authentication_service.modes.internal.public_registration_enabled", true)
 	v.SetDefault("services.authentication_service.modes.internal.button_text", "Login via local DB")
 	v.SetDefault("services.authentication_service.modes.internal.order", 1)
+
 	v.SetDefault("services.authentication_service.modes.keycloak.type", "openid")
 	v.SetDefault("services.authentication_service.modes.keycloak.enabled", true)
 	v.SetDefault("services.authentication_service.modes.keycloak.button_text", "Login with via Keycloak")
