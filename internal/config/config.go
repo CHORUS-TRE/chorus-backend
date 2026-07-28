@@ -337,12 +337,12 @@ type (
 
 		Steward struct {
 			Tenant struct {
-				Name string `yaml:"name"`
+				Name string `yaml:"name" validate:"required"`
 			} `yaml:"tenant"`
 
 			User struct {
-				Username string    `yaml:"username"`
-				Password Sensitive `yaml:"password"`
+				Username string    `yaml:"username" validate:"required"`
+				Password Sensitive `yaml:"password" validate:"required"`
 			} `yaml:"user"`
 		} `yaml:"steward"`
 	}
