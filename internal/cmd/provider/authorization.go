@@ -8,9 +8,11 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
+	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service/middleware"
-	authorization_store "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/postgres"
+	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/middleware"
+	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/postgres"
 	"go.uber.org/zap"
 )
 
@@ -43,11 +45,18 @@ func ProvideAuthorizationController() chorus.AuthorizationServiceServer {
 }
 
 var authorizationStoreOnce sync.Once
-var authorizationStore authorization_service.Store
+var authorizationStore authorization_service.AuthorizationStore
 
-func ProvideAuthorizationStore() authorization_service.Store {
+func ProvideAuthorizationStore() authorization_service.AuthorizationStore {
 	authorizationStoreOnce.Do(func() {
-		authorizationStore = authorization_store.NewRoleStorage(ProvideMainDB().GetSqlxDB())
+		db := ProvideMainDB(WithClient("authorization-store"), WithMigrations(migration.GetMigration))
+		switch db.Type {
+		case POSTGRES:
+			authorizationStore = postgres.NewAuthorizationStorage(db.DB.GetSqlxDB())
+		default:
+			logger.TechLog.Fatal(context.Background(), "unsupported database type for authorization store", zap.String("db_type", string(db.Type)))
+		}
+		authorizationStore = store_mw.Logging(logger.TechLog)(authorizationStore)
 	})
 	return authorizationStore
 }
