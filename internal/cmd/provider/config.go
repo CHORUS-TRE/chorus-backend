@@ -280,6 +280,44 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("log.loggers.stdout_security.level", "debug")
 	v.SetDefault("log.loggers.stdout_security.category", "security")
 
+	// Clients - Kubernetes
+	v.SetDefault("clients.k8s_client.enabled", true)
+	v.SetDefault("clients.k8s_client.kube_config", "")
+	v.SetDefault("clients.k8s_client.api_server", "https://kubernetes.default.svc")
+	v.SetDefault("clients.k8s_client.sa_secret_path", "/var/run/secrets/kubernetes.io/serviceaccount")
+	v.SetDefault("clients.k8s_client.sa_override_ca", "")
+	v.SetDefault("clients.k8s_client.token", "")
+	v.SetDefault("clients.k8s_client.ca", "")
+	v.SetDefault("clients.k8s_client.image_pull_secret_name", "regcred")
+	v.SetDefault("clients.k8s_client.server_version", "6.3.6-r0-3")
+	v.SetDefault("clients.k8s_client.init_container_version", "0.0.2-4")
+	v.SetDefault("clients.k8s_client.add_user_details", false)
+	v.SetDefault("clients.k8s_client.insecure_tls", false)
+	v.SetDefault("clients.k8s_client.is_watcher", true)
+	v.SetDefault("clients.k8s_client.default_registry", "")
+	v.SetDefault("clients.k8s_client.default_repository", "apps")
+	// Default to the conventional kubeconfig path,
+	// leave unset if file does not exist
+	if home, err := os.UserHomeDir(); err == nil {
+		kubeConfigPath := filepath.Join(home, ".kube", "config")
+		if _, err := os.Stat(kubeConfigPath); err == nil {
+			v.SetDefault("clients.k8s_client.kube_config", kubeConfigPath)
+		}
+	}
+
+	// Clients - Docker
+	v.SetDefault("clients.docker_client.enabled", true)
+
+	// Clients - Harbor
+	v.SetDefault("clients.harbor_client.enabled", true)
+	v.SetDefault("clients.harbor_client.url", "")
+	v.SetDefault("clients.harbor_client.project", "apps")
+	v.SetDefault("clients.harbor_client.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
+	v.SetDefault("clients.harbor_client.page_size", 100)
+	v.SetDefault("clients.harbor_client.max_parallel_fetches", 16)
+	v.SetDefault("clients.harbor_client.username", "")
+	v.SetDefault("clients.harbor_client.password", "")
+
 	// Storage - Datastores
 	v.SetDefault("storage.datastores.chorus.type", "postgres")
 	v.SetDefault("storage.datastores.chorus.host", "127.0.0.1")
@@ -411,43 +449,5 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.steward.tenant.name", "default")
 	v.SetDefault("services.steward.user.username", "chorus")
 	v.SetDefault("services.steward.user.password", "")
-
-	// Clients - Docker
-	v.SetDefault("clients.docker_client.enabled", true)
-
-	// Clients - Kubernetes
-	v.SetDefault("clients.k8s_client.enabled", true)
-	v.SetDefault("clients.k8s_client.kube_config", "")
-	v.SetDefault("clients.k8s_client.api_server", "https://kubernetes.default.svc")
-	v.SetDefault("clients.k8s_client.sa_secret_path", "/var/run/secrets/kubernetes.io/serviceaccount")
-	v.SetDefault("clients.k8s_client.sa_override_ca", "")
-	v.SetDefault("clients.k8s_client.token", "")
-	v.SetDefault("clients.k8s_client.ca", "")
-	v.SetDefault("clients.k8s_client.image_pull_secret_name", "regcred")
-	v.SetDefault("clients.k8s_client.server_version", "6.3.6-r0-3")
-	v.SetDefault("clients.k8s_client.init_container_version", "0.0.2-4")
-	v.SetDefault("clients.k8s_client.add_user_details", false)
-	v.SetDefault("clients.k8s_client.insecure_tls", false)
-	v.SetDefault("clients.k8s_client.is_watcher", true)
-	v.SetDefault("clients.k8s_client.default_registry", "")
-	v.SetDefault("clients.k8s_client.default_repository", "apps")
-	// Default to the conventional kubeconfig path,
-	// leave unset if file does not exist
-	if home, err := os.UserHomeDir(); err == nil {
-		kubeConfigPath := filepath.Join(home, ".kube", "config")
-		if _, err := os.Stat(kubeConfigPath); err == nil {
-			v.SetDefault("clients.k8s_client.kube_config", kubeConfigPath)
-		}
-	}
-
-	// Clients - Harbor
-	v.SetDefault("clients.harbor_client.enabled", true)
-	v.SetDefault("clients.harbor_client.url", "")
-	v.SetDefault("clients.harbor_client.project", "apps")
-	v.SetDefault("clients.harbor_client.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
-	v.SetDefault("clients.harbor_client.page_size", 100)
-	v.SetDefault("clients.harbor_client.max_parallel_fetches", 16)
-	v.SetDefault("clients.harbor_client.username", "")
-	v.SetDefault("clients.harbor_client.password", "")
 
 }
