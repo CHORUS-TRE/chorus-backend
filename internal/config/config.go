@@ -32,8 +32,8 @@ type (
 			Headers        struct {
 				AccessControlAllowOrigins        []string `yaml:"access_control_allow_origins"`
 				AccessControlAllowOriginWildcard bool     `yaml:"access_control_allow_origin_wildcard"`
-				AccessControlMaxAge              string   `yaml:"access_control_max_age"`
-				CookieDomain                     string   `yaml:"cookie_domain"`
+				AccessControlMaxAge              string   `yaml:"access_control_max_age" validate:"required"`
+				CookieDomain                     string   `yaml:"cookie_domain" validate:"required"`
 			} `yaml:"headers"`
 			MaxCallRecvMsgSize int `yaml:"max_call_recv_msg_size" validate:"required"`
 			MaxCallSendMsgSize int `yaml:"max_call_send_msg_size" validate:"required"`
@@ -41,15 +41,15 @@ type (
 
 		JWT struct {
 			Secret         Sensitive     `yaml:"secret" validate:"required"`
-			ExpirationTime time.Duration `yaml:"expiration_time"`
-			MaxRefreshTime time.Duration `yaml:"max_refresh_time"`
+			ExpirationTime time.Duration `yaml:"expiration_time" validate:"required"`
+			MaxRefreshTime time.Duration `yaml:"max_refresh_time" validate:"required"`
 		} `yaml:"jwt"`
 
 		TOTP struct {
-			NumRecoveryCodes int `yaml:"num_recovery_codes"`
+			NumRecoveryCodes int `yaml:"num_recovery_codes" validate:"required"`
 		} `yaml:"totp"`
 
-		Jobs map[string]Job `yaml:"jobs"`
+		Jobs map[string]Job `yaml:"jobs" validate:"dive"`
 
 		Jobber Jobber `yaml:"jobber"`
 
@@ -456,7 +456,7 @@ type (
 	Job struct {
 		Enabled  bool                   `yaml:"enabled"`
 		Timeout  time.Duration          `yaml:"timeout"`
-		Interval time.Duration          `yaml:"interval"`
+		Interval time.Duration          `yaml:"interval" validate:"required_if=Enabled true"`
 		Options  map[string]interface{} `yaml:"options"`
 	}
 
