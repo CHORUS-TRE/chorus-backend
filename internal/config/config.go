@@ -359,7 +359,6 @@ type (
 		PublicRegistrationEnabled bool   `yaml:"public_registration_enabled"`
 		OpenID                    OpenID `yaml:"openid"`
 		ButtonText                string `yaml:"button_text"`
-		IconURL                   string `yaml:"icon_url"`
 		Order                     uint   `yaml:"order"`
 	}
 

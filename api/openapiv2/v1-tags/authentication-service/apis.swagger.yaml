@@ -194,8 +194,6 @@ definitions:
         $ref: '#/definitions/chorusOpenID'
       ButtonText:
         type: string
-      IconURL:
-        type: string
   chorusAuthenticationReply:
     type: object
     properties:

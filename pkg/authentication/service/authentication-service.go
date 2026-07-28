@@ -191,7 +191,6 @@ func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationM
 					PublicRegistrationEnabled: mode.PublicRegistrationEnabled,
 				},
 				ButtonText: mode.ButtonText,
-				IconURL:    mode.IconURL,
 				Order:      mode.Order,
 			})
 		}
@@ -202,7 +201,6 @@ func (a *AuthenticationService) GetAuthenticationModes() []model.AuthenticationM
 					ID: mode.OpenID.ID,
 				},
 				ButtonText: mode.ButtonText,
-				IconURL:    mode.IconURL,
 				Order:      mode.Order,
 			})
 		}

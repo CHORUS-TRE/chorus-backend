@@ -108,14 +108,12 @@ config:
           enabled: true
           public_registration_enabled: false
           button_text: "Login via local DB"
-          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 1
         keycloak:
           type: openid
           enabled: true
           main_source: true
           button_text: "Login with Keycloak"
-          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 2
           openid:
             id: keycloak
@@ -139,7 +137,6 @@ config:
           type: openid
           enabled: true
           button_text: "Login with Keycloak (dev)"
-          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
           order: 3
           openid:
             id: keycloakdev

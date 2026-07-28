@@ -21,9 +21,6 @@ type ChorusAuthenticationMode struct {
 	// button text
 	ButtonText string `json:"ButtonText,omitempty"`
 
-	// icon URL
-	IconURL string `json:"IconURL,omitempty"`
-
 	// internal
 	Internal *ChorusInternal `json:"internal,omitempty"`
 

@@ -5,7 +5,6 @@ type AuthenticationMode struct {
 	Internal   Internal
 	OpenID     OpenID
 	ButtonText string
-	IconURL    string
 	Order      uint
 }
 
