@@ -21,7 +21,10 @@ import (
 var configOnce sync.Once
 var cfg config.Config
 
-const GiB = 1 << 30
+const (
+	MiB = 1 << (10 * (iota + 2))
+	GiB
+)
 
 // ProvideConfig returns the user-provided config structure. A field will
 // take a default value, as given by the default config structure, if it is
@@ -347,9 +350,10 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.file_stores.s3.minio_config.secret_access_key", "")
 	v.SetDefault("storage.file_stores.s3.minio_config.bucket_name", "chorus-data")
 	v.SetDefault("storage.file_stores.s3.minio_config.use_ssl", false)
-	v.SetDefault("storage.file_stores.s3.minio_config.multipart_min_part_size", 5242880)    // 5MB
-	v.SetDefault("storage.file_stores.s3.minio_config.multipart_max_part_size", 5368709120) // 5GB
+	v.SetDefault("storage.file_stores.s3.minio_config.multipart_min_part_size", 5*MiB)
+	v.SetDefault("storage.file_stores.s3.minio_config.multipart_max_part_size", 5*GiB)
 	v.SetDefault("storage.file_stores.s3.minio_config.multipart_max_total_parts", 10000)
+
 	v.SetDefault("storage.file_stores.disk.type", "disk")
 	v.SetDefault("storage.file_stores.disk.disk_config.enabled", true)
 	v.SetDefault("storage.file_stores.disk.disk_config.base_path", "docker/.diskfilestore")
