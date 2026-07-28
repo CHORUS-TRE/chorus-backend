@@ -19,15 +19,15 @@ type (
 	// Daemon holds the GRPC and HTTP server settings.
 	Daemon struct {
 		GRPC struct {
-			Host           string `yaml:"host"`
-			Port           string `yaml:"port"`
-			MaxRecvMsgSize int    `yaml:"max_recv_msg_size"`
-			MaxSendMsgSize int    `yaml:"max_send_msg_size"`
+			Host           string `yaml:"host" validate:"required"`
+			Port           string `yaml:"port" validate:"required"`
+			MaxRecvMsgSize int    `yaml:"max_recv_msg_size" validate:"required"`
+			MaxSendMsgSize int    `yaml:"max_send_msg_size" validate:"required"`
 		} `yaml:"grpc"`
 
 		HTTP struct {
-			Host           string `yaml:"host"`
-			Port           string `yaml:"port"`
+			Host           string `yaml:"host" validate:"required"`
+			Port           string `yaml:"port" validate:"required"`
 			HeaderClientIP string `yaml:"header_client_ip"`
 			Headers        struct {
 				AccessControlAllowOrigins        []string `yaml:"access_control_allow_origins"`
@@ -35,8 +35,8 @@ type (
 				AccessControlMaxAge              string   `yaml:"access_control_max_age"`
 				CookieDomain                     string   `yaml:"cookie_domain"`
 			} `yaml:"headers"`
-			MaxCallRecvMsgSize int `yaml:"max_call_recv_msg_size"`
-			MaxCallSendMsgSize int `yaml:"max_call_send_msg_size"`
+			MaxCallRecvMsgSize int `yaml:"max_call_recv_msg_size" validate:"required"`
+			MaxCallSendMsgSize int `yaml:"max_call_send_msg_size" validate:"required"`
 		} `yaml:"http"`
 
 		JWT struct {
