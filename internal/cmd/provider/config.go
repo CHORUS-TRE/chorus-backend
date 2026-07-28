@@ -124,6 +124,8 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		return fmt.Sprintf("FAIL '%s' must not be '%s'", path, fe.Param())
 	case "min":
 		return fmt.Sprintf("FAIL '%s' must contain at least %s entry/entries", path, fe.Param())
+	case "required_openid":
+		return fmt.Sprintf("FAIL '%s' is missing (required for openid-type authentication modes)", path)
 	default:
 		return fmt.Sprintf("FAIL '%s' failed '%s' validation", path, fe.Tag())
 	}

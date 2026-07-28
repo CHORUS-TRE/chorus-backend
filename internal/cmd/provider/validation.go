@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/validation"
 
 	val "github.com/go-playground/validator/v10"
@@ -28,6 +29,40 @@ func ProvideValidator() *val.Validate {
 			}
 			return name
 		})
+
+		validator.RegisterStructValidation(validateOpenIDMode, config.Mode{})
 	})
 	return validator
+}
+
+// validateOpenIDMode requires the OpenID fields an "openid"-type mode actually
+// depends on (internal/authentication-service.go's oauth2 config, redirect
+// URL, and userinfo/claims lookups). These can't be expressed as required_if
+// tags on OpenID's own fields: the gating condition is Mode.Type, which lives
+// one level up and isn't reachable from a tag on a field inside OpenID.
+func validateOpenIDMode(sl val.StructLevel) {
+	mode := sl.Current().Interface().(config.Mode)
+	if mode.Type != "openid" {
+		return
+	}
+
+	o := mode.OpenID
+	reportIfEmpty := func(value, field, structField string) {
+		if value == "" {
+			sl.ReportError(value, field, structField, "required_openid", "")
+		}
+	}
+
+	reportIfEmpty(o.ID, "openid.id", "OpenID.ID")
+	reportIfEmpty(o.ClientID, "openid.client_id", "OpenID.ClientID")
+	reportIfEmpty(o.ClientSecret.PlainText(), "openid.client_secret", "OpenID.ClientSecret")
+	reportIfEmpty(o.AuthorizeURL, "openid.authorize_url", "OpenID.AuthorizeURL")
+	reportIfEmpty(o.TokenURL, "openid.token_url", "OpenID.TokenURL")
+	reportIfEmpty(o.UserInfoURL, "openid.user_info_url", "OpenID.UserInfoURL")
+
+	if o.EnableFrontendRedirect {
+		reportIfEmpty(o.ChorusFrontendRedirectURL, "openid.chorus_frontend_redirect_url", "OpenID.ChorusFrontendRedirectURL")
+	} else {
+		reportIfEmpty(o.ChorusBackendHost, "openid.chorus_backend_host", "OpenID.ChorusBackendHost")
+	}
 }
