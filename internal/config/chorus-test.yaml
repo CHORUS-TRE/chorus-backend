@@ -14,7 +14,7 @@ daemon:
   pprof_enabled: true
   expose_error_stack_trace: true
   salt: 1234
- 
+
 storage:
   datastores:
     chorus:
@@ -107,4 +107,4 @@ tenants:
         - 127.0.0.1/32
         - 10.1.0.0/16
 
-        
+
