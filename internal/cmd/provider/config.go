@@ -114,6 +114,10 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		field, value, _ := strings.Cut(fe.Param(), " ")
 		sibling := siblingPath(cfg, fe, field)
 		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is %s)", path, sibling, value)
+	case "required_unless":
+		field, value, _ := strings.Cut(fe.Param(), " ")
+		sibling := siblingPath(cfg, fe, field)
+		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is %s)", path, sibling, value)
 	case "oneof":
 		return fmt.Sprintf("FAIL '%s' must be one of: %s", path, fe.Param())
 	default:
@@ -362,6 +366,17 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.audit_service.enabled", true)
 	v.SetDefault("services.audit_service.datastore_name", "audit")
 
+	// Services - Mailer
+	v.SetDefault("services.mailer_service.smtp.enabled", false)
+	v.SetDefault("services.mailer_service.smtp.host", "")
+	v.SetDefault("services.mailer_service.smtp.port", "")
+	v.SetDefault("services.mailer_service.smtp.user", "")
+	v.SetDefault("services.mailer_service.smtp.password", "")
+	v.SetDefault("services.mailer_service.smtp.authentication", "none")
+	v.SetDefault("services.mailer_service.smtp.insecure_mode", false)
+	v.SetDefault("services.mailer_service.smtp.certificates_repo", "")
+	v.SetDefault("services.mailer_service.smtp.server_name", "")
+
 	// Services - Authentication
 	v.SetDefault("services.authentication_service.enabled", true)
 	v.SetDefault("services.authentication_service.auth_ui_enabled", true)
@@ -392,14 +407,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Services - Approval Request
 	v.SetDefault("services.approval_request_service.staging_file_store_name", "disk")
 	v.SetDefault("services.approval_request_service.require_data_manager_approval", false)
-
-	// Services - Mailer
-	v.SetDefault("services.mailer_service.smtp.host", "smtp-relay.sendinblue.com")
-	v.SetDefault("services.mailer_service.smtp.port", "587")
-	v.SetDefault("services.mailer_service.smtp.user", "smtpUser")
-	v.SetDefault("services.mailer_service.smtp.password", "")
-	v.SetDefault("services.mailer_service.smtp.authentication", "none")
-	v.SetDefault("services.mailer_service.smtp.insecure_mode", false)
 
 	// Services - OpenID Connect Provider
 	v.SetDefault("services.openid_connect_provider.enabled", true)
