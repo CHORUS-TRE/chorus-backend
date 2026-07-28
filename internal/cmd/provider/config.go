@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -86,24 +87,68 @@ func CheckConfig() error {
 
 	lines := make([]string, 0, len(validationErrs))
 	for _, fe := range validationErrs {
-		lines = append(lines, formatValidationError(fe))
+		lines = append(lines, formatValidationError(cfg, fe))
 	}
 	return errors.New(strings.Join(lines, "\n"))
 }
 
-func formatValidationError(fe val.FieldError) string {
+func formatValidationError(cfg config.Config, fe val.FieldError) string {
+	// Namespace() is rooted at the Config struct's Go type name (e.g.
+	// "Config.daemon.grpc.host"); strip it to get the plain dotted path
+	// used everywhere else (--set, CHORUS_* env vars, config.yaml).
+	_, path, _ := strings.Cut(fe.Namespace(), ".")
+
 	switch fe.Tag() {
 	case "required":
-		return fmt.Sprintf("FAIL '%s' is missing", fe.Namespace())
+		return fmt.Sprintf("FAIL '%s' is missing", path)
 	case "required_without":
-		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", fe.Namespace(), fe.Param())
+		sibling := siblingPath(cfg, fe, fe.Param())
+		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", path, sibling)
 	case "required_if":
-		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", fe.Namespace(), fe.Param())
+		field, value, _ := strings.Cut(fe.Param(), " ")
+		sibling := siblingPath(cfg, fe, field)
+		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is %s)", path, sibling, value)
 	case "oneof":
-		return fmt.Sprintf("FAIL '%s' must be one of: %s", fe.Namespace(), fe.Param())
+		return fmt.Sprintf("FAIL '%s' must be one of: %s", path, fe.Param())
 	default:
-		return fmt.Sprintf("FAIL '%s' failed '%s' validation", fe.Namespace(), fe.Tag())
+		return fmt.Sprintf("FAIL '%s' failed '%s' validation", path, fe.Tag())
 	}
+}
+
+// siblingPath resolves a required_if/required_without Param (a Go field name
+// within the same parent struct) to its full dotted yaml path, e.g. "Enabled"
+// on Config.Clients.K8sClient.DefaultRegistry becomes "clients.k8s_client.enabled".
+// Falls back to the raw Go field name if anything doesn't resolve cleanly.
+func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) string {
+	structSegments := strings.Split(fe.StructNamespace(), ".")
+	if len(structSegments) < 2 {
+		return goFieldName
+	}
+	parentSegments := structSegments[1 : len(structSegments)-1] // drop leading "Config" and the leaf field
+
+	v := reflect.ValueOf(cfg)
+	for _, seg := range parentSegments {
+		v = v.FieldByName(seg)
+		if !v.IsValid() {
+			return goFieldName
+		}
+	}
+
+	sf, ok := v.Type().FieldByName(goFieldName)
+	if !ok {
+		return goFieldName
+	}
+	yamlName, _, _ := strings.Cut(sf.Tag.Get("yaml"), ",")
+	if yamlName == "" || yamlName == "-" {
+		return goFieldName
+	}
+
+	_, path, _ := strings.Cut(fe.Namespace(), ".")
+	parentPath := path
+	if idx := strings.LastIndex(path, "."); idx >= 0 {
+		parentPath = path[:idx]
+	}
+	return parentPath + "." + yamlName
 }
 
 var defaultConfigOnce sync.Once
@@ -129,25 +174,32 @@ func ProvideDefaultConfig() config.Config {
 }
 
 func SetDefaultConfig(v *viper.Viper) {
-	// Daemon
-	v.SetDefault("daemon.http.host", "0.0.0.0")
-	v.SetDefault("daemon.http.port", "5000")
-	v.SetDefault("daemon.http.headers.access_control_allow_origins", []string{"http://localhost:3000"})
-	v.SetDefault("daemon.http.headers.access_control_allow_origin_wildcard", true)
-	v.SetDefault("daemon.http.headers.access_control_max_age", "600")
-	v.SetDefault("daemon.http.headers.cookie_domain", "localhost")
-	v.SetDefault("daemon.http.max_call_recv_msg_size", 1073741824) // 1 GiB
-	v.SetDefault("daemon.http.max_call_send_msg_size", 1073741824) // 1 GiB
+
+	// Daemon - GRPC
 	v.SetDefault("daemon.grpc.host", "localhost")
 	v.SetDefault("daemon.grpc.port", "5555")
 	v.SetDefault("daemon.grpc.max_recv_msg_size", 1073741824) // 1 GiB
 	v.SetDefault("daemon.grpc.max_send_msg_size", 1073741824) // 1 GiB
+
+	// Daemon - HTTP
+	v.SetDefault("daemon.http.host", "0.0.0.0")
+	v.SetDefault("daemon.http.port", "5000")
+	v.SetDefault("daemon.http.headers.access_control_allow_origins", []string{"http://localhost:3000"})
+	v.SetDefault("daemon.http.headers.access_control_allow_origin_wildcard", false)
+	v.SetDefault("daemon.http.headers.access_control_max_age", "600")
+	v.SetDefault("daemon.http.headers.cookie_domain", "localhost")
+	v.SetDefault("daemon.http.max_call_recv_msg_size", 1073741824) // 1 GiB
+	v.SetDefault("daemon.http.max_call_send_msg_size", 1073741824) // 1 GiB
+
+	// Daemon - JWT and TOTP
 	v.SetDefault("daemon.jwt.secret", "")
 	v.SetDefault("daemon.jwt.expiration_time", "72h")
 	v.SetDefault("daemon.jwt.max_refresh_time", "4320h") // 180 days
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 	v.SetDefault("daemon.pprof_enabled", false)
 	v.SetDefault("daemon.expose_error_stack_trace", true)
+
+	// Daemon - Metrics
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
 	v.SetDefault("daemon.metrics.authentication.password", "")
