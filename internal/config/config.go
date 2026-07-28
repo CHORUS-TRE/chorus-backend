@@ -151,13 +151,13 @@ type (
 
 	HarborClient struct {
 		Enabled            bool      `yaml:"enabled"`
-		URL                string    `yaml:"url"`
+		URL                string    `yaml:"url" validate:"required_if=Enabled true"`
 		Username           string    `yaml:"username"`
 		Password           Sensitive `yaml:"password"`
 		Project            string    `yaml:"project"`
 		LabelPrefixes      []string  `yaml:"label_prefixes"`
-		PageSize           int       `yaml:"page_size"`
-		MaxParallelFetches uint64    `yaml:"max_parallel_fetches"`
+		PageSize           int       `yaml:"page_size" validate:"required_if=Enabled true"`
+		MaxParallelFetches uint64    `yaml:"max_parallel_fetches" validate:"required_if=Enabled true"`
 	}
 
 	ImagePullSecret struct {
