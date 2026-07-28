@@ -30,6 +30,13 @@ func (s *minioFileStorage) computeFilePartSize(fileSize uint64) (uint64, uint64,
 	maxPartSize := cfg.MultipartMaxPartSize
 	maxTotalParts := cfg.MultipartMaxTotalParts
 
+	if minPartSize == 0 {
+		return 0, 0, fmt.Errorf("invalid multipart configuration: multipart_min_part_size must be greater than 0")
+	}
+	if maxTotalParts == 0 {
+		return 0, 0, fmt.Errorf("invalid multipart configuration: multipart_max_total_parts must be greater than 0")
+	}
+
 	if fileSize == 0 {
 		return 0, 0, fmt.Errorf("unable to compute part size for empty files")
 	}
