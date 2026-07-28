@@ -251,16 +251,17 @@ type (
 	Services struct {
 		AuditService struct {
 			Enabled       bool   `yaml:"enabled"`
-			DatastoreName string `yaml:"datastore_name"`
+			DatastoreName string `yaml:"datastore_name" validate:"required_if=Enabled true"`
 		} `yaml:"audit_service"`
 
 		MailerService struct {
 			SMTP struct {
-				User             string    `yaml:"user"`
-				Password         Sensitive `yaml:"password"`
-				Host             string    `yaml:"host"`
-				Port             string    `yaml:"port"`
-				Authentication   string    `yaml:"authentication"`
+				Enabled          bool      `yaml:"enabled"`
+				User             string    `yaml:"user" validate:"required_unless=Authentication none"`
+				Password         Sensitive `yaml:"password" validate:"required_unless=Authentication none"`
+				Host             string    `yaml:"host" validate:"required_if=Enabled true"`
+				Port             string    `yaml:"port" validate:"required_if=Enabled true"`
+				Authentication   string    `yaml:"authentication" validate:"oneof=none plain login"`
 				InsecureMode     bool      `yaml:"insecure_mode"`
 				CertificatesRepo string    `yaml:"certificates_repo"`
 				ServerName       string    `yaml:"server_name"`
