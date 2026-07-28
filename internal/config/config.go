@@ -71,7 +71,7 @@ type (
 
 	// Log bundles several logging instances.
 	Log struct {
-		Loggers map[string]Logger `yaml:"loggers"`
+		Loggers map[string]Logger `yaml:"loggers" validate:"dive"`
 	}
 
 	// logger holds the settings for a go.uber.org/zap logging instance.
@@ -83,29 +83,29 @@ type (
 		Category string `yaml:"category" validate:"oneof=technical business security"`
 
 		// File
-		Path       string `yaml:"path"`
+		Path       string `yaml:"path" validate:"required_if=Type file"`
 		MaxSize    int    `yaml:"max_size"`
 		MaxBackups int    `yaml:"max_backups"`
 		MaxAge     int    `yaml:"max_age"`
 
 		// Redis
-		Host     string    `yaml:"host"`
-		Port     string    `yaml:"port"`
+		Host     string    `yaml:"host" validate:"required_if=Type redis"`
+		Port     string    `yaml:"port" validate:"required_if=Type redis"`
 		Database int       `yaml:"database"`
 		Password Sensitive `yaml:"password"`
-		Key      string    `yaml:"key"`
+		Key      string    `yaml:"key" validate:"required_if=Type redis"`
 
 		// Graylog
 		GraylogTimeout                        time.Duration `yaml:"graylogtimeout"`
-		GraylogHost                           string        `yaml:"grayloghost"`
+		GraylogHost                           string        `yaml:"grayloghost" validate:"required_if=Type graylog"`
 		GraylogBulkReceiving                  bool          `yaml:"graylogbulkreceiving"`
 		GraylogAuthorizeSelfSignedCertificate bool          `yaml:"graylogauthorizeselfsignedcertificate"`
 
 		// OpenSearch
-		OpenSearchAddresses []string  `yaml:"osaddresses"`
+		OpenSearchAddresses []string  `yaml:"osaddresses" validate:"required_if=Type opensearch"`
 		OpenSearchUsername  string    `yaml:"osusername"`
 		OpenSearchPassword  Sensitive `yaml:"ospassword"`
-		OpenSearchIndexName string    `yaml:"osindexname"`
+		OpenSearchIndexName string    `yaml:"osindexname" validate:"required_if=Type opensearch"`
 
 		// for elasticsearch logger.
 		BufferSize      int  `yaml:"buffersize"`
