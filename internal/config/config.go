@@ -63,8 +63,8 @@ type (
 			Enabled        bool `yaml:"enabled"`
 			Authentication struct {
 				Enabled  bool      `yaml:"enabled"`
-				Username string    `yaml:"username"`
-				Password Sensitive `yaml:"password"`
+				Username string    `yaml:"username" validate:"required_if=Enabled true"`
+				Password Sensitive `yaml:"password" validate:"required_if=Enabled true"`
 			} `yaml:"authentication"`
 		} `yaml:"metrics"`
 	}
