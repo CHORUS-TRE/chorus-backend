@@ -271,9 +271,9 @@ type (
 		AuthenticationService struct {
 			Enabled       bool            `yaml:"enabled"`
 			AuthUIEnabled bool            `yaml:"auth_ui_enabled"`
-			Modes         map[string]Mode `yaml:"modes"`
+			Modes         map[string]Mode `yaml:"modes" validate:"min=1,dive"`
 			SelfService   struct {
-				TenantID uint64 `yaml:"tenant_id"`
+				TenantID uint64 `yaml:"tenant_id" validate:"required"`
 			} `yaml:"self_service"`
 		} `yaml:"authentication_service"`
 
@@ -364,7 +364,7 @@ type (
 	}
 
 	OpenID struct {
-		ID                        string    `yaml:"id"`
+		ID                        string    `yaml:"id" validate:"ne=internal"`
 		ChorusBackendHost         string    `yaml:"chorus_backend_host"`
 		EnableFrontendRedirect    bool      `yaml:"enable_frontend_redirect"`
 		ChorusFrontendRedirectURL string    `yaml:"chorus_frontend_redirect_url"`
