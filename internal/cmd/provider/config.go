@@ -328,6 +328,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.chorus.max_lifetime", 10*time.Second)
 	v.SetDefault("storage.datastores.chorus.ssl.enabled", false)
 	v.SetDefault("storage.datastores.chorus.password", "")
+
 	v.SetDefault("storage.datastores.audit.type", "postgres")
 	v.SetDefault("storage.datastores.audit.host", "127.0.0.1")
 	v.SetDefault("storage.datastores.audit.port", "5432")
