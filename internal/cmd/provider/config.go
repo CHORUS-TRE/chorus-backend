@@ -261,6 +261,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Daemon - Metrics
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
+	v.SetDefault("daemon.metrics.authentication.username", "prometheus")
 	v.SetDefault("daemon.metrics.authentication.password", "")
 
 	// Storage - Datastores
