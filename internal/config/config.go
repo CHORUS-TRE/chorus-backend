@@ -231,21 +231,21 @@ type (
 	FileStoreMinioConfig struct {
 		Enabled bool `yaml:"enabled"`
 
-		Endpoint        string    `yaml:"endpoint"`
-		AccessKeyID     string    `yaml:"access_key_id"`
-		SecretAccessKey Sensitive `yaml:"secret_access_key"`
+		Endpoint        string    `yaml:"endpoint" validate:"required_if=Enabled true"`
+		AccessKeyID     string    `yaml:"access_key_id" validate:"required_if=Enabled true"`
+		SecretAccessKey Sensitive `yaml:"secret_access_key" validate:"required_if=Enabled true"`
 
-		BucketName string `yaml:"bucket_name"`
+		BucketName string `yaml:"bucket_name" validate:"required_if=Enabled true"`
 		UseSSL     bool   `yaml:"use_ssl"`
 
-		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size"`
-		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size"`
-		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts"`
+		MultipartMinPartSize   uint64 `yaml:"multipart_min_part_size" validate:"required_if=Enabled true"`
+		MultipartMaxPartSize   uint64 `yaml:"multipart_max_part_size" validate:"required_if=Enabled true"`
+		MultipartMaxTotalParts uint64 `yaml:"multipart_max_total_parts" validate:"required_if=Enabled true"`
 	}
 
 	FileStoreDiskConfig struct {
 		Enabled  bool   `yaml:"enabled"`
-		BasePath string `yaml:"base_path"` // Base directory path for disk storage
+		BasePath string `yaml:"base_path" validate:"required_if=Enabled true"` // Base directory path for disk storage
 	}
 
 	Services struct {
