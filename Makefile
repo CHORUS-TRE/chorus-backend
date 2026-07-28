@@ -9,7 +9,7 @@ SUITE ?=
 UNIT_TARGET       = $(if $(PKG),./pkg/$(PKG)/service,./...)
 ACCEPTANCE_TARGET = $(if $(SUITE),./tests/acceptance/$(SUITE),./tests/acceptance/...)
 
-.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean
+.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean check-config
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-26s\033[0m %s\n", $$1, $$2}'
@@ -34,6 +34,9 @@ export-default-config: ## Print the code-level default configuration
 
 diff-config: ## Show drift between CONFIG_FILE and the code-level defaults
 	@go run ./cmd/chorus/main.go diff-config --config $(CONFIG_FILE)
+
+check-config: ## Validate CONFIG_FILE against the validation rules (required fields, oneof, etc.)
+	@go run ./cmd/chorus/main.go check-config --config $(CONFIG_FILE)
 
 jwks: ## Generate a JWKS for services.openid_connect_provider.jwks (add -public-key for the Keycloak one-liner too)
 	@go run ./cmd/generate-jwks

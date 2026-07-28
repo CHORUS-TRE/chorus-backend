@@ -1,14 +1,17 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 
+	val "github.com/go-playground/validator/v10"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
@@ -21,17 +24,12 @@ var cfg config.Config
 // not specified by the user.
 func ProvideConfig() config.Config {
 	configOnce.Do(func() {
-		if err := viper.GetViper().Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" }); err != nil {
+		resolved, err := resolveConfig()
+		if err != nil {
 			fmt.Printf("config error: unable to ProvideConfig: %v", err)
 			os.Exit(1)
 		}
-
-		SetDefaultConfig(viper.GetViper())
-
-		if err := viper.GetViper().Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" }); err != nil {
-			fmt.Printf("config error: unable to ProvideConfig: %v", err)
-			os.Exit(1)
-		}
+		cfg = resolved
 
 		if err := validateConfig(cfg); err != nil {
 			fmt.Printf("config validation failed: %v\n", err)
@@ -41,11 +39,71 @@ func ProvideConfig() config.Config {
 	return cfg
 }
 
+// resolveConfig unmarshals viper's current settings into a Config, applying
+// code-level defaults for anything left unset.
+func resolveConfig() (config.Config, error) {
+	var c config.Config
+	decode := func(dc *mapstructure.DecoderConfig) { dc.TagName = "yaml" }
+
+	if err := viper.GetViper().Unmarshal(&c, decode); err != nil {
+		return c, err
+	}
+
+	SetDefaultConfig(viper.GetViper())
+
+	if err := viper.GetViper().Unmarshal(&c, decode); err != nil {
+		return c, err
+	}
+
+	return c, nil
+}
+
 // validateConfig fails fast on empty required fields (JWT secret, signing keys).
 // Datastore credentials aren't struct fields (looked up by name via ProvideDB),
 // so they can't carry `validate` tags and fail later instead.
 func validateConfig(cfg config.Config) error {
 	return ProvideValidator().Struct(cfg)
+}
+
+// CheckConfig resolves the configuration and reports its validation errors,
+// one per line, in a human-readable form -- unlike ProvideConfig, it never
+// exits the process.
+func CheckConfig() error {
+	cfg, err := resolveConfig()
+	if err != nil {
+		return err
+	}
+
+	err = validateConfig(cfg)
+	if err == nil {
+		return nil
+	}
+
+	var validationErrs val.ValidationErrors
+	if !errors.As(err, &validationErrs) {
+		return err
+	}
+
+	lines := make([]string, 0, len(validationErrs))
+	for _, fe := range validationErrs {
+		lines = append(lines, formatValidationError(fe))
+	}
+	return errors.New(strings.Join(lines, "\n"))
+}
+
+func formatValidationError(fe val.FieldError) string {
+	switch fe.Tag() {
+	case "required":
+		return fmt.Sprintf("FAIL '%s' is missing", fe.Namespace())
+	case "required_without":
+		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", fe.Namespace(), fe.Param())
+	case "required_if":
+		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", fe.Namespace(), fe.Param())
+	case "oneof":
+		return fmt.Sprintf("FAIL '%s' must be one of: %s", fe.Namespace(), fe.Param())
+	default:
+		return fmt.Sprintf("FAIL '%s' failed '%s' validation", fe.Namespace(), fe.Tag())
+	}
 }
 
 var defaultConfigOnce sync.Once
