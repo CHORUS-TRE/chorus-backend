@@ -253,6 +253,11 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Daemon - Error Stack Trace
 	v.SetDefault("daemon.expose_error_stack_trace", false)
 
+	// Daemon - Private Key
+	v.SetDefault("daemon.private_key_file", "")
+	v.SetDefault("daemon.private_key", "")
+	v.SetDefault("daemon.salt", "")
+
 	// Daemon - Metrics
 	v.SetDefault("daemon.metrics.enabled", true)
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
