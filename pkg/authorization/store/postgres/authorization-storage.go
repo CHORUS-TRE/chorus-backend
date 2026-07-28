@@ -175,6 +175,17 @@ FROM role_definitions_required_contexts`); err != nil {
 	return roles, nil
 }
 
+// findUsersBaseQuery selects active users in a tenant holding any of the given
+// role names. Callers append context conditions as needed.
+const findUsersBaseQuery = `
+SELECT DISTINCT u.id
+FROM users u
+JOIN user_role ur ON ur.userid = u.id
+JOIN role_definitions rd ON rd.id = ur.roleid
+WHERE u.tenantid = $1
+  AND u.status = 'active'
+  AND rd.name = ANY($2)`
+
 // FindUsersWithPermission returns user ids that hold the requested permission,
 // computed from the provided list of roles known to grant it.
 func (s *AuthorizationStorage) FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter, rolesGranting []model.RoleName) ([]uint64, error) {
@@ -182,33 +193,18 @@ func (s *AuthorizationStorage) FindUsersWithPermission(ctx context.Context, tena
 		return nil, fmt.Errorf("no roles grant permission %s", filter.PermissionName)
 	}
 
-	var rolesToCheck []string
-	if len(filter.ViaRoles) > 0 {
-		viaRolesSet := make(map[string]bool, len(filter.ViaRoles))
-		for _, r := range filter.ViaRoles {
-			viaRolesSet[string(r)] = true
-		}
-		for _, r := range rolesGranting {
-			if viaRolesSet[r.String()] {
-				rolesToCheck = append(rolesToCheck, r.String())
-			}
-		}
-		if len(rolesToCheck) == 0 {
-			return nil, nil
-		}
-	} else {
-		rolesToCheck = make([]string, 0, len(rolesGranting))
-		for _, r := range rolesGranting {
-			rolesToCheck = append(rolesToCheck, r.String())
-		}
+	roles := rolesToCheck(rolesGranting, filter.ViaRoles)
+	if len(roles) == 0 {
+		return nil, nil // the via-roles filter excluded every granting role
 	}
 
 	if len(filter.Context) == 0 {
-		return s.findUsersWithRoles(ctx, tenantID, rolesToCheck)
+		return s.findUsersWithRoles(ctx, tenantID, roles)
 	}
 
+	// Prefer an exact context match when asked; fall back to wildcard-tolerant.
 	if filter.PreferExactContextMatch {
-		userIDs, err := s.findUsersWithExactContext(ctx, tenantID, rolesToCheck, filter.Context)
+		userIDs, err := s.findUsersWithContext(ctx, tenantID, roles, filter.Context, false)
 		if err != nil {
 			return nil, err
 		}
@@ -217,82 +213,66 @@ func (s *AuthorizationStorage) FindUsersWithPermission(ctx context.Context, tena
 		}
 	}
 
-	return s.findUsersWithContextMatch(ctx, tenantID, rolesToCheck, filter.Context)
+	return s.findUsersWithContext(ctx, tenantID, roles, filter.Context, true)
 }
 
-func (s *AuthorizationStorage) findUsersWithRoles(ctx context.Context, tenantID uint64, rolesToCheck []string) ([]uint64, error) {
-	query := `
-SELECT DISTINCT u.id
-FROM users u
-JOIN user_role ur ON ur.userid = u.id
-JOIN role_definitions rd ON rd.id = ur.roleid
-WHERE u.tenantid = $1
-  AND u.status = 'active'
-  AND rd.name = ANY($2)
-`
+// rolesToCheck reduces the granting roles to their names, optionally restricted
+// to a caller-supplied subset (filter.ViaRoles).
+func rolesToCheck(rolesGranting, viaRoles []model.RoleName) []string {
+	if len(viaRoles) == 0 {
+		names := make([]string, 0, len(rolesGranting))
+		for _, r := range rolesGranting {
+			names = append(names, r.String())
+		}
+		return names
+	}
+
+	allowed := make(map[string]bool, len(viaRoles))
+	for _, r := range viaRoles {
+		allowed[r.String()] = true
+	}
+	var names []string
+	for _, r := range rolesGranting {
+		if allowed[r.String()] {
+			names = append(names, r.String())
+		}
+	}
+	return names
+}
+
+func (s *AuthorizationStorage) findUsersWithRoles(ctx context.Context, tenantID uint64, roles []string) ([]uint64, error) {
 	var userIDs []uint64
-	if err := s.db.SelectContext(ctx, &userIDs, query, tenantID, pq.Array(rolesToCheck)); err != nil {
-		return nil, fmt.Errorf("failed to find users with roles: %w", err)
+	if err := s.db.SelectContext(ctx, &userIDs, findUsersBaseQuery, tenantID, pq.Array(roles)); err != nil {
+		return nil, fmt.Errorf("find users with roles: %w", err)
 	}
 	return userIDs, nil
 }
 
-func (s *AuthorizationStorage) findUsersWithExactContext(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext model.Context) ([]uint64, error) {
-	args := []interface{}{tenantID, pq.Array(rolesToCheck)}
+// findUsersWithContext narrows findUsersBaseQuery to users whose role context
+// matches every dimension in filterContext. When matchWildcard is true a stored
+// "*" also satisfies a dimension.
+func (s *AuthorizationStorage) findUsersWithContext(ctx context.Context, tenantID uint64, roles []string, filterContext model.Context, matchWildcard bool) ([]uint64, error) {
+	args := []any{tenantID, pq.Array(roles)}
 
 	conditions := make([]string, 0, len(filterContext))
-	for dim, val := range filterContext {
+	for dimension, value := range filterContext {
+		dimPlaceholder, valuePlaceholder := len(args)+1, len(args)+2
+		valueMatch := fmt.Sprintf("urc.value = $%d", valuePlaceholder)
+		if matchWildcard {
+			valueMatch = fmt.Sprintf("(urc.value = $%d OR urc.value = '*')", valuePlaceholder)
+		}
 		conditions = append(conditions, fmt.Sprintf(
-			"EXISTS (SELECT 1 FROM user_role_context urc WHERE urc.userroleid = ur.id AND urc.contextdimension = $%d AND urc.value = $%d)",
-			len(args)+1, len(args)+2,
+			"EXISTS (SELECT 1 FROM user_role_context urc WHERE urc.userroleid = ur.id AND urc.contextdimension = $%d AND %s)",
+			dimPlaceholder, valueMatch,
 		))
-		args = append(args, string(dim), val)
+		args = append(args, string(dimension), value)
 	}
 
-	query := fmt.Sprintf(`
-SELECT DISTINCT u.id
-FROM users u
-JOIN user_role ur ON ur.userid = u.id
-JOIN role_definitions rd ON rd.id = ur.roleid
-WHERE u.tenantid = $1
-  AND u.status = 'active'
-  AND rd.name = ANY($2)
-  AND %s
-`, strings.Join(conditions, " AND "))
+	query := findUsersBaseQuery + "\n  AND " + strings.Join(conditions, "\n  AND ")
 
 	var userIDs []uint64
 	if err := s.db.SelectContext(ctx, &userIDs, query, args...); err != nil {
-		return nil, fmt.Errorf("failed to find users with exact context: %w", err)
-	}
-	return userIDs, nil
-}
-
-func (s *AuthorizationStorage) findUsersWithContextMatch(ctx context.Context, tenantID uint64, rolesToCheck []string, filterContext model.Context) ([]uint64, error) {
-	args := []interface{}{tenantID, pq.Array(rolesToCheck)}
-
-	conditions := make([]string, 0, len(filterContext))
-	for dim, val := range filterContext {
-		conditions = append(conditions, fmt.Sprintf(
-			"EXISTS (SELECT 1 FROM user_role_context urc WHERE urc.userroleid = ur.id AND urc.contextdimension = $%d AND (urc.value = $%d OR urc.value = '*'))",
-			len(args)+1, len(args)+2,
-		))
-		args = append(args, string(dim), val)
-	}
-
-	query := fmt.Sprintf(`
-SELECT DISTINCT u.id
-FROM users u
-JOIN user_role ur ON ur.userid = u.id
-JOIN role_definitions rd ON rd.id = ur.roleid
-WHERE u.tenantid = $1
-  AND u.status = 'active'
-  AND rd.name = ANY($2)
-  AND %s
-`, strings.Join(conditions, " AND "))
-
-	var userIDs []uint64
-	if err := s.db.SelectContext(ctx, &userIDs, query, args...); err != nil {
-		return nil, fmt.Errorf("failed to find users with context match: %w", err)
+		return nil, fmt.Errorf("find users with context: %w", err)
 	}
 	return userIDs, nil
 }
