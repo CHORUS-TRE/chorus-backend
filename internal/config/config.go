@@ -202,24 +202,23 @@ type (
 	}
 
 	Storage struct {
-		Datastores map[string]Datastore `yaml:"datastores"`
-		FileStores map[string]FileStore `yaml:"file_stores"`
+		Datastores map[string]Datastore `yaml:"datastores" validate:"dive"`
+		FileStores map[string]FileStore `yaml:"file_stores" validate:"dive"`
 	}
 
 	Datastore struct {
 		Type           string        `yaml:"type" validate:"oneof=postgres"`
-		Host           string        `yaml:"host"`
-		Instance       string        `yaml:"instance" validate:"required_without=Port"` // When instance is set, the port is not used.
-		Port           string        `yaml:"port" validate:"required_without=Instance"`
-		Username       string        `yaml:"username"`
-		Password       Sensitive     `yaml:"password"`
-		Database       string        `yaml:"database"`
+		Host           string        `yaml:"host" validate:"required"`
+		Port           string        `yaml:"port" validate:"required"`
+		Username       string        `yaml:"username" validate:"required"`
+		Password       Sensitive     `yaml:"password" validate:"required"`
+		Database       string        `yaml:"database" validate:"required"`
 		MaxConnections int           `yaml:"max_connections"`
 		MaxLifetime    time.Duration `yaml:"max_lifetime"`
 		SSL            struct {
 			Enabled         bool   `yaml:"enabled"`
-			CertificateFile string `yaml:"certificate_file"`
-			KeyFile         string `yaml:"key_file"`
+			CertificateFile string `yaml:"certificate_file" validate:"required_if=Enabled true"`
+			KeyFile         string `yaml:"key_file" validate:"required_if=Enabled true"`
 		} `yaml:"ssl"`
 	}
 
