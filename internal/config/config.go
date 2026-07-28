@@ -133,18 +133,18 @@ type (
 		CA                       string    `yaml:"ca"`             // and service account ca
 
 		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets"`
-		ImagePullSecretName string            `yaml:"image_pull_secret_name"`
+		ImagePullSecretName string            `yaml:"image_pull_secret_name" validate:"required_if=Enabled true"`
 
-		ServerVersion        string `yaml:"server_version"`
-		InitContainerVersion string `yaml:"init_container_version"`
+		ServerVersion        string `yaml:"server_version" validate:"required_if=Enabled true"`
+		InitContainerVersion string `yaml:"init_container_version" validate:"required_if=Enabled true"`
 		AddUserDetails       bool   `yaml:"add_user_details"`
 
 		InsecureTLS bool `yaml:"insecure_tls"` // if true, TLS certificate verification is skipped (testing only)
 
 		IsWatcher bool `yaml:"is_watcher"` // if true, the client will watch for changes in the cluster
 
-		DefaultRegistry   string `yaml:"default_registry"`
-		DefaultRepository string `yaml:"default_repository"`
+		DefaultRegistry   string `yaml:"default_registry" validate:"required_if=Enabled true"`
+		DefaultRepository string `yaml:"default_repository" validate:"required_if=Enabled true"`
 	}
 
 	DockerClient struct {
