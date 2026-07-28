@@ -251,7 +251,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.jobber.lock_store", "postgres")
 
 	// Daemon - Error Stack Trace
-	v.SetDefault("daemon.expose_error_stack_trace", true)
+	v.SetDefault("daemon.expose_error_stack_trace", false)
 
 	// Daemon - Metrics
 	v.SetDefault("daemon.metrics.enabled", true)
