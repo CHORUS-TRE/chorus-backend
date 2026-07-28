@@ -57,7 +57,7 @@ type (
 
 		PrivateKeyFile string `yaml:"private_key_file" validate:"required_without=PrivateKey"`
 		PrivateKey     string `yaml:"private_key" validate:"required_without=PrivateKeyFile"`
-		Salt           string `yaml:"salt"`
+		Salt           string `yaml:"salt" validate:"required"`
 
 		Metrics struct {
 			Enabled        bool `yaml:"enabled"`
