@@ -264,6 +264,22 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.metrics.authentication.username", "prometheus")
 	v.SetDefault("daemon.metrics.authentication.password", "")
 
+	// Log and Loggers
+	v.SetDefault("log.loggers.stdout_technical.enabled", true)
+	v.SetDefault("log.loggers.stdout_technical.type", "stdout")
+	v.SetDefault("log.loggers.stdout_technical.level", "debug")
+	v.SetDefault("log.loggers.stdout_technical.category", "technical")
+
+	v.SetDefault("log.loggers.stdout_business.enabled", true)
+	v.SetDefault("log.loggers.stdout_business.type", "stdout")
+	v.SetDefault("log.loggers.stdout_business.level", "debug")
+	v.SetDefault("log.loggers.stdout_business.category", "business")
+
+	v.SetDefault("log.loggers.stdout_security.enabled", true)
+	v.SetDefault("log.loggers.stdout_security.type", "stdout")
+	v.SetDefault("log.loggers.stdout_security.level", "debug")
+	v.SetDefault("log.loggers.stdout_security.category", "security")
+
 	// Storage - Datastores
 	v.SetDefault("storage.datastores.chorus.type", "postgres")
 	v.SetDefault("storage.datastores.chorus.host", "127.0.0.1")
@@ -434,17 +450,4 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.harbor_client.username", "")
 	v.SetDefault("clients.harbor_client.password", "")
 
-	// Loggers
-	v.SetDefault("log.loggers.stdout_technical.enabled", true)
-	v.SetDefault("log.loggers.stdout_technical.type", "stdout")
-	v.SetDefault("log.loggers.stdout_technical.level", "debug")
-	v.SetDefault("log.loggers.stdout_technical.category", "technical")
-	v.SetDefault("log.loggers.stdout_business.enabled", true)
-	v.SetDefault("log.loggers.stdout_business.type", "stdout")
-	v.SetDefault("log.loggers.stdout_business.level", "debug")
-	v.SetDefault("log.loggers.stdout_business.category", "business")
-	v.SetDefault("log.loggers.stdout_security.enabled", true)
-	v.SetDefault("log.loggers.stdout_security.type", "stdout")
-	v.SetDefault("log.loggers.stdout_security.level", "debug")
-	v.SetDefault("log.loggers.stdout_security.category", "security")
 }
