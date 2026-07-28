@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,8 @@ import (
 
 var configOnce sync.Once
 var cfg config.Config
+
+const GiB = 1 << 30
 
 // ProvideConfig returns the user-provided config structure. A field will
 // take a default value, as given by the default config structure, if it is
@@ -118,7 +121,9 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 // siblingPath resolves a required_if/required_without Param (a Go field name
 // within the same parent struct) to its full dotted yaml path, e.g. "Enabled"
 // on Config.Clients.K8sClient.DefaultRegistry becomes "clients.k8s_client.enabled".
-// Falls back to the raw Go field name if anything doesn't resolve cleanly.
+// Parent segments may be map-indexed (e.g. "Jobs[app-sync]") when the field
+// lives inside a map, as with Daemon.Jobs. Falls back to the raw Go field name
+// if anything doesn't resolve cleanly.
 func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) string {
 	structSegments := strings.Split(fe.StructNamespace(), ".")
 	if len(structSegments) < 2 {
@@ -128,9 +133,20 @@ func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) strin
 
 	v := reflect.ValueOf(cfg)
 	for _, seg := range parentSegments {
-		v = v.FieldByName(seg)
+		fieldName, mapKey, hasMapKey := strings.Cut(seg, "[")
+		v = v.FieldByName(fieldName)
 		if !v.IsValid() {
 			return goFieldName
+		}
+		if hasMapKey {
+			key, ok := convertMapKey(v.Type().Key(), strings.TrimSuffix(mapKey, "]"))
+			if !ok {
+				return goFieldName
+			}
+			v = v.MapIndex(key)
+			if !v.IsValid() {
+				return goFieldName
+			}
 		}
 	}
 
@@ -149,6 +165,29 @@ func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) strin
 		parentPath = path[:idx]
 	}
 	return parentPath + "." + yamlName
+}
+
+// convertMapKey parses raw (as extracted from a "Field[key]" namespace
+// segment) into a reflect.Value of the given map key type.
+func convertMapKey(keyType reflect.Type, raw string) (reflect.Value, bool) {
+	switch keyType.Kind() {
+	case reflect.String:
+		return reflect.ValueOf(raw).Convert(keyType), true
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		n, err := strconv.ParseUint(raw, 10, 64)
+		if err != nil {
+			return reflect.Value{}, false
+		}
+		return reflect.ValueOf(n).Convert(keyType), true
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		n, err := strconv.ParseInt(raw, 10, 64)
+		if err != nil {
+			return reflect.Value{}, false
+		}
+		return reflect.ValueOf(n).Convert(keyType), true
+	default:
+		return reflect.Value{}, false
+	}
 }
 
 var defaultConfigOnce sync.Once
@@ -178,8 +217,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Daemon - GRPC
 	v.SetDefault("daemon.grpc.host", "localhost")
 	v.SetDefault("daemon.grpc.port", "5555")
-	v.SetDefault("daemon.grpc.max_recv_msg_size", 1073741824) // 1 GiB
-	v.SetDefault("daemon.grpc.max_send_msg_size", 1073741824) // 1 GiB
+	v.SetDefault("daemon.grpc.max_recv_msg_size", 1*GiB)
+	v.SetDefault("daemon.grpc.max_send_msg_size", 1*GiB)
 
 	// Daemon - HTTP
 	v.SetDefault("daemon.http.host", "0.0.0.0")
@@ -188,15 +227,33 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.http.headers.access_control_allow_origin_wildcard", false)
 	v.SetDefault("daemon.http.headers.access_control_max_age", "600")
 	v.SetDefault("daemon.http.headers.cookie_domain", "localhost")
-	v.SetDefault("daemon.http.max_call_recv_msg_size", 1073741824) // 1 GiB
-	v.SetDefault("daemon.http.max_call_send_msg_size", 1073741824) // 1 GiB
+	v.SetDefault("daemon.http.max_call_recv_msg_size", 1*GiB)
+	v.SetDefault("daemon.http.max_call_send_msg_size", 1*GiB)
 
-	// Daemon - JWT and TOTP
+	// Daemon - JWT
 	v.SetDefault("daemon.jwt.secret", "")
-	v.SetDefault("daemon.jwt.expiration_time", "72h")
-	v.SetDefault("daemon.jwt.max_refresh_time", "4320h") // 180 days
+	v.SetDefault("daemon.jwt.expiration_time", 3*24*time.Hour)
+	v.SetDefault("daemon.jwt.max_refresh_time", 180*24*time.Hour)
+
+	// Daemon - TOTP
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
+
+	// Daemon - Jobs
+	v.SetDefault("daemon.jobs.app-sync.enabled", true)
+	v.SetDefault("daemon.jobs.app-sync.interval", 30*time.Minute)
+	v.SetDefault("daemon.jobs.app-sync.timeout", 10*time.Minute)
+	v.SetDefault("daemon.jobs.app-sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
+
+	// Daemon - Jobber
+	v.SetDefault("daemon.jobber.enabled", true)
+	v.SetDefault("daemon.jobber.check_interval", 30*time.Second)
+	v.SetDefault("daemon.jobber.jitter", 0.2)
+	v.SetDefault("daemon.jobber.lock_store", "postgres")
+
+	// Daemon - Pprof
 	v.SetDefault("daemon.pprof_enabled", false)
+
+	// Daemon - Error Stack Trace
 	v.SetDefault("daemon.expose_error_stack_trace", true)
 
 	// Daemon - Metrics
@@ -204,19 +261,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.metrics.authentication.enabled", false)
 	v.SetDefault("daemon.metrics.authentication.password", "")
 
-	// Jobber
-	v.SetDefault("daemon.jobber.enabled", true)
-	v.SetDefault("daemon.jobber.check_interval", 30*time.Second)
-	v.SetDefault("daemon.jobber.jitter", 0.2)
-	v.SetDefault("daemon.jobber.lock_store", "postgres")
-
-	// Jobs
-	v.SetDefault("daemon.jobs.app-sync.enabled", true)
-	v.SetDefault("daemon.jobs.app-sync.interval", 30*time.Minute)
-	v.SetDefault("daemon.jobs.app-sync.timeout", 10*time.Minute)
-	v.SetDefault("daemon.jobs.app-sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
-
-	// Storage
+	// Storage - Datastores
 	v.SetDefault("storage.datastores.chorus.type", "postgres")
 	v.SetDefault("storage.datastores.chorus.host", "127.0.0.1")
 	v.SetDefault("storage.datastores.chorus.port", "5432")
@@ -235,6 +280,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.audit.max_lifetime", 10*time.Second)
 	v.SetDefault("storage.datastores.audit.ssl.enabled", false)
 	v.SetDefault("storage.datastores.audit.password", "")
+
+	// Storage - File Stores
 	v.SetDefault("storage.file_stores.s3.type", "minio")
 	v.SetDefault("storage.file_stores.s3.minio_config.enabled", true)
 	v.SetDefault("storage.file_stores.s3.minio_config.endpoint", "localhost:9000")
@@ -249,9 +296,11 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.file_stores.disk.disk_config.enabled", true)
 	v.SetDefault("storage.file_stores.disk.disk_config.base_path", "docker/.diskfilestore")
 
-	// Services
+	// Services - Audit
 	v.SetDefault("services.audit_service.enabled", true)
 	v.SetDefault("services.audit_service.datastore_name", "audit")
+
+	// Services - Authentication
 	v.SetDefault("services.authentication_service.enabled", true)
 	v.SetDefault("services.authentication_service.auth_ui_enabled", true)
 	v.SetDefault("services.authentication_service.self_service.tenant_id", 1)
@@ -277,24 +326,35 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.client_id", "chorus")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.client_secret", "")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.scopes", []string{"openid", "profile", "email", "roles"})
+
+	// Services - Approval Request
 	v.SetDefault("services.approval_request_service.staging_file_store_name", "disk")
+	v.SetDefault("services.approval_request_service.require_data_manager_approval", false)
+
+	// Services - Mailer
 	v.SetDefault("services.mailer_service.smtp.host", "smtp-relay.sendinblue.com")
 	v.SetDefault("services.mailer_service.smtp.port", "587")
 	v.SetDefault("services.mailer_service.smtp.user", "smtpUser")
 	v.SetDefault("services.mailer_service.smtp.password", "")
 	v.SetDefault("services.mailer_service.smtp.authentication", "none")
 	v.SetDefault("services.mailer_service.smtp.insecure_mode", false)
+
+	// Services - OpenID Connect Provider
 	v.SetDefault("services.openid_connect_provider.enabled", true)
 	v.SetDefault("services.openid_connect_provider.issuer_url", "http://localhost:5000/openid-connect")
 	v.SetDefault("services.openid_connect_provider.frontend_interactions_url", "http://localhost:5000/auth-ui")
 	v.SetDefault("services.openid_connect_provider.jwks", "")
 	v.SetDefault("services.openid_connect_provider.scopes", []string{"openid", "profile", "email", "roles"})
+
+	// Services - Workspace
 	v.SetDefault("services.workspace_service.enable_kill_fixed_timeout", false)
 	v.SetDefault("services.workspace_service.kill_fixed_timeout", time.Hour)
 	v.SetDefault("services.workspace_service.kill_fixed_check_interval", time.Hour)
 	v.SetDefault("services.workspace_service.creator_is_admin", true)
 	v.SetDefault("services.workspace_service.creator_is_data_manager", true)
 	v.SetDefault("services.workspace_service.gid_offset", 2000)
+
+	// Services - Workspace File
 	v.SetDefault("services.workspace_file_service.stores.archive.file_store_name", "s3")
 	v.SetDefault("services.workspace_file_service.stores.archive.workspace_prefix", "workspaces/%s")
 	v.SetDefault("services.workspace_file_service.stores.archive.description", "Long-term object storage (MinIO).")
@@ -303,10 +363,15 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workspace_file_service.stores.disk.workspace_prefix", "workspaces/%s")
 	v.SetDefault("services.workspace_file_service.stores.disk.description", "Local disk storage.")
 	v.SetDefault("services.workspace_file_service.stores.disk.order", 2)
+
+	// Services - User
 	v.SetDefault("services.user_service.require_email", false)
 	v.SetDefault("services.user_service.uid_offset", 2000)
+
+	// Services - Authorization
 	v.SetDefault("services.authorization_service.workspace_admin_can_assign_data_manager", true)
-	v.SetDefault("services.approval_request_service.require_data_manager_approval", false)
+
+	// Services - Workbench
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", true)
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
@@ -322,6 +387,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.round_tripper.tls_handshake_timeout", 10*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.response_header_timeout", 15*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.max_transient_retry", 3)
+
+	// Services - Steward
 	v.SetDefault("services.steward.tenant.name", "default")
 	v.SetDefault("services.steward.user.username", "chorus")
 	v.SetDefault("services.steward.user.password", "")
