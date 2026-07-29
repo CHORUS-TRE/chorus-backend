@@ -53,3 +53,6 @@ configs/config.yaml.tmp
 
 # Coverage files
 tests/coverage
+
+# Build output
+bin/
