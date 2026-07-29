@@ -323,7 +323,7 @@ type (
 		} `yaml:"authorization_service"`
 
 		ApprovalRequestService struct {
-			StagingFileStoreName       string `yaml:"staging_file_store_name"`
+			StagingFileStoreName       string `yaml:"staging_file_store_name" validate:"required"`
 			RequireDataManagerApproval bool   `yaml:"require_data_manager_approval"`
 		} `yaml:"approval_request_service"`
 
