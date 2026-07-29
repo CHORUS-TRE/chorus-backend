@@ -345,7 +345,6 @@ type (
 	}
 
 	WorkspaceFileStore struct {
-		FileStoreName   string `yaml:"file_store_name" validate:"required"` // Reference to file store in storage.file_stores
 		WorkspacePrefix string `yaml:"workspace_prefix" validate:"required"`
 		Description     string `yaml:"description"`
 		Order           uint   `yaml:"order"`
