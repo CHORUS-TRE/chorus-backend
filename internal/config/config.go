@@ -40,7 +40,7 @@ type (
 		} `yaml:"http"`
 
 		JWT struct {
-			Secret         Sensitive     `yaml:"secret" validate:"required"`
+			Secret         Sensitive     `yaml:"secret" validate:"required" init:"random"`
 			ExpirationTime time.Duration `yaml:"expiration_time" validate:"required"`
 			MaxRefreshTime time.Duration `yaml:"max_refresh_time" validate:"required"`
 		} `yaml:"jwt"`
@@ -56,8 +56,8 @@ type (
 		ExposeErrorStackTrace bool `yaml:"expose_error_stack_trace"`
 
 		PrivateKeyFile string `yaml:"private_key_file" validate:"required_without=PrivateKey"`
-		PrivateKey     string `yaml:"private_key" validate:"required_without=PrivateKeyFile"`
-		Salt           string `yaml:"salt" validate:"required"`
+		PrivateKey     string `yaml:"private_key" validate:"required_without=PrivateKeyFile" init:"privatekey"`
+		Salt           string `yaml:"salt" validate:"required" init:"random"`
 
 		Metrics struct {
 			Enabled        bool `yaml:"enabled"`
@@ -141,7 +141,7 @@ type (
 
 		IsWatcher bool `yaml:"is_watcher"` // if true, the client will watch for changes in the cluster
 
-		DefaultRegistry   string `yaml:"default_registry" validate:"required_if=Enabled true"`
+		DefaultRegistry   string `yaml:"default_registry" validate:"required_if=Enabled true" init:"placeholder"`
 		DefaultRepository string `yaml:"default_repository" validate:"required_if=Enabled true"`
 	}
 
@@ -151,7 +151,7 @@ type (
 
 	HarborClient struct {
 		Enabled            bool      `yaml:"enabled"`
-		URL                string    `yaml:"url" validate:"required_if=Enabled true"`
+		URL                string    `yaml:"url" validate:"required_if=Enabled true" init:"placeholder"`
 		Username           string    `yaml:"username"`
 		Password           Sensitive `yaml:"password"`
 		Project            string    `yaml:"project"`
@@ -211,7 +211,7 @@ type (
 		Host           string        `yaml:"host" validate:"required"`
 		Port           string        `yaml:"port" validate:"required"`
 		Username       string        `yaml:"username" validate:"required"`
-		Password       Sensitive     `yaml:"password" validate:"required"`
+		Password       Sensitive     `yaml:"password" validate:"required" init:"localdev=password"`
 		Database       string        `yaml:"database" validate:"required"`
 		MaxConnections int           `yaml:"max_connections"`
 		MaxLifetime    time.Duration `yaml:"max_lifetime"`
@@ -233,7 +233,7 @@ type (
 
 		Endpoint        string    `yaml:"endpoint" validate:"required_if=Enabled true"`
 		AccessKeyID     string    `yaml:"access_key_id" validate:"required_if=Enabled true"`
-		SecretAccessKey Sensitive `yaml:"secret_access_key" validate:"required_if=Enabled true"`
+		SecretAccessKey Sensitive `yaml:"secret_access_key" validate:"required_if=Enabled true" init:"localdev=minioadmin"`
 
 		BucketName string `yaml:"bucket_name" validate:"required_if=Enabled true"`
 		UseSSL     bool   `yaml:"use_ssl"`
@@ -339,7 +339,7 @@ type (
 
 			User struct {
 				Username string    `yaml:"username" validate:"required"`
-				Password Sensitive `yaml:"password" validate:"required"`
+				Password Sensitive `yaml:"password" validate:"required" init:"random"`
 			} `yaml:"user"`
 		} `yaml:"steward"`
 	}
@@ -373,7 +373,7 @@ type (
 		UserNameClaim             string    `yaml:"user_name_claim"`
 		EmailClaim                string    `yaml:"email_claim"`
 		ClientID                  string    `yaml:"client_id"`
-		ClientSecret              Sensitive `yaml:"client_secret"`
+		ClientSecret              Sensitive `yaml:"client_secret" init:"placeholder"`
 		Scopes                    []string  `yaml:"scopes"`
 		InsecureSkipTLS           bool      `yaml:"insecure_skip_tls"`
 		CustomCA                  string    `yaml:"custom_ca"`

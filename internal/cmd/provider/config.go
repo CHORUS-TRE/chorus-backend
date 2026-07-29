@@ -203,6 +203,51 @@ func convertMapKey(keyType reflect.Type, raw string) (reflect.Value, bool) {
 	}
 }
 
+// FieldTag resolves a FieldError's own failing field (not a sibling, unlike
+// siblingPath) and returns the value of the given struct tag on it, e.g.
+// FieldTag(cfg, fe, "init") reads the field's `init:"..."` tag. Works
+// identically for plain validate-tag failures and custom struct-level
+// validator failures (e.g. validateOpenIDMode's sl.ReportError calls),
+// since both produce the same StructNamespace() format.
+func FieldTag(cfg config.Config, fe val.FieldError, tagName string) (string, bool) {
+	segments := strings.Split(fe.StructNamespace(), ".")
+	if len(segments) < 2 {
+		return "", false
+	}
+	segments = segments[1:] // drop leading "Config"
+
+	v := reflect.ValueOf(cfg)
+	var sf reflect.StructField
+	for _, seg := range segments {
+		fieldName, mapKey, hasMapKey := strings.Cut(seg, "[")
+
+		if v.Kind() != reflect.Struct {
+			return "", false
+		}
+		var ok bool
+		sf, ok = v.Type().FieldByName(fieldName)
+		if !ok {
+			return "", false
+		}
+		v = v.FieldByName(fieldName)
+		if !v.IsValid() {
+			return "", false
+		}
+
+		if hasMapKey {
+			key, ok := convertMapKey(v.Type().Key(), strings.TrimSuffix(mapKey, "]"))
+			if !ok {
+				return "", false
+			}
+			v = v.MapIndex(key)
+			if !v.IsValid() {
+				return "", false
+			}
+		}
+	}
+	return sf.Tag.Get(tagName), true
+}
+
 var defaultConfigOnce sync.Once
 var defaultCfg config.Config
 
