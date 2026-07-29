@@ -2,10 +2,7 @@ package model
 
 import (
 	"fmt"
-	"slices"
 	"strings"
-
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 )
 
 // Role is a role assignment: a RoleName plus the concrete context it applies
@@ -126,18 +123,4 @@ func GetAllRoles() []RoleName {
 		RolePlatformDataManager,
 		RoleSuperAdmin,
 	}
-}
-
-// UniqueRoleNames returns a sorted, deduplicated list of role names from a slice of JWT roles.
-func UniqueRoleNames(roles []jwt_model.Role) []string {
-	seen := make(map[string]struct{}, len(roles))
-	for _, r := range roles {
-		seen[r.Name] = struct{}{}
-	}
-	names := make([]string, 0, len(seen))
-	for name := range seen {
-		names = append(names, name)
-	}
-	slices.Sort(names)
-	return names
 }
