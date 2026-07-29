@@ -441,8 +441,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authentication_service.modes.internal.order", 1)
 
 	v.SetDefault("services.authentication_service.modes.keycloak.type", "openid")
-	v.SetDefault("services.authentication_service.modes.keycloak.enabled", true)
-	v.SetDefault("services.authentication_service.modes.keycloak.button_text", "Login with via Keycloak")
+	v.SetDefault("services.authentication_service.modes.keycloak.enabled", false)
+	v.SetDefault("services.authentication_service.modes.keycloak.button_text", "Login with Keycloak")
 	v.SetDefault("services.authentication_service.modes.keycloak.order", 2)
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.id", "keycloak")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.chorus_backend_host", "http://localhost:5000")
