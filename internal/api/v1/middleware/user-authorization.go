@@ -112,7 +112,7 @@ func isInternalPublicRegistrationEnabled(cfg config.Config) bool {
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdatePassword, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionUpdatePassword, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionEnableTotp, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionEnableTotp, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.ResetTotpRequest) (*chorus.ResetTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionResetTotp, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionResetTotp, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}

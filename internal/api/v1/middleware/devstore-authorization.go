@@ -56,7 +56,7 @@ func (c devstoreControllerAuthorization) DeleteGlobalEntry(ctx context.Context, 
 }
 
 func (c devstoreControllerAuthorization) ListUserEntries(ctx context.Context, req *chorus.ListEntriesRequest) (*chorus.ListEntriesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c devstoreControllerAuthorization) ListUserEntries(ctx context.Context, re
 }
 
 func (c devstoreControllerAuthorization) GetUserEntry(ctx context.Context, req *chorus.GetEntryRequest) (*chorus.GetEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c devstoreControllerAuthorization) GetUserEntry(ctx context.Context, req *
 }
 
 func (c devstoreControllerAuthorization) PutUserEntry(ctx context.Context, req *chorus.PutEntryRequest) (*chorus.PutEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (c devstoreControllerAuthorization) PutUserEntry(ctx context.Context, req *
 }
 
 func (c devstoreControllerAuthorization) DeleteUserEntry(ctx context.Context, req *chorus.DeleteEntryRequest) (*chorus.DeleteEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, authorization.WithUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
 	if err != nil {
 		return nil, err
 	}
