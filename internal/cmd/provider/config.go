@@ -442,6 +442,7 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	v.SetDefault("services.authentication_service.modes.keycloak.type", "openid")
 	v.SetDefault("services.authentication_service.modes.keycloak.enabled", false)
+	v.SetDefault("services.authentication_service.modes.keycloak.main_source", false)
 	v.SetDefault("services.authentication_service.modes.keycloak.button_text", "Login with Keycloak")
 	v.SetDefault("services.authentication_service.modes.keycloak.order", 2)
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.id", "keycloak")
