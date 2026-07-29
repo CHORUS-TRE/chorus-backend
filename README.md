@@ -28,6 +28,10 @@ The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like an
 - `token` — the service account token
 - `ca` — the service account CA
 
+A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.k8s_client.image_pull_secret_name`) — used to pull images from a private registry.
+
+The [workbench-operator](https://github.com/CHORUS-TRE/workbench-operator) must also be deployed on the cluster — it reconciles the workbench/workspace custom resources the backend creates.
+
 ### Object Storage
 
 MinIO — run `make deps` to start it locally.
