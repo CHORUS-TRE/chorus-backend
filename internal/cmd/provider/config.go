@@ -425,6 +425,24 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.openid_connect_provider.jwks", "")
 	v.SetDefault("services.openid_connect_provider.scopes", []string{"openid", "profile", "email", "roles"})
 
+	// Services - Workbench
+	v.SetDefault("services.workbench_service.stream_proxy_enabled", true)
+	v.SetDefault("services.workbench_service.backend_in_k8s", false)
+	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
+	v.SetDefault("services.workbench_service.workbench_idle_timeout", 24*time.Hour)
+	v.SetDefault("services.workbench_service.workbench_idle_check_interval", 10*time.Second)
+	v.SetDefault("services.workbench_service.round_tripper.dial_timeout", 5*time.Second)
+	// If zero, keep-alive probes are sent with a default value (currently 15 seconds)
+	// If negative, keep-alive probes are disabled.
+	v.SetDefault("services.workbench_service.round_tripper.dial_keep_alive", 30*time.Second)
+	v.SetDefault("services.workbench_service.round_tripper.force_attempt_http2", false)
+	v.SetDefault("services.workbench_service.round_tripper.max_idle_conns", 256)
+	v.SetDefault("services.workbench_service.round_tripper.max_idle_conns_per_host", 256)
+	v.SetDefault("services.workbench_service.round_tripper.idle_conn_timeout", 90*time.Second)
+	v.SetDefault("services.workbench_service.round_tripper.tls_handshake_timeout", 10*time.Second)
+	v.SetDefault("services.workbench_service.round_tripper.response_header_timeout", 15*time.Second)
+	v.SetDefault("services.workbench_service.round_tripper.max_transient_retry", 3)
+
 	// Services - Workspace
 	v.SetDefault("services.workspace_service.enable_kill_fixed_timeout", false)
 	v.SetDefault("services.workspace_service.kill_fixed_timeout", time.Hour)
@@ -443,30 +461,14 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workspace_file_service.stores.disk.description", "Local disk storage.")
 	v.SetDefault("services.workspace_file_service.stores.disk.order", 2)
 
-	// Services - User
-	v.SetDefault("services.user_service.require_email", false)
-	v.SetDefault("services.user_service.uid_offset", 2000)
-
 	// Services - Authorization
 	v.SetDefault("services.authorization_service.workspace_admin_can_assign_data_manager", true)
 
-	// Services - Workbench
-	v.SetDefault("services.workbench_service.stream_proxy_enabled", true)
-	v.SetDefault("services.workbench_service.backend_in_k8s", false)
-	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
-	v.SetDefault("services.workbench_service.workbench_idle_timeout", 24*time.Hour)
-	v.SetDefault("services.workbench_service.workbench_idle_check_interval", 10*time.Second)
-	v.SetDefault("services.workbench_service.round_tripper.dial_timeout", 5*time.Second)
-	// If zero, keep-alive probes are sent with a default value (currently 15 seconds)
-	// If negative, keep-alive probes are disabled.
-	v.SetDefault("services.workbench_service.round_tripper.dial_keep_alive", 30*time.Second)
-	v.SetDefault("services.workbench_service.round_tripper.force_attempt_http2", false)
-	v.SetDefault("services.workbench_service.round_tripper.max_idle_conns", 256)
-	v.SetDefault("services.workbench_service.round_tripper.max_idle_conns_per_host", 256)
-	v.SetDefault("services.workbench_service.round_tripper.idle_conn_timeout", 90*time.Second)
-	v.SetDefault("services.workbench_service.round_tripper.tls_handshake_timeout", 10*time.Second)
-	v.SetDefault("services.workbench_service.round_tripper.response_header_timeout", 15*time.Second)
-	v.SetDefault("services.workbench_service.round_tripper.max_transient_retry", 3)
+	// Services - Approval Request
+
+	// Services - User
+	v.SetDefault("services.user_service.require_email", false)
+	v.SetDefault("services.user_service.uid_offset", 2000)
 
 	// Services - Steward
 	v.SetDefault("services.steward.tenant.name", "default")
