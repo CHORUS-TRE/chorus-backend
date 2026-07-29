@@ -339,7 +339,7 @@ type (
 
 			User struct {
 				Username string    `yaml:"username" validate:"required"`
-				Password Sensitive `yaml:"password" validate:"required" init:"random"`
+				Password Sensitive `yaml:"password" validate:"required" init:"localdev=password"`
 			} `yaml:"user"`
 		} `yaml:"steward"`
 	}
