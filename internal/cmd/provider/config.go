@@ -126,6 +126,8 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		return fmt.Sprintf("FAIL '%s' must contain at least %s entry/entries", path, fe.Param())
 	case "required_openid":
 		return fmt.Sprintf("FAIL '%s' is missing (required for openid-type authentication modes)", path)
+	case "gt":
+		return fmt.Sprintf("FAIL '%s' must be greater than %s", path, fe.Param())
 	default:
 		return fmt.Sprintf("FAIL '%s' failed '%s' validation", path, fe.Tag())
 	}
@@ -452,10 +454,11 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workbench_service.stream_proxy_enabled", true)
 	v.SetDefault("services.workbench_service.backend_in_k8s", false)
 	v.SetDefault("services.workbench_service.proxy_hit_save_batch_interval", 30*time.Second)
-	v.SetDefault("services.workbench_service.workbench_idle_notification", nil)
 	v.SetDefault("services.workbench_service.workbench_idle_timeout", 24*time.Hour)
 	v.SetDefault("services.workbench_service.workbench_idle_check_interval", 10*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.dial_timeout", 5*time.Second)
+	// If zero, keep-alive probes are sent with a default value (currently 15 seconds)
+	// If negative, keep-alive probes are disabled.
 	v.SetDefault("services.workbench_service.round_tripper.dial_keep_alive", 30*time.Second)
 	v.SetDefault("services.workbench_service.round_tripper.force_attempt_http2", false)
 	v.SetDefault("services.workbench_service.round_tripper.max_idle_conns", 256)
