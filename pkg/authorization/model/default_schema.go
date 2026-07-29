@@ -258,7 +258,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionCountUnreadNotifications, "Allow the user to count unread notifications", contexts(one(ContextUser))),
 			permissionDefinition(PermissionMarkNotificationAsRead, "Allow the user to mark a notification as read", contexts(one(ContextUser))),
 
-			permissionDefinition(PermissionListUsers, "Allow the user to list users", contexts(one(ContextUser))),
+			permissionDefinition(PermissionListUsers, "Allow the user to list users", nil),
 			permissionDefinition(PermissionSearchUsers, "Allow the user to search users", nil),
 			permissionDefinition(PermissionCreateUser, "Allow the user to create a user", nil),
 			permissionDefinition(PermissionUpdateUser, "Allow the user to update a user", contexts(one(ContextUser))),
@@ -277,7 +277,7 @@ func GetDefaultSchema() AuthorizationSchema {
 			permissionDefinition(PermissionAuditPlatform, "Allow the user to audit the platform", nil),
 			permissionDefinition(PermissionManageDynamicRoles, "Allow the user to create dynamic roles", nil),
 
-			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", contexts(one(ContextWorkbench))),
+			permissionDefinition(PermissionListAppInstances, "Allow the user to list app instances", nil),
 			permissionDefinition(PermissionCreateAppInstance, "Allow the user to create an app instance", contexts(one(ContextWorkbench))),
 			permissionDefinition(PermissionUpdateAppInstance, "Allow the user to update an app instance", contexts(one(ContextWorkbench))),
 			permissionDefinition(PermissionGetAppInstance, "Allow the user to get an app instance", contexts(one(ContextWorkbench))),
