@@ -355,16 +355,16 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.audit.password", "")
 
 	// Storage - File Stores
-	v.SetDefault("storage.file_stores.s3.type", "minio")
-	v.SetDefault("storage.file_stores.s3.minio_config.enabled", true)
-	v.SetDefault("storage.file_stores.s3.minio_config.endpoint", "localhost:9000")
-	v.SetDefault("storage.file_stores.s3.minio_config.access_key_id", "minioadmin")
-	v.SetDefault("storage.file_stores.s3.minio_config.secret_access_key", "")
-	v.SetDefault("storage.file_stores.s3.minio_config.bucket_name", "chorus-data")
-	v.SetDefault("storage.file_stores.s3.minio_config.use_ssl", false)
-	v.SetDefault("storage.file_stores.s3.minio_config.multipart_min_part_size", 5*MiB)
-	v.SetDefault("storage.file_stores.s3.minio_config.multipart_max_part_size", 5*GiB)
-	v.SetDefault("storage.file_stores.s3.minio_config.multipart_max_total_parts", 10000)
+	v.SetDefault("storage.file_stores.archive.type", "minio")
+	v.SetDefault("storage.file_stores.archive.minio_config.enabled", true)
+	v.SetDefault("storage.file_stores.archive.minio_config.endpoint", "localhost:9000")
+	v.SetDefault("storage.file_stores.archive.minio_config.access_key_id", "minioadmin")
+	v.SetDefault("storage.file_stores.archive.minio_config.secret_access_key", "")
+	v.SetDefault("storage.file_stores.archive.minio_config.bucket_name", "chorus-data")
+	v.SetDefault("storage.file_stores.archive.minio_config.use_ssl", false)
+	v.SetDefault("storage.file_stores.archive.minio_config.multipart_min_part_size", 5*MiB)
+	v.SetDefault("storage.file_stores.archive.minio_config.multipart_max_part_size", 5*GiB)
+	v.SetDefault("storage.file_stores.archive.minio_config.multipart_max_total_parts", 10000)
 
 	v.SetDefault("storage.file_stores.disk.type", "disk")
 	v.SetDefault("storage.file_stores.disk.disk_config.enabled", true)
@@ -452,14 +452,14 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workspace_service.gid_offset", 0)
 
 	// Services - Workspace File
-	v.SetDefault("services.workspace_file_service.stores.archive.file_store_name", "s3")
+	v.SetDefault("services.workspace_file_service.stores.archive.file_store_name", "archive")
 	v.SetDefault("services.workspace_file_service.stores.archive.workspace_prefix", "workspaces/%s")
-	v.SetDefault("services.workspace_file_service.stores.archive.description", "Object storage backed file store.")
+	v.SetDefault("services.workspace_file_service.stores.archive.description", "Object storage backed file store")
 	v.SetDefault("services.workspace_file_service.stores.archive.order", 1)
 
 	v.SetDefault("services.workspace_file_service.stores.disk.file_store_name", "disk")
 	v.SetDefault("services.workspace_file_service.stores.disk.workspace_prefix", "workspaces/%s")
-	v.SetDefault("services.workspace_file_service.stores.disk.description", "Local disk storage.")
+	v.SetDefault("services.workspace_file_service.stores.disk.description", "Local disk storage - intended for local development only")
 	v.SetDefault("services.workspace_file_service.stores.disk.order", 2)
 
 	// Services - Authorization
