@@ -454,8 +454,9 @@ func SetDefaultConfig(v *viper.Viper) {
 	// Services - Workspace File
 	v.SetDefault("services.workspace_file_service.stores.archive.file_store_name", "s3")
 	v.SetDefault("services.workspace_file_service.stores.archive.workspace_prefix", "workspaces/%s")
-	v.SetDefault("services.workspace_file_service.stores.archive.description", "Long-term object storage (MinIO).")
+	v.SetDefault("services.workspace_file_service.stores.archive.description", "Object storage backed file store.")
 	v.SetDefault("services.workspace_file_service.stores.archive.order", 1)
+
 	v.SetDefault("services.workspace_file_service.stores.disk.file_store_name", "disk")
 	v.SetDefault("services.workspace_file_service.stores.disk.workspace_prefix", "workspaces/%s")
 	v.SetDefault("services.workspace_file_service.stores.disk.description", "Local disk storage.")
