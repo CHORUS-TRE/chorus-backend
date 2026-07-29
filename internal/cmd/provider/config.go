@@ -414,10 +414,6 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.client_secret", "")
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.scopes", []string{"openid", "profile", "email", "roles"})
 
-	// Services - Approval Request
-	v.SetDefault("services.approval_request_service.staging_file_store_name", "disk")
-	v.SetDefault("services.approval_request_service.require_data_manager_approval", false)
-
 	// Services - OpenID Connect Provider
 	v.SetDefault("services.openid_connect_provider.enabled", true)
 	v.SetDefault("services.openid_connect_provider.issuer_url", "http://localhost:5000/openid-connect")
@@ -464,6 +460,8 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authorization_service.workspace_admin_can_assign_data_manager", true)
 
 	// Services - Approval Request
+	v.SetDefault("services.approval_request_service.staging_file_store_name", "disk")
+	v.SetDefault("services.approval_request_service.require_data_manager_approval", true)
 
 	// Services - User
 	v.SetDefault("services.user_service.require_email", false)
