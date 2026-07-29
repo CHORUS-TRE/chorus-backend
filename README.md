@@ -94,18 +94,21 @@ Both print to stdout — paste the result into the matching field in `configs/co
 ### Keep it in Sync
 
 Whichever way you built `configs/config.yaml`:
+
 * Check for drift against the code-level defaults at any time:
     ```bash
-    chorus diff-config --config configs/config.yaml
+    make diff-config
     ```
 * Validate your config against the required-field rules at any time:
     ```bash
-    chorus check-config --config configs/config.yaml
+    make check-config
     ```
 * Optional: trim `configs/config.yaml` down to only the fields you actually changed (backs up to `configs/config.yaml.bak` first):
     ```bash
     make trim-config
     ```
+
+The make commands above run against live source rather than the built `chorus` binary — handy if you're actively editing `internal/config/config.go` yourself.
 
 ### Resolution Order
 
