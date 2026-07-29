@@ -141,7 +141,7 @@ type (
 
 		IsWatcher bool `yaml:"is_watcher"` // if true, the client will watch for changes in the cluster
 
-		DefaultRegistry   string `yaml:"default_registry" validate:"required_if=Enabled true" init:"placeholder"`
+		DefaultRegistry   string `yaml:"default_registry" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"`
 		DefaultRepository string `yaml:"default_repository" validate:"required_if=Enabled true"`
 	}
 
@@ -151,7 +151,7 @@ type (
 
 	HarborClient struct {
 		Enabled            bool      `yaml:"enabled"`
-		URL                string    `yaml:"url" validate:"required_if=Enabled true" init:"placeholder"`
+		URL                string    `yaml:"url" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"`
 		Username           string    `yaml:"username"`
 		Password           Sensitive `yaml:"password"`
 		Project            string    `yaml:"project"`
@@ -373,7 +373,7 @@ type (
 		UserNameClaim             string    `yaml:"user_name_claim"`
 		EmailClaim                string    `yaml:"email_claim"`
 		ClientID                  string    `yaml:"client_id"`
-		ClientSecret              Sensitive `yaml:"client_secret" init:"placeholder"`
+		ClientSecret              Sensitive `yaml:"client_secret" validate:"ne=CHANGEME" init:"placeholder"`
 		Scopes                    []string  `yaml:"scopes"`
 		InsecureSkipTLS           bool      `yaml:"insecure_skip_tls"`
 		CustomCA                  string    `yaml:"custom_ca"`
