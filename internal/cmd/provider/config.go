@@ -452,12 +452,10 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.workspace_service.gid_offset", 0)
 
 	// Services - Workspace File
-	v.SetDefault("services.workspace_file_service.stores.archive.file_store_name", "archive")
 	v.SetDefault("services.workspace_file_service.stores.archive.workspace_prefix", "workspaces/%s")
 	v.SetDefault("services.workspace_file_service.stores.archive.description", "Object storage backed file store")
 	v.SetDefault("services.workspace_file_service.stores.archive.order", 1)
 
-	v.SetDefault("services.workspace_file_service.stores.disk.file_store_name", "disk")
 	v.SetDefault("services.workspace_file_service.stores.disk.workspace_prefix", "workspaces/%s")
 	v.SetDefault("services.workspace_file_service.stores.disk.description", "Local disk storage - intended for local development only")
 	v.SetDefault("services.workspace_file_service.stores.disk.order", 2)
