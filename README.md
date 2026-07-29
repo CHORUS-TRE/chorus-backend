@@ -20,7 +20,7 @@ This project is the backend of the chorus platform.
 
 A running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
 
-The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like any other setting (see [Configuration](#configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.k8s_client` fields individually:
+The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.k8s_client` fields individually:
 
 - `api_server` — the service account API server URL
 - `sa_secret_path` — path to the service account secret
@@ -36,37 +36,31 @@ MinIO — run `make deps` to start it locally.
 
 Postgres — run `make deps` to start it locally.
 
-## Launching
+## Quick Start
 
 1. Install [go](https://go.dev/doc/install)
 1. Download this repository
 1. Make sure the [requirements](#requirements) are met — kubeconfig in place, `make deps` running
+1. Build the CLI
+    ```bash
+    make build
+    ```
+    Every config command below is `./bin/chorus <command>` from here on — alias it once per shell session if you'd rather type `chorus`:
+    ```bash
+    alias chorus=./bin/chorus
+    ```
 1. Configure your environment
-    * Export the full default config and override any of it in `configs/config.yaml`:
-        ```bash
-        make export-default-config > configs/config.yaml
-        ```
-    * Generate a private key and paste it into `daemon.private_key` in `configs/config.yaml`:
-        ```bash
-        openssl ecparam -name prime256v1 -genkey -noout
-        ```
-    * Generate a JWKS and paste it into `services.openid_connect_provider.jwks` in `configs/config.yaml`:
-        ```bash
-        make jwks
-        ```
-    * Compare your `configs/config.yaml` with the default config:
-       ```bash
-       make diff-config
-       ```
-    * Optional: trim `configs/config.yaml` down to only the fields you actually changed (backs up to `configs/config.yaml.bak` first):
-       ```bash
-       make trim-config
-       ```
+    ```bash
+    chorus init-config
+    ```
+    Creates `configs/config.yaml` with just the fields `check-config` actually requires, generating what it can (private key, JWT secret, salt, steward password, JWKS, and datastore/object-store credentials matching `make deps`) and leaving anything that needs a real external system (an image registry, Harbor, Keycloak) as an obvious `CHANGEME` placeholder. Fill in any `CHANGEME` fields it reports if you need that integration — everything else is ready to run as-is.
+
+    Prefer to see every overridable field yourself and hand-edit `configs/config.yaml` instead? See [Advanced Configuration](#advanced-configuration).
 1. Launch the backend
     ```bash
     make run
     ```
-1. Browse to [localhost:5000/doc](localhost:5000/doc) (port my differ depending on your config)
+1. Browse to [localhost:5000/doc](localhost:5000/doc)
 1. Import the [swagger documentation](api/openapiv2/v1-tags/apis.swagger.yaml) into a new [Postman collection](https://learning.postman.com/docs/getting-started/importing-and-exporting/importing-from-swagger)
 1. Authenticate with the default user to retrieve a bearer token
 1. Save the bearer token in a collection-wide variable named ```token```
@@ -77,23 +71,59 @@ Postgres — run `make deps` to start it locally.
     ```
 1. Now you can play around and send request to the chorus backend server running locally
 
-## Configuration
+## Advanced Configuration
 
+### Build a Full Config
+
+`chorus init-config` (see [Quick Start](#quick-start)) covers local dev in one command. If you'd rather see every overridable field yourself and hand-edit `configs/config.yaml`, build it from the code-level defaults instead:
+
+```bash
+chorus export-default-config > configs/config.yaml
+```
+
+At minimum you'll still need to fill in every field `chorus check-config` reports as missing, including a `daemon.private_key`:
+```bash
+chorus generate-private-key
+```
+and a `services.openid_connect_provider.jwks`:
+```bash
+chorus generate-jwks
+```
+Both print to stdout — paste the result into the matching field in `configs/config.yaml`.
+
+### Keep it in Sync
+
+Whichever way you built `configs/config.yaml`:
+* Check for drift against the code-level defaults at any time:
+    ```bash
+    chorus diff-config --config configs/config.yaml
+    ```
+* Validate your config against the required-field rules at any time:
+    ```bash
+    chorus check-config --config configs/config.yaml
+    ```
+* Optional: trim `configs/config.yaml` down to only the fields you actually changed (backs up to `configs/config.yaml.bak` first):
+    ```bash
+    make trim-config
+    ```
+
+### Resolution Order
+
+Beyond editing `configs/config.yaml` directly, any value can be overridden two other ways: a `CHORUS_*` environment variable, or a one-off `--set path.to.key=value` flag.
 Configuration resolves in this order — later wins:
 
-1. code-level defaults (`provider.SetDefaultConfig()`, see `make export-default-config`)
+1. code-level defaults (`provider.SetDefaultConfig()`, see `chorus export-default-config`)
 2. `--config <file>`, repeatable — later files override earlier ones
 3. `CHORUS_*` environment variables
 4. `--set path.to.key=value`, repeatable
 
 ```bash
-go run ./cmd/chorus/main.go start \
+chorus start \
   --config configs/config.yaml \
   --set storage.datastores.chorus.database=chorus_ci
 ```
 
 Environment variables use the dotted config path, uppercased, with `.` replaced by `_`, prefixed with `CHORUS_`: `storage.datastores.chorus.database` → `CHORUS_STORAGE_DATASTORES_CHORUS_DATABASE`.
-
 
 ## Developer doc.
 
