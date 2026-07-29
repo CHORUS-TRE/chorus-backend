@@ -128,33 +128,6 @@ func GetAllRoles() []RoleName {
 	}
 }
 
-func GetWorkspaceRoles() []RoleName {
-	return []RoleName{
-		RoleWorkspaceGuest,
-		RoleWorkspaceMember,
-		RoleWorkspaceMaintainer,
-		RoleWorkspaceDataManager,
-		RoleWorkspaceAdmin,
-	}
-}
-
-func GetWorkbenchRoles() []RoleName {
-	return []RoleName{
-		RoleWorkbenchViewer,
-		RoleWorkbenchMember,
-		RoleWorkbenchAdmin,
-	}
-}
-
-func RoleIn(role RoleName, roles []RoleName) bool {
-	for _, r := range roles {
-		if r == role {
-			return true
-		}
-	}
-	return false
-}
-
 // UniqueRoleNames returns a sorted, deduplicated list of role names from a slice of JWT roles.
 func UniqueRoleNames(roles []jwt_model.Role) []string {
 	seen := make(map[string]struct{}, len(roles))
