@@ -458,9 +458,9 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("services.authentication_service.modes.keycloak.openid.scopes", []string{"openid", "profile", "email", "roles"})
 
 	// Services - OpenID Connect Provider
-	v.SetDefault("services.openid_connect_provider.enabled", true)
-	v.SetDefault("services.openid_connect_provider.issuer_url", "http://localhost:5000/openid-connect")
-	v.SetDefault("services.openid_connect_provider.frontend_interactions_url", "http://localhost:5000/auth-ui")
+	v.SetDefault("services.openid_connect_provider.enabled", false)
+	v.SetDefault("services.openid_connect_provider.issuer_url", "")                // e.g. http://localhost:5000/openid-connect
+	v.SetDefault("services.openid_connect_provider.frontend_interactions_url", "") // e.g. http://localhost:5000/auth-ui
 	v.SetDefault("services.openid_connect_provider.jwks", "")
 	v.SetDefault("services.openid_connect_provider.scopes", []string{"openid", "profile", "email", "roles"})
 
