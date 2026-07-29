@@ -279,11 +279,11 @@ type (
 
 		OpenIDConnectProvider struct {
 			Enabled                 bool                          `yaml:"enabled"`
-			FrontendInteractionsURL string                        `yaml:"frontend_interactions_url"`
-			JWKS                    Sensitive                     `yaml:"jwks"`
-			IssuerURL               string                        `yaml:"issuer_url"`
+			FrontendInteractionsURL string                        `yaml:"frontend_interactions_url" validate:"required_if=Enabled true"`
+			JWKS                    Sensitive                     `yaml:"jwks" validate:"required_if=Enabled true" init:"jwks"`
+			IssuerURL               string                        `yaml:"issuer_url" validate:"required_if=Enabled true"`
 			Scopes                  []string                      `yaml:"scopes"`
-			Clients                 []OpenIDConnectProviderClient `yaml:"clients"`
+			Clients                 []OpenIDConnectProviderClient `yaml:"clients" validate:"required_if=Enabled true,dive"`
 		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {
@@ -380,7 +380,7 @@ type (
 	}
 
 	OpenIDConnectProviderClient struct {
-		ID string `yaml:"client_id"`
+		ID string `yaml:"client_id" validate:"required"`
 		// Secret is used when the client authenticates with client_secret_jwt,
 		// since the key used to sign the assertion is the same used to verify it.
 		Secret Sensitive `yaml:"client_secret"`
