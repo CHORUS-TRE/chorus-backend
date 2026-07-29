@@ -116,7 +116,7 @@ func NewWorkspaceService(cfg config.Config, store WorkspaceStore, client k8s.K8s
 		logger.TechLog.Info(context.Background(), "starting workspace idle cleaner", zap.Duration("idleTimeout", ws.cfg.Services.WorkspaceService.KillFixedTimeout), zap.Duration("checkInterval", ws.cfg.Services.WorkspaceService.KillFixedCheckInterval))
 
 		go func() {
-			interval := ws.cfg.Services.WorkspaceService.KillFixedTimeout
+			interval := ws.cfg.Services.WorkspaceService.KillFixedCheckInterval
 			// sleep a random jitter in initial interval to avoid all instances doing this at the same time
 			jitter := time.Duration(rand.Int64N(int64(interval)))
 			time.Sleep(jitter)
