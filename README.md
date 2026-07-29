@@ -57,7 +57,7 @@ Postgres — run `make deps` to start it locally.
     ```bash
     chorus init-config
     ```
-    Creates `configs/config.yaml` with just the fields `check-config` actually requires, generating what it can (private key, JWT secret, salt, steward password, JWKS, and datastore/object-store credentials matching `make deps`) and leaving anything that needs a real external system (an image registry, Harbor, Keycloak) as an obvious `CHANGEME` placeholder. Fill in any `CHANGEME` fields it reports if you need that integration — everything else is ready to run as-is.
+    Creates `configs/config.yaml` with just the fields `check-config` actually requires, generating what it can (private key, JWT secret, salt, steward password, JWKS, and datastore/object-store credentials matching `make deps`). The image registry and Harbor URL need a real external system, so they're left as an explicit `CHANGEME` placeholder — since both clients are enabled by default, fill those in (or disable the clients) before launching, or `chorus start` won't boot.
 
     Prefer to see every overridable field yourself and hand-edit `configs/config.yaml` instead? See [Advanced Configuration](#advanced-configuration).
 1. Launch the backend
