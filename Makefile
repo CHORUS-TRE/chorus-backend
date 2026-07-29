@@ -9,7 +9,7 @@ SUITE ?=
 UNIT_TARGET       = $(if $(PKG),./pkg/$(PKG)/service,./...)
 ACCEPTANCE_TARGET = $(if $(SUITE),./tests/acceptance/$(SUITE),./tests/acceptance/...)
 
-.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean check-config
+.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean trim-config diff-config check-config
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-26s\033[0m %s\n", $$1, $$2}'
@@ -29,17 +29,11 @@ build: ## Build the backend binary into bin/chorus
 run: ## Run the backend with the dev config
 	go run ./cmd/chorus/main.go start --config $(CONFIG_FILE) | go run ./cmd/logger/main.go
 
-export-default-config: ## Print the code-level default configuration
-	@go run ./cmd/chorus/main.go export-default-config
-
-diff-config: ## Show drift between CONFIG_FILE and the code-level defaults
+diff-config: ## Show drift between CONFIG_FILE and the code-level defaults, from live source
 	@go run ./cmd/chorus/main.go diff-config --config $(CONFIG_FILE)
 
-check-config: ## Validate CONFIG_FILE against the validation rules (required fields, oneof, etc.)
+check-config: ## Validate CONFIG_FILE against the validation rules, from live source
 	@go run ./cmd/chorus/main.go check-config --config $(CONFIG_FILE)
-
-jwks: ## Generate a JWKS for services.openid_connect_provider.jwks (add -public-key for the Keycloak one-liner too)
-	@go run ./cmd/generate-jwks
 
 trim-config: ## Remove fields from CONFIG_FILE that are redundant with the code-level defaults (backs up to $(CONFIG_FILE).bak first)
 	@cp $(CONFIG_FILE) $(CONFIG_FILE).bak
