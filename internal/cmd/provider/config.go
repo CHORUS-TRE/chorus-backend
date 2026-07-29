@@ -465,7 +465,7 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Services - User
 	v.SetDefault("services.user_service.require_email", false)
-	v.SetDefault("services.user_service.uid_offset", 2000)
+	v.SetDefault("services.user_service.uid_offset", 0)
 
 	// Services - Steward
 	v.SetDefault("services.steward.tenant.name", "default")
