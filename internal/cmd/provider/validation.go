@@ -18,9 +18,8 @@ func ProvideValidator() *val.Validate {
 	validatorOnce.Do(func() {
 		validator = validation.NewValidator()
 
-		// Report the yaml tag name instead of the Go field name (e.g.
-		// "daemon.grpc.host" instead of "Daemon.GRPC.Host") -- matches the
-		// dotted path used everywhere else (--set, CHORUS_* env vars).
+		// Report the yaml tag name instead of the Go field name
+		// (e.g. "daemon.grpc.host" instead of "Daemon.GRPC.Host")
 		// Falls back to the Go field name for structs with no yaml tag.
 		validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
 			name := strings.SplitN(fld.Tag.Get("yaml"), ",", 2)[0]
@@ -36,13 +35,11 @@ func ProvideValidator() *val.Validate {
 }
 
 // validateOpenIDMode requires the OpenID fields an "openid"-type mode actually
-// depends on (internal/authentication-service.go's oauth2 config, redirect
-// URL, and userinfo/claims lookups). These can't be expressed as required_if
-// tags on OpenID's own fields: the gating condition is Mode.Type, which lives
-// one level up and isn't reachable from a tag on a field inside OpenID.
+// depends on.
+// These can't be expressed as required_if tags on OpenID's own fields
 func validateOpenIDMode(sl val.StructLevel) {
 	mode := sl.Current().Interface().(config.Mode)
-	if mode.Type != "openid" {
+	if mode.Type != "openid" || !mode.Enabled {
 		return
 	}
 
