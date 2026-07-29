@@ -287,12 +287,11 @@ type (
 		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {
-			StreamProxyEnabled         bool           `yaml:"stream_proxy_enabled"`
-			BackendInK8S               bool           `yaml:"backend_in_k8s"`
-			ProxyHitSaveBatchInterval  time.Duration  `yaml:"proxy_hit_save_batch_interval"`
-			WorkbenchIdleNotification  *time.Duration `yaml:"workbench_idle_notification"`
-			WorkbenchIdleTimeout       *time.Duration `yaml:"workbench_idle_timeout"`
-			WorkbenchIdleCheckInterval time.Duration  `yaml:"workbench_idle_check_interval"`
+			StreamProxyEnabled         bool          `yaml:"stream_proxy_enabled"`
+			BackendInK8S               bool          `yaml:"backend_in_k8s"`
+			ProxyHitSaveBatchInterval  time.Duration `yaml:"proxy_hit_save_batch_interval" validate:"required"`
+			WorkbenchIdleTimeout       time.Duration `yaml:"workbench_idle_timeout"`
+			WorkbenchIdleCheckInterval time.Duration `yaml:"workbench_idle_check_interval" validate:"required"`
 			RoundTripper               struct {
 				DialTimeout           time.Duration `yaml:"dial_timeout"`
 				DialKeepAlive         time.Duration `yaml:"dial_keep_alive"`
@@ -302,7 +301,7 @@ type (
 				IdleConnTimeout       time.Duration `yaml:"idle_conn_timeout"`
 				TLSHandshakeTimeout   time.Duration `yaml:"tls_handshake_timeout"`
 				ResponseHeaderTimeout time.Duration `yaml:"response_header_timeout"`
-				MaxTransientRetry     int           `yaml:"max_transient_retry"`
+				MaxTransientRetry     int           `yaml:"max_transient_retry" validate:"required"`
 			} `yaml:"round_tripper"`
 		} `yaml:"workbench_service"`
 

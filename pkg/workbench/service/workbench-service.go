@@ -157,8 +157,8 @@ func NewWorkbenchService(cfg config.Config, store WorkbenchStore, client k8s.K8s
 		}
 	}()
 
-	if s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout != nil {
-		logger.TechLog.Info(context.Background(), "starting workbench idle cleaner", zap.Duration("idleTimeout", *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout), zap.Duration("checkInterval", s.cfg.Services.WorkbenchService.WorkbenchIdleCheckInterval))
+	if s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout > 0 {
+		logger.TechLog.Info(context.Background(), "starting workbench idle cleaner", zap.Duration("idleTimeout", s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout), zap.Duration("checkInterval", s.cfg.Services.WorkbenchService.WorkbenchIdleCheckInterval))
 
 		go func() {
 			interval := cfg.Services.WorkbenchService.WorkbenchIdleCheckInterval
@@ -350,7 +350,7 @@ func (s *WorkbenchService) updateAllWorkbenches(ctx context.Context) {
 }
 
 func (s *WorkbenchService) cleanIdleWorkbenches(ctx context.Context) {
-	workbenches, err := s.store.DeleteIdleWorkbenches(ctx, *s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
+	workbenches, err := s.store.DeleteIdleWorkbenches(ctx, s.cfg.Services.WorkbenchService.WorkbenchIdleTimeout)
 	if err != nil {
 		logger.TechLog.Error(ctx, "unable to query idle workbenches", zap.Error(err))
 		return
