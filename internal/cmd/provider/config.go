@@ -445,11 +445,11 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Services - Workspace
 	v.SetDefault("services.workspace_service.enable_kill_fixed_timeout", false)
-	v.SetDefault("services.workspace_service.kill_fixed_timeout", time.Hour)
-	v.SetDefault("services.workspace_service.kill_fixed_check_interval", time.Hour)
+	v.SetDefault("services.workspace_service.kill_fixed_timeout", 1*time.Hour)
+	v.SetDefault("services.workspace_service.kill_fixed_check_interval", 1*time.Hour)
 	v.SetDefault("services.workspace_service.creator_is_admin", true)
 	v.SetDefault("services.workspace_service.creator_is_data_manager", true)
-	v.SetDefault("services.workspace_service.gid_offset", 2000)
+	v.SetDefault("services.workspace_service.gid_offset", 0)
 
 	// Services - Workspace File
 	v.SetDefault("services.workspace_file_service.stores.archive.file_store_name", "s3")

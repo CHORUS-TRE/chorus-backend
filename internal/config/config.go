@@ -307,8 +307,8 @@ type (
 
 		WorkspaceService struct {
 			EnableKillFixedTimeout bool          `yaml:"enable_kill_fixed_timeout"`
-			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout"`
-			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval"`
+			KillFixedTimeout       time.Duration `yaml:"kill_fixed_timeout" validate:"required_if=EnableKillFixedTimeout true"`
+			KillFixedCheckInterval time.Duration `yaml:"kill_fixed_check_interval" validate:"required_if=EnableKillFixedTimeout true"`
 			CreatorIsAdmin         bool          `yaml:"creator_is_admin"`
 			CreatorIsDataManager   bool          `yaml:"creator_is_data_manager"`
 			GIDOffset              uint64        `yaml:"gid_offset"`
