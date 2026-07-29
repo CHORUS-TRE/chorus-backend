@@ -315,7 +315,7 @@ type (
 		} `yaml:"workspace_service"`
 
 		WorkspaceFileService struct {
-			Stores map[string]WorkspaceFileStore `yaml:"stores"`
+			Stores map[string]WorkspaceFileStore `yaml:"stores" validate:"dive"`
 		} `yaml:"workspace_file_service"`
 
 		AuthorizationService struct {
@@ -345,8 +345,8 @@ type (
 	}
 
 	WorkspaceFileStore struct {
-		FileStoreName   string `yaml:"file_store_name"` // Reference to file store in clients.file_stores
-		WorkspacePrefix string `yaml:"workspace_prefix"`
+		FileStoreName   string `yaml:"file_store_name" validate:"required"` // Reference to file store in storage.file_stores
+		WorkspacePrefix string `yaml:"workspace_prefix" validate:"required"`
 		Description     string `yaml:"description"`
 		Order           uint   `yaml:"order"`
 	}
