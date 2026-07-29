@@ -254,13 +254,6 @@ config:
     workspace_service:
       enable_kill_fixed_timeout: false
       kill_fixed_timeout: 1h
-    # workspace_file_service:
-    #   stores:
-    #     archive:
-    #       client_type: minio
-    #       client_name: s3
-    #       store_prefix: /workspace-archive
-    #       workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
     approval_request_service:
       staging_file_store_name: disk
 
