@@ -150,7 +150,7 @@ config:
         access_control_allow_origins: []
         access_control_allow_origin_wildcard: true
         cookie_domain: ""
-  
+
     metrics:
       enabled: false
   services:
@@ -184,8 +184,6 @@ config:
       disk:
         disk_config:
           base_path: /var/lib/chorus/disk/.diskfilestore
-
-
 
 postgresql:
   enabled: true
