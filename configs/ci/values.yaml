@@ -135,7 +135,7 @@ config:
       enabled: false
   daemon:
     jwt:
-      secret: NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO # set in secret
+      secret: NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO
       expiration_time: 72h
       max_refresh_time: 4320h #180d
     private_key: |
