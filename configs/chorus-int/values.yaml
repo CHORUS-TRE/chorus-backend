@@ -39,6 +39,7 @@ config:
     authentication_service:
       modes:
         internal:
+          main_source: false
           public_registration_enabled: false
         keycloak:
           enabled: true
