@@ -218,14 +218,6 @@ Create a complete service (here the workbench service)
     make test-acceptance SUITE=workspace
     ```
 
-    **Acceptance Coverage**
-
-    Same self-managed flow, against a coverage-instrumented backend
-    (writes `tests/coverage/acceptance.out`)
-    ```bash
-    make test-acceptance-coverage
-    ```
-
 ## License and Usage Restrictions
 
 Any use of the software for purposes other than academic research, including for commercial purposes, shall be requested in advance from [CHUV](mailto:pactt.legal@chuv.ch).
