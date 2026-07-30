@@ -145,12 +145,6 @@ config:
       f3hlc8rjTTQFa/xIsE+FYdpzVv5TB5qJVw==
       -----END EC PRIVATE KEY-----
     salt: SNN6lK7wfEHVvN7mAaTI4nH375yQZzV8
-    http:
-      headers:
-        access_control_allow_origins: []
-        access_control_allow_origin_wildcard: true
-        cookie_domain: ""
-
     metrics:
       enabled: false
   services:
