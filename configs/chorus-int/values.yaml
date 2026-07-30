@@ -28,7 +28,6 @@ config:
           - "https://int.chorus-tre.ch"
           - "https://backend.int.chorus-tre.ch"
           - "http://localhost:3000"
-        access_control_allow_origin_wildcard: true
         cookie_domain: ".int.chorus-tre.ch"
     expose_error_stack_trace: true
     metrics:
