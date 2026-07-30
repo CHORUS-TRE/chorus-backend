@@ -107,3 +107,6 @@ config:
           endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
           access_key_id: "" # set in secret
           secret_access_key: "" # set in secret
+      disk:
+        disk_config:
+          enabled: false
