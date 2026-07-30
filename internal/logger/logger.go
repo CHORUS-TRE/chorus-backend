@@ -215,9 +215,9 @@ func initLoggerCores(
 			case "file":
 				core := zapcore.NewCore(encoder, zapcore.AddSync(&jack.Logger{
 					Filename:   logger.Path,
-					MaxSize:    getOrElse(logger.MaxSize, 100),    // megabytes
-					MaxBackups: getOrElse(logger.MaxBackups, 100), // max 100*100 MB = 10 GB
-					MaxAge:     getOrElse(logger.MaxAge, 30),      // days
+					MaxSize:    logger.MaxSize,
+					MaxBackups: logger.MaxBackups,
+					MaxAge:     logger.MaxAge,
 				}), level)
 				cores = append(cores, core)
 			case "redis":
@@ -243,13 +243,6 @@ func initLoggerCores(
 		}
 	}
 	return cores, nil
-}
-
-func getOrElse(value, orElse int) int {
-	if value != 0 {
-		return value
-	}
-	return orElse
 }
 
 // WrapExpectedError wraps an error such that LogError() will print it to the debug log.

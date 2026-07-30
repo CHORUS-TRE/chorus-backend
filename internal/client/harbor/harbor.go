@@ -147,7 +147,7 @@ func (c *harborClient) ListApps() ([]App, error) {
 
 func (c *harborClient) listRepositories() ([]harborRepository, error) {
 	var allRepos []harborRepository
-	pageSize := c.pageSize()
+	pageSize := c.cfg.PageSize
 
 	for page := 1; ; page++ {
 		url := fmt.Sprintf("%s/api/v2.0/projects/%s/repositories?page_size=%d&page=%d",
@@ -175,7 +175,7 @@ func (c *harborClient) listRepositories() ([]harborRepository, error) {
 
 func (c *harborClient) listArtifacts(repoName string) ([]harborArtifact, error) {
 	var allArtifacts []harborArtifact
-	pageSize := c.pageSize()
+	pageSize := c.cfg.PageSize
 
 	for page := 1; ; page++ {
 		url := fmt.Sprintf("%s/api/v2.0/projects/%s/repositories/%s/artifacts?page_size=%d&page=%d",
@@ -264,9 +264,3 @@ func (c *harborClient) stripProjectPrefix(name string) string {
 	return name
 }
 
-func (c *harborClient) pageSize() int {
-	if c.cfg.PageSize > 0 {
-		return c.cfg.PageSize
-	}
-	return 100
-}

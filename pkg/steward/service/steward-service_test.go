@@ -81,7 +81,7 @@ func alwaysOKUserer() *fakeUserer {
 
 // --- tests ---
 
-func TestNewStewardService_NoCredentials_Skips(t *testing.T) {
+func TestNewStewardService_NoCredentials_ReturnsError(t *testing.T) {
 	conf := stewardConf("", "")
 	tenanter := &fakeTenanter{
 		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { t.Fatal("unexpected call"); return nil, nil },
@@ -94,12 +94,12 @@ func TestNewStewardService_NoCredentials_Skips(t *testing.T) {
 	}
 
 	_, err := NewStewardService(conf, tenanter, userer)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 
-func TestNewStewardService_UsernameOnly_Skips(t *testing.T) {
+func TestNewStewardService_UsernameOnly_ReturnsError(t *testing.T) {
 	conf := stewardConf("chorus", "")
 	tenanter := &fakeTenanter{
 		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { t.Fatal("unexpected call"); return nil, nil },
@@ -112,12 +112,12 @@ func TestNewStewardService_UsernameOnly_Skips(t *testing.T) {
 	}
 
 	_, err := NewStewardService(conf, tenanter, userer)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 
-func TestNewStewardService_PasswordOnly_Skips(t *testing.T) {
+func TestNewStewardService_PasswordOnly_ReturnsError(t *testing.T) {
 	conf := stewardConf("", "password")
 	tenanter := &fakeTenanter{
 		createTenantFn:    func(_ context.Context, _ string) (*tenant_model.Tenant, error) { t.Fatal("unexpected call"); return nil, nil },
@@ -130,12 +130,12 @@ func TestNewStewardService_PasswordOnly_Skips(t *testing.T) {
 	}
 
 	_, err := NewStewardService(conf, tenanter, userer)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 
-func TestNewStewardService_TenantNameMissing_Skips(t *testing.T) {
+func TestNewStewardService_TenantNameMissing_ReturnsError(t *testing.T) {
 	conf := stewardConf("chorus", "password")
 	conf.Services.Steward.Tenant.Name = ""
 	tenanter := &fakeTenanter{
@@ -149,8 +149,8 @@ func TestNewStewardService_TenantNameMissing_Skips(t *testing.T) {
 	}
 
 	_, err := NewStewardService(conf, tenanter, userer)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error, got nil")
 	}
 }
 

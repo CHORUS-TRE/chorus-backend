@@ -296,7 +296,7 @@ func encodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, err
 	auths := make(map[string]map[string]string)
 
 	for _, entry := range entries {
-		auth := base64.StdEncoding.EncodeToString([]byte(entry.Username + ":" + entry.Password))
+		auth := base64.StdEncoding.EncodeToString([]byte(entry.Username + ":" + entry.Password.PlainText()))
 
 		auths[entry.Registry] = map[string]string{
 			"auth": auth,

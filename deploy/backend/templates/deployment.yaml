@@ -36,13 +36,12 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          # TODO: discuss how to improve the startup args
           args:
             - start
             - --config
-            - /config/config.yaml
+            - /configs/config.yaml
             {{- if not .Values.disableMountSecrets }}
-            - --config-override
+            - --config
             - /secrets/secrets.yaml
             {{- end }}
           securityContext:
@@ -69,7 +68,7 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           volumeMounts:
           - name: config
-            mountPath: /config
+            mountPath: /configs
           {{- if not .Values.disableMountSecrets }}
           - name: secrets
             mountPath: /secrets

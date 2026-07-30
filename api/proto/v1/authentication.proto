@@ -21,5 +21,4 @@ message AuthenticationMode {
     optional Internal internal = 2;
     optional OpenID openid = 3;
     string ButtonText = 4;
-    string IconURL = 5;
 }

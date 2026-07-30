@@ -24,6 +24,12 @@ func ProvideMailer() mailerService.Mailer {
 
 		cfg := ProvideConfig()
 
+		if !cfg.Services.MailerService.SMTP.Enabled {
+			logger.TechLog.Info(context.Background(), "Mailer service is disabled, using no-op mailer")
+			mailer = mailerService.NewNoOpMailer()
+			return
+		}
+
 		var rootCas *x509.CertPool
 		certificatesRepo := cfg.Services.MailerService.SMTP.CertificatesRepo
 		if certificatesRepo != "" {

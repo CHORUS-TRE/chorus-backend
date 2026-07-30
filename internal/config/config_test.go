@@ -24,7 +24,6 @@ func TestDecodeDaemon(t *testing.T) {
 	require.Equal(t, Sensitive("jwt_secret"), cfg.Daemon.JWT.Secret)
 	require.Equal(t, 10*time.Second, cfg.Daemon.JWT.ExpirationTime)
 	require.Equal(t, 10, cfg.Daemon.TOTP.NumRecoveryCodes)
-	require.Equal(t, true, cfg.Daemon.PPROFEnabled)
 	require.Equal(t, true, cfg.Daemon.ExposeErrorStackTrace)
 	require.Equal(t, "True-Client-IP", cfg.Daemon.HTTP.HeaderClientIP)
 }
@@ -33,8 +32,6 @@ func TestDecodeStorage(t *testing.T) {
 	cfg := config(t)
 
 	// Storage
-	require.Equal(t, "This is a description", cfg.Storage.Description)
-
 	s := cfg.Storage.Datastores["chorus"]
 	require.Equal(t, "postgres", s.Type)
 	require.Equal(t, "localhost", s.Host)

@@ -11,12 +11,10 @@ daemon:
     expiration_time: 10s
   totp:
     num_recovery_codes: 10
-  pprof_enabled: true
   expose_error_stack_trace: true
   salt: 1234
- 
+
 storage:
-  description: This is a description
   datastores:
     chorus:
       type: postgres
@@ -108,4 +106,4 @@ tenants:
         - 127.0.0.1/32
         - 10.1.0.0/16
 
-        
+

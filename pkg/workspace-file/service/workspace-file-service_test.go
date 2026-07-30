@@ -30,7 +30,6 @@ func createTestService() *WorkspaceFileService {
 	cfg := config.Config{}
 	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
 		testStoreName: {
-			FileStoreName:   testStoreName,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}
@@ -61,11 +60,9 @@ func createTestServiceWithTwoStores() *WorkspaceFileService {
 	cfg := config.Config{}
 	cfg.Services.WorkspaceFileService.Stores = map[string]config.WorkspaceFileStore{
 		testStoreName: {
-			FileStoreName:   testStoreName,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 		testStoreName2: {
-			FileStoreName:   testStoreName2,
 			WorkspacePrefix: testWorkspacePrefix,
 		},
 	}

@@ -50,12 +50,12 @@ func NewWorkspaceFileService(cfg config.Config, fileStores map[string]filestore.
 		if !strings.Contains(storeCfg.WorkspacePrefix, "%s") {
 			return nil, fmt.Errorf("workspace file store %q: workspace_prefix must contain %%s for workspace name substitution", storeName)
 		}
-		rawCfg, ok := cfg.Storage.FileStores[storeCfg.FileStoreName]
+		rawCfg, ok := cfg.Storage.FileStores[storeName]
 		if !ok {
-			return nil, fmt.Errorf("workspace file store %q references unknown file store %q", storeName, storeCfg.FileStoreName)
+			return nil, fmt.Errorf("workspace file store %q: no matching entry in storage.file_stores", storeName)
 		}
-		if isFileStoreEnabled(rawCfg) && fileStores[storeCfg.FileStoreName] == nil {
-			return nil, fmt.Errorf("workspace file store %q: file store %q is enabled but was not initialized", storeName, storeCfg.FileStoreName)
+		if isFileStoreEnabled(rawCfg) && fileStores[storeName] == nil {
+			return nil, fmt.Errorf("workspace file store %q: file store is enabled but was not initialized", storeName)
 		}
 		stores[storeName] = workspaceFileStore{
 			workspacePrefix: storeCfg.WorkspacePrefix,
@@ -63,7 +63,7 @@ func NewWorkspaceFileService(cfg config.Config, fileStores map[string]filestore.
 			storeType:       rawCfg.Type,
 			enabled:         isFileStoreEnabled(rawCfg),
 			order:           storeCfg.Order,
-			store:           fileStores[storeCfg.FileStoreName],
+			store:           fileStores[storeName],
 		}
 	}
 

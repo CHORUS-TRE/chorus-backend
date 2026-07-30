@@ -43,14 +43,16 @@ func NewStewardService(conf config.Config, tenanter Tenanter, userer Userer) (*S
 		userer:   userer,
 	}
 
-	if conf.Services.Steward.Tenant.Name != "" && conf.Services.Steward.User.Username != "" && conf.Services.Steward.User.Password.IsSet() {
-		tenantID, err := stewardService.InitializeDefaultTenant(context.Background())
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize default tenant: %w", err)
-		}
-		if err := stewardService.InitializeDefaultUser(context.Background(), tenantID); err != nil {
-			return nil, fmt.Errorf("failed to initialize default user: %w", err)
-		}
+	if conf.Services.Steward.Tenant.Name == "" || conf.Services.Steward.User.Username == "" || !conf.Services.Steward.User.Password.IsSet() {
+		return nil, fmt.Errorf("default tenant name, username, and password must all be set to initialize steward service")
+	}
+
+	tenantID, err := stewardService.InitializeDefaultTenant(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize default tenant: %w", err)
+	}
+	if err := stewardService.InitializeDefaultUser(context.Background(), tenantID); err != nil {
+		return nil, fmt.Errorf("failed to initialize default user: %w", err)
 	}
 
 	return stewardService, nil

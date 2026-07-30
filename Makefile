@@ -1,7 +1,6 @@
-TEST_CONFIG_FILE ?= ./../../../configs/ci_local/backend-config.yaml
-DB_HOST          ?= 127.0.0.1
-COVERAGE_DIR     ?= tests/coverage
-REPORT           ?= acceptance
+CONFIG_FILE           ?= configs/config.yaml
+COVERAGE_DIR          ?= tests/coverage
+REPORT                ?= acceptance
 
 # Optional selectors: make test-unit PKG=workspace, make test-acceptance SUITE=user
 PKG   ?=
@@ -10,7 +9,7 @@ SUITE ?=
 UNIT_TARGET       = $(if $(PKG),./pkg/$(PKG)/service,./...)
 ACCEPTANCE_TARGET = $(if $(SUITE),./tests/acceptance/$(SUITE),./tests/acceptance/...)
 
-.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean
+.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean trim-config diff-config check-config
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-26s\033[0m %s\n", $$1, $$2}'
@@ -28,7 +27,19 @@ build: ## Build the backend binary into bin/chorus
 	go build -o bin/chorus ./cmd/chorus
 
 run: ## Run the backend with the dev config
-	go run ./cmd/chorus/main.go start | go run ./cmd/logger/main.go
+	go run ./cmd/chorus/main.go start --config $(CONFIG_FILE) | go run ./cmd/logger/main.go
+
+diff-config: ## Show drift between CONFIG_FILE and the code-level defaults, from live source
+	@go run ./cmd/chorus/main.go diff-config --config $(CONFIG_FILE)
+
+check-config: ## Validate CONFIG_FILE against the validation rules, from live source
+	@go run ./cmd/chorus/main.go check-config --config $(CONFIG_FILE)
+
+trim-config: ## Remove fields from CONFIG_FILE that are redundant with the code-level defaults (backs up to $(CONFIG_FILE).bak first)
+	@cp $(CONFIG_FILE) $(CONFIG_FILE).bak
+	@go run ./cmd/chorus/main.go trim-config --config $(CONFIG_FILE) > $(CONFIG_FILE).tmp
+	@mv $(CONFIG_FILE).tmp $(CONFIG_FILE)
+	@echo "Trimmed $(CONFIG_FILE) (previous version backed up to $(CONFIG_FILE).bak)"
 
 protos: ## Regenerate protobuf / gateway / openapi code
 	./scripts/generate-protos.sh
@@ -41,11 +52,8 @@ test-integration: ## Run integration tests (embedded postgres)
 	@mkdir -p $(COVERAGE_DIR)
 	go test -count=1 --tags integration -p 1 ./... -coverprofile=$(COVERAGE_DIR)/integration.out
 
-test-acceptance: ## Run acceptance suites against a running backend (SUITE=<name> for one)
-	TEST_CONFIG_FILE="$(TEST_CONFIG_FILE)" go test -count=1 -p 1 --tags acceptance $(ACCEPTANCE_TARGET) -args --ginkgo.junit-report=junit.xml
-
-test-acceptance-coverage: ## Acceptance suites against an instrumented backend + coverage report
-	DB_HOST="$(DB_HOST)" COVERAGE_DIR="$(COVERAGE_DIR)" ./scripts/run_acceptance_coverage.sh $(SUITE)
+test-acceptance: ## Run acceptance test against a dedicated backend (SUITE=<suite> for a single suite)
+	./scripts/run_acceptance_tests.sh --coverage $(SUITE)
 
 coverage-html: ## Open an HTML coverage report (REPORT=acceptance|unit|integration|all)
 	go tool cover -html=$(COVERAGE_DIR)/$(REPORT).out

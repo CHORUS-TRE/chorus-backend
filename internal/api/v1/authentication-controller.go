@@ -54,7 +54,6 @@ func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, re
 					PublicRegistrationEnabled: mode.Internal.PublicRegistrationEnabled,
 				},
 				ButtonText: mode.ButtonText,
-				IconURL:    mode.IconURL,
 			})
 		}
 		if mode.Type == "openid" {
@@ -64,7 +63,6 @@ func (a AuthenticationController) GetAuthenticationModes(ctx context.Context, re
 					Id: mode.OpenID.ID,
 				},
 				ButtonText: mode.ButtonText,
-				IconURL:    mode.IconURL,
 			})
 		}
 	}

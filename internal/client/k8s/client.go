@@ -461,6 +461,23 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 		return
 	}
 
+	// syncImagePullSecret is a no-op when ImagePullSecrets isn't configured,
+	// so the secret named by ImagePullSecretName may not actually exist —
+	// confirm it does before referencing it, instead of submitting jobs that
+	// would only fail later, per-node, via ImagePullBackOff.
+	var imagePullSecrets []corev1.LocalObjectReference
+	if secretName := c.cfg.Clients.K8sClient.ImagePullSecretName; secretName != "" {
+		if _, err := c.GetSecret(PREPULL_NAMESPACE, secretName); err != nil {
+			logger.TechLog.Warn(context.Background(), "image pull secret not found, pre-pull jobs will run without it",
+				zap.String("secret", secretName),
+				zap.String("namespace", PREPULL_NAMESPACE),
+				zap.Error(err),
+			)
+		} else {
+			imagePullSecrets = []corev1.LocalObjectReference{{Name: secretName}}
+		}
+	}
+
 	nodeList, err := c.k8sClient.CoreV1().Nodes().List(context.Background(), v1.ListOptions{})
 	if err != nil {
 		logger.TechLog.Error(context.Background(), "failed to list nodes while pre-pulling image",
@@ -491,11 +508,7 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 								ImagePullPolicy: corev1.PullIfNotPresent,
 							},
 						},
-						ImagePullSecrets: []corev1.LocalObjectReference{
-							{
-								Name: c.cfg.Clients.K8sClient.ImagePullSecretName,
-							},
-						},
+						ImagePullSecrets: imagePullSecrets,
 					},
 				},
 			},

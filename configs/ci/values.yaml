@@ -128,162 +128,58 @@ clusterRole:
 # which is not recommended for production use cases
 disableMountSecrets: true
 config:
+  clients:
+    harbor_client:
+      enabled: false
+    k8s_client:
+      enabled: false
   daemon:
-    title: "template backend"
-    grpc:
-      max_recv_msg_size: 1073741824 # 1GB
-      max_send_msg_size: 1073741824 # 1GB
-    http:
-      host: 0.0.0.0
-      port: 5000
-      max_call_recv_msg_size: 1073741824 # 1GB
-      max_call_send_msg_size: 1073741824 # 1GB
-      headers:
-        access_control_allow_origins: []
-        access_control_allow_origin_wildcard: true
-        access_control_max_age: "600"
-        cookie_domain: ""
     jwt:
-      secret: "NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO" # set in secret
-      expiration_time: 72h
-      max_refresh_time: 4320h #180d
+      secret: NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO
     private_key: |
       -----BEGIN EC PRIVATE KEY-----
       MHcCAQEEII8kGzWHAJfOs9i/4Itm6XmR/CIb6ePuqx+2waa/U0EuoAoGCCqGSM49
       AwEHoUQDQgAEg3/teKmW70zuiWjYTOynPqPHLOM7XExQUeOD6WSGdlJph3jZzuXh
       f3hlc8rjTTQFa/xIsE+FYdpzVv5TB5qJVw==
       -----END EC PRIVATE KEY-----
-    salt: "SNN6lK7wfEHVvN7mAaTI4nH375yQZzV8"
+    salt: SNN6lK7wfEHVvN7mAaTI4nH375yQZzV8
     metrics:
       enabled: false
-      authentication:
-        enabled: true
-        username: prometheus
-        password: "" # set in secret
-
+  services:
+    authentication_service:
+      enabled: true
+      modes:
+        internal:
+          public_registration_enabled: false
+        keycloak:
+          enabled: false
+    audit_service:
+      enabled: false
+    workbench_service:
+      backend_in_k8s: true
+    approval_request_service:
+      staging_file_store_name: disk
+    steward:
+      user:
+        password: password
   # TODO: refactor storage with the postgresql chart values below
   #       to avoid duplication
   storage:
     datastores:
+      audit:
+        # the audit service is disabled
+        # but we still need to provide a dummy password
+        password: password
       chorus:
-        type: postgres
-        migration_table_name: tt_migrations
         host: "" # set dynamically in argo-workflows
-        port: 5432
-        username: backend
-        password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"  # set in secret
-        database: backend
-        max_connections: 10
-        max_lifetime: 10s
-        debug_mode: true
-        ssl:
-          enabled: false
-          certificate_file: ""
-          key_file: ""
+        password: password
     file_stores:
       archive:
-        type: minio
         minio_config:
           enabled: false
-          endpoint: ""
-          access_key_id: ""
-          secret_access_key: "" # set in secret
-          bucket_name: ""
-          use_ssl: false
       disk:
-        type: disk
         disk_config:
-          enabled: true
           base_path: /var/lib/chorus/disk/.diskfilestore
-
-  services:
-    index_service:
-      key: value
-    authentication_service:
-      enabled: true
-      dev_auth_enabled: true
-      modes:
-        internal:
-          type: internal
-          enabled: true
-          public_registration_enabled: false
-          button_text: "Login via local DB"
-          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
-          order: 1
-        keycloak:
-          type: openid
-          enabled: false
-          main_source: false
-          button_text: "Login with Keycloak"
-          icon_url: "data:image/svg+xml;base64,CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1hcnJvdy1yaWdodCBtci0yIGgtNCB3LTQiPjxwYXRoIGQ9Ik01IDEyaDE0Ij48L3BhdGg+PHBhdGggZD0ibTEyIDUgNyA3LTcgNyI+PC9wYXRoPjwvc3ZnPgo="
-          order: 2
-          openid:
-            id: keycloak
-            chorus_backend_host: ""
-            enable_frontend_redirect: true
-            chorus_frontend_redirect_url: ""
-            authorize_url: ""
-            token_url: ""
-            user_info_url: ""
-            logout_url: ""
-            user_name_claim: "preferred_username"
-            client_id: chorus
-            client_secret: ""  # set in secret
-            scopes:
-              - openid
-              - profile
-              - email
-              - roles
-        keycloakdev: {}
-    steward:
-      tenant:
-        name: "default"
-      user:
-        username: chorus
-        password: "" # set in secret
-    mailer_service:
-      smtp:
-        user: smtpUser
-        password: ""  # set in secret
-        host: smtp-relay.sendinblue.com
-        port: 587
-        authentication: "none"
-    workbench_service:
-      stream_proxy_enabled: true
-      backend_in_k8s: true
-      proxy_hit_save_batch_interval: 30s
-      workbench_idle_timeout: 504h #21d
-    workspace_service:
-      enable_kill_fixed_timeout: false
-      kill_fixed_timeout: 1h
-    # workspace_file_service:
-    #   stores:
-    #     archive:
-    #       client_type: minio
-    #       client_name: s3
-    #       store_prefix: /workspace-archive
-    #       workspace_prefix: "workspaces/%s/data" # %s will be replaced by the namespace name (workspace+id)
-    approval_request_service:
-      staging_file_store_name: disk
-
-  clients:
-    docker_client:
-      enabled: false
-    k8s_client:
-      enabled: false
-      sa_secret_path: ""
-      api_server: ""
-      add_user_details: false
-
-  log:
-    loggers:
-      stdout_technical:
-        level: debug
-      stdout_security:
-        level: debug
-      stdout_business:
-        level: debug
-
 
 postgresql:
   enabled: true
@@ -297,14 +193,14 @@ postgresql:
       defaultStorageClass: "ceph-corbo-rbd-hdd"
       postgresql:
         auth:
-          postgresPassword: "FQAVJwPBCAbDRSkEXuIHAUSWjPViKyfF"
-          username: backend
-          password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"
-          database: backend
+          postgresPassword: password
+          username: admin
+          password: password
+          database: chorus
           existingSecret: ""
           secretKeys:
-            adminPasswordKey: "postgres-password"
-            userPasswordKey: "password"
+            adminPasswordKey: postgres-password
+            userPasswordKey: password
             replicationPasswordKey: ""
         service:
           port: 5432
