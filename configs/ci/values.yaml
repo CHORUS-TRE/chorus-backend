@@ -170,7 +170,7 @@ config:
         password: password
       chorus:
         host: "" # set dynamically in argo-workflows
-        password: TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj
+        password: password
     file_stores:
       archive:
         minio_config:
@@ -191,14 +191,14 @@ postgresql:
       defaultStorageClass: "ceph-corbo-rbd-hdd"
       postgresql:
         auth:
-          postgresPassword: "FQAVJwPBCAbDRSkEXuIHAUSWjPViKyfF"
-          username: backend
-          password: "TMbuiWnBZxHx44MRHIgOJCiXbMdG1Bvj"
-          database: backend
+          postgresPassword: password
+          username: admin
+          password: password
+          database: chorus
           existingSecret: ""
           secretKeys:
-            adminPasswordKey: "postgres-password"
-            userPasswordKey: "password"
+            adminPasswordKey: postgres-password
+            userPasswordKey: password
             replicationPasswordKey: ""
         service:
           port: 5432
