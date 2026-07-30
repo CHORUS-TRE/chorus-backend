@@ -169,6 +169,8 @@ config:
   storage:
     datastores:
       audit:
+        # the audit service is disabled
+        # but we still need to provide a dummy password
         password: password
       chorus:
         host: "" # set dynamically in argo-workflows
