@@ -155,6 +155,8 @@ config:
           public_registration_enabled: false
         keycloak:
           enabled: false
+    audit_service:
+      enabled: false
     workbench_service:
       backend_in_k8s: true
     approval_request_service:
