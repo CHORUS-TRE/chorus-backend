@@ -17,26 +17,27 @@ import (
 func expandUserPermissions(
 	roles map[model.RoleName]*model.RoleDefinition,
 	permissions map[model.PermissionName]model.PermissionDefinition,
-	user []model.Role,
+	userRoles []model.Role,
 ) ([]model.Permission, error) {
 	expanded := make([]model.Permission, 0)
-	for _, role := range user {
-		definition, ok := roles[role.Name]
+
+	for _, role := range userRoles {
+		roleDefinition, ok := roles[role.Name]
 		if !ok {
 			return nil, fmt.Errorf("role %q not found in schema", role.Name)
 		}
-		for _, permissionName := range definition.Permissions {
-			permissionDefinition := permissions[permissionName]
-			permission := model.Permission{
-				Name:    permissionName,
-				Context: make(model.Context, len(permissionDefinition.RequiredContextDimensions)),
-			}
-			for _, dimension := range permissionDefinition.RequiredContextDimensions {
-				if actualValue, ok := role.Context[dimension]; ok {
-					permission.Context[dimension] = actualValue
+
+		for _, permissionName := range roleDefinition.Permissions {
+			required := permissions[permissionName].RequiredContextDimensions
+			context := make(model.Context, len(required))
+			for _, dimension := range required {
+				if value, ok := role.Context[dimension]; ok {
+					context[dimension] = value
 				}
 			}
-			expanded = append(expanded, permission)
+			if len(context) == len(required) {
+				expanded = append(expanded, model.Permission{Name: permissionName, Context: context})
+			}
 		}
 	}
 	return expanded, nil

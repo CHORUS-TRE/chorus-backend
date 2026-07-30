@@ -175,17 +175,6 @@ func (p Permission) String() string {
 	return fmt.Sprintf("%s@%s", p.Name, p.Context.String())
 }
 
-func (p Permission) Copy() Permission {
-	newContext := make(Context, len(p.Context))
-	for k, v := range p.Context {
-		newContext[k] = v
-	}
-	return Permission{
-		Name:    p.Name,
-		Context: newContext,
-	}
-}
-
 // UniquePermissionNames returns a sorted, deduplicated list of permission names from a slice of permissions.
 func UniquePermissionNames(permissions []Permission) []string {
 	seen := make(map[string]struct{}, len(permissions))

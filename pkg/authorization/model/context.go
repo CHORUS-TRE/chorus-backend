@@ -1,13 +1,10 @@
 package model
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 	"sort"
 	"strings"
-
-	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 )
 
 const Wildcard = "*"
@@ -58,22 +55,6 @@ func WithUser(user any) NewContextOption {
 	return func(c *Context) {
 		(*c)[ContextUser] = fmt.Sprintf("%v", user)
 	}
-}
-
-func WithUserFromCtx(ctx context.Context) NewContextOption {
-	uID := ""
-	f := func(c *Context) {
-		(*c)[ContextUser] = uID
-	}
-
-	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
-	if !ok {
-		return f
-	}
-
-	uID = fmt.Sprintf("%v", claims.ID)
-
-	return f
 }
 
 type ContextDimension string

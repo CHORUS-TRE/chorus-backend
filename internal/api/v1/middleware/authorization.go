@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
@@ -161,7 +162,7 @@ func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.J
 		zap.Uint64("tenant_id", claims.TenantID),
 		zap.String("required_permission", string(p.Name)),
 		zap.Strings("user_permissions", authorization.UniquePermissionNames(permissions)),
-		zap.Strings("user_roles", authorization.UniqueRoleNames(claims.Roles)))
+		zap.Strings("user_roles", uniqueRoleNames(claims.Roles)))
 	return chorus_errors.ErrPermissionDenied.WithMessage(fmt.Sprintf("required permission: %v", p))
 }
 
@@ -175,4 +176,30 @@ func claimRolesToAuthRoles(claims *jwt_model.JWTClaims) ([]authorization.Role, e
 		roles = append(roles, role)
 	}
 	return roles, nil
+}
+
+// withUserFromCtx binds the user context dimension to the caller's own id,
+// taken from the JWT claims. Kept here (not in the authorization model) so the
+// model stays free of any JWT dependency.
+func withUserFromCtx(ctx context.Context) authorization.NewContextOption {
+	userID := ""
+	if claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); ok {
+		userID = fmt.Sprintf("%v", claims.ID)
+	}
+	return authorization.WithUser(userID)
+}
+
+// uniqueRoleNames returns a sorted, deduplicated list of role names from the
+// caller's JWT roles.
+func uniqueRoleNames(roles []jwt_model.Role) []string {
+	seen := make(map[string]struct{}, len(roles))
+	for _, r := range roles {
+		seen[r.Name] = struct{}{}
+	}
+	names := make([]string, 0, len(seen))
+	for name := range seen {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names
 }

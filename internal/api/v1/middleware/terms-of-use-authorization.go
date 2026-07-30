@@ -78,14 +78,14 @@ func (c termsOfUseControllerAuthorization) ListTermsOfUseAcceptances(ctx context
 }
 
 func (c termsOfUseControllerAuthorization) GetMyTermsOfUseStatus(ctx context.Context, req *chorus.GetMyTermsOfUseStatusRequest) (*chorus.GetMyTermsOfUseStatusReply, error) {
-	if err := c.IsAuthorized(ctx, authorization.PermissionGetMyTermsOfUseStatus, authorization.WithUserFromCtx(ctx)); err != nil {
+	if err := c.IsAuthorized(ctx, authorization.PermissionGetMyTermsOfUseStatus, withUserFromCtx(ctx)); err != nil {
 		return nil, err
 	}
 	return c.next.GetMyTermsOfUseStatus(ctx, req)
 }
 
 func (c termsOfUseControllerAuthorization) AcceptTermsOfUse(ctx context.Context, req *chorus.AcceptTermsOfUseRequest) (*chorus.AcceptTermsOfUseReply, error) {
-	if err := c.IsAuthorized(ctx, authorization.PermissionAcceptTermsOfUse, authorization.WithUserFromCtx(ctx)); err != nil {
+	if err := c.IsAuthorized(ctx, authorization.PermissionAcceptTermsOfUse, withUserFromCtx(ctx)); err != nil {
 		return nil, err
 	}
 	return c.next.AcceptTermsOfUse(ctx, req)

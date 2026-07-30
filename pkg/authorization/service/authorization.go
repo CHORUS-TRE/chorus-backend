@@ -8,14 +8,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 )
 
-// Store persists role definitions and answers user-permission lookups.
-// It is the only direct collaborator of the authorization service.
-type Store interface {
-	SyncSystemRoles(ctx context.Context, roles []*model.RoleDefinition) error
-	ListRoles(ctx context.Context) ([]*model.RoleDefinition, error)
-	CreateDynamicRole(ctx context.Context, role *model.RoleDefinition) error
-	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter, rolesGranting []model.RoleName) ([]uint64, error)
-}
+var _ Authorizer = (*authorizationService)(nil)
 
 type Authorizer interface {
 	GetAuthorizationSchema() *model.AuthorizationSchema
@@ -30,6 +23,21 @@ type Authorizer interface {
 	IsRoleInScope(roleName model.RoleName, scopes ...model.RoleScope) bool
 	CanAssignRole(user []model.Role, roleName model.RoleName, assignmentContext model.Context) (bool, error)
 	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter) ([]uint64, error)
+}
+
+// AuthorizationStore persists role definitions and answers user-permission lookups.
+// It is the only direct collaborator of the authorization service.
+type AuthorizationStore interface {
+	SyncSystemRoles(ctx context.Context, roles []*model.RoleDefinition) error
+	ListRoles(ctx context.Context) ([]*model.RoleDefinition, error)
+	CreateDynamicRole(ctx context.Context, role *model.RoleDefinition) error
+	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter model.FindUsersWithPermissionFilter, rolesGranting []model.RoleName) ([]uint64, error)
+}
+
+type authorizationService struct {
+	schema *model.AuthorizationSchema
+	store  AuthorizationStore
+	authStructures
 }
 
 // authStructures is the schema in lookup form, rebuilt on every schema
@@ -74,18 +82,10 @@ func extractAuthorizationStructures(schema *model.AuthorizationSchema) (authStru
 	}, nil
 }
 
-type authorizationService struct {
-	schema *model.AuthorizationSchema
-	store  Store
-	authStructures
-}
-
-var _ Authorizer = (*authorizationService)(nil)
-
 // NewAuthorizationService syncs the code-defined system roles to the store,
 // reloads the full role set from the store, and builds the in-memory schema.
 // The store is the single source of truth for roles after construction.
-func NewAuthorizationService(ctx context.Context, cfg config.Config, store Store) (Authorizer, error) {
+func NewAuthorizationService(ctx context.Context, cfg config.Config, store AuthorizationStore) (Authorizer, error) {
 	codeSchema := model.GetDefaultSchema()
 
 	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
