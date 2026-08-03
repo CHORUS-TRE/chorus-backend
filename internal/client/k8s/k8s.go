@@ -2,13 +2,11 @@ package k8s
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	jsonpatch "github.com/evanphx/json-patch"
 	"go.uber.org/zap"
@@ -18,10 +16,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/discovery"
-)
-
-const (
-	DEFAULT_POLL_INTERVAL = 500 * time.Millisecond
 )
 
 func (c *client) syncWorkbench(tenantID uint64, workbench K8sWorkbench, namespace string) error {
@@ -35,13 +29,6 @@ func (c *client) syncWorkbench(tenantID uint64, workbench K8sWorkbench, namespac
 	err := c.syncNamespace(tenantID, namespace)
 	if err != nil {
 		return fmt.Errorf("error syncing namespace: %w", err)
-	}
-
-	err = c.syncImagePullSecret(namespace)
-	if err != nil {
-		// TODO fix
-		// return fmt.Errorf("error syncing image pull secret: %w", err)
-		logger.TechLog.Error(context.Background(), "error syncing image pull secret: %w", zap.Error(err))
 	}
 
 	return c.syncResource(workbench, kind, name, namespace, "spec")
@@ -214,7 +201,7 @@ func (c *client) deleteNamespace(namespace string) error {
 		logger.TechLog.Info(context.Background(), "Waiting for namespace to be deleted",
 			zap.String("namespace", namespace),
 		)
-		time.Sleep(DEFAULT_POLL_INTERVAL)
+		time.Sleep(c.cfg.Clients.K8sClient.PollInterval)
 	}
 }
 
@@ -259,60 +246,8 @@ func (c *client) deleteResource(namespace, kind, name string) error {
 		logger.TechLog.Info(context.Background(), "Waiting for resource to be deleted",
 			zap.String("namespace", namespace), zap.String("kind", kind), zap.String("name", name),
 		)
-		time.Sleep(DEFAULT_POLL_INTERVAL)
+		time.Sleep(c.cfg.Clients.K8sClient.PollInterval)
 	}
-}
-
-func (c *client) syncImagePullSecret(namespace string) error {
-	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) == 0 {
-		return nil
-	}
-
-	secretName := c.cfg.Clients.K8sClient.ImagePullSecretName
-
-	dockerConfig, err := encodeRegistriesToDockerJSON(c.cfg.Clients.K8sClient.ImagePullSecrets)
-	if err != nil {
-		return fmt.Errorf("unable to encode registries: %w", err)
-	}
-
-	dockerConfigBase64 := base64.StdEncoding.EncodeToString([]byte(dockerConfig))
-
-	spec := map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "Secret",
-		"metadata": map[string]interface{}{
-			"name": secretName,
-		},
-		"type": "kubernetes.io/dockerconfigjson",
-		"data": map[string]interface{}{
-			".dockerconfigjson": dockerConfigBase64,
-		},
-	}
-
-	return c.syncResource(spec, "Secret", secretName, namespace, "data")
-}
-
-func encodeRegistriesToDockerJSON(entries []config.ImagePullSecret) (string, error) {
-	auths := make(map[string]map[string]string)
-
-	for _, entry := range entries {
-		auth := base64.StdEncoding.EncodeToString([]byte(entry.Username + ":" + entry.Password.PlainText()))
-
-		auths[entry.Registry] = map[string]string{
-			"auth": auth,
-		}
-	}
-
-	result := map[string]map[string]map[string]string{
-		"auths": auths,
-	}
-
-	jsonData, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		return "", err
-	}
-
-	return string(jsonData), nil
 }
 
 func (c *client) interfaceToMapInterface(i interface{}) (map[string]interface{}, error) {

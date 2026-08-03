@@ -53,7 +53,7 @@ func (c *client) workbenchToK8sWorkbench(workbench Workbench) (K8sWorkbench, err
 	}
 
 	// Add optional fields from config
-	if len(c.cfg.Clients.K8sClient.ImagePullSecrets) != 0 {
+	if c.cfg.Clients.K8sClient.ImagePullSecretName != "" {
 		k8sWorkbench.Spec.ImagePullSecrets = []string{c.cfg.Clients.K8sClient.ImagePullSecretName}
 	}
 

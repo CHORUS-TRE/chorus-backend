@@ -1,6 +1,8 @@
 package docker
 
 import (
+	"net/url"
+
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
 
@@ -16,16 +18,16 @@ type DockerClientConfig struct {
 
 func getDockerClientConfig(cfg config.Config) (DockerClientConfig, error) {
 	registries := make(map[string]DockerRegistryConfig)
-	imagePullSecrets := cfg.Clients.K8sClient.ImagePullSecrets // Get the registries from k8sClient ImagePullSecrets
 
-	for _, secret := range imagePullSecrets {
-		registryCfg := DockerRegistryConfig{
-			Registry: secret.Registry,
-			Username: secret.Username,
-			Password: secret.Password.PlainText(),
+	harborCfg := cfg.Clients.HarborClient
+	if harborCfg.Enabled {
+		if u, err := url.Parse(harborCfg.URL); err == nil && u.Host != "" {
+			registries[u.Host] = DockerRegistryConfig{
+				Registry: u.Host,
+				Username: harborCfg.Username,
+				Password: harborCfg.Password.PlainText(),
+			}
 		}
-
-		registries[secret.Registry] = registryCfg
 	}
 
 	return DockerClientConfig{

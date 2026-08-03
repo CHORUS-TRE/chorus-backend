@@ -130,8 +130,7 @@ type (
 		Token                    Sensitive `yaml:"token"`          // or a service account token
 		CA                       string    `yaml:"ca"`             // and service account ca
 
-		ImagePullSecrets    []ImagePullSecret `yaml:"image_pull_secrets"`
-		ImagePullSecretName string            `yaml:"image_pull_secret_name" validate:"required_if=Enabled true"`
+		ImagePullSecretName string `yaml:"image_pull_secret_name" validate:"required_if=Enabled true"`
 
 		ServerVersion        string `yaml:"server_version" validate:"required_if=Enabled true"`
 		InitContainerVersion string `yaml:"init_container_version" validate:"required_if=Enabled true"`
@@ -141,8 +140,13 @@ type (
 
 		IsWatcher bool `yaml:"is_watcher"` // if true, the client will watch for changes in the cluster
 
+		PollInterval time.Duration `yaml:"poll_interval" validate:"required_if=Enabled true"` // how often to poll while waiting for a namespace/resource deletion to complete
+
 		DefaultRegistry   string `yaml:"default_registry" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"`
 		DefaultRepository string `yaml:"default_repository" validate:"required_if=Enabled true"`
+
+		PrepullNamespace     string `yaml:"prepull_namespace" validate:"required_if=Enabled true"` // namespace the backend itself runs in, where pre-pull Jobs are created
+		PrepullJobTTLSeconds int    `yaml:"prepull_job_ttl_seconds" validate:"required_if=Enabled true"`
 	}
 
 	DockerClient struct {
@@ -158,12 +162,6 @@ type (
 		LabelPrefixes      []string  `yaml:"label_prefixes"`
 		PageSize           int       `yaml:"page_size" validate:"required_if=Enabled true"`
 		MaxParallelFetches uint64    `yaml:"max_parallel_fetches" validate:"required_if=Enabled true"`
-	}
-
-	ImagePullSecret struct {
-		Registry string    `yaml:"registry"`
-		Username string    `yaml:"username"`
-		Password Sensitive `yaml:"password"`
 	}
 
 	Tenant struct {
