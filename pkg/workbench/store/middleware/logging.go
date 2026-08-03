@@ -209,6 +209,26 @@ func (c workbenchStorageLogging) UpdateWorkbench(ctx context.Context, tenantID u
 	return updatedWorkbench, nil
 }
 
+func (c workbenchStorageLogging) UpdateWorkbenchStatus(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
+	c.logger.Debug(ctx, "request started")
+	now := time.Now()
+
+	updatedWorkbench, err := c.next.UpdateWorkbenchStatus(ctx, tenantID, workbench)
+	if err != nil {
+		c.logger.Error(ctx, "request completed",
+			logger.WithWorkbenchIDField(workbench.ID),
+			zap.Error(err),
+			zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+		)
+		return nil, err
+	}
+	c.logger.Debug(ctx, "request completed",
+		logger.WithWorkbenchIDField(updatedWorkbench.ID),
+		zap.Float64(logger.LoggerKeyElapsedMs, float64(time.Since(now).Nanoseconds())/1000000.0),
+	)
+	return updatedWorkbench, nil
+}
+
 func (c workbenchStorageLogging) CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error) {
 	c.logger.Debug(ctx, "request started")
 
