@@ -6,14 +6,16 @@ import "fmt"
 // the role0/role1 declarations in roles.go.
 var roleDefinitions []*RoleDefinition
 
-func registerRole(name RoleName, description string, scope RoleScope, required map[ContextDimension]ContextQuantifier, permissions []PermissionName) {
-	roleDefinitions = append(roleDefinitions, &RoleDefinition{
+func registerRole(name RoleName, description string, scope RoleScope, required map[ContextDimension]ContextQuantifier, permissions []PermissionName) *RoleDefinition {
+	def := &RoleDefinition{
 		Name:                      name,
 		Description:               description,
 		Scope:                     scope,
 		RequiredContextDimensions: required,
 		Permissions:               append([]PermissionName(nil), permissions...),
-	})
+	}
+	roleDefinitions = append(roleDefinitions, def)
+	return def
 }
 
 // RoleDefinitions returns every declared role definition.
@@ -38,14 +40,14 @@ func RoleDefinitionsMap() map[RoleName]*RoleDefinition {
 // A role factory bakes in wildcard dimensions and exposes a typed .For for the
 // exact-bound value. Declare with role0/role1 (roles.go).
 
-// roleFactory0 is the factory for a role that binds no exact context value. It
+// roleFactoryNoContext is the factory for a role that binds no exact context value. It
 // may still bake in wildcard dimensions (granted for any value).
-type roleFactory0 struct {
-	Name      RoleName
+type roleFactoryNoContext struct {
+	*RoleDefinition
 	wildcards []ContextDimension
 }
 
-func (r roleFactory0) For() Role {
+func (r roleFactoryNoContext) For() Role {
 	ctx := make(Context, len(r.wildcards))
 	for _, dim := range r.wildcards {
 		ctx[dim] = Wildcard
@@ -53,13 +55,13 @@ func (r roleFactory0) For() Role {
 	return Role{Name: r.Name, Context: ctx}
 }
 
-// roleFactory1 is the factory for a role that binds one exact context value.
-type roleFactory1[A contextID] struct {
-	Name      RoleName
+// roleFactoryOneContext is the factory for a role that binds one exact context value.
+type roleFactoryOneContext[A contextID] struct {
+	*RoleDefinition
 	wildcards []ContextDimension
 }
 
-func (r roleFactory1[A]) For(a A) Role {
+func (r roleFactoryOneContext[A]) For(a A) Role {
 	ctx := make(Context, len(r.wildcards)+1)
 	for _, dim := range r.wildcards {
 		ctx[dim] = Wildcard
@@ -82,15 +84,13 @@ func requiredContext(exact, wildcards []ContextDimension) map[ContextDimension]C
 	return required
 }
 
-func role0(name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactory0 {
-	registerRole(name, description, scope, requiredContext(nil, wildcards), permissions)
-	return roleFactory0{Name: name, wildcards: wildcards}
+func roleWithNoContext(name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryNoContext {
+	return roleFactoryNoContext{registerRole(name, description, scope, requiredContext(nil, wildcards), permissions), wildcards}
 }
 
-func role1[A contextID](name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactory1[A] {
+func roleWithOneContext[A contextID](name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryOneContext[A] {
 	var a A
-	registerRole(name, description, scope, requiredContext([]ContextDimension{a.dimension()}, wildcards), permissions)
-	return roleFactory1[A]{Name: name, wildcards: wildcards}
+	return roleFactoryOneContext[A]{registerRole(name, description, scope, requiredContext([]ContextDimension{a.dimension()}, wildcards), permissions), wildcards}
 }
 
 // -------------------------------------------------------------------
@@ -315,123 +315,123 @@ var (
 // One factory per role — name, description, scope, granted permissions, and the
 // context binding: exact via the id type parameter, wildcard via trailing args.
 var (
-	Public = role0(
+	Public = roleWithNoContext(
 		RolePublic,
 		"Public users can authenticate and read public platform settings",
 		RoleScopePlatform,
 		publicPermissions,
 	)
-	Authenticated = role1[UserID](
+	Authenticated = roleWithOneContext[UserID](
 		RoleAuthenticated,
 		"Authenticated users can manage their own session, profile, notifications, and base resources",
 		RoleScopePlatform,
 		authenticatedPermissions,
 	)
-	WorkspaceGuest = role1[WorkspaceID](
+	WorkspaceGuest = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceGuest,
 		"Workspace guests can view workspace metadata and create requests",
 		RoleScopeWorkspace,
 		workspaceGuestPermissions,
 	)
-	WorkspaceMember = role1[WorkspaceID](
+	WorkspaceMember = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceMember,
 		"Workspace members can create workbenches and list workspace files",
 		RoleScopeWorkspace,
 		workspaceMemberPermissions,
 	)
-	WorkspaceMaintainer = role1[WorkspaceID](
+	WorkspaceMaintainer = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceMaintainer,
 		"Workspace maintainers can update workspace metadata and manage workspace files",
 		RoleScopeWorkspace,
 		workspaceMaintainerPermissions,
 	)
-	WorkspaceDataManager = role1[WorkspaceID](
+	WorkspaceDataManager = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceDataManager,
 		"Workspace data managers can manage workspace files and data-manager assignments",
 		RoleScopeWorkspace,
 		workspaceDataManagerPermissions,
 	)
-	WorkspaceAdmin = role1[WorkspaceID](
+	WorkspaceAdmin = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceAdmin,
 		"Workspace admins can administer workspace users, requests, workbenches, files, and services",
 		RoleScopeWorkspace,
 		workspaceAdminPermissions,
 	)
-	WorkbenchViewer = role1[WorkbenchID](
+	WorkbenchViewer = roleWithOneContext[WorkbenchID](
 		RoleWorkbenchViewer,
 		"Workbench viewers can view and stream workbenches",
 		RoleScopeWorkbench,
 		workbenchViewerPermissions,
 	)
-	WorkbenchMember = role1[WorkbenchID](
+	WorkbenchMember = roleWithOneContext[WorkbenchID](
 		RoleWorkbenchMember,
 		"Workbench members can update workbenches and manage app instances",
 		RoleScopeWorkbench,
 		workbenchMemberPermissions,
 	)
-	WorkbenchAdmin = role1[WorkbenchID](
+	WorkbenchAdmin = roleWithOneContext[WorkbenchID](
 		RoleWorkbenchAdmin,
 		"Workbench admins can administer workbenches and their users",
 		RoleScopeWorkbench,
 		workbenchAdminPermissions,
 	)
-	Healthchecker = role0(
+	Healthchecker = roleWithNoContext(
 		RoleHealthchecker,
 		"Healthcheckers can read healthcheck status",
 		RoleScopePlatform,
 		healthcheckerPermissions,
 		ContextUser,
 	)
-	PlatformSettingsManager = role0(
+	PlatformSettingsManager = roleWithNoContext(
 		RolePlatformSettingsManager,
 		"Platform settings managers can manage platform settings",
 		RoleScopePlatform,
 		platformSettingsManagerPermissions,
 		ContextUser,
 	)
-	PlatformUserManager = role0(
+	PlatformUserManager = roleWithNoContext(
 		RolePlatformUserManager,
 		"Platform user managers can administer platform users and their roles",
 		RoleScopePlatform,
 		platformUserManagerPermissions,
 		ContextUser,
 	)
-	PlatformOrganizationManager = role0(
+	PlatformOrganizationManager = roleWithNoContext(
 		RolePlatformOrganizationManager,
 		"Platform organization managers can manage organizations",
 		RoleScopePlatform,
 		platformOrganizationManagerPermissions,
 		ContextUser,
 	)
-	PlatformAuditor = role0(
+	PlatformAuditor = roleWithNoContext(
 		RolePlatformAuditor,
 		"Platform auditors can audit the platform",
 		RoleScopePlatform,
 		platformAuditorPermissions,
 		ContextUser,
 	)
-	PlatformWorkspaceManager = role0(
+	PlatformWorkspaceManager = roleWithNoContext(
 		RolePlatformWorkspaceManager,
 		"Platform workspace managers can create, update, and delete any workspace",
 		RoleScopePlatform,
 		platformWorkspaceManagerPermissions,
 		ContextWorkspace,
 	)
-	AppStoreAdmin = role0(
+	AppStoreAdmin = roleWithNoContext(
 		RoleAppStoreAdmin,
 		"App store admins can administer apps",
 		RoleScopePlatform,
 		appStoreAdminPermissions,
 		ContextUser,
 	)
-	PlatformDataManager = role0(
+	PlatformDataManager = roleWithNoContext(
 		RolePlatformDataManager,
 		"Data managers can manage workspace data across workspaces",
 		RoleScopePlatform,
 		dataManagerPermissions,
 		ContextWorkspace,
 	)
-	SuperAdmin = role0(
+	SuperAdmin = roleWithNoContext(
 		RoleSuperAdmin,
 		"Super admins can perform all platform, workspace, and workbench actions",
 		RoleScopeSystem,
