@@ -352,8 +352,11 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.k8s_client.add_user_details", false)
 	v.SetDefault("clients.k8s_client.insecure_tls", false)
 	v.SetDefault("clients.k8s_client.is_watcher", true)
+	v.SetDefault("clients.k8s_client.poll_interval", 500*time.Millisecond)
 	v.SetDefault("clients.k8s_client.default_registry", "")
 	v.SetDefault("clients.k8s_client.default_repository", "apps")
+	v.SetDefault("clients.k8s_client.prepull_namespace", "backend")
+	v.SetDefault("clients.k8s_client.prepull_job_ttl_seconds", 60)
 	// Default to the conventional kubeconfig path,
 	// leave unset if file does not exist
 	if home, err := os.UserHomeDir(); err == nil {

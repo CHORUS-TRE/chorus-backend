@@ -30,11 +30,6 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-const (
-	PREPULL_NAMESPACE       = "backend"
-	PREPULL_JOB_TTL_SECONDS = 60
-)
-
 var _ = K8sClienter(&client{})
 
 type K8sClienter interface {
@@ -452,25 +447,17 @@ func (c *client) GetSecret(namespace, name string) (map[string][]byte, error) {
 }
 
 func (c *client) PrePullImageOnAllNodes(image string) {
-	err := c.syncImagePullSecret(PREPULL_NAMESPACE)
-	if err != nil {
-		logger.TechLog.Error(context.Background(), "failed to sync image pull secret",
-			zap.String("image", image),
-			zap.Error(err),
-		)
-		return
-	}
+	namespace := c.cfg.Clients.K8sClient.PrepullNamespace
 
-	// syncImagePullSecret is a no-op when ImagePullSecrets isn't configured,
-	// so the secret named by ImagePullSecretName may not actually exist —
-	// confirm it does before referencing it, instead of submitting jobs that
-	// would only fail later, per-node, via ImagePullBackOff.
+	// The backend doesn't create this secret itself - confirm it exists before
+	// referencing it, instead of submitting jobs that would only fail later,
+	// per-node, via ImagePullBackOff.
 	var imagePullSecrets []corev1.LocalObjectReference
 	if secretName := c.cfg.Clients.K8sClient.ImagePullSecretName; secretName != "" {
-		if _, err := c.GetSecret(PREPULL_NAMESPACE, secretName); err != nil {
+		if _, err := c.GetSecret(namespace, secretName); err != nil {
 			logger.TechLog.Warn(context.Background(), "image pull secret not found, pre-pull jobs will run without it",
 				zap.String("secret", secretName),
-				zap.String("namespace", PREPULL_NAMESPACE),
+				zap.String("namespace", namespace),
 				zap.Error(err),
 			)
 		} else {
@@ -492,10 +479,10 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 		job := &batchv1.Job{
 			ObjectMeta: v1.ObjectMeta{
 				GenerateName: "prepull-",
-				Namespace:    PREPULL_NAMESPACE,
+				Namespace:    namespace,
 			},
 			Spec: batchv1.JobSpec{
-				TTLSecondsAfterFinished: ptr.To(int32(PREPULL_JOB_TTL_SECONDS)),
+				TTLSecondsAfterFinished: ptr.To(int32(c.cfg.Clients.K8sClient.PrepullJobTTLSeconds)),
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						NodeName:      node.Name,
@@ -516,7 +503,7 @@ func (c *client) PrePullImageOnAllNodes(image string) {
 			Status:   batchv1.JobStatus{},
 		}
 
-		_, err := c.k8sClient.BatchV1().Jobs(PREPULL_NAMESPACE).Create(context.Background(), job, v1.CreateOptions{})
+		_, err := c.k8sClient.BatchV1().Jobs(namespace).Create(context.Background(), job, v1.CreateOptions{})
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "failed to create job for pre-pulling image",
 				zap.String("image", image),
