@@ -5,6 +5,12 @@ image:
 service:
   port: 5000
 
+serviceMonitor:
+  enabled: true
+  basicAuth:
+    enabled: true
+    secretName: "chorus-int-backend-metrics"
+
 # Disable mounting of secrets volume and config override
 # all password will need to be set via the config below
 # which is not recommended for production use cases
