@@ -26,17 +26,12 @@ type (
 		} `yaml:"grpc"`
 
 		HTTP struct {
-			Host           string `yaml:"host" validate:"required"`
-			Port           string `yaml:"port" validate:"required"`
-			HeaderClientIP string `yaml:"header_client_ip"`
-			Headers        struct {
-				AccessControlAllowOrigins        []string `yaml:"access_control_allow_origins"`
-				AccessControlAllowOriginWildcard bool     `yaml:"access_control_allow_origin_wildcard"`
-				AccessControlMaxAge              string   `yaml:"access_control_max_age" validate:"required"`
-				CookieDomain                     string   `yaml:"cookie_domain" validate:"required"`
-			} `yaml:"headers"`
-			MaxCallRecvMsgSize int `yaml:"max_call_recv_msg_size" validate:"required"`
-			MaxCallSendMsgSize int `yaml:"max_call_send_msg_size" validate:"required"`
+			Host               string      `yaml:"host" validate:"required"`
+			Port               string      `yaml:"port" validate:"required"`
+			HeaderClientIP     string      `yaml:"header_client_ip"`
+			Headers            HTTPHeaders `yaml:"headers"`
+			MaxCallRecvMsgSize int         `yaml:"max_call_recv_msg_size" validate:"required"`
+			MaxCallSendMsgSize int         `yaml:"max_call_send_msg_size" validate:"required"`
 		} `yaml:"http"`
 
 		JWT struct {
@@ -67,6 +62,14 @@ type (
 				Password Sensitive `yaml:"password" validate:"required_if=Enabled true"`
 			} `yaml:"authentication"`
 		} `yaml:"metrics"`
+	}
+
+	// HTTPHeaders holds the daemon's HTTP response header settings.
+	HTTPHeaders struct {
+		AccessControlAllowOrigins        []string `yaml:"access_control_allow_origins"`
+		AccessControlAllowOriginWildcard bool     `yaml:"access_control_allow_origin_wildcard"`
+		AccessControlMaxAge              string   `yaml:"access_control_max_age" validate:"required"`
+		CookieDomain                     string   `yaml:"cookie_domain" validate:"required"`
 	}
 
 	// Log bundles several logging instances.
