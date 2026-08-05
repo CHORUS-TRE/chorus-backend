@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/cmd/provider"
@@ -44,20 +45,37 @@ func init() {
 }
 
 func runDiffConfig() error {
-	fileValues := flattenSettings(viper.AllSettings())
+	// viper.AllSettings() lowercases every key internally, which loses the
+	// real casing for anything with an uppercase letter (e.g. a camelCase
+	// field like accessControlAllowOrigins). Join file/default values on a
+	// lowercased key throughout, but keep the original-case string for
+	// display -- preferring whichever source has the real casing: the raw
+	// file parse, then (authoritative when the key is part of the schema)
+	// the default struct's own marshaled tags.
+	display := map[string]string{}
 
-	// viper.AllSettings() drops a key entirely when its YAML value is an
-	// explicit null, making "set to null" indistinguishable from "never set".
-	// Backfill from the raw file(s) directly, so an explicit null compares
-	// correctly against the default instead of looking entirely unset.
+	fileValues := map[string]string{}
+	for k, v := range flattenSettings(viper.AllSettings()) {
+		lk := strings.ToLower(k)
+		fileValues[lk] = v
+		display[lk] = k
+	}
+
+	// viper.AllSettings() also drops a key entirely when its YAML value is
+	// an explicit null, making "set to null" indistinguishable from "never
+	// set". Backfill from the raw file(s) directly, so an explicit null
+	// compares correctly against the default instead of looking entirely
+	// unset -- this also fixes the casing for every key actually in a file.
 	rawValues, err := flattenRawConfigFiles(configFilenames)
 	if err != nil {
 		return err
 	}
 	for k, v := range rawValues {
-		if _, ok := fileValues[k]; !ok {
-			fileValues[k] = v
+		lk := strings.ToLower(k)
+		if _, ok := fileValues[lk]; !ok {
+			fileValues[lk] = v
 		}
+		display[lk] = k
 	}
 
 	defaultYAML, err := yaml.Marshal(provider.ProvideDefaultConfig())
@@ -68,7 +86,12 @@ func runDiffConfig() error {
 	if err := yaml.Unmarshal(defaultYAML, &defaultTree); err != nil {
 		return fmt.Errorf("unable to unmarshal default config: %w", err)
 	}
-	defaultValues := flattenSettings(defaultTree)
+	defaultValues := map[string]string{}
+	for k, v := range flattenSettings(defaultTree) {
+		lk := strings.ToLower(k)
+		defaultValues[lk] = v
+		display[lk] = k // the struct's own tag casing is authoritative
+	}
 
 	seen := map[string]bool{}
 	var keys []string
@@ -91,7 +114,7 @@ func runDiffConfig() error {
 		fv, fOk := fileValues[k]
 		dv, dOk := defaultValues[k]
 		if fOk && dOk && !valuesEqual(fv, dv) {
-			fmt.Printf("%s\n  file:    %s\n  default: %s\n", k, fv, dv)
+			fmt.Printf("%s\n  file:    %s\n  default: %s\n", display[k], fv, dv)
 		}
 	}
 
@@ -100,7 +123,7 @@ func runDiffConfig() error {
 		fv, fOk := fileValues[k]
 		dv, dOk := defaultValues[k]
 		if fOk && dOk && valuesEqual(fv, dv) {
-			fmt.Printf("%s = %s\n", k, fv)
+			fmt.Printf("%s = %s\n", display[k], fv)
 		}
 	}
 
@@ -109,7 +132,7 @@ func runDiffConfig() error {
 		fv, fOk := fileValues[k]
 		_, dOk := defaultValues[k]
 		if fOk && !dOk {
-			fmt.Printf("%s = %s\n", k, fv)
+			fmt.Printf("%s = %s\n", display[k], fv)
 		}
 	}
 
@@ -121,7 +144,7 @@ func runDiffConfig() error {
 		// explicit null, making "set to null" and "never set" indistinguishable
 		// on the file side — so a nil default can never be reliably compared.
 		if !fOk && dOk && dv != "<nil>" {
-			fmt.Printf("%s = %s\n", k, dv)
+			fmt.Printf("%s = %s\n", display[k], dv)
 		}
 	}
 

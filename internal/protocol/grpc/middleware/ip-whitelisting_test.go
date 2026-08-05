@@ -28,8 +28,8 @@ func TestNewIPWhitelistUnaryServerInterceptor(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })
@@ -79,8 +79,8 @@ func TestNewIPWhitelistStreamServerInterceptor(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })
@@ -114,10 +114,10 @@ func TestNewIPWhitelistStreamServerInterceptor(t *testing.T) {
 func TestIPWhitelister_Verify(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
-	v.SetDefault("daemon.http.header_client_ip", "True-Client-IP")
+	v.SetDefault("daemon.http.headerClientIp", "True-Client-IP")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })
@@ -141,10 +141,10 @@ func TestIPWhitelister_Verify(t *testing.T) {
 func TestIPWhitelister_NotFromGateway_Verify(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
-	v.SetDefault("daemon.http.header_client_ip", "True-Client-IP")
+	v.SetDefault("daemon.http.headerClientIp", "True-Client-IP")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.subnetworks", []string{"10.1.1.0/24", "10.2.0.0/16"})
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })
@@ -164,9 +164,9 @@ func TestIPWhitelister_NotFromGateway_Verify(t *testing.T) {
 func TestIPWhitelister_MissingHeader_Verify(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
-	v.SetDefault("daemon.http.header_client_ip", "Another-Client-IP")
+	v.SetDefault("daemon.http.headerClientIp", "Another-Client-IP")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })
@@ -196,7 +196,7 @@ func TestIPWhitelister_NoMetadata_Verify(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })
@@ -216,11 +216,11 @@ func TestIPWhitelister_TenantDisabled_Verify(t *testing.T) {
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.SetDefault("tenants.88888.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.enabled", true)
-	v.SetDefault("tenants.88888.ip_whitelist.subnetworks", []string{"10.1.1.0/24"})
+	v.SetDefault("tenants.88888.ipWhitelist.enabled", true)
+	v.SetDefault("tenants.88888.ipWhitelist.subnetworks", []string{"10.1.1.0/24"})
 	v.SetDefault("tenants.88889.enabled", true)
-	v.SetDefault("tenants.88889.ip_whitelist.enabled", false)
-	v.SetDefault("tenants.88889.ip_whitelist.subnetworks", []string{"10.1.1.0/24"})
+	v.SetDefault("tenants.88889.ipWhitelist.enabled", false)
+	v.SetDefault("tenants.88889.ipWhitelist.subnetworks", []string{"10.1.1.0/24"})
 
 	var cfg config.Config
 	err := v.Unmarshal(&cfg, func(c *mapstructure.DecoderConfig) { c.TagName = "yaml" })

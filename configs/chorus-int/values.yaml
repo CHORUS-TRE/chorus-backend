@@ -22,76 +22,76 @@ config:
       username: "robot$chorus-int"
       password: "" # set in secret
     kubernetes:
-      default_registry: "https://harbor.int.chorus-tre.ch"
+      defaultRegistry: "https://harbor.int.chorus-tre.ch"
   daemon:
     jwt:
       secret: "" # set in secret
-    private_key: "" # set in secret
+    privateKey: "" # set in secret
     salt: feast-salutary3-online-slogan-chafe-july-rickety-desktop-from
     http:
       headers:
-        access_control_allow_origins:
+        accessControlAllowOrigins:
           - "https://int.chorus-tre.ch"
           - "https://backend.int.chorus-tre.ch"
           - "http://localhost:3000"
-        cookie_domain: ".int.chorus-tre.ch"
-    expose_error_stack_trace: true
+        cookieDomain: ".int.chorus-tre.ch"
+    exposeErrorStackTrace: true
     metrics:
       authentication:
         enabled: true
         password: "" # set in secret
   services:
-    authentication_service:
+    authenticationService:
       modes:
         internal:
-          main_source: false
-          public_registration_enabled: false
+          mainSource: false
+          publicRegistrationEnabled: false
         keycloak:
           enabled: true
-          main_source: true
+          mainSource: true
           openid:
-            chorus_backend_host: "https://backend.int.chorus-tre.ch"
-            chorus_frontend_redirect_url: "https://int.chorus-tre.ch/oauthredirect"
-            authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
-            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
-            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
-            logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
-            client_secret: "" # set in secret
+            chorusBackendHost: "https://backend.int.chorus-tre.ch"
+            chorusFrontendRedirectUrl: "https://int.chorus-tre.ch/oauthredirect"
+            authorizeUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            tokenUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            userInfoUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logoutUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=https://int.chorus-tre.ch"
+            clientSecret: "" # set in secret
         keycloakdev:
           type: openid
           enabled: true
-          button_text: "Login with Keycloak - dev mode"
+          buttonText: "Login with Keycloak - dev mode"
           order: 3
           openid:
             id: keycloakdev
-            chorus_backend_host: "https://backend.int.chorus-tre.ch"
-            enable_frontend_redirect: true
-            chorus_frontend_redirect_url: "http://localhost:3000/oauthredirect"
-            authorize_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
-            token_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
-            user_info_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
-            logout_url: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
-            user_name_claim: "preferred_username"
-            client_id: chorus
-            client_secret: ""  # set in secret
+            chorusBackendHost: "https://backend.int.chorus-tre.ch"
+            enableFrontendRedirect: true
+            chorusFrontendRedirectUrl: "http://localhost:3000/oauthredirect"
+            authorizeUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/auth"
+            tokenUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/token"
+            userInfoUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/userinfo"
+            logoutUrl: "https://auth.int.chorus-tre.ch/realms/chorus/protocol/openid-connect/logout?client_id=chorus&post_logout_redirect_uri=http://localhost:3000"
+            userNameClaim: "preferred_username"
+            clientId: chorus
+            clientSecret: ""  # set in secret
             scopes:
               - openid
               - profile
               - email
               - roles
-    workbench_service:
-      backend_in_k8s: true
-      workbench_idle_timeout: 504h #21d
-    workspace_file_service:
+    workbenchService:
+      backendInK8s: true
+      workbenchIdleTimeout: 504h #21d
+    workspaceFileService:
       stores:
         archive:
-          workspace_prefix: "workspaces/%s/data" # where %s will be replaced by the namespace name (workspace+id)
-    approval_request_service:
-      staging_file_store_name: archive
-    openid_connect_provider:
+          workspacePrefix: "workspaces/%s/data" # where %s will be replaced by the namespace name (workspace+id)
+    approvalRequestService:
+      stagingFileStoreName: archive
+    openidConnectProvider:
       enabled: true
-      issuer_url: "https://backend.int.chorus-tre.ch/openid-connect"
-      frontend_interactions_url: "https://backend.int.chorus-tre.ch/auth-ui"
+      issuerUrl: "https://backend.int.chorus-tre.ch/openid-connect"
+      frontendInteractionsUrl: "https://backend.int.chorus-tre.ch/auth-ui"
       jwks: "" # set in secret
       clients: [] # set in secret
     steward:
@@ -107,12 +107,12 @@ config:
         host: chorus-int-backend-db-postgresql
         username: backend
         password: "" # set in secret
-    file_stores:
+    fileStores:
       archive:
-        minio_config:
+        minioConfig:
           endpoint: juicefs-s3-gateway.kube-system.svc.cluster.local:9000
-          access_key_id: "" # set in secret
-          secret_access_key: "" # set in secret
+          accessKeyId: "" # set in secret
+          secretAccessKey: "" # set in secret
       disk:
-        disk_config:
+        diskConfig:
           enabled: false

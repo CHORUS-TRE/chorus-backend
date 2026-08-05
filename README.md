@@ -20,15 +20,15 @@ This project is the backend of the chorus platform.
 
 A running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
 
-The kubeconfig path (`clients.kubernetes.kube_config`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.kubernetes` fields individually:
+The kubeconfig path (`clients.kubernetes.kubeConfig`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.kubernetes` fields individually:
 
-- `api_server` — the service account API server URL
-- `sa_secret_path` — path to the service account secret
-- `sa_override_ca` — CA certificate content, optional, for private clusters with custom CAs
+- `apiServer` — the service account API server URL
+- `saSecretPath` — path to the service account secret
+- `saOverrideCa` — CA certificate content, optional, for private clusters with custom CAs
 - `token` — the service account token
 - `ca` — the service account CA
 
-A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.kubernetes.image_pull_secret_name`) — used to pull images from a private registry.
+A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.kubernetes.imagePullSecretName`) — used to pull images from a private registry.
 
 The [workbench-operator](https://github.com/CHORUS-TRE/workbench-operator) must also be deployed on the cluster — it reconciles the workbench/workspace custom resources the backend creates.
 
@@ -85,11 +85,11 @@ Postgres — run `make deps` to start it locally.
 chorus export-default-config > configs/config.yaml
 ```
 
-At minimum you'll still need to fill in every field `chorus check-config` reports as missing, including a `daemon.private_key`:
+At minimum you'll still need to fill in every field `chorus check-config` reports as missing, including a `daemon.privateKey`:
 ```bash
 chorus generate-private-key
 ```
-and a `services.openid_connect_provider.jwks`:
+and a `services.openidConnectProvider.jwks`:
 ```bash
 chorus generate-jwks
 ```

@@ -105,16 +105,16 @@ func validateOpenIDMode(sl val.StructLevel) {
 	}
 
 	reportIfEmpty(o.ID, "openid.id", "OpenID.ID")
-	reportIfEmpty(o.ClientID, "openid.client_id", "OpenID.ClientID")
-	reportIfEmpty(o.ClientSecret.PlainText(), "openid.client_secret", "OpenID.ClientSecret")
-	reportIfEmpty(o.AuthorizeURL, "openid.authorize_url", "OpenID.AuthorizeURL")
-	reportIfEmpty(o.TokenURL, "openid.token_url", "OpenID.TokenURL")
-	reportIfEmpty(o.UserInfoURL, "openid.user_info_url", "OpenID.UserInfoURL")
+	reportIfEmpty(o.ClientID, "openid.clientId", "OpenID.ClientID")
+	reportIfEmpty(o.ClientSecret.PlainText(), "openid.clientSecret", "OpenID.ClientSecret")
+	reportIfEmpty(o.AuthorizeURL, "openid.authorizeUrl", "OpenID.AuthorizeURL")
+	reportIfEmpty(o.TokenURL, "openid.tokenUrl", "OpenID.TokenURL")
+	reportIfEmpty(o.UserInfoURL, "openid.userInfoUrl", "OpenID.UserInfoURL")
 
 	if o.EnableFrontendRedirect {
-		reportIfEmpty(o.ChorusFrontendRedirectURL, "openid.chorus_frontend_redirect_url", "OpenID.ChorusFrontendRedirectURL")
+		reportIfEmpty(o.ChorusFrontendRedirectURL, "openid.chorusFrontendRedirectUrl", "OpenID.ChorusFrontendRedirectURL")
 	} else {
-		reportIfEmpty(o.ChorusBackendHost, "openid.chorus_backend_host", "OpenID.ChorusBackendHost")
+		reportIfEmpty(o.ChorusBackendHost, "openid.chorusBackendHost", "OpenID.ChorusBackendHost")
 	}
 }
 
@@ -124,6 +124,6 @@ func validateOpenIDMode(sl val.StructLevel) {
 func validateHTTPHeaders(sl val.StructLevel) {
 	headers := sl.Current().Interface().(config.HTTPHeaders)
 	if len(headers.AccessControlAllowOrigins) > 0 && headers.AccessControlAllowOriginWildcard {
-		sl.ReportError(headers.AccessControlAllowOriginWildcard, "access_control_allow_origin_wildcard", "AccessControlAllowOriginWildcard", "wildcard_with_allowlist", "")
+		sl.ReportError(headers.AccessControlAllowOriginWildcard, "accessControlAllowOriginWildcard", "AccessControlAllowOriginWildcard", "wildcard_with_allowlist", "")
 	}
 }

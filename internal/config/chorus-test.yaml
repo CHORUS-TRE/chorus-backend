@@ -2,16 +2,16 @@ daemon:
   http:
     host: localhost
     port: 5000
-    header_client_ip: True-Client-IP
+    headerClientIp: True-Client-IP
   grpc:
     host: 127.0.0.1
     port: 5555
   jwt:
     secret: jwt_secret
-    expiration_time: 10s
+    expirationTime: 10s
   totp:
-    num_recovery_codes: 10
-  expose_error_stack_trace: true
+    numRecoveryCodes: 10
+  exposeErrorStackTrace: true
   salt: 1234
 
 storage:
@@ -23,12 +23,12 @@ storage:
       username: root
       password: password
       database: chorus
-      max_connections: 10
-      max_lifetime: 10s
+      maxConnections: 10
+      maxLifetime: 10s
       ssl:
         enabled: true
-        certificate_file: /chorus/postgres-certs/client.crt
-        key_file: /chorus/postgres-certs/client.key
+        certificateFile: /chorus/postgres-certs/client.crt
+        keyFile: /chorus/postgres-certs/client.key
     audit:
       type: postgres
       host: localhost
@@ -36,8 +36,8 @@ storage:
       username: audit_user
       password: password
       database: audit
-      max_connections: 10
-      max_lifetime: 10s
+      maxConnections: 10
+      maxLifetime: 10s
       ssl:
         enabled: false
 log:
@@ -63,9 +63,9 @@ log:
       level: error
       category: technical
       path: /var/log/chorus/technical.log
-      max_age: 7
-      max_backups: 20
-      max_size: 50
+      maxAge: 7
+      maxBackups: 20
+      maxSize: 50
     redis_technical:
       enabled: true
       type: redis
@@ -82,15 +82,15 @@ log:
       enabled: true
       level: debug
       category: technical
-      graylogtimeout: 5s
-      grayloghost: http://local.chorus-tre.ch:12201/gelf   # Must include the entire ingestor URL (typically at /gelf)
-      graylogbulkreceiving: true                            # Must be aligned with the "Enable Bulk Receiving" option of the graylog Input
-      graylogauthorizeselfsignedcertificate: true           # For TLS/HTTPS, skip certificate authority signature
+      graylogTimeout: 5s
+      graylogHost: http://local.chorus-tre.ch:12201/gelf   # Must include the entire ingestor URL (typically at /gelf)
+      graylogBulkReceiving: true                            # Must be aligned with the "Enable Bulk Receiving" option of the graylog Input
+      graylogAuthorizeSelfSignedCertificate: true           # For TLS/HTTPS, skip certificate authority signature
 
 services:
-  audit_service:
+  auditService:
     enabled: true
-    datastore_name: audit
+    datastoreName: audit
   steward:
     tenant:
       name: default
@@ -100,7 +100,7 @@ services:
 
 tenants:
   88888:
-    ip_whitelist:
+    ipWhitelist:
       enabled: true
       subnetworks:
         - 127.0.0.1/32

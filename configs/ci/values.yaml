@@ -136,7 +136,7 @@ config:
   daemon:
     jwt:
       secret: NxioXzY4v4IEGdWmIrTG9Ng7Cgo5j3yO
-    private_key: |
+    privateKey: |
       -----BEGIN EC PRIVATE KEY-----
       MHcCAQEEII8kGzWHAJfOs9i/4Itm6XmR/CIb6ePuqx+2waa/U0EuoAoGCCqGSM49
       AwEHoUQDQgAEg3/teKmW70zuiWjYTOynPqPHLOM7XExQUeOD6WSGdlJph3jZzuXh
@@ -146,19 +146,19 @@ config:
     metrics:
       enabled: false
   services:
-    authentication_service:
+    authenticationService:
       enabled: true
       modes:
         internal:
-          public_registration_enabled: false
+          publicRegistrationEnabled: false
         keycloak:
           enabled: false
-    audit_service:
+    auditService:
       enabled: false
-    workbench_service:
-      backend_in_k8s: true
-    approval_request_service:
-      staging_file_store_name: disk
+    workbenchService:
+      backendInK8s: true
+    approvalRequestService:
+      stagingFileStoreName: disk
     steward:
       user:
         password: password
@@ -173,13 +173,13 @@ config:
       chorus:
         host: "" # set dynamically in argo-workflows
         password: password
-    file_stores:
+    fileStores:
       archive:
-        minio_config:
+        minioConfig:
           enabled: false
       disk:
-        disk_config:
-          base_path: /var/lib/chorus/disk/.diskfilestore
+        diskConfig:
+          basePath: /var/lib/chorus/disk/.diskfilestore
 
 postgresql:
   enabled: true

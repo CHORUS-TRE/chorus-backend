@@ -65,7 +65,7 @@ func runInitConfig() error {
 	for _, f := range fields {
 		// Part of a required_without pair with daemon.private_key, which we
 		// always generate below -- writing an inline key satisfies both.
-		if f.Path == "daemon.private_key_file" {
+		if f.Path == "daemon.privateKeyFile" {
 			continue
 		}
 
