@@ -43,18 +43,8 @@ func init() {
 	rootCmd.AddCommand(diffConfigCmd)
 }
 
-// nonConfigKeys are viper settings that come from bound CLI flags rather
-// than the Config struct (e.g. --runtime-environment), so they'd otherwise
-// show up as spurious "only in file" entries with no real default to have.
-var nonConfigKeys = map[string]bool{
-	"runtime-environment": true,
-}
-
 func runDiffConfig() error {
 	fileValues := flattenSettings(viper.AllSettings())
-	for k := range nonConfigKeys {
-		delete(fileValues, k)
-	}
 
 	// viper.AllSettings() drops a key entirely when its YAML value is an
 	// explicit null, making "set to null" indistinguishable from "never set".

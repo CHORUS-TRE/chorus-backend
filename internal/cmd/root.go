@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/cmd/provider"
-	"github.com/CHORUS-TRE/chorus-backend/internal/component"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"go.uber.org/zap"
 
@@ -49,17 +48,6 @@ func init() {
 		[]string{},
 		"override a config value, repeatable: --set path.to.key=value",
 	)
-	rootCmd.PersistentFlags().StringVar(
-		&component.RuntimeEnvironment,
-		"runtime-environment",
-		"",
-		"the runtime environment, e.g. INT, ACC, PROD...",
-	)
-	err := viper.BindPFlag("runtime-environment", rootCmd.PersistentFlags().Lookup("runtime-environment"))
-	if err != nil {
-		panic(err)
-	}
-
 	viper.SetEnvPrefix("CHORUS")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
