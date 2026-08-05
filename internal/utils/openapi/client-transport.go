@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httputil"
+	"regexp"
 	"strings"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
@@ -12,6 +13,12 @@ import (
 	"github.com/go-openapi/strfmt"
 	"go.uber.org/zap"
 )
+
+var sensitiveHeaderPattern = regexp.MustCompile(`(?im)^(Authorization|Cookie|Set-Cookie):.*$`)
+
+func redactSensitiveHeaders(dump []byte) []byte {
+	return sensitiveHeaderPattern.ReplaceAll(dump, []byte("$1: [REDACTED]"))
+}
 
 type ClientTransport struct {
 	Host      string
@@ -79,7 +86,7 @@ func (r *ClientTransport) Submit(operation *runtime.ClientOperation) (interface{
 	if err != nil {
 		return nil, err
 	}
-	r.logger.Debug(ctx, "request sent", zap.String("httpRequest", string(b)))
+	r.logger.Debug(ctx, "request sent", zap.String("httpRequest", string(redactSensitiveHeaders(b))))
 
 	ctx, cancel := context.WithTimeout(ctx, request.timeout)
 	defer cancel()
@@ -98,7 +105,7 @@ func (r *ClientTransport) Submit(operation *runtime.ClientOperation) (interface{
 	if err != nil {
 		return nil, err
 	}
-	r.logger.Debug(ctx, "response received", zap.String("httpRequest", string(b)))
+	r.logger.Debug(ctx, "response received", zap.String("httpRequest", string(redactSensitiveHeaders(b))))
 
 	return readResponse.ReadResponse(response{res}, r.Consumer)
 }
