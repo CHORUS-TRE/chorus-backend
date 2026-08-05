@@ -130,7 +130,7 @@ type (
 		Token                    Sensitive `yaml:"token"`          // or a service account token
 		CA                       string    `yaml:"ca"`             // and service account ca
 
-		ImagePullSecretName string `yaml:"image_pull_secret_name" validate:"required_if=Enabled true"`
+		ImagePullSecretName string `yaml:"image_pull_secret_name"`
 
 		ServerVersion        string `yaml:"server_version" validate:"required_if=Enabled true"`
 		InitContainerVersion string `yaml:"init_container_version" validate:"required_if=Enabled true"`
