@@ -77,6 +77,12 @@ Postgres — run `make deps` to start it locally.
 
 ## Advanced Configuration
 
+### Naming Convention
+
+The backend's own config schema (everything under `internal/config/config.go`, i.e. every field documented in this section) uses **snake_case**, e.g. `daemon.http.headers.access_control_allow_origins`. This is deliberate, not an oversight: Viper lowercases every key inside any `map[string]...`-typed field during decode (`Log.Loggers`, `Daemon.Jobs`, `Storage.Datastores`, `Storage.FileStores`, `Services.AuthenticationService.Modes`), regardless of how it's written in the file — so a camelCase field like `appSync` would silently decode as `appsync`, breaking any Go code that looks it up by exact name (e.g. `internal/cmd/provider/jobber.go` dispatching a job by its config key). Since that limitation applies schema-wide in practice, the whole backend config stays snake_case for consistency, including named map instances like the `app_sync` job or the `chorus`/`audit` datastores.
+
+This is separate from the Helm chart's own `values.yaml` (`deploy/backend/values.yaml`, `configs/*/values.yaml`), which follows the standard Helm/Kubernetes convention of camelCase (`imagePullPolicy`, `podLabels`, etc.) for its own chart-level fields — everything *outside* the `config:` block that gets passed straight through into `configs/config.yaml` as-is.
+
 ### Build a Full Config
 
 `chorus init-config` (see [Quick Start](#quick-start)) covers local dev in one command. If you'd rather see every overridable field yourself and hand-edit `configs/config.yaml`, build it from the code-level defaults instead:

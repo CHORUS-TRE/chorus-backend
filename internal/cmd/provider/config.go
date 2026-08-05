@@ -136,7 +136,7 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 // siblingPath resolves a required_if/required_without Param (a Go field name
 // within the same parent struct) to its full dotted yaml path, e.g. "Enabled"
 // on Config.Clients.K8sClient.DefaultRegistry becomes "clients.kubernetes.enabled".
-// Parent segments may be map-indexed (e.g. "Jobs[app-sync]") when the field
+// Parent segments may be map-indexed (e.g. "Jobs[app_sync]") when the field
 // lives inside a map, as with Daemon.Jobs. Falls back to the raw Go field name
 // if anything doesn't resolve cleanly.
 func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) string {
@@ -299,10 +299,10 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 
 	// Daemon - Jobs
-	v.SetDefault("daemon.jobs.app-sync.enabled", true)
-	v.SetDefault("daemon.jobs.app-sync.interval", 30*time.Minute)
-	v.SetDefault("daemon.jobs.app-sync.timeout", 10*time.Minute)
-	v.SetDefault("daemon.jobs.app-sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
+	v.SetDefault("daemon.jobs.app_sync.enabled", true)
+	v.SetDefault("daemon.jobs.app_sync.interval", 30*time.Minute)
+	v.SetDefault("daemon.jobs.app_sync.timeout", 10*time.Minute)
+	v.SetDefault("daemon.jobs.app_sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
 
 	// Daemon - Jobber
 	v.SetDefault("daemon.jobber.enabled", true)
