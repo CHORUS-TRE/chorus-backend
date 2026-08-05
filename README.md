@@ -20,7 +20,7 @@ This project is the backend of the chorus platform.
 
 A running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
 
-The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.k8s_client` fields individually:
+The kubeconfig path (`clients.kubernetes.kube_config`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.kubernetes` fields individually:
 
 - `api_server` — the service account API server URL
 - `sa_secret_path` — path to the service account secret
@@ -28,7 +28,7 @@ The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like an
 - `token` — the service account token
 - `ca` — the service account CA
 
-A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.k8s_client.image_pull_secret_name`) — used to pull images from a private registry.
+A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.kubernetes.image_pull_secret_name`) — used to pull images from a private registry.
 
 The [workbench-operator](https://github.com/CHORUS-TRE/workbench-operator) must also be deployed on the cluster — it reconciles the workbench/workspace custom resources the backend creates.
 

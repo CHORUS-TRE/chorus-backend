@@ -129,9 +129,9 @@ clusterRole:
 disableMountSecrets: true
 config:
   clients:
-    harbor_client:
+    harbor:
       enabled: false
-    k8s_client:
+    kubernetes:
       enabled: false
   daemon:
     jwt:

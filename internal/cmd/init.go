@@ -190,10 +190,10 @@ func setNestedValue(tree map[string]interface{}, path string, value interface{})
 	}
 }
 
-// annotateHarborClient inserts a comment above the harbor_client key
+// annotateHarborClient inserts a comment above the harbor key
 // reminding the reader to set username/password for a private registry.
 func annotateHarborClient(out []byte) []byte {
-	const marker = "  harbor_client:\n"
+	const marker = "  harbor:\n"
 	const note = "  # If this registry requires auth, also set username/password below.\n" + marker
 	return bytes.Replace(out, []byte(marker), []byte(note), 1)
 }
