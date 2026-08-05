@@ -4,7 +4,6 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/component"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 )
 
@@ -18,12 +17,11 @@ var (
 )
 
 type Info struct {
-	Name               string `json:"name,omitempty"`
-	Version            string `json:"version,omitempty"`
-	RuntimeEnvironment string `json:"runtime_environment,omitempty"`
-	ComponentID        string `json:"id,omitempty"`
-	Commit             string `json:"commit,omitempty"`
-	GoVersion          string `json:"-"`
+	Name        string `json:"name,omitempty"`
+	Version     string `json:"version,omitempty"`
+	ComponentID string `json:"id,omitempty"`
+	Commit      string `json:"commit,omitempty"`
+	GoVersion   string `json:"-"`
 }
 
 // componentID is generated once at runtime (not by the compiler), the
@@ -40,11 +38,10 @@ func ProvideComponentInfo() *Info {
 	})
 
 	return &Info{
-		Name:               componentName,
-		Version:            version,
-		RuntimeEnvironment: component.RuntimeEnvironment,
-		ComponentID:        componentID,
-		Commit:             gitCommit,
-		GoVersion:          runtime.Version(),
+		Name:        componentName,
+		Version:     version,
+		ComponentID: componentID,
+		Commit:      gitCommit,
+		GoVersion:   runtime.Version(),
 	}
 }
