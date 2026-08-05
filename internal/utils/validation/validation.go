@@ -67,6 +67,7 @@ func NewValidator() *val.Validate {
 	})
 
 	v.RegisterStructValidation(validateOpenIDMode, config.Mode{})
+	v.RegisterStructValidation(validateHTTPHeaders, config.HTTPHeaders{})
 
 	return v
 }
@@ -114,5 +115,15 @@ func validateOpenIDMode(sl val.StructLevel) {
 		reportIfEmpty(o.ChorusFrontendRedirectURL, "openid.chorus_frontend_redirect_url", "OpenID.ChorusFrontendRedirectURL")
 	} else {
 		reportIfEmpty(o.ChorusBackendHost, "openid.chorus_backend_host", "OpenID.ChorusBackendHost")
+	}
+}
+
+// validateHTTPHeaders rejects wildcard mode combined with a non-empty
+// allowlist - browsers reject a credentialed "*" response, so the
+// combination is always dead configuration.
+func validateHTTPHeaders(sl val.StructLevel) {
+	headers := sl.Current().Interface().(config.HTTPHeaders)
+	if len(headers.AccessControlAllowOrigins) > 0 && headers.AccessControlAllowOriginWildcard {
+		sl.ReportError(headers.AccessControlAllowOriginWildcard, "access_control_allow_origin_wildcard", "AccessControlAllowOriginWildcard", "wildcard_with_allowlist", "")
 	}
 }
