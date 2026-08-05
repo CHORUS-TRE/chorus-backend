@@ -117,9 +117,9 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient    `yaml:"k8s_client"`
-		DockerClient DockerClient `yaml:"docker_client"`
-		HarborClient HarborClient `yaml:"harbor_client"`
+		K8sClient    K8sClient    `yaml:"kubernetes"`
+		DockerClient DockerClient `yaml:"docker"`
+		HarborClient HarborClient `yaml:"harbor"`
 	}
 
 	K8sClient struct {
