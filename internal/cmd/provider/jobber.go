@@ -50,7 +50,7 @@ func InitDaemonJobs() {
 	for name, jobConfig := range cfg.Daemon.Jobs {
 		var j job.Job
 		switch name {
-		case "app-sync":
+		case "app_sync":
 			registry := ""
 			if u, err := url.Parse(cfg.Clients.HarborClient.URL); err == nil {
 				registry = u.Host
