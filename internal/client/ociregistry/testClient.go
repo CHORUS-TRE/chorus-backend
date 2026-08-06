@@ -1,6 +1,6 @@
-package docker
+package ociregistry
 
-var _ DockerClienter = &testClient{}
+var _ OCIClienter = &testClient{}
 
 type testClient struct{}
 
