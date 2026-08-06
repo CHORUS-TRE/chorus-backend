@@ -9,11 +9,19 @@ func NewTestClient() *testClient {
 }
 
 // VerifyImageExists always returns true for testing purposes
-func (c *testClient) ImageExists(imageRef string, username string, password string) (bool, error) {
+func (c *testClient) ImageExists(imageRef string) (bool, error) {
 	// In test mode, we assume all images exist
 	return true, nil
 }
 
-func (c *testClient) GetLabels(imageRef string, username string, password string) (map[string]string, error) {
+func (c *testClient) GetLabels(imageRef string) (map[string]string, error) {
 	return nil, nil
+}
+
+func (c *testClient) Credentials() (string, string) {
+	return "", ""
+}
+
+func (c *testClient) Host() string {
+	return ""
 }

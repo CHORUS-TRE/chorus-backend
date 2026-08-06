@@ -124,6 +124,8 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		return fmt.Sprintf("FAIL '%s' is missing (required for openid-type authentication modes)", path)
 	case "wildcard_with_allowlist":
 		return fmt.Sprintf("FAIL '%s' must be false when 'access_control_allow_origins' is non-empty", path)
+	case "harbor_requires_oci":
+		return fmt.Sprintf("FAIL '%s' must be true when 'clients.harbor.enabled' is true", path)
 	default:
 		return fmt.Sprintf("FAIL '%s' failed '%s' validation", path, fe.Tag())
 	}
@@ -376,16 +378,16 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Clients - OCI
 	v.SetDefault("clients.oci.enabled", true)
+	v.SetDefault("clients.oci.host", "")
+	v.SetDefault("clients.oci.username", "")
+	v.SetDefault("clients.oci.password", "")
 
 	// Clients - Harbor
 	v.SetDefault("clients.harbor.enabled", true)
-	v.SetDefault("clients.harbor.url", "")
 	v.SetDefault("clients.harbor.project", "apps")
 	v.SetDefault("clients.harbor.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
 	v.SetDefault("clients.harbor.page_size", 100)
 	v.SetDefault("clients.harbor.max_parallel_fetches", 16)
-	v.SetDefault("clients.harbor.username", "")
-	v.SetDefault("clients.harbor.password", "")
 
 	// Storage - Datastores
 	v.SetDefault("storage.datastores.chorus.type", "postgres")

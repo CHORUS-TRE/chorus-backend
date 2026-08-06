@@ -16,42 +16,50 @@ import (
 var _ OCIClienter = &client{}
 
 type OCIClienter interface {
-	ImageExists(imageRef string, username string, password string) (bool, error)
-	GetLabels(imageRef string, username string, password string) (map[string]string, error)
+	ImageExists(imageRef string) (bool, error)
+	GetLabels(imageRef string) (map[string]string, error)
+	Credentials() (username, password string)
+	Host() string
+}
+
+type registryConfig struct {
+	host     string // bare hostname, e.g. "harbor.example.com"
+	username string
+	password string
 }
 
 type client struct {
-	cfg       config.Config
-	clientCfg ClientConfig
+	cfg config.Config
+	reg registryConfig
 }
 
 func NewClient(cfg config.Config) (*client, error) {
-	clientCfg, err := getClientConfig(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("error getting oci client config: %w", err)
-	}
-
+	ociCfg := cfg.Clients.OCIClient
 	return &client{
-		cfg:       cfg,
-		clientCfg: clientCfg,
+		cfg: cfg,
+		reg: registryConfig{
+			host:     ociCfg.Host,
+			username: ociCfg.Username,
+			password: ociCfg.Password.PlainText(),
+		},
 	}, nil
 }
 
-// ImageExists checks whether an image exists in registry
-func (c *client) ImageExists(imageRef string, username string, password string) (bool, error) {
-	// Parse image reference
+func (c *client) Host() string {
+	return c.reg.host
+}
+
+func (c *client) Credentials() (string, string) {
+	return c.reg.username, c.reg.password
+}
+
+func (c *client) ImageExists(imageRef string) (bool, error) {
 	ref, err := name.ParseReference(imageRef, name.WeakValidation)
 	if err != nil {
 		return false, fmt.Errorf("invalid image reference: %w", err)
 	}
 
-	registry := ref.Context().RegistryStr()
-	authenticator, err := c.getRegistryAuth(registry, username, password)
-	if err != nil {
-		return false, fmt.Errorf("failed to get registry auth: %w", err)
-	}
-
-	_, err = remote.Get(ref, remote.WithAuth(authenticator))
+	_, err = remote.Get(ref, remote.WithAuth(c.getRegistryAuth()))
 	if err != nil {
 		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == 404 {
 			return false, nil
@@ -62,20 +70,13 @@ func (c *client) ImageExists(imageRef string, username string, password string) 
 	return true, nil
 }
 
-// GetLabels retrieves the OCI image config labels for the given image reference.
-func (c *client) GetLabels(imageRef string, username, password string) (map[string]string, error) {
+func (c *client) GetLabels(imageRef string) (map[string]string, error) {
 	ref, err := name.ParseReference(imageRef, name.WeakValidation)
 	if err != nil {
 		return nil, fmt.Errorf("invalid image reference: %w", err)
 	}
 
-	registry := ref.Context().RegistryStr()
-	authenticator, err := c.getRegistryAuth(registry, username, password)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get registry auth: %w", err)
-	}
-
-	desc, err := remote.Get(ref, remote.WithAuth(authenticator))
+	desc, err := remote.Get(ref, remote.WithAuth(c.getRegistryAuth()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch image descriptor: %w", err)
 	}
@@ -95,28 +96,9 @@ func (c *client) GetLabels(imageRef string, username, password string) (map[stri
 	return cfgFile.Config.Labels, nil
 }
 
-func (c *client) getRegistryAuth(registry string, username string, password string) (authn.Authenticator, error) {
-	if registry == "" {
-		return nil, fmt.Errorf("registry hostname cannot be empty")
+func (c *client) getRegistryAuth() authn.Authenticator {
+	if c.reg.username == "" || c.reg.password == "" {
+		return authn.Anonymous
 	}
-
-	// If credentials are provided, use them
-	if username != "" && password != "" {
-		return authn.FromConfig((authn.AuthConfig{
-			Username: username,
-			Password: password,
-		})), nil
-	}
-
-	// Check if registry is configured
-	cfg, found := c.clientCfg.Registries[registry]
-	if found && cfg.Username != "" && cfg.Password != "" {
-		return authn.FromConfig(authn.AuthConfig{
-			Username: cfg.Username,
-			Password: cfg.Password,
-		}), nil
-	}
-
-	// Fallback to anonymous access
-	return authn.Anonymous, nil
+	return authn.FromConfig(authn.AuthConfig{Username: c.reg.username, Password: c.reg.password})
 }
