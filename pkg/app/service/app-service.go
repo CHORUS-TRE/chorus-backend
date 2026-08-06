@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/harbor"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/k8s"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/ociregistry"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/model"
 	common "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 )
@@ -32,15 +32,15 @@ type AppStore interface {
 type AppService struct {
 	store        AppStore
 	k8sClient    k8s.K8sClienter
-	dockerClient docker.DockerClienter
+	ociClient    ociregistry.OCIClienter
 	harborClient harbor.HarborClient
 }
 
-func NewAppService(store AppStore, k8sClient k8s.K8sClienter, dockerClient docker.DockerClienter, harborClient harbor.HarborClient) *AppService {
+func NewAppService(store AppStore, k8sClient k8s.K8sClienter, ociClient ociregistry.OCIClienter, harborClient harbor.HarborClient) *AppService {
 	return &AppService{
 		store:        store,
 		k8sClient:    k8sClient,
-		dockerClient: dockerClient,
+		ociClient:    ociClient,
 		harborClient: harborClient,
 	}
 }
@@ -74,8 +74,8 @@ func (u *AppService) DeleteApp(ctx context.Context, tenantID, appID uint64) erro
 func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App, error) {
 	imageRef := dockerImageToString(app)
 
-	// Verify that app image exists using docker client
-	exists, err := u.dockerClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+	// Verify that app image exists using the OCI client
+	exists, err := u.ociClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
 	}
@@ -98,8 +98,8 @@ func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App,
 func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
 	imageRef := dockerImageToString(app)
 
-	// Verify that app image exists using docker client
-	exists, err := u.dockerClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+	// Verify that app image exists using the OCI client
+	exists, err := u.ociClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
 	}
@@ -123,8 +123,8 @@ func (u *AppService) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*
 	for _, app := range apps {
 		imageRef := dockerImageToString(app)
 
-		// Verify that app image exists using docker client
-		exists, err := u.dockerClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+		// Verify that app image exists using the OCI client
+		exists, err := u.ociClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
 		if err != nil {
 			return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
 		}

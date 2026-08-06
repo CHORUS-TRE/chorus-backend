@@ -1,4 +1,4 @@
-package docker
+package ociregistry
 
 import (
 	"context"
@@ -13,27 +13,27 @@ import (
 	"go.uber.org/zap"
 )
 
-var _ DockerClienter = &client{}
+var _ OCIClienter = &client{}
 
-type DockerClienter interface {
+type OCIClienter interface {
 	ImageExists(imageRef string, username string, password string) (bool, error)
 	GetLabels(imageRef string, username string, password string) (map[string]string, error)
 }
 
 type client struct {
-	cfg             config.Config
-	dockerClientCfg DockerClientConfig
+	cfg       config.Config
+	clientCfg ClientConfig
 }
 
 func NewClient(cfg config.Config) (*client, error) {
-	clientCfg, err := getDockerClientConfig(cfg)
+	clientCfg, err := getClientConfig(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("error getting docker config: %w", err)
+		return nil, fmt.Errorf("error getting oci client config: %w", err)
 	}
 
 	return &client{
-		cfg:             cfg,
-		dockerClientCfg: clientCfg,
+		cfg:       cfg,
+		clientCfg: clientCfg,
 	}, nil
 }
 
@@ -42,13 +42,13 @@ func (c *client) ImageExists(imageRef string, username string, password string) 
 	// Parse image reference
 	ref, err := name.ParseReference(imageRef, name.WeakValidation)
 	if err != nil {
-		return false, fmt.Errorf("invalid docker image reference: %w", err)
+		return false, fmt.Errorf("invalid image reference: %w", err)
 	}
 
 	registry := ref.Context().RegistryStr()
 	authenticator, err := c.getRegistryAuth(registry, username, password)
 	if err != nil {
-		return false, fmt.Errorf("failed to get docker registry auth: %w", err)
+		return false, fmt.Errorf("failed to get registry auth: %w", err)
 	}
 
 	_, err = remote.Get(ref, remote.WithAuth(authenticator))
@@ -56,7 +56,7 @@ func (c *client) ImageExists(imageRef string, username string, password string) 
 		if terr, ok := err.(*transport.Error); ok && terr.StatusCode == 404 {
 			return false, nil
 		}
-		return false, fmt.Errorf("failed to check if docker image exists: %w", err)
+		return false, fmt.Errorf("failed to check if image exists: %w", err)
 	}
 
 	return true, nil
@@ -66,13 +66,13 @@ func (c *client) ImageExists(imageRef string, username string, password string) 
 func (c *client) GetLabels(imageRef string, username, password string) (map[string]string, error) {
 	ref, err := name.ParseReference(imageRef, name.WeakValidation)
 	if err != nil {
-		return nil, fmt.Errorf("invalid docker image reference: %w", err)
+		return nil, fmt.Errorf("invalid image reference: %w", err)
 	}
 
 	registry := ref.Context().RegistryStr()
 	authenticator, err := c.getRegistryAuth(registry, username, password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get docker registry auth: %w", err)
+		return nil, fmt.Errorf("failed to get registry auth: %w", err)
 	}
 
 	desc, err := remote.Get(ref, remote.WithAuth(authenticator))
@@ -97,7 +97,7 @@ func (c *client) GetLabels(imageRef string, username, password string) (map[stri
 
 func (c *client) getRegistryAuth(registry string, username string, password string) (authn.Authenticator, error) {
 	if registry == "" {
-		return nil, fmt.Errorf("docker registry hostname cannot be empty")
+		return nil, fmt.Errorf("registry hostname cannot be empty")
 	}
 
 	// If credentials are provided, use them
@@ -109,7 +109,7 @@ func (c *client) getRegistryAuth(registry string, username string, password stri
 	}
 
 	// Check if registry is configured
-	cfg, found := c.dockerClientCfg.Registries[registry]
+	cfg, found := c.clientCfg.Registries[registry]
 	if found && cfg.Username != "" && cfg.Password != "" {
 		return authn.FromConfig(authn.AuthConfig{
 			Username: cfg.Username,

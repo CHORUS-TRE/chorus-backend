@@ -374,8 +374,8 @@ func SetDefaultConfig(v *viper.Viper) {
 		}
 	}
 
-	// Clients - Docker
-	v.SetDefault("clients.docker.enabled", true)
+	// Clients - OCI
+	v.SetDefault("clients.oci.enabled", true)
 
 	// Clients - Harbor
 	v.SetDefault("clients.harbor.enabled", true)

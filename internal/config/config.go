@@ -118,7 +118,7 @@ type (
 
 	Clients struct {
 		K8sClient    K8sClient    `yaml:"kubernetes"`
-		DockerClient DockerClient `yaml:"docker"`
+		OCIClient    OCIClient    `yaml:"oci"`
 		HarborClient HarborClient `yaml:"harbor"`
 	}
 
@@ -147,7 +147,7 @@ type (
 		PrepullJobTTLSeconds int    `yaml:"prepull_job_ttl_seconds" validate:"required_if=Enabled true"`
 	}
 
-	DockerClient struct {
+	OCIClient struct {
 		Enabled bool `yaml:"enabled"`
 	}
 

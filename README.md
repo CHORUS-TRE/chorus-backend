@@ -201,7 +201,7 @@ Create a complete service (here the workbench service)
 
     There's no separate CI config file — acceptance testing reuses
     `CONFIG_FILE` (default `configs/config.yaml`), with a handful of overrides
-    (`chorus_ci` database, a separate disk file-store path, docker/k8s clients
+    (`chorus_ci` database, a separate disk file-store path, oci/kubernetes clients
     disabled) applied via `--set`. See `CONFIG_FILE`/`ACCEPTANCE_CONFIG_SET`
     at the top of `scripts/run_acceptance_tests.sh` to change the defaults.
 

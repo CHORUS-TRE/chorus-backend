@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/ociregistry"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 
 	"golang.org/x/sync/errgroup"
@@ -34,11 +34,11 @@ func (c *HarborNoopClient) ListApps() ([]App, error) {
 type harborClient struct {
 	cfg          config.HarborClient
 	client       *http.Client
-	dockerClient docker.DockerClienter
+	ociClient    ociregistry.OCIClienter
 	registryHost string
 }
 
-func NewHarborClient(cfg config.Config, dockerClient docker.DockerClienter) HarborClient {
+func NewHarborClient(cfg config.Config, ociClient ociregistry.OCIClienter) HarborClient {
 	harborCfg := cfg.Clients.HarborClient
 
 	registryHost := ""
@@ -51,7 +51,7 @@ func NewHarborClient(cfg config.Config, dockerClient docker.DockerClienter) Harb
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		dockerClient: dockerClient,
+		ociClient:    ociClient,
 		registryHost: registryHost,
 	}
 }
@@ -201,12 +201,12 @@ func (c *harborClient) listArtifacts(repoName string) ([]harborArtifact, error) 
 	return allArtifacts, nil
 }
 
-// fetchLabels builds a full image reference and delegates to the Docker client
+// fetchLabels builds a full image reference and delegates to the OCI client
 // to retrieve OCI image config labels, then filters by configured prefixes.
 func (c *harborClient) fetchLabels(repoName, digest string) (map[string]string, error) {
 	imageRef := fmt.Sprintf("%s/%s/%s@%s", c.registryHost, c.cfg.Project, repoName, digest)
 
-	allLabels, err := c.dockerClient.GetLabels(imageRef, c.cfg.Username, c.cfg.Password.PlainText())
+	allLabels, err := c.ociClient.GetLabels(imageRef, c.cfg.Username, c.cfg.Password.PlainText())
 	if err != nil {
 		return nil, fmt.Errorf("getting labels for %s: %w", imageRef, err)
 	}
@@ -263,4 +263,3 @@ func (c *harborClient) stripProjectPrefix(name string) string {
 	}
 	return name
 }
-
