@@ -18,15 +18,7 @@ This project is the backend of the chorus platform.
 
 ### Kubernetes
 
-A running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
-
-The kubeconfig path (`clients.kubernetes.kube_config`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.kubernetes` fields individually:
-
-- `api_server` — the service account API server URL
-- `sa_secret_path` — path to the service account secret
-- `sa_override_ca` — CA certificate content, optional, for private clusters with custom CAs
-- `token` — the service account token
-- `ca` — the service account CA
+A running kubernetes cluster reachable from your machine. For local dev, set `clients.kubernetes.in_cluster_config_enabled: false` (already the default written by `chorus init-config`) and optionally override `clients.kubernetes.kube_config`, which defaults to `$HOME/.kube/config` — so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
 
 A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.kubernetes.image_pull_secret_name`) — used to pull images from a private registry.
 

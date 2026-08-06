@@ -125,13 +125,8 @@ type (
 	K8sClient struct {
 		Enabled bool `yaml:"enabled"` // if true, the client will be used to connect to the k8s cluster
 
-		KubeConfig string `yaml:"kube_config"` // either provide a path to a kubeconfig file
-
-		APIServer                string    `yaml:"api_server"`     // or a service account api server
-		ServiceAccountSecretPath string    `yaml:"sa_secret_path"` // and a service account secret path
-		ServiceAccountOverrideCA string    `yaml:"sa_override_ca"` // optional CA crt content to override the one provided in the service account secret, useful for private clusters with custom CAs
-		Token                    Sensitive `yaml:"token"`          // or a service account token
-		CA                       string    `yaml:"ca"`             // and service account ca
+		InClusterConfigEnabled bool   `yaml:"in_cluster_config_enabled"` // if true, reads pod's service account token and CA cert to connect to the k8s cluster
+		KubeConfig             string `yaml:"kube_config" validate:"required_if=Enabled true InClusterConfigEnabled false"`
 
 		ImagePullSecretName string `yaml:"image_pull_secret_name"`
 
