@@ -111,13 +111,9 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		sibling := siblingPath(cfg, fe, fe.Param())
 		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", path, sibling)
 	case "required_if":
-		field, value, _ := strings.Cut(fe.Param(), " ")
-		sibling := siblingPath(cfg, fe, field)
-		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is %s)", path, sibling, value)
+		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", path, describeConditions(cfg, fe))
 	case "required_unless":
-		field, value, _ := strings.Cut(fe.Param(), " ")
-		sibling := siblingPath(cfg, fe, field)
-		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is %s)", path, sibling, value)
+		return fmt.Sprintf("FAIL '%s' is missing (required unless %s)", path, describeConditions(cfg, fe))
 	case "oneof":
 		return fmt.Sprintf("FAIL '%s' must be one of: %s", path, fe.Param())
 	case "ne":
@@ -180,6 +176,20 @@ func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) strin
 		parentPath = path[:idx]
 	}
 	return parentPath + "." + yamlName
+}
+
+// describeConditions renders a required_if/required_unless Param -- one or
+// more space-separated "Field Value" pairs, ANDed together per go-playground's
+// own semantics -- as a human-readable "'x' is true and 'y' is false" list of
+// sibling yaml paths.
+func describeConditions(cfg config.Config, fe val.FieldError) string {
+	params := strings.Fields(fe.Param())
+	var conditions []string
+	for i := 0; i+1 < len(params); i += 2 {
+		sibling := siblingPath(cfg, fe, params[i])
+		conditions = append(conditions, fmt.Sprintf("'%s' is %s", sibling, params[i+1]))
+	}
+	return strings.Join(conditions, " and ")
 }
 
 // convertMapKey parses raw (as extracted from a "Field[key]" namespace
@@ -342,12 +352,8 @@ func SetDefaultConfig(v *viper.Viper) {
 
 	// Clients - Kubernetes
 	v.SetDefault("clients.kubernetes.enabled", true)
+	v.SetDefault("clients.kubernetes.in_cluster_config_enabled", true)
 	v.SetDefault("clients.kubernetes.kube_config", "")
-	v.SetDefault("clients.kubernetes.api_server", "https://kubernetes.default.svc")
-	v.SetDefault("clients.kubernetes.sa_secret_path", "/var/run/secrets/kubernetes.io/serviceaccount")
-	v.SetDefault("clients.kubernetes.sa_override_ca", "")
-	v.SetDefault("clients.kubernetes.token", "")
-	v.SetDefault("clients.kubernetes.ca", "")
 	v.SetDefault("clients.kubernetes.image_pull_secret_name", "regcred")
 	v.SetDefault("clients.kubernetes.server_version", "6.3.6-r0-3")
 	v.SetDefault("clients.kubernetes.init_container_version", "0.0.2-4")

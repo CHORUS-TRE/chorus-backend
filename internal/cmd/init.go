@@ -61,6 +61,10 @@ func runInitConfig() error {
 	}
 
 	tree := map[string]interface{}{}
+
+	// disable in cluster config for local dev
+	setNestedValue(tree, "clients.kubernetes.in_cluster_config_enabled", false)
+
 	var placeholders []string
 	for _, f := range fields {
 		// Part of a required_without pair with daemon.private_key, which we

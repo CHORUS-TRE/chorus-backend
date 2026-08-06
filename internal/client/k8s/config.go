@@ -1,9 +1,7 @@
 package k8s
 
 import (
-	"errors"
 	"fmt"
-	"os"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"k8s.io/client-go/rest"
@@ -11,15 +9,10 @@ import (
 )
 
 func getK8sConfig(cfg config.Config) (restConfig *rest.Config, err error) {
-	switch {
-	case cfg.Clients.K8sClient.KubeConfig != "":
+	if cfg.Clients.K8sClient.InClusterConfigEnabled {
+		restConfig, err = rest.InClusterConfig()
+	} else {
 		restConfig, err = getK8sConfigFromKubeConfig(cfg)
-	case cfg.Clients.K8sClient.ServiceAccountSecretPath != "":
-		restConfig, err = getK8sConfigFromServiceAccountPath(cfg)
-	case cfg.Clients.K8sClient.Token != "":
-		restConfig, err = getK8sConfigFromServiceAccount(cfg)
-	default:
-		return nil, errors.New("no config for k8s client found")
 	}
 	if err != nil {
 		return nil, err
@@ -45,48 +38,6 @@ func getK8sConfigFromKubeConfig(cfg config.Config) (*rest.Config, error) {
 	restConfig, err := clientConfig.ClientConfig()
 	if err != nil {
 		return nil, fmt.Errorf("error getting restconfig: %w", err)
-	}
-
-	return restConfig, nil
-}
-
-// getK8sConfigFromServiceAccountPath loads a Kubernetes config from a service account secret path.
-func getK8sConfigFromServiceAccountPath(cfg config.Config) (*rest.Config, error) {
-	saPath := cfg.Clients.K8sClient.ServiceAccountSecretPath
-	apiServer := cfg.Clients.K8sClient.APIServer
-
-	// Read CA cert
-	caCert, err := os.ReadFile(saPath + "/ca.crt")
-	if err != nil {
-		return nil, fmt.Errorf("error reading service account CA cert: %w", err)
-	}
-
-	if cfg.Clients.K8sClient.ServiceAccountOverrideCA != "" {
-		caCert = []byte(cfg.Clients.K8sClient.ServiceAccountOverrideCA)
-	}
-
-	restConfig := &rest.Config{
-		Host:            apiServer,
-		BearerTokenFile: saPath + "/token",
-		TLSClientConfig: rest.TLSClientConfig{
-			CAData: caCert,
-		},
-	}
-
-	return restConfig, nil
-}
-
-func getK8sConfigFromServiceAccount(cfg config.Config) (*rest.Config, error) {
-	token := cfg.Clients.K8sClient.Token.PlainText()
-	caCert := cfg.Clients.K8sClient.CA
-	apiServer := cfg.Clients.K8sClient.APIServer
-
-	restConfig := &rest.Config{
-		Host:        apiServer,
-		BearerToken: token,
-		TLSClientConfig: rest.TLSClientConfig{
-			CAData: []byte(caCert),
-		},
 	}
 
 	return restConfig, nil
