@@ -110,6 +110,9 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 	case "required_without":
 		sibling := siblingPath(cfg, fe, fe.Param())
 		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", path, sibling)
+	case "required_with":
+		sibling := siblingPath(cfg, fe, fe.Param())
+		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is set)", path, sibling)
 	case "required_if":
 		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", path, describeConditions(cfg, fe))
 	case "required_unless":
