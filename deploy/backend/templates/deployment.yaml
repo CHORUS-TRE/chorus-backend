@@ -40,10 +40,6 @@ spec:
             - start
             - --config
             - /configs/config.yaml
-            {{- if not .Values.disableMountSecrets }}
-            - --config
-            - /secrets/secrets.yaml
-            {{- end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ include "backend.image" . }}
@@ -52,8 +48,11 @@ spec:
           env:
             {{- toYaml . | nindent 10 }}
           {{- end }}
-          {{- with .Values.envFrom }}
           envFrom:
+          - secretRef:
+              name: {{ include "backend.fullname" . }}
+              optional: true
+          {{- with .Values.envFrom }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
           resources:
@@ -69,10 +68,6 @@ spec:
           volumeMounts:
           - name: config
             mountPath: /configs
-          {{- if not .Values.disableMountSecrets }}
-          - name: secrets
-            mountPath: /secrets
-          {{- end }}
       volumes:
       - name: config
         configMap:
@@ -80,14 +75,6 @@ spec:
           items:
           - key: config.yaml
             path: config.yaml
-      {{- if not .Values.disableMountSecrets }}
-      - name: secrets
-        secret:
-          secretName: {{ include "backend.fullname" . }}
-          items:
-          - key: secrets.yaml
-            path: secrets.yaml
-      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
