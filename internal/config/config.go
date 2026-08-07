@@ -274,12 +274,12 @@ type (
 		} `yaml:"authentication_service"`
 
 		OpenIDConnectProvider struct {
-			Enabled                 bool                          `yaml:"enabled"`
-			FrontendInteractionsURL string                        `yaml:"frontend_interactions_url" validate:"required_if=Enabled true"`
-			JWKS                    Sensitive                     `yaml:"jwks" validate:"required_if=Enabled true" init:"jwks"`
-			IssuerURL               string                        `yaml:"issuer_url" validate:"required_if=Enabled true"`
-			Scopes                  []string                      `yaml:"scopes"`
-			Clients                 []OpenIDConnectProviderClient `yaml:"clients" validate:"required_if=Enabled true,dive"`
+			Enabled                 bool                                   `yaml:"enabled"`
+			FrontendInteractionsURL string                                 `yaml:"frontend_interactions_url" validate:"required_if=Enabled true"`
+			JWKS                    Sensitive                              `yaml:"jwks" validate:"required_if=Enabled true" init:"jwks"`
+			IssuerURL               string                                 `yaml:"issuer_url" validate:"required_if=Enabled true"`
+			Scopes                  []string                               `yaml:"scopes"`
+			Clients                 map[string]OpenIDConnectProviderClient `yaml:"clients" validate:"required_if=Enabled true,dive"`
 		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {
@@ -376,10 +376,9 @@ type (
 	}
 
 	OpenIDConnectProviderClient struct {
-		ID string `yaml:"client_id" validate:"required"`
-		// Secret is used when the client authenticates with client_secret_jwt,
-		// since the key used to sign the assertion is the same used to verify it.
-		Secret Sensitive `yaml:"client_secret"`
+		// Secret is required unless the client authenticates via private_key_jwt
+		// (which proves possession of a key pair instead of a shared secret).
+		Secret Sensitive `yaml:"client_secret" validate:"required_unless=TokenAuthnMethod private_key_jwt"`
 		// HashedSecret is the hash of the client secret for the client_secret_basic
 		// and client_secret_post authentication methods.
 		HashedSecret Sensitive `yaml:"hashed_secret"`
@@ -423,13 +422,16 @@ type (
 		RequestURIs       []string `yaml:"request_uris"`
 		GrantTypes        []string `yaml:"grant_types"`    // client_credentials, authorization_code, refresh_token, implicit
 		ResponseTypes     []string `yaml:"response_types"` // code, id_token, token, code id_token, code token, id_token token, code id_token token
-		PublicJWKSURI     string   `yaml:"jwks_uri"`
+		PublicJWKSURI     string   `yaml:"jwks_uri" validate:"required_if=TokenAuthnMethod private_key_jwt"`
 		// PublicJWKS        *JSONWebKeySet `yaml:"jwks"`
 		// ScopeIDs contains the scopes available to the client separated by spaces.
 		ScopeIDs string `yaml:"scope"`
 		//...
 
-		TokenAuthnMethod string `yaml:"token_endpoint_auth_method"` // none, client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth, dpop
+		// TokenAuthnMethod is constrained to the methods actually enabled by
+		// the provider (see WithTokenAuthnMethods in oidc-idp.go) -- not the
+		// full set the underlying OIDC library supports.
+		TokenAuthnMethod string `yaml:"token_endpoint_auth_method" validate:"oneof=client_secret_basic client_secret_post private_key_jwt"`
 	}
 
 	// UserDelegationConfig configures a client to act on behalf of a specific

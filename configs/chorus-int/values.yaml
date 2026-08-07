@@ -93,7 +93,20 @@ config:
       issuer_url: "https://backend.int.chorus-tre.ch/openid-connect"
       frontend_interactions_url: "https://backend.int.chorus-tre.ch/auth-ui"
       jwks: "" # set in secret
-      clients: [] # set in secret
+      clients:
+        gitlab:
+          client_name: "Gitlab int Chorus OIDC Client"
+          client_secret: "" # set in secret
+          redirect_uris:
+            - "https://gitlab.int.chorus-tre.ch/users/auth/openid_connect/callback"
+          grant_types:
+            - authorization_code
+            - refresh_token
+          response_types:
+            - code
+          scope: "openid profile email roles"
+          token_endpoint_auth_method: "client_secret_post"
+          only_pre_logged_for_client: false
     steward:
       user:
         password: "" # set in secret

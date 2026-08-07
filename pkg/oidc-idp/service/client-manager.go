@@ -21,7 +21,7 @@ var _ goidc.ClientManager = &clientManager{}
 func NewClientManager(cfg config.Config) (*clientManager, error) {
 	cs := make(map[string]*goidc.Client, len(cfg.Services.OpenIDConnectProvider.Clients))
 
-	for _, c := range cfg.Services.OpenIDConnectProvider.Clients {
+	for id, c := range cfg.Services.OpenIDConnectProvider.Clients {
 		gt := make([]goidc.GrantType, len(c.GrantTypes))
 		for i, grantType := range c.GrantTypes {
 			gt[i] = goidc.GrantType(grantType)
@@ -38,7 +38,7 @@ func NewClientManager(cfg config.Config) (*clientManager, error) {
 		}
 
 		client := &goidc.Client{
-			ID:                         c.ID,
+			ID:                         id,
 			Secret:                     c.Secret.PlainText(),
 			HashedSecret:               string(h),
 			CreatedAtTimestamp:         c.CreatedAtTimestamp,
@@ -66,14 +66,14 @@ func NewClientManager(cfg config.Config) (*clientManager, error) {
 
 		if c.UserDelegation != nil {
 			if c.GrantTypes == nil || len(c.GrantTypes) != 1 || c.GrantTypes[0] != string(goidc.GrantClientCredentials) {
-				return nil, fmt.Errorf("client %s has user delegation configured, it needs to have a single grant type: client_credentials", c.ID)
+				return nil, fmt.Errorf("client %s has user delegation configured, it needs to have a single grant type: client_credentials", id)
 			}
 			client.SetCustomAttribute("user_delegation_user_id", c.UserDelegation.UserID)
 			client.SetCustomAttribute("user_delegation_tenant_id", c.UserDelegation.TenantID)
 			client.SetCustomAttribute("user_delegation_claims", c.UserDelegation.Claims)
 		}
 
-		cs[c.ID] = client
+		cs[id] = client
 	}
 
 	return &clientManager{
