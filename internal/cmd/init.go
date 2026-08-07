@@ -87,7 +87,7 @@ func runInitConfig() error {
 	if err != nil {
 		return fmt.Errorf("unable to marshal config: %w", err)
 	}
-	out = annotateHarborClient(out)
+	out = annotateOCIClient(out)
 
 	if err := os.WriteFile(path, out, 0o600); err != nil {
 		return fmt.Errorf("unable to write %s: %w", path, err)
@@ -194,10 +194,11 @@ func setNestedValue(tree map[string]interface{}, path string, value interface{})
 	}
 }
 
-// annotateHarborClient inserts a comment above the harbor key
-// reminding the reader to set username/password for a private registry.
-func annotateHarborClient(out []byte) []byte {
-	const marker = "  harbor:\n"
+// annotateOCIClient inserts a comment above the oci key reminding the reader
+// to set username/password for a private registry -- the Harbor client
+// retrieves its own registry credentials from here, it has none of its own.
+func annotateOCIClient(out []byte) []byte {
+	const marker = "  oci:\n"
 	const note = "  # If this registry requires auth, also set username/password below.\n" + marker
 	return bytes.Replace(out, []byte(marker), []byte(note), 1)
 }

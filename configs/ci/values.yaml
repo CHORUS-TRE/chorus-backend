@@ -129,6 +129,8 @@ clusterRole:
 disableMountSecrets: true
 config:
   clients:
+    oci:
+      enabled: false
     harbor:
       enabled: false
     kubernetes:

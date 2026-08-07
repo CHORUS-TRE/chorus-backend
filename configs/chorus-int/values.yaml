@@ -17,12 +17,12 @@ serviceMonitor:
 disableMountSecrets: false
 config:
   clients:
-    harbor:
-      url: "https://harbor.int.chorus-tre.ch"
+    oci:
+      host: "harbor.int.chorus-tre.ch"
       username: "robot$chorus-int"
       password: "" # set in secret
     kubernetes:
-      default_registry: "https://harbor.int.chorus-tre.ch"
+      default_registry: "harbor.int.chorus-tre.ch"
   daemon:
     jwt:
       secret: "" # set in secret

@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"net/url"
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/job"
@@ -51,15 +50,11 @@ func InitDaemonJobs() {
 		var j job.Job
 		switch name {
 		case "app_sync":
-			registry := ""
-			if u, err := url.Parse(cfg.Clients.HarborClient.URL); err == nil {
-				registry = u.Host
-			}
 			j = appservice.NewAppSyncJob(
 				ProvideAppStore(),
 				ProvideAppService(),
 				ProvideHarborClient(),
-				registry,
+				ProvideOCIClient().Host(),
 				logger.TechLog,
 			)
 		default:

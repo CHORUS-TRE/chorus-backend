@@ -148,18 +148,18 @@ type (
 	}
 
 	OCIClient struct {
-		Enabled bool `yaml:"enabled"`
+		Enabled  bool      `yaml:"enabled"`
+		Host     string    `yaml:"host" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"` // bare registry hostname, e.g. "harbor.example.com" -- no scheme; the Harbor client retrieves this and its credentials from here rather than owning its own copy
+		Username string    `yaml:"username"`
+		Password Sensitive `yaml:"password"`
 	}
 
 	HarborClient struct {
-		Enabled            bool      `yaml:"enabled"`
-		URL                string    `yaml:"url" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"`
-		Username           string    `yaml:"username"`
-		Password           Sensitive `yaml:"password"`
-		Project            string    `yaml:"project"`
-		LabelPrefixes      []string  `yaml:"label_prefixes"`
-		PageSize           int       `yaml:"page_size" validate:"required_if=Enabled true"`
-		MaxParallelFetches uint64    `yaml:"max_parallel_fetches" validate:"required_if=Enabled true"`
+		Enabled            bool     `yaml:"enabled"`
+		Project            string   `yaml:"project"`
+		LabelPrefixes      []string `yaml:"label_prefixes"`
+		PageSize           int      `yaml:"page_size" validate:"required_if=Enabled true"`
+		MaxParallelFetches uint64   `yaml:"max_parallel_fetches" validate:"required_if=Enabled true"`
 	}
 
 	Tenant struct {

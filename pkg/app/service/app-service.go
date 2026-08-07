@@ -72,10 +72,13 @@ func (u *AppService) DeleteApp(ctx context.Context, tenantID, appID uint64) erro
 }
 
 func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	if err := u.validateRegistry(app); err != nil {
+		return nil, err
+	}
+
 	imageRef := dockerImageToString(app)
 
-	// Verify that app image exists using the OCI client
-	exists, err := u.ociClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+	exists, err := u.ociClient.ImageExists(imageRef)
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
 	}
@@ -96,10 +99,13 @@ func (u *AppService) UpdateApp(ctx context.Context, app *model.App) (*model.App,
 }
 
 func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App, error) {
+	if err := u.validateRegistry(app); err != nil {
+		return nil, err
+	}
+
 	imageRef := dockerImageToString(app)
 
-	// Verify that app image exists using the OCI client
-	exists, err := u.ociClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+	exists, err := u.ociClient.ImageExists(imageRef)
 	if err != nil {
 		return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
 	}
@@ -121,10 +127,13 @@ func (u *AppService) CreateApp(ctx context.Context, app *model.App) (*model.App,
 
 func (u *AppService) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*model.App, error) {
 	for _, app := range apps {
+		if err := u.validateRegistry(app); err != nil {
+			return nil, err
+		}
+
 		imageRef := dockerImageToString(app)
 
-		// Verify that app image exists using the OCI client
-		exists, err := u.ociClient.ImageExists(imageRef, "", "") // Use empty registry credentials for now
+		exists, err := u.ociClient.ImageExists(imageRef)
 		if err != nil {
 			return nil, fmt.Errorf("unable to verify app image existence %s: %w", imageRef, err)
 		}
@@ -151,4 +160,13 @@ func (u *AppService) BulkCreateApps(ctx context.Context, apps []*model.App) ([]*
 // dockerImageToString constructs the full Docker image name
 func dockerImageToString(app *model.App) string {
 	return app.DockerImageRegistry + "/" + app.DockerImageName + ":" + app.DockerImageTag
+}
+
+// validateRegistry rejects an app whose registry doesn't match the one the
+// OCI client is configured for
+func (u *AppService) validateRegistry(app *model.App) error {
+	if app.DockerImageRegistry != "" && app.DockerImageRegistry != u.ociClient.Host() {
+		return fmt.Errorf("app image registry %q does not match configured registry %q", app.DockerImageRegistry, u.ociClient.Host())
+	}
+	return nil
 }
