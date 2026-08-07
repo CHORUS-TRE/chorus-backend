@@ -150,8 +150,8 @@ type (
 	OCIClient struct {
 		Enabled  bool      `yaml:"enabled"`
 		Host     string    `yaml:"host" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"` // bare registry hostname, e.g. "harbor.example.com" -- no scheme; the Harbor client retrieves this and its credentials from here rather than owning its own copy
-		Username string    `yaml:"username"`
-		Password Sensitive `yaml:"password"`
+		Username string    `yaml:"username" validate:"required_with=Password"`
+		Password Sensitive `yaml:"password" validate:"required_with=Username"`
 	}
 
 	HarborClient struct {
