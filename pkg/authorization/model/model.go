@@ -62,117 +62,7 @@ type Permission struct {
 	Context Context
 }
 
-func NewPermission(name PermissionName, opts ...NewContextOption) Permission {
-	context := NewContext(opts...)
-	return Permission{
-		Name:    name,
-		Context: context,
-	}
-}
-
 type PermissionName string
-
-const (
-	PermissionListAppInstances  PermissionName = "listAppInstances"
-	PermissionCreateAppInstance PermissionName = "createAppInstance"
-	PermissionUpdateAppInstance PermissionName = "updateAppInstance"
-	PermissionGetAppInstance    PermissionName = "getAppInstance"
-	PermissionDeleteAppInstance PermissionName = "deleteAppInstance"
-
-	PermissionListWorkbenchs         PermissionName = "listWorkbenchs"
-	PermissionCreateWorkbench        PermissionName = "createWorkbench"
-	PermissionUpdateWorkbench        PermissionName = "updateWorkbench"
-	PermissionGetWorkbench           PermissionName = "getWorkbench"
-	PermissionStreamWorkbench        PermissionName = "streamWorkbench"
-	PermissionDeleteWorkbench        PermissionName = "deleteWorkbench"
-	PermissionManageUsersInWorkbench PermissionName = "manageUsersInWorkbench"
-	PermissionAuditWorkbench         PermissionName = "auditWorkbench"
-
-	PermissionListWorkspaces                 PermissionName = "listWorkspaces"
-	PermissionListPublicWorkspaces           PermissionName = "listPublicWorkspaces"
-	PermissionCreateWorkspace                PermissionName = "createWorkspace"
-	PermissionUpdateWorkspace                PermissionName = "updateWorkspace"
-	PermissionGetWorkspace                   PermissionName = "getWorkspace"
-	PermissionDeleteWorkspace                PermissionName = "deleteWorkspace"
-	PermissionManageUsersInWorkspace         PermissionName = "manageUsersInWorkspace"
-	PermissionManageUsersDataRoleInWorkspace PermissionName = "manageUsersDataRoleInWorkspace"
-	PermissionListFilesInWorkspace           PermissionName = "listFilesInWorkspace"
-	PermissionUploadFilesToWorkspace         PermissionName = "uploadFilesToWorkspace"
-	PermissionDownloadFilesFromWorkspace     PermissionName = "downloadFilesFromWorkspace"
-	PermissionModifyFilesInWorkspace         PermissionName = "modifyFilesInWorkspace"
-	PermissionAuditWorkspace                 PermissionName = "auditWorkspace"
-
-	PermissionListWorkspaceServiceInstances  PermissionName = "listWorkspaceServiceInstances"
-	PermissionCreateWorkspaceServiceInstance PermissionName = "createWorkspaceServiceInstance"
-	PermissionUpdateWorkspaceServiceInstance PermissionName = "updateWorkspaceServiceInstance"
-	PermissionGetWorkspaceServiceInstance    PermissionName = "getWorkspaceServiceInstance"
-	PermissionDeleteWorkspaceServiceInstance PermissionName = "deleteWorkspaceServiceInstance"
-
-	PermissionGetWorkspaceServiceInstanceSecret PermissionName = "getWorkspaceServiceInstanceSecret"
-
-	PermissionListApps  PermissionName = "listApps"
-	PermissionCreateApp PermissionName = "createApp"
-	PermissionUpdateApp PermissionName = "updateApp"
-	PermissionGetApp    PermissionName = "getApp"
-	PermissionDeleteApp PermissionName = "deleteApp"
-
-	PermissionAuthenticate                       PermissionName = "authenticate"
-	PermissionLogout                             PermissionName = "logout"
-	PermissionGetListOfPossibleWayToAuthenticate PermissionName = "getListOfPossibleWayToAuthenticate"
-	PermissionAuthenticateUsingAuth2_0           PermissionName = "authenticateUsingAuth2.0"
-	PermissionAuthenticateRedirectUsingAuth2_0   PermissionName = "authenticateRedirectUsingAuth2.0"
-	PermissionRefreshToken                       PermissionName = "refreshToken"
-
-	PermissionGetHealthCheck PermissionName = "getHealthCheck"
-
-	PermissionListNotifications        PermissionName = "listNotifications"
-	PermissionCountUnreadNotifications PermissionName = "countUnreadNotifications"
-	PermissionMarkNotificationAsRead   PermissionName = "markNotificationAsRead"
-
-	PermissionInitializeTenant PermissionName = "initializeTenant"
-
-	PermissionListUsers       PermissionName = "listUsers"
-	PermissionSearchUsers     PermissionName = "searchUsers"
-	PermissionCreateUser      PermissionName = "createUser"
-	PermissionUpdateUser      PermissionName = "updateUser"
-	PermissionGetMyOwnUser    PermissionName = "getMyOwnUser"
-	PermissionUpdatePassword  PermissionName = "updatePassword"
-	PermissionEnableTotp      PermissionName = "enableTotp"
-	PermissionResetTotp       PermissionName = "resetTotp"
-	PermissionGetUser         PermissionName = "getUser"
-	PermissionDeleteUser      PermissionName = "deleteUser"
-	PermissionResetPassword   PermissionName = "resetPassword"
-	PermissionManageUserRoles PermissionName = "manageUserRoles"
-	PermissionAuditUser       PermissionName = "auditUser"
-
-	PermissionGetPlatformSettings PermissionName = "getPlatformSettings"
-	PermissionSetPlatformSettings PermissionName = "setPlatformSettings"
-	PermissionAuditPlatform       PermissionName = "auditPlatform"
-	PermissionManageDynamicRoles  PermissionName = "manageDynamicRoles"
-
-	PermissionCreateTermsOfUseVersion     PermissionName = "createTermsOfUseVersion"
-	PermissionUpdateTermsOfUseVersion     PermissionName = "updateTermsOfUseVersion"
-	PermissionPublishTermsOfUseVersion    PermissionName = "publishTermsOfUseVersion"
-	PermissionGetTermsOfUseVersion        PermissionName = "getTermsOfUseVersion"
-	PermissionListTermsOfUseVersions      PermissionName = "listTermsOfUseVersions"
-	PermissionGetCurrentTermsOfUseVersion PermissionName = "getCurrentTermsOfUseVersion"
-	PermissionListTermsOfUseAcceptances   PermissionName = "listTermsOfUseAcceptances"
-	PermissionGetMyTermsOfUseStatus       PermissionName = "getMyTermsOfUseStatus"
-	PermissionAcceptTermsOfUse            PermissionName = "acceptTermsOfUse"
-
-	PermissionListRequests   PermissionName = "listRequests"
-	PermissionListMyRequests PermissionName = "listMyRequests"
-	PermissionGetRequest     PermissionName = "getRequest"
-	PermissionCreateRequest  PermissionName = "createRequest"
-	PermissionApproveRequest PermissionName = "approveRequest"
-	PermissionDeleteRequest  PermissionName = "deleteRequest"
-
-	PermissionListOrganizations  PermissionName = "listOrganizations"
-	PermissionGetOrganization    PermissionName = "getOrganization"
-	PermissionCreateOrganization PermissionName = "createOrganization"
-	PermissionUpdateOrganization PermissionName = "updateOrganization"
-	PermissionDeleteOrganization PermissionName = "deleteOrganization"
-)
 
 func (p PermissionName) String() string {
 	return string(p)
@@ -246,14 +136,6 @@ func UniquePermissionNames(permissions []Permission) []string {
 type Role struct {
 	Name    RoleName `json:"name"`
 	Context Context  `json:"context"`
-}
-
-func NewRole(name RoleName, opts ...NewContextOption) Role {
-	context := NewContext(opts...)
-	return Role{
-		Name:    name,
-		Context: context,
-	}
 }
 
 func ToRole(name string, context map[string]string) (Role, error) {
