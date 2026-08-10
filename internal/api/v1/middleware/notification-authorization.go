@@ -6,7 +6,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	jwt "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	empty "google.golang.org/protobuf/types/known/emptypb"
 )
@@ -36,7 +36,7 @@ func (c notificationControllerAuthorization) CountUnreadNotifications(ctx contex
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionCountUnreadNotifications, authorization.WithUser(userID))
+	err = c.IsAuthorized(ctx, authz.CountUnreadNotifications.For(authz.UserID(userID)))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionMarkNotificationAsRead, authorization.WithUser(userID))
+	err = c.IsAuthorized(ctx, authz.MarkNotificationAsRead.For(authz.UserID(userID)))
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c notificationControllerAuthorization) GetNotifications(ctx context.Contex
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionListNotifications, authorization.WithUser(userID))
+	err = c.IsAuthorized(ctx, authz.ListNotifications.For(authz.UserID(userID)))
 	if err != nil {
 		return nil, err
 	}

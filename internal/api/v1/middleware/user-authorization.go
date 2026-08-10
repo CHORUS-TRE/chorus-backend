@@ -9,7 +9,7 @@ import (
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -38,31 +38,31 @@ func UserAuthorizing(cfg config.Config, logger *logger.ContextLogger, authorizer
 func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
 	if req.Filter != nil {
 		for _, id := range req.Filter.IdsIn {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUser(id))
+			err := c.IsAuthorized(ctx, authz.GetUser.For(authz.UserID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 		for _, id := range req.Filter.WorkspaceIDs {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(id))
+			err := c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 		for _, id := range req.Filter.WorkbenchIDs {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(id))
+			err := c.IsAuthorized(ctx, authz.GetWorkbench.For(authz.WorkbenchID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 		if req.Filter.Search != nil {
-			err := c.IsAuthorized(ctx, authorization.PermissionSearchUsers)
+			err := c.IsAuthorized(ctx, authz.SearchUsers.For())
 			if err != nil {
 				return nil, err
 			}
 		}
 	} else {
-		err := c.IsAuthorized(ctx, authorization.PermissionListUsers)
+		err := c.IsAuthorized(ctx, authz.ListUsers.For())
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetUser, authorization.WithUser(req.Id))
+	err := c.IsAuthorized(ctx, authz.GetUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus
 	// The actual payload sanitization (only safe fields used for self-service)
 	// is performed in the controller.
 	if _, authenticated := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); authenticated {
-		if err := c.IsAuthorized(ctx, authorization.PermissionCreateUser); err != nil {
+		if err := c.IsAuthorized(ctx, authz.CreateUser.For()); err != nil {
 			return nil, err
 		}
 	} else if !isInternalPublicRegistrationEnabled(c.cfg) {
@@ -112,7 +112,7 @@ func isInternalPublicRegistrationEnabled(cfg config.Config) bool {
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.GetMyOwnUser.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdatePassword, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.UpdatePassword.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateUser, authorization.WithUser(req.Id))
+	err := c.IsAuthorized(ctx, authz.UpdateUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -139,19 +139,19 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *chorus.CreateUserRoleRequest) (*chorus.CreateUserRoleReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionManageUserRoles, authorization.WithUser(req.UserId))
+	err := c.IsAuthorized(ctx, authz.ManageUserRoles.For(authz.UserID(req.UserId)))
 	if err != nil {
 		return nil, err
 	}
 
-	roleName, err := authorization.ToRoleName(req.Role.Name)
+	roleName, err := authz.ToRoleName(req.Role.Name)
 	if err != nil {
 		return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role name")
 	}
 
-	assignmentContext := authorization.Context{authorization.ContextUser: fmt.Sprintf("%d", req.UserId)}
+	assignmentContext := authz.Context{authz.ContextUser: fmt.Sprintf("%d", req.UserId)}
 	for key, value := range req.Role.Context {
-		dimension, err := authorization.ToContextDimension(key)
+		dimension, err := authz.ToContextDimension(key)
 		if err != nil {
 			return nil, cerr.ErrInvalidRequest.Wrap(err, "Invalid role context")
 		}
@@ -165,7 +165,7 @@ func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) DeleteUserRole(ctx context.Context, req *chorus.DeleteUserRoleRequest) (*chorus.DeleteUserRoleReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionManageUserRoles, authorization.WithUser(req.UserId))
+	err := c.IsAuthorized(ctx, authz.ManageUserRoles.For(authz.UserID(req.UserId)))
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (c userControllerAuthorization) DeleteUserRole(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteUser, authorization.WithUser(req.Id))
+	err := c.IsAuthorized(ctx, authz.DeleteUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionEnableTotp, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.EnableTotp.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.ResetTotpRequest) (*chorus.ResetTotpReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionResetTotp, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.ResetTotp.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *chorus.ResetPasswordRequest) (*chorus.ResetPasswordReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionResetPassword, authorization.WithUser(req.Id))
+	err := c.IsAuthorized(ctx, authz.ResetPassword.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}

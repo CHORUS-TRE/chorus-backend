@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
@@ -10,7 +11,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	approval_request_model "github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -64,12 +65,12 @@ func (c approvalRequestControllerAuthorization) GetApprovalRequest(ctx context.C
 	// Workspace admins with PermissionGetRequest on any involved workspace can also view it.
 	hasWorkspaceAccess := func() bool {
 		sourceWorkspaceID := approvalRequest.GetSourceWorkspaceID()
-		if c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithWorkspace(sourceWorkspaceID)) == nil {
+		if c.IsAuthorized(ctx, authz.GetRequest.For(authz.WorkspaceID(sourceWorkspaceID))) == nil {
 			return true
 		}
 		if approvalRequest.Type == approval_request_model.ApprovalRequestTypeDataTransfer {
 			destinationWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
-			if c.IsAuthorized(ctx, authorization.PermissionGetRequest, authorization.WithWorkspace(destinationWorkspaceID)) == nil {
+			if c.IsAuthorized(ctx, authz.GetRequest.For(authz.WorkspaceID(destinationWorkspaceID))) == nil {
 				return true
 			}
 		}
@@ -95,7 +96,7 @@ func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context
 			(req.Filter.ApproverId != nil && *req.Filter.ApproverId == userID))
 
 	if listMine {
-		if err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests); err != nil {
+		if err := c.IsAuthorized(ctx, authz.ListMyRequests.For()); err != nil {
 			return nil, err
 		}
 		return c.next.ListApprovalRequests(ctx, req)
@@ -103,11 +104,11 @@ func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context
 
 	// Broader listing (e.g. by workspace admin) requires PermissionListRequests,
 	// scoped to the workspace when one is provided.
-	opts := []authorization.NewContextOption{}
+	var workspaceID authz.WorkspaceID
 	if req.Filter != nil && req.Filter.WorkspaceId != nil {
-		opts = append(opts, authorization.WithWorkspace(*req.Filter.WorkspaceId))
+		workspaceID = authz.WorkspaceID(*req.Filter.WorkspaceId)
 	}
-	if err := c.IsAuthorized(ctx, authorization.PermissionListRequests, opts...); err != nil {
+	if err := c.IsAuthorized(ctx, authz.ListRequests.For(workspaceID)); err != nil {
 		return nil, err
 	}
 
@@ -115,7 +116,7 @@ func (c approvalRequestControllerAuthorization) ListApprovalRequests(ctx context
 }
 
 func (c approvalRequestControllerAuthorization) CountMyApprovalRequests(ctx context.Context, req *chorus.CountMyApprovalRequestsRequest) (*chorus.CountMyApprovalRequestsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListMyRequests)
+	err := c.IsAuthorized(ctx, authz.ListMyRequests.For())
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +125,7 @@ func (c approvalRequestControllerAuthorization) CountMyApprovalRequests(ctx cont
 }
 
 func (c approvalRequestControllerAuthorization) CreateDataExtractionRequest(ctx context.Context, req *chorus.CreateDataExtractionRequestRequest) (*chorus.CreateDataExtractionRequestReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateRequest, authorization.WithWorkspace(req.SourceWorkspaceId))
+	err := c.IsAuthorized(ctx, authz.CreateRequest.For(authz.WorkspaceID(req.SourceWorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +134,12 @@ func (c approvalRequestControllerAuthorization) CreateDataExtractionRequest(ctx 
 }
 
 func (c approvalRequestControllerAuthorization) CreateDataTransferRequest(ctx context.Context, req *chorus.CreateDataTransferRequestRequest) (*chorus.CreateDataTransferRequestReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateRequest, authorization.WithWorkspace(req.SourceWorkspaceId))
+	err := c.IsAuthorized(ctx, authz.CreateRequest.For(authz.WorkspaceID(req.SourceWorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.DestinationWorkspaceId))
+	err = c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(req.DestinationWorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -165,19 +166,19 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 	switch approvalRequest.Type {
 	case approval_request_model.ApprovalRequestTypeDataExtraction:
 		workspaceID := approvalRequest.GetSourceWorkspaceID()
-		if err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID)); err == nil {
+		if err := c.IsAuthorized(ctx, authz.DownloadFilesFromWorkspace.For(authz.WorkspaceID(workspaceID))); err == nil {
 			canApprove = true
 		}
 	case approval_request_model.ApprovalRequestTypeDataTransfer:
 		sourceWorkspaceID := approvalRequest.GetSourceWorkspaceID()
 		if _, decided := approvalRequest.StepDecisions[approval_request_model.StepDownload]; !decided {
-			if err := c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(sourceWorkspaceID)); err == nil {
+			if err := c.IsAuthorized(ctx, authz.DownloadFilesFromWorkspace.For(authz.WorkspaceID(sourceWorkspaceID))); err == nil {
 				canApprove = true
 			}
 		}
 		targetWorkspaceID := approvalRequest.Details.DataTransferDetails.DestinationWorkspaceID
 		if _, decided := approvalRequest.StepDecisions[approval_request_model.StepUpload]; !decided {
-			if err := c.IsAuthorized(ctx, authorization.PermissionUploadFilesToWorkspace, authorization.WithWorkspace(targetWorkspaceID)); err == nil {
+			if err := c.IsAuthorized(ctx, authz.UploadFilesToWorkspace.For(authz.WorkspaceID(targetWorkspaceID))); err == nil {
 				canApprove = true
 			}
 		}
@@ -193,7 +194,11 @@ func (c approvalRequestControllerAuthorization) ApproveApprovalRequest(ctx conte
 }
 
 func (c approvalRequestControllerAuthorization) DeleteApprovalRequest(ctx context.Context, req *chorus.DeleteApprovalRequestRequest) (*chorus.DeleteApprovalRequestReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteRequest, authorization.WithRequest(req.Id))
+	permission := authz.Permission{
+		Name:    authz.DeleteRequest.Name,
+		Context: authz.Context{authz.ContextRequest: fmt.Sprintf("%d", req.Id)},
+	}
+	err := c.IsAuthorized(ctx, permission)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +227,7 @@ func (c approvalRequestControllerAuthorization) DownloadApprovalRequestFile(ctx 
 	}
 
 	workspaceID := approvalRequest.GetSourceWorkspaceID()
-	err = c.IsAuthorized(ctx, authorization.PermissionDownloadFilesFromWorkspace, authorization.WithWorkspace(workspaceID))
+	err = c.IsAuthorized(ctx, authz.DownloadFilesFromWorkspace.For(authz.WorkspaceID(workspaceID)))
 	isPotentialApprover := err == nil
 
 	if !isPotentialApprover && approvalRequest.RequesterID != userID {
