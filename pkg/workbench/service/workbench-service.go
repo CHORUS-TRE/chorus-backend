@@ -25,7 +25,7 @@ import (
 	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -528,9 +528,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return nil, cerr.WrapStoreError(err, "Unable to create workbench")
 	}
 
-	r := authorization_model.NewRole(authorization_model.RoleWorkbenchAdmin,
-		authorization_model.WithWorkbench(newWorkbench.ID),
-		authorization_model.WithWorkspace(newWorkbench.WorkspaceID))
+	r := authz.WorkbenchAdmin.For(authz.WorkbenchID(newWorkbench.ID))
 	err = s.userer.CreateUserRoles(ctx, workbench.TenantID, workbench.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workbench admin role to user %v for workbench %v", workbench.UserID, newWorkbench.ID))

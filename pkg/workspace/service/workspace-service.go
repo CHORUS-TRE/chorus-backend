@@ -13,7 +13,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -36,7 +36,7 @@ type Workspaceer interface {
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
 
 	AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
-	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error
+	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authz.RoleName) error
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
 
 	GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error)
@@ -339,11 +339,11 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 
 	var rolesToAssign []user_model.UserRole
 	if s.cfg.Services.WorkspaceService.CreatorIsAdmin {
-		r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
+		r := authz.WorkspaceAdmin.For(authz.WorkspaceID(newWorkspace.ID))
 		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
 	}
 	if s.cfg.Services.WorkspaceService.CreatorIsDataManager {
-		r := authorization_model.NewRole(authorization_model.RoleWorkspaceDataManager, authorization_model.WithWorkspace(newWorkspace.ID))
+		r := authz.WorkspaceDataManager.For(authz.WorkspaceID(newWorkspace.ID))
 		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
 	}
 
@@ -408,7 +408,7 @@ func (s *WorkspaceService) AddUserRoleInWorkspace(ctx context.Context, tenantID,
 	return nil
 }
 
-func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
+func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authz.RoleName) error {
 	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {

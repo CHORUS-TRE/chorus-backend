@@ -27,7 +27,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/crypto"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/model"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	userModel "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	userService "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
@@ -59,30 +59,30 @@ type AuthenticationStore interface {
 
 // AuthenticationService is the authentication service handler.
 type AuthenticationService struct {
-	modes                map[string]config.Mode
-	userer               Userer
-	signingKey           string        // signingKey is the secret key with which JWT-tokens are signed.
-	jwtExpirationTime    time.Duration // jwtExpirationTime is the number of minutes until a JWT-token expires.
-	maxRefreshTime       time.Duration
-	daemonEncryptionKey  *crypto.Secret
-	store                AuthenticationStore // store is the database handler object.
-	oauthConfigs         map[string]*oauth2.Config
-	oauthHTTPClients     map[string]*http.Client // Custom HTTP clients per OAuth provider for TLS configuration
-	selfServiceTenantID  uint64
+	modes               map[string]config.Mode
+	userer              Userer
+	signingKey          string        // signingKey is the secret key with which JWT-tokens are signed.
+	jwtExpirationTime   time.Duration // jwtExpirationTime is the number of minutes until a JWT-token expires.
+	maxRefreshTime      time.Duration
+	daemonEncryptionKey *crypto.Secret
+	store               AuthenticationStore // store is the database handler object.
+	oauthConfigs        map[string]*oauth2.Config
+	oauthHTTPClients    map[string]*http.Client // Custom HTTP clients per OAuth provider for TLS configuration
+	selfServiceTenantID uint64
 }
 
 // CustomClaims groups the JWT-token data fields.
 type CustomClaims struct {
-	ID        uint64                     `json:"id"`
-	TenantID  uint64                     `json:"tenantId"`
-	FirstName string                     `json:"firstName"`
-	LastName  string                     `json:"lastName"`
-	Roles     []authorization_model.Role `json:"roles"`
-	R         string                     `json:"r"` // Roles gz compressed and base64-encoded
-	Username  string                     `json:"username"`
-	Email     string                     `json:"email"`
-	ForClient string                     `json:"forClient"`
-	Source    string                     `json:"source"`
+	ID        uint64       `json:"id"`
+	TenantID  uint64       `json:"tenantId"`
+	FirstName string       `json:"firstName"`
+	LastName  string       `json:"lastName"`
+	Roles     []authz.Role `json:"roles"`
+	R         string       `json:"r"` // Roles gz compressed and base64-encoded
+	Username  string       `json:"username"`
+	Email     string       `json:"email"`
+	ForClient string       `json:"forClient"`
+	Source    string       `json:"source"`
 
 	jwt.StandardClaims
 }
@@ -396,10 +396,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		}
 
 		err = a.userer.CreateUserRoles(ctx, 1, createdUser.ID, []userModel.UserRole{{
-			Role: authorization_model.NewRole(
-				authorization_model.RoleAuthenticated,
-				authorization_model.WithUser(createdUser.ID),
-			),
+			Role: authz.Authenticated.For(authz.UserID(createdUser.ID)),
 		}})
 		if err != nil {
 			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to create user roles")

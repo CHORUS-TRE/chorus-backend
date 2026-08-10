@@ -14,7 +14,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/uuid"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/model"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	workspace_file_service "github.com/CHORUS-TRE/chorus-backend/pkg/workspace-file/service"
@@ -57,7 +57,7 @@ type NotificationStore interface {
 }
 
 type UserPermissionFinder interface {
-	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter authorization_model.FindUsersWithPermissionFilter) ([]uint64, error)
+	FindUsersWithPermission(ctx context.Context, tenantID uint64, filter authz.FindUsersWithPermissionFilter) ([]uint64, error)
 }
 
 type ApprovalRequestService struct {
@@ -179,16 +179,16 @@ func (s *ApprovalRequestService) CreateDataExtractionRequest(ctx context.Context
 }
 
 func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx context.Context, tenantID, requesterID, workspaceID uint64) (map[model.ApprovalStep][]uint64, bool, error) {
-	workspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(workspaceID))
+	workspaceContext := authz.Context{authz.ContextWorkspace: fmt.Sprintf("%d", workspaceID)}
 
-	filter := authorization_model.FindUsersWithPermissionFilter{
-		PermissionName:          authorization_model.PermissionDownloadFilesFromWorkspace,
+	filter := authz.FindUsersWithPermissionFilter{
+		PermissionName:          authz.DownloadFilesFromWorkspace.Name,
 		Context:                 workspaceContext,
 		PreferExactContextMatch: true,
 	}
 
 	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-		filter.ViaRoles = []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager}
+		filter.ViaRoles = []authz.RoleName{authz.RoleWorkspaceDataManager}
 	}
 
 	approvers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filter)
@@ -300,16 +300,16 @@ func (s *ApprovalRequestService) CreateDataTransferRequest(ctx context.Context, 
 }
 
 func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context.Context, tenantID, requesterID, sourceWorkspaceID, targetWorkspaceID uint64) (map[model.ApprovalStep][]uint64, bool, error) {
-	downloadWorkspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(sourceWorkspaceID))
-	uploadWorkspaceContext := authorization_model.NewContext(authorization_model.WithWorkspace(targetWorkspaceID))
+	downloadWorkspaceContext := authz.Context{authz.ContextWorkspace: fmt.Sprintf("%d", sourceWorkspaceID)}
+	uploadWorkspaceContext := authz.Context{authz.ContextWorkspace: fmt.Sprintf("%d", targetWorkspaceID)}
 
-	filterDownload := authorization_model.FindUsersWithPermissionFilter{
-		PermissionName:          authorization_model.PermissionDownloadFilesFromWorkspace,
+	filterDownload := authz.FindUsersWithPermissionFilter{
+		PermissionName:          authz.DownloadFilesFromWorkspace.Name,
 		Context:                 downloadWorkspaceContext,
 		PreferExactContextMatch: true,
 	}
 	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-		filterDownload.ViaRoles = []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager}
+		filterDownload.ViaRoles = []authz.RoleName{authz.RoleWorkspaceDataManager}
 	}
 
 	downloadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterDownload)
@@ -317,13 +317,13 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 		return nil, false, err
 	}
 
-	filterUpload := authorization_model.FindUsersWithPermissionFilter{
-		PermissionName:          authorization_model.PermissionUploadFilesToWorkspace,
+	filterUpload := authz.FindUsersWithPermissionFilter{
+		PermissionName:          authz.UploadFilesToWorkspace.Name,
 		Context:                 uploadWorkspaceContext,
 		PreferExactContextMatch: true,
 	}
 	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-		filterUpload.ViaRoles = []authorization_model.RoleName{authorization_model.RoleWorkspaceDataManager}
+		filterUpload.ViaRoles = []authz.RoleName{authz.RoleWorkspaceDataManager}
 	}
 
 	uploadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterUpload)

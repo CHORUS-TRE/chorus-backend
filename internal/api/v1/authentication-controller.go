@@ -15,7 +15,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -93,7 +93,7 @@ func (a AuthenticationController) Authenticate(ctx context.Context, req *chorus.
 }
 
 func (a AuthenticationController) RefreshToken(ctx context.Context, req *chorus.RefreshTokenRequest) (*chorus.RefreshTokenReply, error) {
-	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authorization.PermissionRefreshToken)
+	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authz.RefreshToken.For())
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (a AuthenticationController) AuthenticateOauthRedirect(ctx context.Context,
 }
 
 func (a AuthenticationController) Logout(ctx context.Context, req *chorus.LogoutRequest) (*chorus.LogoutReply, error) {
-	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authorization.PermissionLogout)
+	err := a.refreshTokenAuthorization.IsAuthorized(ctx, authz.Logout.For())
 	if err != nil {
 		return nil, err
 	}

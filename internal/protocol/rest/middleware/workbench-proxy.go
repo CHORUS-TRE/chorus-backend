@@ -14,7 +14,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	jwt_go "github.com/golang-jwt/jwt"
 
@@ -53,7 +53,7 @@ func AddProxyWorkbench(h http.Handler, pw ProxyWorkbenchHandler, cfg config.Conf
 
 		ctx = GetContextWithAuth(ctx, r, keyFunc, claimsFactory)
 
-		err = auth.IsAuthorized(ctx, authorization.PermissionStreamWorkbench, authorization.WithWorkbench(workbenchID))
+		err = auth.IsAuthorized(ctx, authz.StreamWorkbench.For(authz.WorkbenchID(workbenchID)))
 		if err != nil {
 			logger.TechLog.Error(context.Background(), "invalid authentication token", zap.Error(err))
 			h.ServeHTTP(w, r)

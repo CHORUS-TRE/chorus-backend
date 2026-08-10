@@ -7,7 +7,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	cerr "github.com/CHORUS-TRE/chorus-backend/internal/errors"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	tenant_model "github.com/CHORUS-TRE/chorus-backend/pkg/tenant/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
@@ -106,11 +106,8 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context, tenantID uin
 
 func bootstrapRolesFor(userID uint64) []user_model.UserRole {
 	return []user_model.UserRole{
-		{Role: authorization_model.NewRole(authorization_model.RoleAuthenticated, authorization_model.WithUser(userID))},
-		{Role: authorization_model.NewRole(authorization_model.RoleSuperAdmin,
-			authorization_model.WithUser(authorization_model.Wildcard),
-			authorization_model.WithWorkspace(authorization_model.Wildcard),
-			authorization_model.WithWorkbench(authorization_model.Wildcard))},
+		{Role: authz.Authenticated.For(authz.UserID(userID))},
+		{Role: authz.SuperAdmin.For()},
 	}
 }
 
@@ -128,7 +125,7 @@ func (s *StewardService) InitializeNewTenant(ctx context.Context, name string) (
 }
 
 func (s *StewardService) createDefaultRoles(ctx context.Context) error {
-	allRoles := authorization_model.GetAllRoles()
+	allRoles := authz.GetAllRoles()
 
 	for _, r := range allRoles {
 		if err := s.userer.CreateRole(ctx, r.String()); err != nil {
