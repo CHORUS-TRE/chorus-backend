@@ -551,13 +551,13 @@ func TestGetWorkspaceServiceInstanceSecrets_SecretReadErrorPropagates(t *testing
 func TestRemoveUserRoleInWorkspace_LastRoleRemovesUserFromWorkspace(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
-			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceAdmin.Name),
+			wbRole(2, 5, 7, authorization_model.WorkbenchAdmin.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceAdmin)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.WorkspaceAdmin.Name)
 
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
@@ -566,14 +566,14 @@ func TestRemoveUserRoleInWorkspace_LastRoleRemovesUserFromWorkspace(t *testing.T
 func TestRemoveUserRoleInWorkspace_KeepsOtherWorkspaceRoles(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
-			wsRole(3, 5, authorization_model.RoleWorkspaceDataManager),
-			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceAdmin.Name),
+			wsRole(3, 5, authorization_model.WorkspaceDataManager.Name),
+			wbRole(2, 5, 7, authorization_model.WorkbenchAdmin.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceAdmin)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.WorkspaceAdmin.Name)
 
 	require.NoError(t, err)
 	assert.Equal(t, []uint64{1}, userer.removedRoleIDs)
@@ -582,13 +582,13 @@ func TestRemoveUserRoleInWorkspace_KeepsOtherWorkspaceRoles(t *testing.T) {
 func TestRemoveUserRoleInWorkspace_WorkbenchRoleDoesNotCountAsWorkspaceRole(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceDataManager),
-			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceDataManager.Name),
+			wbRole(2, 5, 7, authorization_model.WorkbenchAdmin.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceDataManager)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.WorkspaceDataManager.Name)
 
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []uint64{1, 2}, userer.removedRoleIDs)
@@ -597,12 +597,12 @@ func TestRemoveUserRoleInWorkspace_WorkbenchRoleDoesNotCountAsWorkspaceRole(t *t
 func TestRemoveUserRoleInWorkspace_RoleNotFound(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceAdmin.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.RoleWorkspaceDataManager)
+	err := svc.RemoveUserRoleInWorkspace(context.Background(), 1, 42, 5, authorization_model.WorkspaceDataManager.Name)
 
 	require.Error(t, err)
 	assert.Empty(t, userer.removedRoleIDs)
@@ -618,38 +618,38 @@ func TestAddUserRoleInWorkspace_AssignsNewRole(t *testing.T) {
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.RoleWorkspaceAdmin))
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.WorkspaceAdmin.Name))
 
 	require.NoError(t, err)
 	require.Len(t, userer.capturedRoles, 1)
-	assert.Equal(t, authorization_model.RoleWorkspaceAdmin, userer.capturedRoles[0].Role.Name)
+	assert.Equal(t, authorization_model.WorkspaceAdmin.Name, userer.capturedRoles[0].Role.Name)
 	assert.Equal(t, "5", userer.capturedRoles[0].Context["workspace"])
 }
 
 func TestAddUserRoleInWorkspace_AllowsMultipleDistinctRolesInSameWorkspace(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceDataManager),
+			wsRole(1, 5, authorization_model.WorkspaceDataManager.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.RoleWorkspaceAdmin))
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.WorkspaceAdmin.Name))
 
 	require.NoError(t, err)
 	require.Len(t, userer.capturedRoles, 1)
-	assert.Equal(t, authorization_model.RoleWorkspaceAdmin, userer.capturedRoles[0].Role.Name)
+	assert.Equal(t, authorization_model.WorkspaceAdmin.Name, userer.capturedRoles[0].Role.Name)
 }
 
 func TestAddUserRoleInWorkspace_RejectsDuplicateRole(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceAdmin.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.RoleWorkspaceAdmin))
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 5, authorization_model.WorkspaceAdmin.Name))
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "already has role")
@@ -659,12 +659,12 @@ func TestAddUserRoleInWorkspace_RejectsDuplicateRole(t *testing.T) {
 func TestAddUserRoleInWorkspace_SameRoleDifferentWorkspaceAllowed(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceAdmin.Name),
 		),
 	}
 
 	svc := newSvc(config.Config{}, &mockWorkspaceStore{}, &mockK8s{}, userer)
-	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 9, authorization_model.RoleWorkspaceAdmin))
+	err := svc.AddUserRoleInWorkspace(context.Background(), 1, 42, wsRole(0, 9, authorization_model.WorkspaceAdmin.Name))
 
 	require.NoError(t, err)
 	require.Len(t, userer.capturedRoles, 1)
@@ -678,9 +678,9 @@ func TestAddUserRoleInWorkspace_SameRoleDifferentWorkspaceAllowed(t *testing.T) 
 func TestRemoveUserFromWorkspace_RemovesAllRolesInWorkspaceOnly(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(1, 5, authorization_model.RoleWorkspaceAdmin),
-			wbRole(2, 5, 7, authorization_model.RoleWorkbenchAdmin),
-			wsRole(3, 9, authorization_model.RoleWorkspaceAdmin),
+			wsRole(1, 5, authorization_model.WorkspaceAdmin.Name),
+			wbRole(2, 5, 7, authorization_model.WorkbenchAdmin.Name),
+			wsRole(3, 9, authorization_model.WorkspaceAdmin.Name),
 		),
 	}
 
@@ -694,7 +694,7 @@ func TestRemoveUserFromWorkspace_RemovesAllRolesInWorkspaceOnly(t *testing.T) {
 func TestRemoveUserFromWorkspace_NoRolesIsNoop(t *testing.T) {
 	userer := &mockUserer{
 		getUser: userWithRoles(
-			wsRole(3, 9, authorization_model.RoleWorkspaceAdmin),
+			wsRole(3, 9, authorization_model.WorkspaceAdmin.Name),
 		),
 	}
 
