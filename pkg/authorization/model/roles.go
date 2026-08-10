@@ -134,7 +134,7 @@ func merge(groups ...[]PermissionName) []PermissionName {
 // `Parent.Permissions` and adds its own with `grant(...)`.
 var (
 	Public = roleWithNoContext(
-		RolePublic,
+		"Public",
 		"Public users can authenticate and read public platform settings",
 		RoleScopePlatform,
 		grant(
@@ -146,7 +146,7 @@ var (
 		),
 	)
 	Authenticated = roleWithOneContext[UserID](
-		RoleAuthenticated,
+		"Authenticated",
 		"Authenticated users can manage their own session, profile, notifications, and base resources",
 		RoleScopePlatform,
 		merge(Public.Permissions, grant(
@@ -176,7 +176,7 @@ var (
 		)),
 	)
 	WorkspaceGuest = roleWithOneContext[WorkspaceID](
-		RoleWorkspaceGuest,
+		"WorkspaceGuest",
 		"Workspace guests can view workspace metadata and create requests",
 		RoleScopeWorkspace,
 		merge(Authenticated.Permissions, grant(
@@ -188,7 +188,7 @@ var (
 		)),
 	)
 	WorkspaceMember = roleWithOneContext[WorkspaceID](
-		RoleWorkspaceMember,
+		"WorkspaceMember",
 		"Workspace members can create workbenches and list workspace files",
 		RoleScopeWorkspace,
 		merge(WorkspaceGuest.Permissions, grant(
@@ -200,7 +200,7 @@ var (
 		)),
 	)
 	WorkspaceMaintainer = roleWithOneContext[WorkspaceID](
-		RoleWorkspaceMaintainer,
+		"WorkspaceMaintainer",
 		"Workspace maintainers can update workspace metadata and manage workspace files",
 		RoleScopeWorkspace,
 		merge(WorkspaceMember.Permissions, grant(
@@ -212,7 +212,7 @@ var (
 		)),
 	)
 	WorkspaceDataManager = roleWithOneContext[WorkspaceID](
-		RoleWorkspaceDataManager,
+		"WorkspaceDataManager",
 		"Workspace data managers can manage workspace files and data-manager assignments",
 		RoleScopeWorkspace,
 		merge(WorkspaceMember.Permissions, grant(
@@ -225,7 +225,7 @@ var (
 		)),
 	)
 	WorkspaceAdmin = roleWithOneContext[WorkspaceID](
-		RoleWorkspaceAdmin,
+		"WorkspaceAdmin",
 		"Workspace admins can administer workspace users, requests, workbenches, files, and services",
 		RoleScopeWorkspace,
 		merge(WorkspaceMaintainer.Permissions, grant(
@@ -250,7 +250,7 @@ var (
 		)),
 	)
 	WorkbenchViewer = roleWithOneContext[WorkbenchID](
-		RoleWorkbenchViewer,
+		"WorkbenchViewer",
 		"Workbench viewers can view and stream workbenches",
 		RoleScopeWorkbench,
 		merge(Authenticated.Permissions, grant(
@@ -262,7 +262,7 @@ var (
 		)),
 	)
 	WorkbenchMember = roleWithOneContext[WorkbenchID](
-		RoleWorkbenchMember,
+		"WorkbenchMember",
 		"Workbench members can update workbenches and manage app instances",
 		RoleScopeWorkbench,
 		merge(WorkbenchViewer.Permissions, grant(
@@ -274,7 +274,7 @@ var (
 		)),
 	)
 	WorkbenchAdmin = roleWithOneContext[WorkbenchID](
-		RoleWorkbenchAdmin,
+		"WorkbenchAdmin",
 		"Workbench admins can administer workbenches and their users",
 		RoleScopeWorkbench,
 		merge(WorkbenchMember.Permissions, grant(
@@ -285,7 +285,7 @@ var (
 		)),
 	)
 	Healthchecker = roleWithNoContext(
-		RoleHealthchecker,
+		"Healthchecker",
 		"Healthcheckers can read healthcheck status",
 		RoleScopePlatform,
 		grant(
@@ -294,7 +294,7 @@ var (
 		ContextUser,
 	)
 	PlatformSettingsManager = roleWithNoContext(
-		RolePlatformSettingsManager,
+		"PlatformSettingsManager",
 		"Platform settings managers can manage platform settings",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -308,7 +308,7 @@ var (
 		ContextUser,
 	)
 	PlatformUserManager = roleWithNoContext(
-		RolePlatformUserManager,
+		"PlatformUserManager",
 		"Platform user managers can administer platform users and their roles",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -325,7 +325,7 @@ var (
 		ContextUser,
 	)
 	PlatformOrganizationManager = roleWithNoContext(
-		RolePlatformOrganizationManager,
+		"PlatformOrganizationManager",
 		"Platform organization managers can manage organizations",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -336,7 +336,7 @@ var (
 		ContextUser,
 	)
 	PlatformAuditor = roleWithNoContext(
-		RolePlatformAuditor,
+		"PlatformAuditor",
 		"Platform auditors can audit the platform",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -345,7 +345,7 @@ var (
 		ContextUser,
 	)
 	PlatformWorkspaceManager = roleWithNoContext(
-		RolePlatformWorkspaceManager,
+		"PlatformWorkspaceManager",
 		"Platform workspace managers can create, update, and delete any workspace",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -357,7 +357,7 @@ var (
 		ContextWorkspace,
 	)
 	AppStoreAdmin = roleWithNoContext(
-		RoleAppStoreAdmin,
+		"AppStoreAdmin",
 		"App store admins can administer apps",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -370,7 +370,7 @@ var (
 		ContextUser,
 	)
 	PlatformDataManager = roleWithNoContext(
-		RolePlatformDataManager,
+		"PlatformDataManager",
 		"Data managers can manage workspace data across workspaces",
 		RoleScopePlatform,
 		merge(Authenticated.Permissions, grant(
@@ -384,7 +384,7 @@ var (
 		ContextWorkspace,
 	)
 	SuperAdmin = roleWithNoContext(
-		RoleSuperAdmin,
+		"SuperAdmin",
 		"Super admins can perform all platform, workspace, and workbench actions",
 		RoleScopeSystem,
 		merge(

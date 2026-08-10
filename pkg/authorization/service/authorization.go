@@ -90,7 +90,7 @@ func NewAuthorizationService(ctx context.Context, cfg config.Config, store Autho
 
 	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
 		for i, role := range codeSchema.Roles {
-			if role.Name == model.RoleWorkspaceAdmin {
+			if role.Name == model.WorkspaceAdmin.Name {
 				codeSchema.Roles[i].Permissions = append(codeSchema.Roles[i].Permissions, model.ManageUsersDataRoleInWorkspace.Name)
 				break
 			}

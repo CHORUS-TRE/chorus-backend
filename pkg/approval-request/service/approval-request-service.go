@@ -188,7 +188,7 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 	}
 
 	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-		filter.ViaRoles = []authz.RoleName{authz.RoleWorkspaceDataManager}
+		filter.ViaRoles = []authz.RoleName{authz.WorkspaceDataManager.Name}
 	}
 
 	approvers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filter)
@@ -309,7 +309,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 		PreferExactContextMatch: true,
 	}
 	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-		filterDownload.ViaRoles = []authz.RoleName{authz.RoleWorkspaceDataManager}
+		filterDownload.ViaRoles = []authz.RoleName{authz.WorkspaceDataManager.Name}
 	}
 
 	downloadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterDownload)
@@ -323,7 +323,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 		PreferExactContextMatch: true,
 	}
 	if s.cfg.Services.ApprovalRequestService.RequireDataManagerApproval {
-		filterUpload.ViaRoles = []authz.RoleName{authz.RoleWorkspaceDataManager}
+		filterUpload.ViaRoles = []authz.RoleName{authz.WorkspaceDataManager.Name}
 	}
 
 	uploadApprovers, err := s.userPermissionFinder.FindUsersWithPermission(ctx, tenantID, filterUpload)

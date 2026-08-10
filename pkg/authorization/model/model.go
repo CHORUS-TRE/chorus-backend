@@ -165,28 +165,6 @@ func (r Role) String() string {
 
 type RoleName string
 
-const (
-	RolePublic                      RoleName = "Public"
-	RoleAuthenticated               RoleName = "Authenticated"
-	RoleWorkspaceGuest              RoleName = "WorkspaceGuest"
-	RoleWorkspaceMember             RoleName = "WorkspaceMember"
-	RoleWorkspaceMaintainer         RoleName = "WorkspaceMaintainer"
-	RoleWorkspaceDataManager        RoleName = "WorkspaceDataManager"
-	RoleWorkspaceAdmin              RoleName = "WorkspaceAdmin"
-	RoleWorkbenchViewer             RoleName = "WorkbenchViewer"
-	RoleWorkbenchMember             RoleName = "WorkbenchMember"
-	RoleWorkbenchAdmin              RoleName = "WorkbenchAdmin"
-	RoleHealthchecker               RoleName = "Healthchecker"
-	RolePlatformSettingsManager     RoleName = "PlatformSettingsManager"
-	RolePlatformUserManager         RoleName = "PlatformUserManager"
-	RolePlatformOrganizationManager RoleName = "PlatformOrganizationManager"
-	RolePlatformAuditor             RoleName = "PlatformAuditor"
-	RolePlatformWorkspaceManager    RoleName = "PlatformWorkspaceManager"
-	RoleAppStoreAdmin               RoleName = "AppStoreAdmin"
-	RolePlatformDataManager         RoleName = "PlatformDataManager"
-	RoleSuperAdmin                  RoleName = "SuperAdmin"
-)
-
 func (r RoleName) String() string {
 	return string(r)
 }
@@ -195,8 +173,8 @@ func (r RoleName) String() string {
 // accepted by ToRoleName as dynamic roles.
 var systemRoleIndex = func() map[string]RoleName {
 	index := make(map[string]RoleName)
-	for _, role := range GetAllRoles() {
-		index[string(role)] = role
+	for _, role := range RoleDefinitions() {
+		index[string(role.Name)] = role.Name
 	}
 	return index
 }()
@@ -216,30 +194,6 @@ func ToRoleName(r string) (RoleName, error) {
 func IsSystemRole(role RoleName) bool {
 	_, ok := systemRoleIndex[string(role)]
 	return ok
-}
-
-func GetAllRoles() []RoleName {
-	return []RoleName{
-		RolePublic,
-		RoleAuthenticated,
-		RoleWorkspaceGuest,
-		RoleWorkspaceMember,
-		RoleWorkspaceMaintainer,
-		RoleWorkspaceDataManager,
-		RoleWorkspaceAdmin,
-		RoleWorkbenchViewer,
-		RoleWorkbenchMember,
-		RoleWorkbenchAdmin,
-		RoleHealthchecker,
-		RolePlatformSettingsManager,
-		RolePlatformUserManager,
-		RolePlatformOrganizationManager,
-		RolePlatformAuditor,
-		RolePlatformWorkspaceManager,
-		RoleAppStoreAdmin,
-		RolePlatformDataManager,
-		RoleSuperAdmin,
-	}
 }
 
 // AuthorizationSchema is the full authorization model in effect: every
