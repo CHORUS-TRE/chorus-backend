@@ -19,7 +19,7 @@ fi
 
 COVERAGE_DIR="${COVERAGE_DIR:-tests/coverage}"
 CONFIG_FILE="${CONFIG_FILE:-configs/config.yaml}"
-ACCEPTANCE_CONFIG_SET="${ACCEPTANCE_CONFIG_SET:-storage.datastores.chorus.database=chorus_ci,storage.file_stores.disk.disk_config.base_path=docker/.diskfilestoreci,clients.oci.enabled=false,clients.kubernetes.enabled=false}"
+ACCEPTANCE_CONFIG_SET="${ACCEPTANCE_CONFIG_SET:-storage.datastores.chorus.database=chorus_ci,storage.file_stores.disk.disk_config.base_path=docker/.diskfilestoreci,clients.oci.enabled=false,clients.harbor.enabled=false,clients.kubernetes.enabled=false}"
 
 # go test runs each suite with its package directory as the working directory
 # (tests/acceptance/<suite>), not the repo root, so the path handed to it must
