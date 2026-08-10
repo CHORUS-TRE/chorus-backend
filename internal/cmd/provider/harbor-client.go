@@ -21,7 +21,7 @@ func ProvideHarborClient() harbor.HarborClient {
 			return
 		}
 
-		harborClient = harbor.NewHarborClient(cfg, ProvideDockerClient())
+		harborClient = harbor.NewHarborClient(cfg, ProvideOCIClient())
 	})
 	return harborClient
 }

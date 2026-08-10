@@ -89,14 +89,14 @@ func (j *AppSyncJob) Do(ctx context.Context, options map[string]interface{}) (st
 	for _, a := range existingApps {
 		existing[appIdentity(a)] = struct{}{}
 	}
-	logger.TechLog.Debug(ctx, fmt.Sprintf("app-sync: listed %d existing apps", len(existingApps)))
+	logger.TechLog.Debug(ctx, fmt.Sprintf("app_sync: listed %d existing apps", len(existingApps)))
 
 	// List apps and versions in Harbor
 	harborApps, err := j.harborClient.ListApps()
 	if err != nil {
 		return "", fmt.Errorf("listing apps from harbor: %w", err)
 	}
-	logger.TechLog.Debug(ctx, fmt.Sprintf("app-sync: listed %d apps from harbor", len(harborApps)))
+	logger.TechLog.Debug(ctx, fmt.Sprintf("app_sync: listed %d apps from harbor", len(harborApps)))
 
 	toCreate := j.appsToCreate(harborApps, existing, tenantID, userID)
 	if len(toCreate) == 0 {

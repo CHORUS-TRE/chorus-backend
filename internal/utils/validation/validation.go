@@ -67,6 +67,8 @@ func NewValidator() *val.Validate {
 	})
 
 	v.RegisterStructValidation(validateOpenIDMode, config.Mode{})
+	v.RegisterStructValidation(validateHTTPHeaders, config.HTTPHeaders{})
+	v.RegisterStructValidation(validateClients, config.Clients{})
 
 	return v
 }
@@ -114,5 +116,26 @@ func validateOpenIDMode(sl val.StructLevel) {
 		reportIfEmpty(o.ChorusFrontendRedirectURL, "openid.chorus_frontend_redirect_url", "OpenID.ChorusFrontendRedirectURL")
 	} else {
 		reportIfEmpty(o.ChorusBackendHost, "openid.chorus_backend_host", "OpenID.ChorusBackendHost")
+	}
+}
+
+// validateHTTPHeaders rejects wildcard mode combined with a non-empty
+// allowlist - browsers reject a credentialed "*" response, so the
+// combination is always dead configuration.
+func validateHTTPHeaders(sl val.StructLevel) {
+	headers := sl.Current().Interface().(config.HTTPHeaders)
+	if len(headers.AccessControlAllowOrigins) > 0 && headers.AccessControlAllowOriginWildcard {
+		sl.ReportError(headers.AccessControlAllowOriginWildcard, "access_control_allow_origin_wildcard", "AccessControlAllowOriginWildcard", "wildcard_with_allowlist", "")
+	}
+}
+
+// validateClients requires the OCI client to be enabled whenever Harbor is --
+// Harbor retrieves its registry URL and credentials from the OCI client
+// rather than configuring its own, so a disabled OCI client would otherwise
+// leave Harbor silently pointed at an empty registry URL.
+func validateClients(sl val.StructLevel) {
+	c := sl.Current().Interface().(config.Clients)
+	if c.HarborClient.Enabled && !c.OCIClient.Enabled {
+		sl.ReportError(c.OCIClient.Enabled, "oci.enabled", "OCIClient.Enabled", "harbor_requires_oci", "")
 	}
 }

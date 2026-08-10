@@ -18,17 +18,9 @@ This project is the backend of the chorus platform.
 
 ### Kubernetes
 
-A running kubernetes cluster reachable from your machine — the backend defaults to `$HOME/.kube/config` to bootstrap its k8s client, so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
+A running kubernetes cluster reachable from your machine. For local dev, set `clients.kubernetes.in_cluster_config_enabled: false` (already the default written by `chorus init-config`) and optionally override `clients.kubernetes.kube_config`, which defaults to `$HOME/.kube/config` — so any cluster your existing kubeconfig already points to (kind, minikube, a real dev cluster, etc.) works out of the box.
 
-The kubeconfig path (`clients.k8s_client.kube_config`) can be overridden like any other setting (see [Advanced Configuration](#advanced-configuration)). Alternatively, skip the kubeconfig file entirely and set these `clients.k8s_client` fields individually:
-
-- `api_server` — the service account API server URL
-- `sa_secret_path` — path to the service account secret
-- `sa_override_ca` — CA certificate content, optional, for private clusters with custom CAs
-- `token` — the service account token
-- `ca` — the service account CA
-
-A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.k8s_client.image_pull_secret_name`) — used to pull images from a private registry.
+A `backend` namespace must also exist in the cluster, containing a `kubernetes.io/dockerconfigjson` Secret named `regcred` (the default for `clients.kubernetes.image_pull_secret_name`) — used to pull images from a private registry.
 
 The [workbench-operator](https://github.com/CHORUS-TRE/workbench-operator) must also be deployed on the cluster — it reconciles the workbench/workspace custom resources the backend creates.
 
@@ -76,6 +68,12 @@ Postgres — run `make deps` to start it locally.
 1. Now you can play around and send request to the chorus backend server running locally
 
 ## Advanced Configuration
+
+### Naming Convention
+
+The backend's own config schema (everything under `internal/config/config.go`, i.e. every field documented in this section) uses **snake_case**, e.g. `daemon.http.headers.access_control_allow_origins`. This is deliberate, not an oversight: Viper lowercases every key inside any `map[string]...`-typed field during decode (`Log.Loggers`, `Daemon.Jobs`, `Storage.Datastores`, `Storage.FileStores`, `Services.AuthenticationService.Modes`), regardless of how it's written in the file — so a camelCase field like `appSync` would silently decode as `appsync`, breaking any Go code that looks it up by exact name (e.g. `internal/cmd/provider/jobber.go` dispatching a job by its config key). Since that limitation applies schema-wide in practice, the whole backend config stays snake_case for consistency, including named map instances like the `app_sync` job or the `chorus`/`audit` datastores.
+
+This is separate from the Helm chart's own `values.yaml` (`deploy/backend/values.yaml`, `configs/*/values.yaml`), which follows the standard Helm/Kubernetes convention of camelCase (`imagePullPolicy`, `podLabels`, etc.) for its own chart-level fields — everything *outside* the `config:` block that gets passed straight through into `configs/config.yaml` as-is.
 
 ### Build a Full Config
 
@@ -203,7 +201,7 @@ Create a complete service (here the workbench service)
 
     There's no separate CI config file — acceptance testing reuses
     `CONFIG_FILE` (default `configs/config.yaml`), with a handful of overrides
-    (`chorus_ci` database, a separate disk file-store path, docker/k8s clients
+    (`chorus_ci` database, a separate disk file-store path, oci/kubernetes clients
     disabled) applied via `--set`. See `CONFIG_FILE`/`ACCEPTANCE_CONFIG_SET`
     at the top of `scripts/run_acceptance_tests.sh` to change the defaults.
 

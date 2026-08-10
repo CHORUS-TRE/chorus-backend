@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	jack "gopkg.in/natefinch/lumberjack.v2"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/component"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 )
 
@@ -24,8 +23,7 @@ const (
 	BusinessCategory  = "business"
 	SecurityCategory  = "security"
 
-	categoryKey           = "category" // Category key field in the logging output.
-	runtimeEnvironmentKey = "runtime_environment"
+	categoryKey = "category" // Category key field in the logging output.
 )
 
 // All loggers are globally accessible objects.
@@ -86,9 +84,6 @@ func (o *options) appendToZapFields(zapFields ...zap.Field) []zap.Field {
 	}
 	if o.componentVersion != "" {
 		fields = append(fields, zap.String("cmp_version", o.componentVersion))
-	}
-	if component.RuntimeEnvironment != "" {
-		fields = append(fields, zap.String(runtimeEnvironmentKey, component.RuntimeEnvironment))
 	}
 
 	return fields

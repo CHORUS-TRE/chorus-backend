@@ -5,18 +5,20 @@ image:
 service:
   port: 5000
 
-# Disable mounting of secrets volume and config override
-# all password will need to be set via the config below
-# which is not recommended for production use cases
-disableMountSecrets: false
+serviceMonitor:
+  enabled: true
+  basicAuth:
+    enabled: true
+    secretName: "chorus-int-backend-metrics"
+
 config:
   clients:
-    harbor_client:
-      url: "https://harbor.int.chorus-tre.ch"
+    oci:
+      host: "harbor.int.chorus-tre.ch"
       username: "robot$chorus-int"
       password: "" # set in secret
-    k8s_client:
-      default_registry: "https://harbor.int.chorus-tre.ch"
+    kubernetes:
+      default_registry: "harbor.int.chorus-tre.ch"
   daemon:
     jwt:
       secret: "" # set in secret
@@ -87,7 +89,20 @@ config:
       issuer_url: "https://backend.int.chorus-tre.ch/openid-connect"
       frontend_interactions_url: "https://backend.int.chorus-tre.ch/auth-ui"
       jwks: "" # set in secret
-      clients: [] # set in secret
+      clients:
+        gitlab:
+          client_name: "Gitlab int Chorus OIDC Client"
+          client_secret: "" # set in secret
+          redirect_uris:
+            - "https://gitlab.int.chorus-tre.ch/users/auth/openid_connect/callback"
+          grant_types:
+            - authorization_code
+            - refresh_token
+          response_types:
+            - code
+          scope: "openid profile email roles"
+          token_endpoint_auth_method: "client_secret_post"
+          only_pre_logged_for_client: false
     steward:
       user:
         password: "" # set in secret

@@ -110,14 +110,13 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 	case "required_without":
 		sibling := siblingPath(cfg, fe, fe.Param())
 		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", path, sibling)
+	case "required_with":
+		sibling := siblingPath(cfg, fe, fe.Param())
+		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is set)", path, sibling)
 	case "required_if":
-		field, value, _ := strings.Cut(fe.Param(), " ")
-		sibling := siblingPath(cfg, fe, field)
-		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is %s)", path, sibling, value)
+		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", path, describeConditions(cfg, fe))
 	case "required_unless":
-		field, value, _ := strings.Cut(fe.Param(), " ")
-		sibling := siblingPath(cfg, fe, field)
-		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is %s)", path, sibling, value)
+		return fmt.Sprintf("FAIL '%s' is missing (required unless %s)", path, describeConditions(cfg, fe))
 	case "oneof":
 		return fmt.Sprintf("FAIL '%s' must be one of: %s", path, fe.Param())
 	case "ne":
@@ -126,6 +125,10 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 		return fmt.Sprintf("FAIL '%s' must contain at least %s entry/entries", path, fe.Param())
 	case "required_openid":
 		return fmt.Sprintf("FAIL '%s' is missing (required for openid-type authentication modes)", path)
+	case "wildcard_with_allowlist":
+		return fmt.Sprintf("FAIL '%s' must be false when 'access_control_allow_origins' is non-empty", path)
+	case "harbor_requires_oci":
+		return fmt.Sprintf("FAIL '%s' must be true when 'clients.harbor.enabled' is true", path)
 	default:
 		return fmt.Sprintf("FAIL '%s' failed '%s' validation", path, fe.Tag())
 	}
@@ -133,8 +136,8 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 
 // siblingPath resolves a required_if/required_without Param (a Go field name
 // within the same parent struct) to its full dotted yaml path, e.g. "Enabled"
-// on Config.Clients.K8sClient.DefaultRegistry becomes "clients.k8s_client.enabled".
-// Parent segments may be map-indexed (e.g. "Jobs[app-sync]") when the field
+// on Config.Clients.K8sClient.DefaultRegistry becomes "clients.kubernetes.enabled".
+// Parent segments may be map-indexed (e.g. "Jobs[app_sync]") when the field
 // lives inside a map, as with Daemon.Jobs. Falls back to the raw Go field name
 // if anything doesn't resolve cleanly.
 func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) string {
@@ -178,6 +181,20 @@ func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) strin
 		parentPath = path[:idx]
 	}
 	return parentPath + "." + yamlName
+}
+
+// describeConditions renders a required_if/required_unless Param -- one or
+// more space-separated "Field Value" pairs, ANDed together per go-playground's
+// own semantics -- as a human-readable "'x' is true and 'y' is false" list of
+// sibling yaml paths.
+func describeConditions(cfg config.Config, fe val.FieldError) string {
+	params := strings.Fields(fe.Param())
+	var conditions []string
+	for i := 0; i+1 < len(params); i += 2 {
+		sibling := siblingPath(cfg, fe, params[i])
+		conditions = append(conditions, fmt.Sprintf("'%s' is %s", sibling, params[i+1]))
+	}
+	return strings.Join(conditions, " and ")
 }
 
 // convertMapKey parses raw (as extracted from a "Field[key]" namespace
@@ -297,10 +314,10 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("daemon.totp.num_recovery_codes", 10)
 
 	// Daemon - Jobs
-	v.SetDefault("daemon.jobs.app-sync.enabled", true)
-	v.SetDefault("daemon.jobs.app-sync.interval", 30*time.Minute)
-	v.SetDefault("daemon.jobs.app-sync.timeout", 10*time.Minute)
-	v.SetDefault("daemon.jobs.app-sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
+	v.SetDefault("daemon.jobs.app_sync.enabled", true)
+	v.SetDefault("daemon.jobs.app_sync.interval", 30*time.Minute)
+	v.SetDefault("daemon.jobs.app_sync.timeout", 10*time.Minute)
+	v.SetDefault("daemon.jobs.app_sync.options", map[string]interface{}{"tenant_id": 1, "user_id": 1})
 
 	// Daemon - Jobber
 	v.SetDefault("daemon.jobber.enabled", true)
@@ -339,45 +356,41 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("log.loggers.stdout_security.category", "security")
 
 	// Clients - Kubernetes
-	v.SetDefault("clients.k8s_client.enabled", true)
-	v.SetDefault("clients.k8s_client.kube_config", "")
-	v.SetDefault("clients.k8s_client.api_server", "https://kubernetes.default.svc")
-	v.SetDefault("clients.k8s_client.sa_secret_path", "/var/run/secrets/kubernetes.io/serviceaccount")
-	v.SetDefault("clients.k8s_client.sa_override_ca", "")
-	v.SetDefault("clients.k8s_client.token", "")
-	v.SetDefault("clients.k8s_client.ca", "")
-	v.SetDefault("clients.k8s_client.image_pull_secret_name", "regcred")
-	v.SetDefault("clients.k8s_client.server_version", "6.3.6-r0-3")
-	v.SetDefault("clients.k8s_client.init_container_version", "0.0.2-4")
-	v.SetDefault("clients.k8s_client.add_user_details", false)
-	v.SetDefault("clients.k8s_client.insecure_tls", false)
-	v.SetDefault("clients.k8s_client.is_watcher", true)
-	v.SetDefault("clients.k8s_client.poll_interval", 500*time.Millisecond)
-	v.SetDefault("clients.k8s_client.default_registry", "")
-	v.SetDefault("clients.k8s_client.default_repository", "apps")
-	v.SetDefault("clients.k8s_client.prepull_namespace", "backend")
-	v.SetDefault("clients.k8s_client.prepull_job_ttl_seconds", 60)
+	v.SetDefault("clients.kubernetes.enabled", true)
+	v.SetDefault("clients.kubernetes.in_cluster_config_enabled", true)
+	v.SetDefault("clients.kubernetes.kube_config", "")
+	v.SetDefault("clients.kubernetes.image_pull_secret_name", "regcred")
+	v.SetDefault("clients.kubernetes.server_version", "6.3.6-r0-3")
+	v.SetDefault("clients.kubernetes.init_container_version", "0.0.2-4")
+	v.SetDefault("clients.kubernetes.add_user_details", false)
+	v.SetDefault("clients.kubernetes.insecure_tls", false)
+	v.SetDefault("clients.kubernetes.is_watcher", true)
+	v.SetDefault("clients.kubernetes.poll_interval", 500*time.Millisecond)
+	v.SetDefault("clients.kubernetes.default_registry", "")
+	v.SetDefault("clients.kubernetes.default_repository", "apps")
+	v.SetDefault("clients.kubernetes.prepull_namespace", "backend")
+	v.SetDefault("clients.kubernetes.prepull_job_ttl_seconds", 60)
 	// Default to the conventional kubeconfig path,
 	// leave unset if file does not exist
 	if home, err := os.UserHomeDir(); err == nil {
 		kubeConfigPath := filepath.Join(home, ".kube", "config")
 		if _, err := os.Stat(kubeConfigPath); err == nil {
-			v.SetDefault("clients.k8s_client.kube_config", kubeConfigPath)
+			v.SetDefault("clients.kubernetes.kube_config", kubeConfigPath)
 		}
 	}
 
-	// Clients - Docker
-	v.SetDefault("clients.docker_client.enabled", true)
+	// Clients - OCI
+	v.SetDefault("clients.oci.enabled", true)
+	v.SetDefault("clients.oci.host", "")
+	v.SetDefault("clients.oci.username", "")
+	v.SetDefault("clients.oci.password", "")
 
 	// Clients - Harbor
-	v.SetDefault("clients.harbor_client.enabled", true)
-	v.SetDefault("clients.harbor_client.url", "")
-	v.SetDefault("clients.harbor_client.project", "apps")
-	v.SetDefault("clients.harbor_client.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
-	v.SetDefault("clients.harbor_client.page_size", 100)
-	v.SetDefault("clients.harbor_client.max_parallel_fetches", 16)
-	v.SetDefault("clients.harbor_client.username", "")
-	v.SetDefault("clients.harbor_client.password", "")
+	v.SetDefault("clients.harbor.enabled", true)
+	v.SetDefault("clients.harbor.project", "apps")
+	v.SetDefault("clients.harbor.label_prefixes", []string{"ch.chorus-tre.", "org.opencontainers.image."})
+	v.SetDefault("clients.harbor.page_size", 100)
+	v.SetDefault("clients.harbor.max_parallel_fetches", 16)
 
 	// Storage - Datastores
 	v.SetDefault("storage.datastores.chorus.type", "postgres")

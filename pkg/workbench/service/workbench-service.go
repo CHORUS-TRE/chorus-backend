@@ -84,6 +84,7 @@ type WorkbenchStore interface {
 	SaveBatchProxyHit(ctx context.Context, proxyHitCountMap map[uint64]uint64, proxyHitDateMap map[uint64]time.Time) error
 	CreateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	UpdateWorkbench(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
+	UpdateWorkbenchStatus(ctx context.Context, tenantID uint64, workbench *model.Workbench) (*model.Workbench, error)
 	DeleteWorkbench(ctx context.Context, tenantID uint64, workbenchID uint64) error
 	DeleteWorkbenchesInWorkspace(ctx context.Context, tenantID uint64, workspaceID uint64) error
 	DeleteIdleWorkbenches(ctx context.Context, idleTimeout time.Duration) ([]*model.Workbench, error)
@@ -223,11 +224,11 @@ func (s *WorkbenchService) SetClientWatchers() {
 			workbench.Status = model.WorkbenchDeleted
 		}
 
-		// Update workbench in DB
-		logger.TechLog.Debug(ctx, "updating workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
-		_, err = s.store.UpdateWorkbench(ctx, k8sWorkbench.TenantID, workbench)
+		// Update workbench statuses in DB
+		logger.TechLog.Debug(ctx, "updating workbench status", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench))
+		_, err = s.store.UpdateWorkbenchStatus(ctx, k8sWorkbench.TenantID, workbench)
 		if err != nil {
-			logger.TechLog.Error(ctx, "unable to update workbench", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
+			logger.TechLog.Error(ctx, "unable to update workbench status", zap.String("namespace", k8sWorkbench.Namespace), zap.String("workbenchName", k8sWorkbench.Name), zap.Any("workbench", workbench), zap.Error(err))
 			return err
 		}
 

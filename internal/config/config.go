@@ -26,17 +26,12 @@ type (
 		} `yaml:"grpc"`
 
 		HTTP struct {
-			Host           string `yaml:"host" validate:"required"`
-			Port           string `yaml:"port" validate:"required"`
-			HeaderClientIP string `yaml:"header_client_ip"`
-			Headers        struct {
-				AccessControlAllowOrigins        []string `yaml:"access_control_allow_origins"`
-				AccessControlAllowOriginWildcard bool     `yaml:"access_control_allow_origin_wildcard"`
-				AccessControlMaxAge              string   `yaml:"access_control_max_age" validate:"required"`
-				CookieDomain                     string   `yaml:"cookie_domain" validate:"required"`
-			} `yaml:"headers"`
-			MaxCallRecvMsgSize int `yaml:"max_call_recv_msg_size" validate:"required"`
-			MaxCallSendMsgSize int `yaml:"max_call_send_msg_size" validate:"required"`
+			Host               string      `yaml:"host" validate:"required"`
+			Port               string      `yaml:"port" validate:"required"`
+			HeaderClientIP     string      `yaml:"header_client_ip"`
+			Headers            HTTPHeaders `yaml:"headers"`
+			MaxCallRecvMsgSize int         `yaml:"max_call_recv_msg_size" validate:"required"`
+			MaxCallSendMsgSize int         `yaml:"max_call_send_msg_size" validate:"required"`
 		} `yaml:"http"`
 
 		JWT struct {
@@ -67,6 +62,14 @@ type (
 				Password Sensitive `yaml:"password" validate:"required_if=Enabled true"`
 			} `yaml:"authentication"`
 		} `yaml:"metrics"`
+	}
+
+	// HTTPHeaders holds the daemon's HTTP response header settings.
+	HTTPHeaders struct {
+		AccessControlAllowOrigins        []string `yaml:"access_control_allow_origins"`
+		AccessControlAllowOriginWildcard bool     `yaml:"access_control_allow_origin_wildcard"`
+		AccessControlMaxAge              string   `yaml:"access_control_max_age" validate:"required"`
+		CookieDomain                     string   `yaml:"cookie_domain" validate:"required"`
 	}
 
 	// Log bundles several logging instances.
@@ -114,23 +117,18 @@ type (
 	}
 
 	Clients struct {
-		K8sClient    K8sClient    `yaml:"k8s_client"`
-		DockerClient DockerClient `yaml:"docker_client"`
-		HarborClient HarborClient `yaml:"harbor_client"`
+		K8sClient    K8sClient    `yaml:"kubernetes"`
+		OCIClient    OCIClient    `yaml:"oci"`
+		HarborClient HarborClient `yaml:"harbor"`
 	}
 
 	K8sClient struct {
 		Enabled bool `yaml:"enabled"` // if true, the client will be used to connect to the k8s cluster
 
-		KubeConfig string `yaml:"kube_config"` // either provide a path to a kubeconfig file
+		InClusterConfigEnabled bool   `yaml:"in_cluster_config_enabled"` // if true, reads pod's service account token and CA cert to connect to the k8s cluster
+		KubeConfig             string `yaml:"kube_config" validate:"required_if=Enabled true InClusterConfigEnabled false"`
 
-		APIServer                string    `yaml:"api_server"`     // or a service account api server
-		ServiceAccountSecretPath string    `yaml:"sa_secret_path"` // and a service account secret path
-		ServiceAccountOverrideCA string    `yaml:"sa_override_ca"` // optional CA crt content to override the one provided in the service account secret, useful for private clusters with custom CAs
-		Token                    Sensitive `yaml:"token"`          // or a service account token
-		CA                       string    `yaml:"ca"`             // and service account ca
-
-		ImagePullSecretName string `yaml:"image_pull_secret_name" validate:"required_if=Enabled true"`
+		ImagePullSecretName string `yaml:"image_pull_secret_name"`
 
 		ServerVersion        string `yaml:"server_version" validate:"required_if=Enabled true"`
 		InitContainerVersion string `yaml:"init_container_version" validate:"required_if=Enabled true"`
@@ -149,19 +147,19 @@ type (
 		PrepullJobTTLSeconds int    `yaml:"prepull_job_ttl_seconds" validate:"required_if=Enabled true"`
 	}
 
-	DockerClient struct {
-		Enabled bool `yaml:"enabled"`
+	OCIClient struct {
+		Enabled  bool      `yaml:"enabled"`
+		Host     string    `yaml:"host" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"` // bare registry hostname, e.g. "harbor.example.com" -- no scheme; the Harbor client retrieves this and its credentials from here rather than owning its own copy
+		Username string    `yaml:"username" validate:"required_with=Password"`
+		Password Sensitive `yaml:"password" validate:"required_with=Username"`
 	}
 
 	HarborClient struct {
-		Enabled            bool      `yaml:"enabled"`
-		URL                string    `yaml:"url" validate:"required_if=Enabled true,ne=CHANGEME" init:"placeholder"`
-		Username           string    `yaml:"username"`
-		Password           Sensitive `yaml:"password"`
-		Project            string    `yaml:"project"`
-		LabelPrefixes      []string  `yaml:"label_prefixes"`
-		PageSize           int       `yaml:"page_size" validate:"required_if=Enabled true"`
-		MaxParallelFetches uint64    `yaml:"max_parallel_fetches" validate:"required_if=Enabled true"`
+		Enabled            bool     `yaml:"enabled"`
+		Project            string   `yaml:"project"`
+		LabelPrefixes      []string `yaml:"label_prefixes"`
+		PageSize           int      `yaml:"page_size" validate:"required_if=Enabled true"`
+		MaxParallelFetches uint64   `yaml:"max_parallel_fetches" validate:"required_if=Enabled true"`
 	}
 
 	Tenant struct {
@@ -276,12 +274,12 @@ type (
 		} `yaml:"authentication_service"`
 
 		OpenIDConnectProvider struct {
-			Enabled                 bool                          `yaml:"enabled"`
-			FrontendInteractionsURL string                        `yaml:"frontend_interactions_url" validate:"required_if=Enabled true"`
-			JWKS                    Sensitive                     `yaml:"jwks" validate:"required_if=Enabled true" init:"jwks"`
-			IssuerURL               string                        `yaml:"issuer_url" validate:"required_if=Enabled true"`
-			Scopes                  []string                      `yaml:"scopes"`
-			Clients                 []OpenIDConnectProviderClient `yaml:"clients" validate:"required_if=Enabled true,dive"`
+			Enabled                 bool                                   `yaml:"enabled"`
+			FrontendInteractionsURL string                                 `yaml:"frontend_interactions_url" validate:"required_if=Enabled true"`
+			JWKS                    Sensitive                              `yaml:"jwks" validate:"required_if=Enabled true" init:"jwks"`
+			IssuerURL               string                                 `yaml:"issuer_url" validate:"required_if=Enabled true"`
+			Scopes                  []string                               `yaml:"scopes"`
+			Clients                 map[string]OpenIDConnectProviderClient `yaml:"clients" validate:"required_if=Enabled true,dive"`
 		} `yaml:"openid_connect_provider"`
 
 		WorkbenchService struct {
@@ -378,10 +376,9 @@ type (
 	}
 
 	OpenIDConnectProviderClient struct {
-		ID string `yaml:"client_id" validate:"required"`
-		// Secret is used when the client authenticates with client_secret_jwt,
-		// since the key used to sign the assertion is the same used to verify it.
-		Secret Sensitive `yaml:"client_secret"`
+		// Secret is required unless the client authenticates via private_key_jwt
+		// (which proves possession of a key pair instead of a shared secret).
+		Secret Sensitive `yaml:"client_secret" validate:"required_unless=TokenAuthnMethod private_key_jwt"`
 		// HashedSecret is the hash of the client secret for the client_secret_basic
 		// and client_secret_post authentication methods.
 		HashedSecret Sensitive `yaml:"hashed_secret"`
@@ -425,13 +422,16 @@ type (
 		RequestURIs       []string `yaml:"request_uris"`
 		GrantTypes        []string `yaml:"grant_types"`    // client_credentials, authorization_code, refresh_token, implicit
 		ResponseTypes     []string `yaml:"response_types"` // code, id_token, token, code id_token, code token, id_token token, code id_token token
-		PublicJWKSURI     string   `yaml:"jwks_uri"`
+		PublicJWKSURI     string   `yaml:"jwks_uri" validate:"required_if=TokenAuthnMethod private_key_jwt"`
 		// PublicJWKS        *JSONWebKeySet `yaml:"jwks"`
 		// ScopeIDs contains the scopes available to the client separated by spaces.
 		ScopeIDs string `yaml:"scope"`
 		//...
 
-		TokenAuthnMethod string `yaml:"token_endpoint_auth_method"` // none, client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, tls_client_auth, self_signed_tls_client_auth, dpop
+		// TokenAuthnMethod is constrained to the methods actually enabled by
+		// the provider (see WithTokenAuthnMethods in oidc-idp.go) -- not the
+		// full set the underlying OIDC library supports.
+		TokenAuthnMethod string `yaml:"token_endpoint_auth_method" validate:"oneof=client_secret_basic client_secret_post private_key_jwt"`
 	}
 
 	// UserDelegationConfig configures a client to act on behalf of a specific

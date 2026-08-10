@@ -139,14 +139,8 @@ func (a authenticator) loadUser(r *http.Request, as *goidc.AuthnSession) (goidc.
 	}
 
 	clientID := as.ClientID
-	var client *config.OpenIDConnectProviderClient
-	for _, c := range a.cfg.Services.OpenIDConnectProvider.Clients {
-		if c.ID == clientID {
-			client = &c
-			break
-		}
-	}
-	if client == nil {
+	client, ok := a.cfg.Services.OpenIDConnectProvider.Clients[clientID]
+	if !ok {
 		return goidc.StatusFailure, errors.New("client not found")
 	}
 
@@ -236,14 +230,8 @@ func (a authenticator) createUserSession(w http.ResponseWriter, as *goidc.AuthnS
 
 func (a authenticator) grantConsent(w http.ResponseWriter, r *http.Request, as *goidc.AuthnSession) (goidc.Status, error) {
 	clientID := as.ClientID
-	var client *config.OpenIDConnectProviderClient
-	for _, c := range a.cfg.Services.OpenIDConnectProvider.Clients {
-		if c.ID == clientID {
-			client = &c
-			break
-		}
-	}
-	if client == nil {
+	client, ok := a.cfg.Services.OpenIDConnectProvider.Clients[clientID]
+	if !ok {
 		return goidc.StatusFailure, errors.New("client not found")
 	}
 	if client.GrantAutoApproved {
@@ -325,7 +313,7 @@ func (a authenticator) grantConsent(w http.ResponseWriter, r *http.Request, as *
 		newGrants = append(newGrants, user_model.UserGrant{
 			TenantID:     user.TenantID,
 			UserID:       user.ID,
-			ClientID:     client.ID,
+			ClientID:     clientID,
 			Scope:        s,
 			GrantedUntil: grantedUntil,
 		})

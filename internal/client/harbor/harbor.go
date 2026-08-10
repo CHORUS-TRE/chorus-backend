@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/client/docker"
+	"github.com/CHORUS-TRE/chorus-backend/internal/client/ociregistry"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 
 	"golang.org/x/sync/errgroup"
@@ -32,28 +31,25 @@ func (c *HarborNoopClient) ListApps() ([]App, error) {
 }
 
 type harborClient struct {
-	cfg          config.HarborClient
-	client       *http.Client
-	dockerClient docker.DockerClienter
-	registryHost string
+	cfg       config.HarborClient
+	client    *http.Client
+	ociClient ociregistry.OCIClienter
 }
 
-func NewHarborClient(cfg config.Config, dockerClient docker.DockerClienter) HarborClient {
-	harborCfg := cfg.Clients.HarborClient
-
-	registryHost := ""
-	if u, err := url.Parse(harborCfg.URL); err == nil {
-		registryHost = u.Host
-	}
-
+func NewHarborClient(cfg config.Config, ociClient ociregistry.OCIClienter) HarborClient {
 	return &harborClient{
-		cfg: harborCfg,
+		cfg: cfg.Clients.HarborClient,
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		dockerClient: dockerClient,
-		registryHost: registryHost,
+		ociClient: ociClient,
 	}
+}
+
+// baseURL builds the Harbor REST API base URL from the OCI client's
+// configured (bare) host -- the REST API is only ever reached over HTTPS.
+func (c *harborClient) baseURL() string {
+	return "https://" + c.ociClient.Host()
 }
 
 // harborRepository is the Harbor API response for a repository entry.
@@ -151,7 +147,7 @@ func (c *harborClient) listRepositories() ([]harborRepository, error) {
 
 	for page := 1; ; page++ {
 		url := fmt.Sprintf("%s/api/v2.0/projects/%s/repositories?page_size=%d&page=%d",
-			c.cfg.URL, c.cfg.Project, pageSize, page)
+			c.baseURL(), c.cfg.Project, pageSize, page)
 
 		body, err := c.doGet(url)
 		if err != nil {
@@ -179,7 +175,7 @@ func (c *harborClient) listArtifacts(repoName string) ([]harborArtifact, error) 
 
 	for page := 1; ; page++ {
 		url := fmt.Sprintf("%s/api/v2.0/projects/%s/repositories/%s/artifacts?page_size=%d&page=%d",
-			c.cfg.URL, c.cfg.Project, repoName, pageSize, page)
+			c.baseURL(), c.cfg.Project, repoName, pageSize, page)
 
 		body, err := c.doGet(url)
 		if err != nil {
@@ -201,12 +197,12 @@ func (c *harborClient) listArtifacts(repoName string) ([]harborArtifact, error) 
 	return allArtifacts, nil
 }
 
-// fetchLabels builds a full image reference and delegates to the Docker client
+// fetchLabels builds a full image reference and delegates to the OCI client
 // to retrieve OCI image config labels, then filters by configured prefixes.
 func (c *harborClient) fetchLabels(repoName, digest string) (map[string]string, error) {
-	imageRef := fmt.Sprintf("%s/%s/%s@%s", c.registryHost, c.cfg.Project, repoName, digest)
+	imageRef := fmt.Sprintf("%s/%s/%s@%s", c.ociClient.Host(), c.cfg.Project, repoName, digest)
 
-	allLabels, err := c.dockerClient.GetLabels(imageRef, c.cfg.Username, c.cfg.Password.PlainText())
+	allLabels, err := c.ociClient.GetLabels(imageRef)
 	if err != nil {
 		return nil, fmt.Errorf("getting labels for %s: %w", imageRef, err)
 	}
@@ -251,8 +247,9 @@ func (c *harborClient) doGet(url string) ([]byte, error) {
 }
 
 func (c *harborClient) setAuth(req *http.Request) {
-	if c.cfg.Username != "" && c.cfg.Password.PlainText() != "" {
-		req.SetBasicAuth(c.cfg.Username, c.cfg.Password.PlainText())
+	username, password := c.ociClient.Credentials()
+	if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
 	}
 }
 
@@ -263,4 +260,3 @@ func (c *harborClient) stripProjectPrefix(name string) string {
 	}
 	return name
 }
-

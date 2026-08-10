@@ -121,9 +121,9 @@ ca_ident=$(echo "$ca" | awk '{print "      "$0}')
 
 cat <<EOF >configs/dev/files/kind.yaml
 clients:
-  docker_client:
+  oci:
     enabled: true
-  k8s_client:
+  kubernetes:
     enabled: true
     is_watcher: true
     server_version: "6.3.2-1"
