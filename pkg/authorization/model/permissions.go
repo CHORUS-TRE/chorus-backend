@@ -182,7 +182,7 @@ var (
 	GetTermsOfUseVersion        = permWithNoContext("getTermsOfUseVersion", "Allow the user to get a terms of use version")
 	ListTermsOfUseVersions      = permWithNoContext("listTermsOfUseVersions", "Allow the user to list terms of use versions")
 	GetCurrentTermsOfUseVersion = permWithNoContext("getCurrentTermsOfUseVersion", "Allow the user to get the current terms of use version")
-	ListTermsOfUseAcceptances   = permWithOneContext[UserID]("listTermsOfUseAcceptances", "Allow the user to list terms of use acceptances")
+	ListTermsOfUseAcceptances   = permWithNoContext("listTermsOfUseAcceptances", "Allow the user to list terms of use acceptances")
 	GetMyTermsOfUseStatus       = permWithOneContext[UserID]("getMyTermsOfUseStatus", "Allow the user to get his terms of use acceptance status")
 	AcceptTermsOfUse            = permWithOneContext[UserID]("acceptTermsOfUse", "Allow the user to accept the terms of use")
 
