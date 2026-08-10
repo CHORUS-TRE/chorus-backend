@@ -25,15 +25,15 @@ func getAuthAsClientOpts(t string) func(*runtime.ClientOperation) {
 }
 
 func workspaceAdminAuth() func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleWorkspaceAdmin.String(), map[string]string{"workspace": "80001"}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.WorkspaceAdmin.Name.String(), map[string]string{"workspace": "80001"}))
 }
 
 func authenticatedAuth(userID uint64) func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": fmt.Sprintf("%d", userID)}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.Authenticated.Name.String(), map[string]string{"user": fmt.Sprintf("%d", userID)}))
 }
 
 func platformWorkspaceManagerAuth(userID uint64) func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.RolePlatformWorkspaceManager.String(), map[string]string{"workspace": "*"}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(userID, 88888, authorization.PlatformWorkspaceManager.Name.String(), map[string]string{"workspace": "*"}))
 }
 
 var _ = Describe("workspace service", func() {
@@ -63,7 +63,7 @@ var _ = Describe("workspace service", func() {
 			When("GET /api/rest/v1/workspaces/{id} is called", func() {
 
 				Then("a permission error is returned", func() {
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.Authenticated.Name.String(), map[string]string{"user": "90001"}))
 					req := workspace_svc.NewWorkspaceServiceGetWorkspaceParams().WithID("80001")
 					c := helpers.WorkspaceServiceHTTPClient()
 					_, err := c.WorkspaceService.WorkspaceServiceGetWorkspace(req, auth)
@@ -147,7 +147,7 @@ var _ = Describe("workspace service", func() {
 			When("GET /api/rest/v1/workspaces/public is called", func() {
 
 				Then("only the public workspace is returned", func() {
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90001"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90001, 88888, authorization.Authenticated.Name.String(), map[string]string{"user": "90001"}))
 					req := workspace_svc.NewWorkspaceServiceListPublicWorkspacesParams()
 					c := helpers.WorkspaceServiceHTTPClient()
 					resp, err := c.WorkspaceService.WorkspaceServiceListPublicWorkspaces(req, auth)
