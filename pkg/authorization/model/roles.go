@@ -3,7 +3,7 @@ package model
 import "fmt"
 
 // roleDefinitions is the single source of every role's definition, populated by
-// the role0/role1 declarations in roles.go.
+// the role declarations below.
 var roleDefinitions []*RoleDefinition
 
 func registerRole(name RoleName, description string, scope RoleScope, required map[ContextDimension]ContextQuantifier, permissions []PermissionName) *RoleDefinition {
@@ -37,11 +37,13 @@ func RoleDefinitionsMap() map[RoleName]*RoleDefinition {
 // Role factories
 // -------------------------------------------------------------------
 
-// A role factory bakes in wildcard dimensions and exposes a typed .For for the
-// exact-bound value. Declare with role0/role1 (roles.go).
+// A role factory embeds its definition (so a child role can inherit a parent's
+// permissions via `.Permissions`) and bakes in wildcard dimensions, exposing a
+// typed .For for the exact-bound value. Declare with roleWithNoContext /
+// roleWithOneContext.
 
-// roleFactoryNoContext is the factory for a role that binds no exact context value. It
-// may still bake in wildcard dimensions (granted for any value).
+// roleFactoryNoContext is the factory for a role that binds no exact context
+// value. It may still bake in wildcard dimensions (granted for any value).
 type roleFactoryNoContext struct {
 	*RoleDefinition
 	wildcards []ContextDimension
@@ -122,320 +124,284 @@ func merge(groups ...[]PermissionName) []PermissionName {
 	return result
 }
 
-// Permission grants, composed by inheritance. Each list is the single source
-// for the role(s) that use it; merge de-duplicates across groups.
-var (
-	publicPermissions = grant(
-		Authenticate,
-		GetListOfPossibleWayToAuthenticate,
-		AuthenticateUsingAuth2_0,
-		AuthenticateRedirectUsingAuth2_0,
-		GetPlatformSettings,
-	)
-
-	authenticatedPermissions = merge(publicPermissions, grant(
-		ListNotifications,
-		CountUnreadNotifications,
-		MarkNotificationAsRead,
-		Logout,
-		RefreshToken,
-		UpdateUser,
-		GetMyOwnUser,
-		UpdatePassword,
-		EnableTotp,
-		ResetTotp,
-		ResetPassword,
-		ListWorkspaces,
-		ListPublicWorkspaces,
-		ListWorkbenchs,
-		ListApps,
-		ListAppInstances,
-		ListMyRequests,
-		AuditUser,
-		GetCurrentTermsOfUseVersion,
-		GetMyTermsOfUseStatus,
-		AcceptTermsOfUse,
-		ListOrganizations,
-		GetOrganization,
-	))
-
-	workspaceGuestPermissions = merge(authenticatedPermissions, grant(
-		ListWorkspaces,
-		GetWorkspace,
-		ListUsers,
-		CreateRequest,
-		ListWorkspaceServiceInstances,
-	))
-
-	workspaceMemberPermissions = merge(workspaceGuestPermissions, grant(
-		CreateWorkbench,
-		ListFilesInWorkspace,
-		CreateRequest,
-		GetWorkspaceServiceInstance,
-		GetWorkspaceServiceInstanceSecret,
-	))
-
-	workspaceMaintainerPermissions = merge(workspaceMemberPermissions, grant(
-		UpdateWorkspace,
-		UploadFilesToWorkspace,
-		ModifyFilesInWorkspace,
-		SearchUsers,
-		CreateRequest,
-	))
-
-	workspaceDataManagerPermissions = merge(workspaceMemberPermissions, grant(
-		UploadFilesToWorkspace,
-		ModifyFilesInWorkspace,
-		DownloadFilesFromWorkspace,
-		ManageUsersDataRoleInWorkspace,
-		CreateRequest,
-		ListRequests,
-	))
-
-	workspaceAdminPermissions = merge(workspaceMaintainerPermissions, grant(
-		ListAppInstances,
-		ListWorkbenchs,
-		UpdateWorkbench,
-		GetWorkbench,
-		StreamWorkbench,
-		DeleteWorkbench,
-		AuditWorkbench,
-		ManageUsersInWorkbench,
-		DeleteWorkspace,
-		AuditWorkspace,
-		ManageUsersInWorkspace,
-		ListRequests,
-		GetRequest,
-		ApproveRequest,
-		DeleteRequest,
-		CreateWorkspaceServiceInstance,
-		UpdateWorkspaceServiceInstance,
-		DeleteWorkspaceServiceInstance,
-	))
-
-	workbenchViewerPermissions = merge(authenticatedPermissions, grant(
-		ListAppInstances,
-		ListWorkbenchs,
-		GetWorkbench,
-		StreamWorkbench,
-		ListUsers,
-	))
-
-	workbenchMemberPermissions = merge(workbenchViewerPermissions, grant(
-		CreateAppInstance,
-		UpdateAppInstance,
-		GetAppInstance,
-		DeleteAppInstance,
-		UpdateWorkbench,
-	))
-
-	workbenchAdminPermissions = merge(workbenchMemberPermissions, grant(
-		DeleteWorkbench,
-		ManageUsersInWorkbench,
-		SearchUsers,
-		AuditWorkbench,
-	))
-
-	platformSettingsManagerPermissions = merge(authenticatedPermissions, grant(
-		SetPlatformSettings,
-		ListTermsOfUseVersions,
-		GetTermsOfUseVersion,
-		CreateTermsOfUseVersion,
-		UpdateTermsOfUseVersion,
-		PublishTermsOfUseVersion,
-	))
-
-	platformUserManagerPermissions = merge(authenticatedPermissions, grant(
-		ListUsers,
-		CreateUser,
-		UpdateUser,
-		ManageUserRoles,
-		ManageDynamicRoles,
-		GetUser,
-		DeleteUser,
-		ResetPassword,
-		ListTermsOfUseAcceptances,
-	))
-
-	platformOrganizationManagerPermissions = merge(authenticatedPermissions, grant(
-		CreateOrganization,
-		UpdateOrganization,
-		DeleteOrganization,
-	))
-
-	platformAuditorPermissions = merge(authenticatedPermissions, grant(
-		AuditPlatform,
-	))
-
-	platformWorkspaceManagerPermissions = merge(authenticatedPermissions, grant(
-		CreateWorkspace,
-		GetWorkspace,
-		UpdateWorkspace,
-		DeleteWorkspace,
-	))
-
-	appStoreAdminPermissions = merge(authenticatedPermissions, grant(
-		ListApps,
-		CreateApp,
-		UpdateApp,
-		GetApp,
-		DeleteApp,
-	))
-
-	dataManagerPermissions = merge(authenticatedPermissions, grant(
-		ListWorkspaces,
-		GetWorkspace,
-		ListFilesInWorkspace,
-		UploadFilesToWorkspace,
-		ModifyFilesInWorkspace,
-		DownloadFilesFromWorkspace,
-	))
-
-	healthcheckerPermissions = grant(
-		GetHealthCheck,
-	)
-
-	superAdminPermissions = merge(
-		authenticatedPermissions,
-		platformSettingsManagerPermissions,
-		platformUserManagerPermissions,
-		platformOrganizationManagerPermissions,
-		platformAuditorPermissions,
-		platformWorkspaceManagerPermissions,
-		appStoreAdminPermissions,
-		dataManagerPermissions,
-		workspaceAdminPermissions,
-		workspaceDataManagerPermissions,
-		workbenchAdminPermissions,
-		healthcheckerPermissions,
-		grant(InitializeTenant),
-	)
-)
+// -------------------------------------------------------------------
+// Roles
+// -------------------------------------------------------------------
 
 // One factory per role — name, description, scope, granted permissions, and the
-// context binding: exact via the id type parameter, wildcard via trailing args.
+// context binding (exact via the id type parameter, wildcard via trailing args).
+// Each role's permissions live here: a role inherits its parent's set via
+// `Parent.Permissions` and adds its own with `grant(...)`.
 var (
 	Public = roleWithNoContext(
 		RolePublic,
 		"Public users can authenticate and read public platform settings",
 		RoleScopePlatform,
-		publicPermissions,
+		grant(
+			Authenticate,
+			GetListOfPossibleWayToAuthenticate,
+			AuthenticateUsingAuth2_0,
+			AuthenticateRedirectUsingAuth2_0,
+			GetPlatformSettings,
+		),
 	)
 	Authenticated = roleWithOneContext[UserID](
 		RoleAuthenticated,
 		"Authenticated users can manage their own session, profile, notifications, and base resources",
 		RoleScopePlatform,
-		authenticatedPermissions,
+		merge(Public.Permissions, grant(
+			ListNotifications,
+			CountUnreadNotifications,
+			MarkNotificationAsRead,
+			Logout,
+			RefreshToken,
+			UpdateUser,
+			GetMyOwnUser,
+			UpdatePassword,
+			EnableTotp,
+			ResetTotp,
+			ResetPassword,
+			ListWorkspaces,
+			ListPublicWorkspaces,
+			ListWorkbenchs,
+			ListApps,
+			ListAppInstances,
+			ListMyRequests,
+			AuditUser,
+			GetCurrentTermsOfUseVersion,
+			GetMyTermsOfUseStatus,
+			AcceptTermsOfUse,
+			ListOrganizations,
+			GetOrganization,
+		)),
 	)
 	WorkspaceGuest = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceGuest,
 		"Workspace guests can view workspace metadata and create requests",
 		RoleScopeWorkspace,
-		workspaceGuestPermissions,
+		merge(Authenticated.Permissions, grant(
+			ListWorkspaces,
+			GetWorkspace,
+			ListUsers,
+			CreateRequest,
+			ListWorkspaceServiceInstances,
+		)),
 	)
 	WorkspaceMember = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceMember,
 		"Workspace members can create workbenches and list workspace files",
 		RoleScopeWorkspace,
-		workspaceMemberPermissions,
+		merge(WorkspaceGuest.Permissions, grant(
+			CreateWorkbench,
+			ListFilesInWorkspace,
+			CreateRequest,
+			GetWorkspaceServiceInstance,
+			GetWorkspaceServiceInstanceSecret,
+		)),
 	)
 	WorkspaceMaintainer = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceMaintainer,
 		"Workspace maintainers can update workspace metadata and manage workspace files",
 		RoleScopeWorkspace,
-		workspaceMaintainerPermissions,
+		merge(WorkspaceMember.Permissions, grant(
+			UpdateWorkspace,
+			UploadFilesToWorkspace,
+			ModifyFilesInWorkspace,
+			SearchUsers,
+			CreateRequest,
+		)),
 	)
 	WorkspaceDataManager = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceDataManager,
 		"Workspace data managers can manage workspace files and data-manager assignments",
 		RoleScopeWorkspace,
-		workspaceDataManagerPermissions,
+		merge(WorkspaceMember.Permissions, grant(
+			UploadFilesToWorkspace,
+			ModifyFilesInWorkspace,
+			DownloadFilesFromWorkspace,
+			ManageUsersDataRoleInWorkspace,
+			CreateRequest,
+			ListRequests,
+		)),
 	)
 	WorkspaceAdmin = roleWithOneContext[WorkspaceID](
 		RoleWorkspaceAdmin,
 		"Workspace admins can administer workspace users, requests, workbenches, files, and services",
 		RoleScopeWorkspace,
-		workspaceAdminPermissions,
+		merge(WorkspaceMaintainer.Permissions, grant(
+			ListAppInstances,
+			ListWorkbenchs,
+			UpdateWorkbench,
+			GetWorkbench,
+			StreamWorkbench,
+			DeleteWorkbench,
+			AuditWorkbench,
+			ManageUsersInWorkbench,
+			DeleteWorkspace,
+			AuditWorkspace,
+			ManageUsersInWorkspace,
+			ListRequests,
+			GetRequest,
+			ApproveRequest,
+			DeleteRequest,
+			CreateWorkspaceServiceInstance,
+			UpdateWorkspaceServiceInstance,
+			DeleteWorkspaceServiceInstance,
+		)),
 	)
 	WorkbenchViewer = roleWithOneContext[WorkbenchID](
 		RoleWorkbenchViewer,
 		"Workbench viewers can view and stream workbenches",
 		RoleScopeWorkbench,
-		workbenchViewerPermissions,
+		merge(Authenticated.Permissions, grant(
+			ListAppInstances,
+			ListWorkbenchs,
+			GetWorkbench,
+			StreamWorkbench,
+			ListUsers,
+		)),
 	)
 	WorkbenchMember = roleWithOneContext[WorkbenchID](
 		RoleWorkbenchMember,
 		"Workbench members can update workbenches and manage app instances",
 		RoleScopeWorkbench,
-		workbenchMemberPermissions,
+		merge(WorkbenchViewer.Permissions, grant(
+			CreateAppInstance,
+			UpdateAppInstance,
+			GetAppInstance,
+			DeleteAppInstance,
+			UpdateWorkbench,
+		)),
 	)
 	WorkbenchAdmin = roleWithOneContext[WorkbenchID](
 		RoleWorkbenchAdmin,
 		"Workbench admins can administer workbenches and their users",
 		RoleScopeWorkbench,
-		workbenchAdminPermissions,
+		merge(WorkbenchMember.Permissions, grant(
+			DeleteWorkbench,
+			ManageUsersInWorkbench,
+			SearchUsers,
+			AuditWorkbench,
+		)),
 	)
 	Healthchecker = roleWithNoContext(
 		RoleHealthchecker,
 		"Healthcheckers can read healthcheck status",
 		RoleScopePlatform,
-		healthcheckerPermissions,
+		grant(
+			GetHealthCheck,
+		),
 		ContextUser,
 	)
 	PlatformSettingsManager = roleWithNoContext(
 		RolePlatformSettingsManager,
 		"Platform settings managers can manage platform settings",
 		RoleScopePlatform,
-		platformSettingsManagerPermissions,
+		merge(Authenticated.Permissions, grant(
+			SetPlatformSettings,
+			ListTermsOfUseVersions,
+			GetTermsOfUseVersion,
+			CreateTermsOfUseVersion,
+			UpdateTermsOfUseVersion,
+			PublishTermsOfUseVersion,
+		)),
 		ContextUser,
 	)
 	PlatformUserManager = roleWithNoContext(
 		RolePlatformUserManager,
 		"Platform user managers can administer platform users and their roles",
 		RoleScopePlatform,
-		platformUserManagerPermissions,
+		merge(Authenticated.Permissions, grant(
+			ListUsers,
+			CreateUser,
+			UpdateUser,
+			ManageUserRoles,
+			ManageDynamicRoles,
+			GetUser,
+			DeleteUser,
+			ResetPassword,
+			ListTermsOfUseAcceptances,
+		)),
 		ContextUser,
 	)
 	PlatformOrganizationManager = roleWithNoContext(
 		RolePlatformOrganizationManager,
 		"Platform organization managers can manage organizations",
 		RoleScopePlatform,
-		platformOrganizationManagerPermissions,
+		merge(Authenticated.Permissions, grant(
+			CreateOrganization,
+			UpdateOrganization,
+			DeleteOrganization,
+		)),
 		ContextUser,
 	)
 	PlatformAuditor = roleWithNoContext(
 		RolePlatformAuditor,
 		"Platform auditors can audit the platform",
 		RoleScopePlatform,
-		platformAuditorPermissions,
+		merge(Authenticated.Permissions, grant(
+			AuditPlatform,
+		)),
 		ContextUser,
 	)
 	PlatformWorkspaceManager = roleWithNoContext(
 		RolePlatformWorkspaceManager,
 		"Platform workspace managers can create, update, and delete any workspace",
 		RoleScopePlatform,
-		platformWorkspaceManagerPermissions,
+		merge(Authenticated.Permissions, grant(
+			CreateWorkspace,
+			GetWorkspace,
+			UpdateWorkspace,
+			DeleteWorkspace,
+		)),
 		ContextWorkspace,
 	)
 	AppStoreAdmin = roleWithNoContext(
 		RoleAppStoreAdmin,
 		"App store admins can administer apps",
 		RoleScopePlatform,
-		appStoreAdminPermissions,
+		merge(Authenticated.Permissions, grant(
+			ListApps,
+			CreateApp,
+			UpdateApp,
+			GetApp,
+			DeleteApp,
+		)),
 		ContextUser,
 	)
 	PlatformDataManager = roleWithNoContext(
 		RolePlatformDataManager,
 		"Data managers can manage workspace data across workspaces",
 		RoleScopePlatform,
-		dataManagerPermissions,
+		merge(Authenticated.Permissions, grant(
+			ListWorkspaces,
+			GetWorkspace,
+			ListFilesInWorkspace,
+			UploadFilesToWorkspace,
+			ModifyFilesInWorkspace,
+			DownloadFilesFromWorkspace,
+		)),
 		ContextWorkspace,
 	)
 	SuperAdmin = roleWithNoContext(
 		RoleSuperAdmin,
 		"Super admins can perform all platform, workspace, and workbench actions",
 		RoleScopeSystem,
-		superAdminPermissions,
+		merge(
+			Authenticated.Permissions,
+			PlatformSettingsManager.Permissions,
+			PlatformUserManager.Permissions,
+			PlatformOrganizationManager.Permissions,
+			PlatformAuditor.Permissions,
+			PlatformWorkspaceManager.Permissions,
+			AppStoreAdmin.Permissions,
+			PlatformDataManager.Permissions,
+			WorkspaceAdmin.Permissions,
+			WorkspaceDataManager.Permissions,
+			WorkbenchAdmin.Permissions,
+			Healthchecker.Permissions,
+			grant(InitializeTenant),
+		),
 		ContextUser,
 		ContextWorkspace,
 		ContextWorkbench,
