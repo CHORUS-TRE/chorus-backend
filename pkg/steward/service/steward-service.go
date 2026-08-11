@@ -106,8 +106,8 @@ func (s *StewardService) InitializeDefaultUser(ctx context.Context, tenantID uin
 
 func bootstrapRolesFor(userID uint64) []user_model.UserRole {
 	return []user_model.UserRole{
-		{Role: authz.Authenticated.For(authz.UserID(userID))},
-		{Role: authz.SuperAdmin.For()},
+		{Role: authz.RoleAuthenticated.For(authz.UserID(userID))},
+		{Role: authz.RoleSuperAdmin.For()},
 	}
 }
 

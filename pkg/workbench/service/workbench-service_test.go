@@ -116,7 +116,7 @@ func TestAddUserRoleInWorkbench_AssignsRoleWhenNoneExists(t *testing.T) {
 	userer := &mockUserer{getUser: userWithRoles()}
 
 	svc := newSvc(workbenchStoreReturning(5), userer)
-	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.WorkbenchAdmin.Name))
+	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.RoleWorkbenchAdmin.Name))
 
 	require.NoError(t, err)
 	assert.Empty(t, userer.removedRoleIDs)
@@ -129,11 +129,11 @@ func TestAddUserRoleInWorkbench_AssignsRoleWhenNoneExists(t *testing.T) {
 // the existing one in that workbench.
 func TestAddUserRoleInWorkbench_ReplacesExistingRole(t *testing.T) {
 	userer := &mockUserer{
-		getUser: userWithRoles(workbenchRole(2, 7, authorization_model.WorkbenchAdmin.Name)),
+		getUser: userWithRoles(workbenchRole(2, 7, authorization_model.RoleWorkbenchAdmin.Name)),
 	}
 
 	svc := newSvc(workbenchStoreReturning(5), userer)
-	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.WorkbenchAdmin.Name))
+	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.RoleWorkbenchAdmin.Name))
 
 	require.NoError(t, err)
 	assert.Equal(t, []uint64{2}, userer.removedRoleIDs)
@@ -144,11 +144,11 @@ func TestAddUserRoleInWorkbench_ReplacesExistingRole(t *testing.T) {
 // another workbench.
 func TestAddUserRoleInWorkbench_KeepsRolesInOtherWorkbenches(t *testing.T) {
 	userer := &mockUserer{
-		getUser: userWithRoles(workbenchRole(2, 9, authorization_model.WorkbenchAdmin.Name)),
+		getUser: userWithRoles(workbenchRole(2, 9, authorization_model.RoleWorkbenchAdmin.Name)),
 	}
 
 	svc := newSvc(workbenchStoreReturning(5), userer)
-	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.WorkbenchAdmin.Name))
+	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.RoleWorkbenchAdmin.Name))
 
 	require.NoError(t, err)
 	assert.Empty(t, userer.removedRoleIDs)
@@ -159,7 +159,7 @@ func TestAddUserRoleInWorkbench_KeepsRolesInOtherWorkbenches(t *testing.T) {
 func TestAddUserRoleInWorkbench_InvalidWorkbenchContext(t *testing.T) {
 	userer := &mockUserer{getUser: userWithRoles()}
 
-	role := workbenchRole(0, 0, authorization_model.WorkbenchAdmin.Name)
+	role := workbenchRole(0, 0, authorization_model.RoleWorkbenchAdmin.Name)
 	role.Context[authorization_model.ContextWorkbench] = "not-a-number"
 
 	svc := newSvc(&mockWorkbenchStore{}, userer)
@@ -180,7 +180,7 @@ func TestAddUserRoleInWorkbench_WorkbenchNotFound(t *testing.T) {
 	userer := &mockUserer{getUser: userWithRoles()}
 
 	svc := newSvc(store, userer)
-	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.WorkbenchAdmin.Name))
+	err := svc.AddUserRoleInWorkbench(context.Background(), 1, 42, workbenchRole(0, 7, authorization_model.RoleWorkbenchAdmin.Name))
 
 	require.Error(t, err)
 	assert.Empty(t, userer.capturedRoles)
@@ -193,7 +193,7 @@ func TestAddUserRoleInWorkbench_WorkbenchNotFound(t *testing.T) {
 // The user's role in the workbench is removed.
 func TestRemoveUserFromWorkbench_RemovesWorkbenchRole(t *testing.T) {
 	userer := &mockUserer{
-		getUser: userWithRoles(workbenchRole(2, 7, authorization_model.WorkbenchAdmin.Name)),
+		getUser: userWithRoles(workbenchRole(2, 7, authorization_model.RoleWorkbenchAdmin.Name)),
 	}
 
 	svc := newSvc(workbenchStoreReturning(5), userer)
@@ -206,7 +206,7 @@ func TestRemoveUserFromWorkbench_RemovesWorkbenchRole(t *testing.T) {
 // A user without a role in the workbench is a no-op (no removal, no error).
 func TestRemoveUserFromWorkbench_NoRoleIsNoop(t *testing.T) {
 	userer := &mockUserer{
-		getUser: userWithRoles(workbenchRole(2, 9, authorization_model.WorkbenchAdmin.Name)),
+		getUser: userWithRoles(workbenchRole(2, 9, authorization_model.RoleWorkbenchAdmin.Name)),
 	}
 
 	svc := newSvc(workbenchStoreReturning(5), userer)

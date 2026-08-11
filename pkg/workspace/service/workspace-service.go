@@ -339,11 +339,11 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 
 	var rolesToAssign []user_model.UserRole
 	if s.cfg.Services.WorkspaceService.CreatorIsAdmin {
-		r := authz.WorkspaceAdmin.For(authz.WorkspaceID(newWorkspace.ID))
+		r := authz.RoleWorkspaceAdmin.For(authz.WorkspaceID(newWorkspace.ID))
 		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
 	}
 	if s.cfg.Services.WorkspaceService.CreatorIsDataManager {
-		r := authz.WorkspaceDataManager.For(authz.WorkspaceID(newWorkspace.ID))
+		r := authz.RoleWorkspaceDataManager.For(authz.WorkspaceID(newWorkspace.ID))
 		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
 	}
 

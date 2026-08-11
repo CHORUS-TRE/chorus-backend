@@ -168,8 +168,8 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 			},
 		},
 		Roles: []*model.RoleDefinition{
-			{Name: model.WorkspaceGuest.Name, Permissions: []model.PermissionName{model.PermGetWorkspace.Name}},
-			{Name: model.WorkspaceAdmin.Name},
+			{Name: model.RoleWorkspaceGuest.Name, Permissions: []model.PermissionName{model.PermGetWorkspace.Name}},
+			{Name: model.RoleWorkspaceAdmin.Name},
 		},
 	}
 
@@ -179,7 +179,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 	}
 
 	allowed, err := policy.IsUserAllowed(
-		[]model.Role{{Name: model.WorkspaceAdmin.Name, Context: model.Context{model.ContextWorkspace: "42"}}},
+		[]model.Role{{Name: model.RoleWorkspaceAdmin.Name, Context: model.Context{model.ContextWorkspace: "42"}}},
 		model.PermGetWorkspace.For(model.WorkspaceID(42)),
 	)
 	if err != nil {
@@ -190,7 +190,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 	}
 
 	allowed, err = policy.IsUserAllowed(
-		[]model.Role{{Name: model.WorkspaceGuest.Name, Context: model.Context{model.ContextWorkspace: "42"}}},
+		[]model.Role{{Name: model.RoleWorkspaceGuest.Name, Context: model.Context{model.ContextWorkspace: "42"}}},
 		model.PermGetWorkspace.For(model.WorkspaceID(42)),
 	)
 	if err != nil {
@@ -208,7 +208,7 @@ func TestDefaultSchemaSuperAdminGrantsEveryPermission(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	permissions, err := policy.GetUserPermissions([]model.Role{{Name: model.SuperAdmin.Name}})
+	permissions, err := policy.GetUserPermissions([]model.Role{{Name: model.RoleSuperAdmin.Name}})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

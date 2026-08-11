@@ -33,15 +33,15 @@ func getAuthAsClientOpts(t string) func(*runtime.ClientOperation) {
 }
 
 func authenticatedAuth() func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.Authenticated.Name.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)}))
 }
 
 func publicAuth() func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.Public.Name.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.RolePublic.Name.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)}))
 }
 
 func orgManagerAuth() func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.PlatformOrganizationManager.Name.String(), map[string]string{}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.RolePlatformOrganizationManager.Name.String(), map[string]string{}))
 }
 
 var _ = Describe("organization service", func() {
@@ -197,7 +197,7 @@ var _ = Describe("organization service", func() {
 
 				Then("the raw logo bytes and content type should be returned", func() {
 					setupTables()
-					token := helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.Authenticated.Name.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)})
+					token := helpers.CreateJWTToken(orgTestJWTUser, orgTestTenantID, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": fmt.Sprintf("%d", orgTestJWTUser)})
 
 					httpReq, reqErr := http.NewRequest(http.MethodGet, "http://"+helpers.ComponentURL()+"/api/rest/v1/organizations/"+orgFixtureID+"/logo", nil)
 					Expect(reqErr).Should(BeNil())

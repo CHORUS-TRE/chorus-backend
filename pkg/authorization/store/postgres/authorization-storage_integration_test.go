@@ -20,18 +20,18 @@ func findUsers(ctx context.Context, store *AuthorizationStorage, tenantID uint64
 func testRolesGrantingPermissions() map[model.PermissionName][]model.RoleName {
 	return map[model.PermissionName][]model.RoleName{
 		model.PermListWorkspaces.Name: {
-			model.WorkspaceAdmin.Name,
-			model.WorkspaceMember.Name,
-			model.WorkspaceGuest.Name,
+			model.RoleWorkspaceAdmin.Name,
+			model.RoleWorkspaceMember.Name,
+			model.RoleWorkspaceGuest.Name,
 		},
 		model.PermCreateWorkspace.Name: {
-			model.PlatformWorkspaceManager.Name,
-			model.SuperAdmin.Name,
+			model.RolePlatformWorkspaceManager.Name,
+			model.RoleSuperAdmin.Name,
 		},
 		model.PermApproveRequest.Name: {
-			model.WorkspaceDataManager.Name,
-			model.WorkspaceAdmin.Name,
-			model.SuperAdmin.Name,
+			model.RoleWorkspaceDataManager.Name,
+			model.RoleWorkspaceAdmin.Name,
+			model.RoleSuperAdmin.Name,
 		},
 	}
 }
@@ -237,7 +237,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_ViaRolesFilter(t *testing.
 		Context: model.Context{
 			model.ContextWorkspace: "100",
 		},
-		ViaRoles: []model.RoleName{model.WorkspaceDataManager.Name},
+		ViaRoles: []model.RoleName{model.RoleWorkspaceDataManager.Name},
 	})
 	require.NoError(t, err)
 	require.ElementsMatch(t, []uint64{fixtures.userIDs["alice"]}, userIDs)
@@ -310,7 +310,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_NoMatchingViaRoles(t *test
 		Context: model.Context{
 			model.ContextWorkspace: "100",
 		},
-		ViaRoles: []model.RoleName{model.WorkbenchAdmin.Name},
+		ViaRoles: []model.RoleName{model.RoleWorkbenchAdmin.Name},
 	})
 	require.NoError(t, err)
 	require.Empty(t, userIDs)

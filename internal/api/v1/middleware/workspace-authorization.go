@@ -145,7 +145,7 @@ func (c workspaceControllerAuthorization) AddUserRoleInWorkspace(ctx context.Con
 		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
 	}
 
-	if roleName == authz.WorkspaceDataManager.Name {
+	if roleName == authz.RoleWorkspaceDataManager.Name {
 		err = c.IsAuthorized(ctx, authz.PermManageUsersDataRoleInWorkspace.For(authz.WorkspaceID(req.Id)))
 		if err != nil {
 			return nil, err
@@ -178,7 +178,7 @@ func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.
 		return nil, fmt.Errorf("role %q is not a valid workspace role", roleName)
 	}
 
-	if roleName == authz.WorkspaceDataManager.Name {
+	if roleName == authz.RoleWorkspaceDataManager.Name {
 		err = c.IsAuthorized(ctx, authz.PermManageUsersDataRoleInWorkspace.For(authz.WorkspaceID(req.Id)))
 		if err != nil {
 			return nil, err

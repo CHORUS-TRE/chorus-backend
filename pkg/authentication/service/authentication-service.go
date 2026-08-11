@@ -396,7 +396,7 @@ func (a *AuthenticationService) OAuthCallback(ctx context.Context, providerID, s
 		}
 
 		err = a.userer.CreateUserRoles(ctx, 1, createdUser.ID, []userModel.UserRole{{
-			Role: authz.Authenticated.For(authz.UserID(createdUser.ID)),
+			Role: authz.RoleAuthenticated.For(authz.UserID(createdUser.ID)),
 		}})
 		if err != nil {
 			return "", 0, "", cerr.ErrInternal.Wrap(err, "Failed to create user roles")

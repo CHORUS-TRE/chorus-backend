@@ -322,7 +322,7 @@ func (c UserController) registerUserSelfService(ctx context.Context, req *chorus
 
 func (c UserController) assignDefaultAuthenticatedRole(ctx context.Context, tenantID, userID uint64) error {
 	return c.user.CreateUserRoles(ctx, tenantID, userID, []model.UserRole{{
-		Role: authz.Authenticated.For(authz.UserID(userID)),
+		Role: authz.RoleAuthenticated.For(authz.UserID(userID)),
 	}})
 }
 

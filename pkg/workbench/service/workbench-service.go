@@ -529,7 +529,7 @@ func (s *WorkbenchService) CreateWorkbench(ctx context.Context, workbench *model
 		return nil, cerr.WrapStoreError(err, "Unable to create workbench")
 	}
 
-	r := authz.WorkbenchAdmin.For(authz.WorkbenchID(newWorkbench.ID))
+	r := authz.RoleWorkbenchAdmin.For(authz.WorkbenchID(newWorkbench.ID))
 	err = s.userer.CreateUserRoles(ctx, workbench.TenantID, workbench.UserID, []user_model.UserRole{{Role: r}})
 	if err != nil {
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to assign workbench admin role to user %v for workbench %v", workbench.UserID, newWorkbench.ID))

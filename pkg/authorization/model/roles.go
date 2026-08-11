@@ -133,7 +133,7 @@ func merge(groups ...[]PermissionName) []PermissionName {
 // Each role's permissions live here: a role inherits its parent's set via
 // `Parent.Permissions` and adds its own with `grant(...)`.
 var (
-	Public = roleWithNoContext(
+	RolePublic = roleWithNoContext(
 		"Public",
 		"Public users can authenticate and read public platform settings",
 		RoleScopePlatform,
@@ -145,11 +145,11 @@ var (
 			PermGetPlatformSettings,
 		),
 	)
-	Authenticated = roleWithOneContext[UserID](
+	RoleAuthenticated = roleWithOneContext[UserID](
 		"Authenticated",
 		"Authenticated users can manage their own session, profile, notifications, and base resources",
 		RoleScopePlatform,
-		merge(Public.Permissions, grant(
+		merge(RolePublic.Permissions, grant(
 			PermListNotifications,
 			PermCountUnreadNotifications,
 			PermMarkNotificationAsRead,
@@ -175,11 +175,11 @@ var (
 			PermGetOrganization,
 		)),
 	)
-	WorkspaceGuest = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceGuest = roleWithOneContext[WorkspaceID](
 		"WorkspaceGuest",
 		"Workspace guests can view workspace metadata and create requests",
 		RoleScopeWorkspace,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermListWorkspaces,
 			PermGetWorkspace,
 			PermListUsers,
@@ -187,11 +187,11 @@ var (
 			PermListWorkspaceServiceInstances,
 		)),
 	)
-	WorkspaceMember = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceMember = roleWithOneContext[WorkspaceID](
 		"WorkspaceMember",
 		"Workspace members can create workbenches and list workspace files",
 		RoleScopeWorkspace,
-		merge(WorkspaceGuest.Permissions, grant(
+		merge(RoleWorkspaceGuest.Permissions, grant(
 			PermCreateWorkbench,
 			PermListFilesInWorkspace,
 			PermCreateRequest,
@@ -199,11 +199,11 @@ var (
 			PermGetWorkspaceServiceInstanceSecret,
 		)),
 	)
-	WorkspaceMaintainer = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceMaintainer = roleWithOneContext[WorkspaceID](
 		"WorkspaceMaintainer",
 		"Workspace maintainers can update workspace metadata and manage workspace files",
 		RoleScopeWorkspace,
-		merge(WorkspaceMember.Permissions, grant(
+		merge(RoleWorkspaceMember.Permissions, grant(
 			PermUpdateWorkspace,
 			PermUploadFilesToWorkspace,
 			PermModifyFilesInWorkspace,
@@ -211,11 +211,11 @@ var (
 			PermCreateRequest,
 		)),
 	)
-	WorkspaceDataManager = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceDataManager = roleWithOneContext[WorkspaceID](
 		"WorkspaceDataManager",
 		"Workspace data managers can manage workspace files and data-manager assignments",
 		RoleScopeWorkspace,
-		merge(WorkspaceMember.Permissions, grant(
+		merge(RoleWorkspaceMember.Permissions, grant(
 			PermUploadFilesToWorkspace,
 			PermModifyFilesInWorkspace,
 			PermDownloadFilesFromWorkspace,
@@ -224,11 +224,11 @@ var (
 			PermListRequests,
 		)),
 	)
-	WorkspaceAdmin = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceAdmin = roleWithOneContext[WorkspaceID](
 		"WorkspaceAdmin",
 		"Workspace admins can administer workspace users, requests, workbenches, files, and services",
 		RoleScopeWorkspace,
-		merge(WorkspaceMaintainer.Permissions, grant(
+		merge(RoleWorkspaceMaintainer.Permissions, grant(
 			PermListAppInstances,
 			PermListWorkbenchs,
 			PermUpdateWorkbench,
@@ -249,11 +249,11 @@ var (
 			PermDeleteWorkspaceServiceInstance,
 		)),
 	)
-	WorkbenchViewer = roleWithOneContext[WorkbenchID](
+	RoleWorkbenchViewer = roleWithOneContext[WorkbenchID](
 		"WorkbenchViewer",
 		"Workbench viewers can view and stream workbenches",
 		RoleScopeWorkbench,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermListAppInstances,
 			PermListWorkbenchs,
 			PermGetWorkbench,
@@ -261,11 +261,11 @@ var (
 			PermListUsers,
 		)),
 	)
-	WorkbenchMember = roleWithOneContext[WorkbenchID](
+	RoleWorkbenchMember = roleWithOneContext[WorkbenchID](
 		"WorkbenchMember",
 		"Workbench members can update workbenches and manage app instances",
 		RoleScopeWorkbench,
-		merge(WorkbenchViewer.Permissions, grant(
+		merge(RoleWorkbenchViewer.Permissions, grant(
 			PermCreateAppInstance,
 			PermUpdateAppInstance,
 			PermGetAppInstance,
@@ -273,18 +273,18 @@ var (
 			PermUpdateWorkbench,
 		)),
 	)
-	WorkbenchAdmin = roleWithOneContext[WorkbenchID](
+	RoleWorkbenchAdmin = roleWithOneContext[WorkbenchID](
 		"WorkbenchAdmin",
 		"Workbench admins can administer workbenches and their users",
 		RoleScopeWorkbench,
-		merge(WorkbenchMember.Permissions, grant(
+		merge(RoleWorkbenchMember.Permissions, grant(
 			PermDeleteWorkbench,
 			PermManageUsersInWorkbench,
 			PermSearchUsers,
 			PermAuditWorkbench,
 		)),
 	)
-	Healthchecker = roleWithNoContext(
+	RoleHealthchecker = roleWithNoContext(
 		"Healthchecker",
 		"Healthcheckers can read healthcheck status",
 		RoleScopePlatform,
@@ -293,11 +293,11 @@ var (
 		),
 		ContextUser,
 	)
-	PlatformSettingsManager = roleWithNoContext(
+	RolePlatformSettingsManager = roleWithNoContext(
 		"PlatformSettingsManager",
 		"Platform settings managers can manage platform settings",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermSetPlatformSettings,
 			PermListTermsOfUseVersions,
 			PermGetTermsOfUseVersion,
@@ -307,11 +307,11 @@ var (
 		)),
 		ContextUser,
 	)
-	PlatformUserManager = roleWithNoContext(
+	RolePlatformUserManager = roleWithNoContext(
 		"PlatformUserManager",
 		"Platform user managers can administer platform users and their roles",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermListUsers,
 			PermCreateUser,
 			PermUpdateUser,
@@ -324,31 +324,31 @@ var (
 		)),
 		ContextUser,
 	)
-	PlatformOrganizationManager = roleWithNoContext(
+	RolePlatformOrganizationManager = roleWithNoContext(
 		"PlatformOrganizationManager",
 		"Platform organization managers can manage organizations",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermCreateOrganization,
 			PermUpdateOrganization,
 			PermDeleteOrganization,
 		)),
 		ContextUser,
 	)
-	PlatformAuditor = roleWithNoContext(
+	RolePlatformAuditor = roleWithNoContext(
 		"PlatformAuditor",
 		"Platform auditors can audit the platform",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermAuditPlatform,
 		)),
 		ContextUser,
 	)
-	PlatformWorkspaceManager = roleWithNoContext(
+	RolePlatformWorkspaceManager = roleWithNoContext(
 		"PlatformWorkspaceManager",
 		"Platform workspace managers can create, update, and delete any workspace",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermCreateWorkspace,
 			PermGetWorkspace,
 			PermUpdateWorkspace,
@@ -356,11 +356,11 @@ var (
 		)),
 		ContextWorkspace,
 	)
-	AppStoreAdmin = roleWithNoContext(
+	RoleAppStoreAdmin = roleWithNoContext(
 		"AppStoreAdmin",
 		"App store admins can administer apps",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermListApps,
 			PermCreateApp,
 			PermUpdateApp,
@@ -369,11 +369,11 @@ var (
 		)),
 		ContextUser,
 	)
-	PlatformDataManager = roleWithNoContext(
+	RolePlatformDataManager = roleWithNoContext(
 		"PlatformDataManager",
 		"Data managers can manage workspace data across workspaces",
 		RoleScopePlatform,
-		merge(Authenticated.Permissions, grant(
+		merge(RoleAuthenticated.Permissions, grant(
 			PermListWorkspaces,
 			PermGetWorkspace,
 			PermListFilesInWorkspace,
@@ -383,23 +383,23 @@ var (
 		)),
 		ContextWorkspace,
 	)
-	SuperAdmin = roleWithNoContext(
+	RoleSuperAdmin = roleWithNoContext(
 		"SuperAdmin",
 		"Super admins can perform all platform, workspace, and workbench actions",
 		RoleScopeSystem,
 		merge(
-			Authenticated.Permissions,
-			PlatformSettingsManager.Permissions,
-			PlatformUserManager.Permissions,
-			PlatformOrganizationManager.Permissions,
-			PlatformAuditor.Permissions,
-			PlatformWorkspaceManager.Permissions,
-			AppStoreAdmin.Permissions,
-			PlatformDataManager.Permissions,
-			WorkspaceAdmin.Permissions,
-			WorkspaceDataManager.Permissions,
-			WorkbenchAdmin.Permissions,
-			Healthchecker.Permissions,
+			RoleAuthenticated.Permissions,
+			RolePlatformSettingsManager.Permissions,
+			RolePlatformUserManager.Permissions,
+			RolePlatformOrganizationManager.Permissions,
+			RolePlatformAuditor.Permissions,
+			RolePlatformWorkspaceManager.Permissions,
+			RoleAppStoreAdmin.Permissions,
+			RolePlatformDataManager.Permissions,
+			RoleWorkspaceAdmin.Permissions,
+			RoleWorkspaceDataManager.Permissions,
+			RoleWorkbenchAdmin.Permissions,
+			RoleHealthchecker.Permissions,
 			grant(PermInitializeTenant),
 		),
 		ContextUser,
