@@ -33,7 +33,7 @@ func (c platformSettingsControllerAuthorization) GetPlatformSettings(ctx context
 }
 
 func (c platformSettingsControllerAuthorization) UpdatePlatformSettings(ctx context.Context, req *chorus.UpdatePlatformSettingsRequest) (*chorus.UpdatePlatformSettingsReply, error) {
-	err := c.IsAuthorized(ctx, authz.SetPlatformSettings.For())
+	err := c.IsAuthorized(ctx, authz.PermSetPlatformSettings.For())
 	if err != nil {
 		return nil, err
 	}

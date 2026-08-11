@@ -36,7 +36,7 @@ func (c notificationControllerAuthorization) CountUnreadNotifications(ctx contex
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authz.CountUnreadNotifications.For(authz.UserID(userID)))
+	err = c.IsAuthorized(ctx, authz.PermCountUnreadNotifications.For(authz.UserID(userID)))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (c notificationControllerAuthorization) MarkNotificationsAsRead(ctx context
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authz.MarkNotificationAsRead.For(authz.UserID(userID)))
+	err = c.IsAuthorized(ctx, authz.PermMarkNotificationAsRead.For(authz.UserID(userID)))
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c notificationControllerAuthorization) GetNotifications(ctx context.Contex
 		return nil, err
 	}
 
-	err = c.IsAuthorized(ctx, authz.ListNotifications.For(authz.UserID(userID)))
+	err = c.IsAuthorized(ctx, authz.PermListNotifications.For(authz.UserID(userID)))
 	if err != nil {
 		return nil, err
 	}

@@ -182,7 +182,7 @@ func (s *ApprovalRequestService) findApproversForDataExtractionRequest(ctx conte
 	workspaceContext := authz.Context{authz.ContextWorkspace: fmt.Sprintf("%d", workspaceID)}
 
 	filter := authz.FindUsersWithPermissionFilter{
-		PermissionName:          authz.DownloadFilesFromWorkspace.Name,
+		PermissionName:          authz.PermDownloadFilesFromWorkspace.Name,
 		Context:                 workspaceContext,
 		PreferExactContextMatch: true,
 	}
@@ -304,7 +304,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 	uploadWorkspaceContext := authz.Context{authz.ContextWorkspace: fmt.Sprintf("%d", targetWorkspaceID)}
 
 	filterDownload := authz.FindUsersWithPermissionFilter{
-		PermissionName:          authz.DownloadFilesFromWorkspace.Name,
+		PermissionName:          authz.PermDownloadFilesFromWorkspace.Name,
 		Context:                 downloadWorkspaceContext,
 		PreferExactContextMatch: true,
 	}
@@ -318,7 +318,7 @@ func (s *ApprovalRequestService) findApproversForDataTransferRequest(ctx context
 	}
 
 	filterUpload := authz.FindUsersWithPermissionFilter{
-		PermissionName:          authz.UploadFilesToWorkspace.Name,
+		PermissionName:          authz.PermUploadFilesToWorkspace.Name,
 		Context:                 uploadWorkspaceContext,
 		PreferExactContextMatch: true,
 	}

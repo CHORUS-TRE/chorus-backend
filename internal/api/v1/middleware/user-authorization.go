@@ -38,31 +38,31 @@ func UserAuthorizing(cfg config.Config, logger *logger.ContextLogger, authorizer
 func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.ListUsersRequest) (*chorus.ListUsersReply, error) {
 	if req.Filter != nil {
 		for _, id := range req.Filter.IdsIn {
-			err := c.IsAuthorized(ctx, authz.GetUser.For(authz.UserID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetUser.For(authz.UserID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 		for _, id := range req.Filter.WorkspaceIDs {
-			err := c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 		for _, id := range req.Filter.WorkbenchIDs {
-			err := c.IsAuthorized(ctx, authz.GetWorkbench.For(authz.WorkbenchID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkbench.For(authz.WorkbenchID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 		if req.Filter.Search != nil {
-			err := c.IsAuthorized(ctx, authz.SearchUsers.For())
+			err := c.IsAuthorized(ctx, authz.PermSearchUsers.For())
 			if err != nil {
 				return nil, err
 			}
 		}
 	} else {
-		err := c.IsAuthorized(ctx, authz.ListUsers.For())
+		err := c.IsAuthorized(ctx, authz.PermListUsers.For())
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func (c userControllerAuthorization) ListUsers(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) GetUser(ctx context.Context, req *chorus.GetUserRequest) (*chorus.GetUserReply, error) {
-	err := c.IsAuthorized(ctx, authz.GetUser.For(authz.UserID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermGetUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (c userControllerAuthorization) CreateUser(ctx context.Context, req *chorus
 	// The actual payload sanitization (only safe fields used for self-service)
 	// is performed in the controller.
 	if _, authenticated := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); authenticated {
-		if err := c.IsAuthorized(ctx, authz.CreateUser.For()); err != nil {
+		if err := c.IsAuthorized(ctx, authz.PermCreateUser.For()); err != nil {
 			return nil, err
 		}
 	} else if !isInternalPublicRegistrationEnabled(c.cfg) {
@@ -112,7 +112,7 @@ func isInternalPublicRegistrationEnabled(cfg config.Config) bool {
 }
 
 func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.GetUserMeRequest) (*chorus.GetUserMeReply, error) {
-	err := c.IsAuthorized(ctx, authz.GetMyOwnUser.For(userFromCtx(ctx)))
+	err := c.IsAuthorized(ctx, authz.PermGetMyOwnUser.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c userControllerAuthorization) GetUserMe(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *chorus.UpdatePasswordRequest) (*chorus.UpdatePasswordReply, error) {
-	err := c.IsAuthorized(ctx, authz.UpdatePassword.For(userFromCtx(ctx)))
+	err := c.IsAuthorized(ctx, authz.PermUpdatePassword.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c userControllerAuthorization) UpdatePassword(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus.User) (*chorus.UpdateUserReply, error) {
-	err := c.IsAuthorized(ctx, authz.UpdateUser.For(authz.UserID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermUpdateUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (c userControllerAuthorization) UpdateUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *chorus.CreateUserRoleRequest) (*chorus.CreateUserRoleReply, error) {
-	err := c.IsAuthorized(ctx, authz.ManageUserRoles.For(authz.UserID(req.UserId)))
+	err := c.IsAuthorized(ctx, authz.PermManageUserRoles.For(authz.UserID(req.UserId)))
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (c userControllerAuthorization) CreateUserRole(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) DeleteUserRole(ctx context.Context, req *chorus.DeleteUserRoleRequest) (*chorus.DeleteUserRoleReply, error) {
-	err := c.IsAuthorized(ctx, authz.ManageUserRoles.For(authz.UserID(req.UserId)))
+	err := c.IsAuthorized(ctx, authz.PermManageUserRoles.For(authz.UserID(req.UserId)))
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (c userControllerAuthorization) DeleteUserRole(ctx context.Context, req *ch
 }
 
 func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus.DeleteUserRequest) (*chorus.DeleteUserReply, error) {
-	err := c.IsAuthorized(ctx, authz.DeleteUser.For(authz.UserID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermDeleteUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (c userControllerAuthorization) DeleteUser(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus.EnableTotpRequest) (*chorus.EnableTotpReply, error) {
-	err := c.IsAuthorized(ctx, authz.EnableTotp.For(userFromCtx(ctx)))
+	err := c.IsAuthorized(ctx, authz.PermEnableTotp.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func (c userControllerAuthorization) EnableTotp(ctx context.Context, req *chorus
 }
 
 func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.ResetTotpRequest) (*chorus.ResetTotpReply, error) {
-	err := c.IsAuthorized(ctx, authz.ResetTotp.For(userFromCtx(ctx)))
+	err := c.IsAuthorized(ctx, authz.PermResetTotp.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (c userControllerAuthorization) ResetTotp(ctx context.Context, req *chorus.
 }
 
 func (c userControllerAuthorization) ResetPassword(ctx context.Context, req *chorus.ResetPasswordRequest) (*chorus.ResetPasswordReply, error) {
-	err := c.IsAuthorized(ctx, authz.ResetPassword.For(authz.UserID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermResetPassword.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}

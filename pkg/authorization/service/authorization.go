@@ -91,7 +91,7 @@ func NewAuthorizationService(ctx context.Context, cfg config.Config, store Autho
 	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
 		for i, role := range codeSchema.Roles {
 			if role.Name == model.WorkspaceAdmin.Name {
-				codeSchema.Roles[i].Permissions = append(codeSchema.Roles[i].Permissions, model.ManageUsersDataRoleInWorkspace.Name)
+				codeSchema.Roles[i].Permissions = append(codeSchema.Roles[i].Permissions, model.PermManageUsersDataRoleInWorkspace.Name)
 				break
 			}
 		}
@@ -285,7 +285,7 @@ func (s *authorizationService) CanAssignRole(user []model.Role, roleName model.R
 }
 
 func (s *authorizationService) canManageUserRoles(user []model.Role) bool {
-	allowed, err := s.IsUserAllowed(user, model.Permission{Name: model.ManageUserRoles.Name})
+	allowed, err := s.IsUserAllowed(user, model.Permission{Name: model.PermManageUserRoles.Name})
 	return err == nil && allowed
 }
 

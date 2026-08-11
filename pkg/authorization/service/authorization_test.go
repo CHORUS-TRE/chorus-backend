@@ -71,7 +71,7 @@ func TestAuthorizationServiceValidatesFlatSchema(t *testing.T) {
 	}{
 		{
 			name:   "valid direct permissions",
-			schema: buildSchema(map[model.RoleName][]model.PermissionName{"admin": {model.GetWorkspace.Name}}),
+			schema: buildSchema(map[model.RoleName][]model.PermissionName{"admin": {model.PermGetWorkspace.Name}}),
 		},
 		{
 			name: "duplicate role",
@@ -87,8 +87,8 @@ func TestAuthorizationServiceValidatesFlatSchema(t *testing.T) {
 			name: "duplicate permission",
 			schema: &model.AuthorizationSchema{
 				Permissions: []model.PermissionDefinition{
-					{Name: model.GetWorkspace.Name},
-					{Name: model.GetWorkspace.Name},
+					{Name: model.PermGetWorkspace.Name},
+					{Name: model.PermGetWorkspace.Name},
 				},
 			},
 			expectErr: true,
@@ -96,7 +96,7 @@ func TestAuthorizationServiceValidatesFlatSchema(t *testing.T) {
 		{
 			name: "unknown role permission",
 			schema: &model.AuthorizationSchema{
-				Roles: []*model.RoleDefinition{{Name: "admin", Permissions: []model.PermissionName{model.GetWorkspace.Name}}},
+				Roles: []*model.RoleDefinition{{Name: "admin", Permissions: []model.PermissionName{model.PermGetWorkspace.Name}}},
 			},
 			expectErr: true,
 		},
@@ -117,7 +117,7 @@ func TestAuthorizationServiceValidatesFlatSchema(t *testing.T) {
 
 func TestGetUserPermissionsUsesDirectRolesOnly(t *testing.T) {
 	policy, err := newTestAuthorizationService(buildSchema(map[model.RoleName][]model.PermissionName{
-		"viewer": {model.GetWorkspace.Name},
+		"viewer": {model.PermGetWorkspace.Name},
 		"admin":  {},
 	}))
 	if err != nil {
@@ -135,8 +135,8 @@ func TestGetUserPermissionsUsesDirectRolesOnly(t *testing.T) {
 
 func TestGetUserPermissionsDeduplicatesPermissions(t *testing.T) {
 	policy, err := newTestAuthorizationService(buildSchema(map[model.RoleName][]model.PermissionName{
-		"viewer": {model.GetWorkspace.Name},
-		"admin":  {model.GetWorkspace.Name, model.UpdateWorkspace.Name},
+		"viewer": {model.PermGetWorkspace.Name},
+		"admin":  {model.PermGetWorkspace.Name, model.PermUpdateWorkspace.Name},
 	}))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -153,7 +153,7 @@ func TestGetUserPermissionsDeduplicatesPermissions(t *testing.T) {
 	}
 	sort.Slice(got, func(i, j int) bool { return got[i] < got[j] })
 
-	expected := []model.PermissionName{model.GetWorkspace.Name, model.UpdateWorkspace.Name}
+	expected := []model.PermissionName{model.PermGetWorkspace.Name, model.PermUpdateWorkspace.Name}
 	if !reflect.DeepEqual(got, expected) {
 		t.Errorf("GetUserPermissions() = %v, want %v", got, expected)
 	}
@@ -163,12 +163,12 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 	schema := &model.AuthorizationSchema{
 		Permissions: []model.PermissionDefinition{
 			{
-				Name:                      model.GetWorkspace.Name,
+				Name:                      model.PermGetWorkspace.Name,
 				RequiredContextDimensions: []model.ContextDimension{model.ContextWorkspace},
 			},
 		},
 		Roles: []*model.RoleDefinition{
-			{Name: model.WorkspaceGuest.Name, Permissions: []model.PermissionName{model.GetWorkspace.Name}},
+			{Name: model.WorkspaceGuest.Name, Permissions: []model.PermissionName{model.PermGetWorkspace.Name}},
 			{Name: model.WorkspaceAdmin.Name},
 		},
 	}
@@ -180,7 +180,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 
 	allowed, err := policy.IsUserAllowed(
 		[]model.Role{{Name: model.WorkspaceAdmin.Name, Context: model.Context{model.ContextWorkspace: "42"}}},
-		model.GetWorkspace.For(model.WorkspaceID(42)),
+		model.PermGetWorkspace.For(model.WorkspaceID(42)),
 	)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -191,7 +191,7 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 
 	allowed, err = policy.IsUserAllowed(
 		[]model.Role{{Name: model.WorkspaceGuest.Name, Context: model.Context{model.ContextWorkspace: "42"}}},
-		model.GetWorkspace.For(model.WorkspaceID(42)),
+		model.PermGetWorkspace.For(model.WorkspaceID(42)),
 	)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

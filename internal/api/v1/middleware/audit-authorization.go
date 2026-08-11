@@ -29,7 +29,7 @@ func AuditAuthorizing(logger *logger.ContextLogger, authorizer authorization_ser
 }
 
 func (c auditControllerAuthorization) ListPlatformAudit(ctx context.Context, req *chorus.ListPlatformAuditRequest) (*chorus.ListAuditReply, error) {
-	err := c.IsAuthorized(ctx, authz.AuditPlatform.For())
+	err := c.IsAuthorized(ctx, authz.PermAuditPlatform.For())
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c auditControllerAuthorization) ListPlatformAudit(ctx context.Context, req
 }
 
 func (c auditControllerAuthorization) ListWorkspaceAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
-	err := c.IsAuthorized(ctx, authz.AuditWorkspace.For(authz.WorkspaceID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermAuditWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c auditControllerAuthorization) ListWorkspaceAudit(ctx context.Context, re
 }
 
 func (c auditControllerAuthorization) ListWorkbenchAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
-	err := c.IsAuthorized(ctx, authz.AuditWorkbench.For(authz.WorkbenchID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermAuditWorkbench.For(authz.WorkbenchID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -58,19 +58,19 @@ func (c auditControllerAuthorization) ListWorkbenchAudit(ctx context.Context, re
 func (c auditControllerAuthorization) ListUserAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
 	if req.Filter != nil && req.Filter.WorkspaceId != 0 {
 		// Workspace-scoped: caller must have audit permission for that specific workspace.
-		err := c.IsAuthorized(ctx, authz.AuditWorkspace.For(authz.WorkspaceID(req.Filter.WorkspaceId)))
+		err := c.IsAuthorized(ctx, authz.PermAuditWorkspace.For(authz.WorkspaceID(req.Filter.WorkspaceId)))
 		if err != nil {
 			return nil, err
 		}
 	} else if req.Filter != nil && req.Filter.WorkbenchId != 0 {
 		// Workbench-scoped: caller must have audit permission for that specific workbench.
-		err := c.IsAuthorized(ctx, authz.AuditWorkbench.For(authz.WorkbenchID(req.Filter.WorkbenchId)))
+		err := c.IsAuthorized(ctx, authz.PermAuditWorkbench.For(authz.WorkbenchID(req.Filter.WorkbenchId)))
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		// No scope: self-audit (authenticated) or platform-level user audit permission required.
-		err := c.IsAuthorized(ctx, authz.AuditUser.For(authz.UserID(req.Id)))
+		err := c.IsAuthorized(ctx, authz.PermAuditUser.For(authz.UserID(req.Id)))
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func (c auditControllerAuthorization) ListUserAudit(ctx context.Context, req *ch
 }
 
 func (c auditControllerAuthorization) ListActorAudit(ctx context.Context, req *chorus.ListEntityAuditRequest) (*chorus.ListAuditReply, error) {
-	err := c.IsAuthorized(ctx, authz.AuditUser.For(authz.UserID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermAuditUser.For(authz.UserID(req.Id)))
 	if err != nil {
 		return nil, err
 	}

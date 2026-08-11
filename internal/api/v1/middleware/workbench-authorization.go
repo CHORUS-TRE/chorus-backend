@@ -36,13 +36,13 @@ func WorkbenchAuthorizing(logger *logger.ContextLogger, authorizer authorization
 func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, req *chorus.ListWorkbenchesRequest) (*chorus.ListWorkbenchesReply, error) {
 	if req.Filter != nil && len(req.Filter.WorkspaceIdsIn) > 0 {
 		for _, id := range req.Filter.WorkspaceIdsIn {
-			err := c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(id)))
 			if err != nil {
 				return nil, err
 			}
 		}
 	} else {
-		attrs, err := c.GetContextListForPermission(ctx, authz.GetWorkspace.Name)
+		attrs, err := c.GetContextListForPermission(ctx, authz.PermGetWorkspace.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (c workbenchControllerAuthorization) ListWorkbenches(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req *chorus.GetWorkbenchRequest) (*chorus.GetWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authz.GetWorkbench.For(authz.WorkbenchID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermGetWorkbench.For(authz.WorkbenchID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (c workbenchControllerAuthorization) GetWorkbench(ctx context.Context, req 
 }
 
 func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.CreateWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authz.CreateWorkbench.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermCreateWorkbench.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c workbenchControllerAuthorization) CreateWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, req *chorus.Workbench) (*chorus.UpdateWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authz.UpdateWorkbench.For(authz.WorkbenchID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermUpdateWorkbench.For(authz.WorkbenchID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (c workbenchControllerAuthorization) UpdateWorkbench(ctx context.Context, r
 }
 
 func (c workbenchControllerAuthorization) DeleteWorkbench(ctx context.Context, req *chorus.DeleteWorkbenchRequest) (*chorus.DeleteWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authz.DeleteWorkbench.For(authz.WorkbenchID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermDeleteWorkbench.For(authz.WorkbenchID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (c workbenchControllerAuthorization) AddUserRoleInWorkbench(ctx context.Con
 		return nil, fmt.Errorf("role %q is not a workbench role", roleName)
 	}
 
-	err = c.IsAuthorized(ctx, authz.ManageUsersInWorkbench.For(authz.WorkbenchID(req.Id)))
+	err = c.IsAuthorized(ctx, authz.PermManageUsersInWorkbench.For(authz.WorkbenchID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (c workbenchControllerAuthorization) AddUserRoleInWorkbench(ctx context.Con
 }
 
 func (c workbenchControllerAuthorization) RemoveUserFromWorkbench(ctx context.Context, req *chorus.RemoveUserFromWorkbenchRequest) (*chorus.RemoveUserFromWorkbenchReply, error) {
-	err := c.IsAuthorized(ctx, authz.ManageUsersInWorkbench.For(authz.WorkbenchID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermManageUsersInWorkbench.For(authz.WorkbenchID(req.Id)))
 	if err != nil {
 		return nil, err
 	}

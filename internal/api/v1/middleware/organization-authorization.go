@@ -31,7 +31,7 @@ func OrganizationAuthorizing(logger *logger.ContextLogger, authorizer authorizat
 }
 
 func (c organizationControllerAuthorization) ListOrganizations(ctx context.Context, req *chorus.ListOrganizationsRequest) (*chorus.ListOrganizationsReply, error) {
-	if err := c.IsAuthorized(ctx, authz.ListOrganizations.For()); err != nil {
+	if err := c.IsAuthorized(ctx, authz.PermListOrganizations.For()); err != nil {
 		return nil, err
 	}
 
@@ -39,7 +39,7 @@ func (c organizationControllerAuthorization) ListOrganizations(ctx context.Conte
 }
 
 func (c organizationControllerAuthorization) GetOrganization(ctx context.Context, req *chorus.GetOrganizationRequest) (*chorus.GetOrganizationReply, error) {
-	if err := c.IsAuthorized(ctx, authz.GetOrganization.For()); err != nil {
+	if err := c.IsAuthorized(ctx, authz.PermGetOrganization.For()); err != nil {
 		return nil, err
 	}
 
@@ -48,7 +48,7 @@ func (c organizationControllerAuthorization) GetOrganization(ctx context.Context
 
 // GetOrganizationLogo reuses PermissionGetOrganization
 func (c organizationControllerAuthorization) GetOrganizationLogo(ctx context.Context, req *chorus.GetOrganizationLogoRequest) (*httpbody.HttpBody, error) {
-	if err := c.IsAuthorized(ctx, authz.GetOrganization.For()); err != nil {
+	if err := c.IsAuthorized(ctx, authz.PermGetOrganization.For()); err != nil {
 		return nil, err
 	}
 
@@ -56,7 +56,7 @@ func (c organizationControllerAuthorization) GetOrganizationLogo(ctx context.Con
 }
 
 func (c organizationControllerAuthorization) CreateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.CreateOrganizationReply, error) {
-	if err := c.IsAuthorized(ctx, authz.CreateOrganization.For()); err != nil {
+	if err := c.IsAuthorized(ctx, authz.PermCreateOrganization.For()); err != nil {
 		return nil, err
 	}
 
@@ -64,7 +64,7 @@ func (c organizationControllerAuthorization) CreateOrganization(ctx context.Cont
 }
 
 func (c organizationControllerAuthorization) UpdateOrganization(ctx context.Context, req *chorus.Organization) (*chorus.UpdateOrganizationReply, error) {
-	if err := c.IsAuthorized(ctx, authz.UpdateOrganization.For()); err != nil {
+	if err := c.IsAuthorized(ctx, authz.PermUpdateOrganization.For()); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (c organizationControllerAuthorization) UpdateOrganization(ctx context.Cont
 }
 
 func (c organizationControllerAuthorization) DeleteOrganization(ctx context.Context, req *chorus.DeleteOrganizationRequest) (*chorus.DeleteOrganizationReply, error) {
-	if err := c.IsAuthorized(ctx, authz.DeleteOrganization.For()); err != nil {
+	if err := c.IsAuthorized(ctx, authz.PermDeleteOrganization.For()); err != nil {
 		return nil, err
 	}
 

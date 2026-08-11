@@ -19,16 +19,16 @@ func findUsers(ctx context.Context, store *AuthorizationStorage, tenantID uint64
 
 func testRolesGrantingPermissions() map[model.PermissionName][]model.RoleName {
 	return map[model.PermissionName][]model.RoleName{
-		model.ListWorkspaces.Name: {
+		model.PermListWorkspaces.Name: {
 			model.WorkspaceAdmin.Name,
 			model.WorkspaceMember.Name,
 			model.WorkspaceGuest.Name,
 		},
-		model.CreateWorkspace.Name: {
+		model.PermCreateWorkspace.Name: {
 			model.PlatformWorkspaceManager.Name,
 			model.SuperAdmin.Name,
 		},
-		model.ApproveRequest.Name: {
+		model.PermApproveRequest.Name: {
 			model.WorkspaceDataManager.Name,
 			model.WorkspaceAdmin.Name,
 			model.SuperAdmin.Name,
@@ -139,7 +139,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_NoRolesGrant(t *testing.T)
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.DeleteApp.Name,
+		PermissionName: model.PermDeleteApp.Name,
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "no roles grant permission")
@@ -162,7 +162,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_NoContext(t *testing.T) {
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.CreateWorkspace.Name,
+		PermissionName: model.PermCreateWorkspace.Name,
 	})
 	require.NoError(t, err)
 	require.ElementsMatch(t, []uint64{fixtures.userIDs["alice"], fixtures.userIDs["bob"]}, userIDs)
@@ -184,7 +184,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_WithContext(t *testing.T) 
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.ListWorkspaces.Name,
+		PermissionName: model.PermListWorkspaces.Name,
 		Context: model.Context{
 			model.ContextWorkspace: "100",
 		},
@@ -208,7 +208,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_WithWildcardContext(t *tes
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.ListWorkspaces.Name,
+		PermissionName: model.PermListWorkspaces.Name,
 		Context: model.Context{
 			model.ContextWorkspace: "999",
 		},
@@ -233,7 +233,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_ViaRolesFilter(t *testing.
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.ApproveRequest.Name,
+		PermissionName: model.PermApproveRequest.Name,
 		Context: model.Context{
 			model.ContextWorkspace: "100",
 		},
@@ -258,7 +258,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_PreferExactContextMatch(t 
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.ListWorkspaces.Name,
+		PermissionName: model.PermListWorkspaces.Name,
 		Context: model.Context{
 			model.ContextWorkspace: "100",
 		},
@@ -282,7 +282,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_PreferExactContextMatch_Fa
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.ListWorkspaces.Name,
+		PermissionName: model.PermListWorkspaces.Name,
 		Context: model.Context{
 			model.ContextWorkspace: "999",
 		},
@@ -306,7 +306,7 @@ func TestAuthorizationStorage_FindUsersWithPermission_NoMatchingViaRoles(t *test
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.ApproveRequest.Name,
+		PermissionName: model.PermApproveRequest.Name,
 		Context: model.Context{
 			model.ContextWorkspace: "100",
 		},
@@ -340,13 +340,13 @@ func TestAuthorizationStorage_FindUsersWithPermission_MultiTenant(t *testing.T) 
 	store := NewAuthorizationStorage(db)
 
 	userIDs, err := findUsers(context.Background(), store, fixtures.tenantID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.CreateWorkspace.Name,
+		PermissionName: model.PermCreateWorkspace.Name,
 	})
 	require.NoError(t, err)
 	require.ElementsMatch(t, []uint64{fixtures.userIDs["alice"]}, userIDs)
 
 	userIDs2, err := findUsers(context.Background(), store, testTenant2ID, model.FindUsersWithPermissionFilter{
-		PermissionName: model.CreateWorkspace.Name,
+		PermissionName: model.PermCreateWorkspace.Name,
 	})
 	require.NoError(t, err)
 	require.ElementsMatch(t, []uint64{testUserOtherID}, userIDs2)

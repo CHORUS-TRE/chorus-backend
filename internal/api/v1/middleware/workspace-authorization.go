@@ -38,14 +38,14 @@ func WorkspaceAuthorizing(logger *logger.ContextLogger, authorizer authorization
 func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, req *chorus.ListWorkspacesRequest) (*chorus.ListWorkspacesReply, error) {
 	if req.Filter != nil && len(req.Filter.WorkspaceIdsIn) > 0 {
 		for _, id := range req.Filter.WorkspaceIdsIn {
-			err := c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(id)))
 			if err != nil {
 				logger.TechLog.Error(ctx, fmt.Sprintf("not authorized to access workspace %d: %v", id, err.Error()))
 				return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("not authorized to access workspace %d", id))
 			}
 		}
 	} else {
-		attrs, err := c.GetContextListForPermission(ctx, authz.GetWorkspace.Name)
+		attrs, err := c.GetContextListForPermission(ctx, authz.PermGetWorkspace.Name)
 		if err != nil {
 			logger.TechLog.Error(ctx, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
@@ -81,7 +81,7 @@ func (c workspaceControllerAuthorization) ListWorkspaces(ctx context.Context, re
 }
 
 func (c workspaceControllerAuthorization) ListPublicWorkspaces(ctx context.Context, req *chorus.ListPublicWorkspacesRequest) (*chorus.ListPublicWorkspacesReply, error) {
-	err := c.IsAuthorized(ctx, authz.ListPublicWorkspaces.For())
+	err := c.IsAuthorized(ctx, authz.PermListPublicWorkspaces.For())
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (c workspaceControllerAuthorization) ListPublicWorkspaces(ctx context.Conte
 }
 
 func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req *chorus.GetWorkspaceRequest) (*chorus.GetWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (c workspaceControllerAuthorization) GetWorkspace(ctx context.Context, req 
 }
 
 func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.CreateWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authz.CreateWorkspace.For())
+	err := c.IsAuthorized(ctx, authz.PermCreateWorkspace.For())
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (c workspaceControllerAuthorization) CreateWorkspace(ctx context.Context, r
 }
 
 func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, req *chorus.Workspace) (*chorus.UpdateWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authz.UpdateWorkspace.For(authz.WorkspaceID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermUpdateWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (c workspaceControllerAuthorization) UpdateWorkspace(ctx context.Context, r
 }
 
 func (c workspaceControllerAuthorization) DeleteWorkspace(ctx context.Context, req *chorus.DeleteWorkspaceRequest) (*chorus.DeleteWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authz.DeleteWorkspace.For(authz.WorkspaceID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermDeleteWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -146,12 +146,12 @@ func (c workspaceControllerAuthorization) AddUserRoleInWorkspace(ctx context.Con
 	}
 
 	if roleName == authz.WorkspaceDataManager.Name {
-		err = c.IsAuthorized(ctx, authz.ManageUsersDataRoleInWorkspace.For(authz.WorkspaceID(req.Id)))
+		err = c.IsAuthorized(ctx, authz.PermManageUsersDataRoleInWorkspace.For(authz.WorkspaceID(req.Id)))
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = c.IsAuthorized(ctx, authz.ManageUsersInWorkspace.For(authz.WorkspaceID(req.Id)))
+		err = c.IsAuthorized(ctx, authz.PermManageUsersInWorkspace.For(authz.WorkspaceID(req.Id)))
 		if err != nil {
 			return nil, err
 		}
@@ -179,12 +179,12 @@ func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.
 	}
 
 	if roleName == authz.WorkspaceDataManager.Name {
-		err = c.IsAuthorized(ctx, authz.ManageUsersDataRoleInWorkspace.For(authz.WorkspaceID(req.Id)))
+		err = c.IsAuthorized(ctx, authz.PermManageUsersDataRoleInWorkspace.For(authz.WorkspaceID(req.Id)))
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = c.IsAuthorized(ctx, authz.ManageUsersInWorkspace.For(authz.WorkspaceID(req.Id)))
+		err = c.IsAuthorized(ctx, authz.PermManageUsersInWorkspace.For(authz.WorkspaceID(req.Id)))
 		if err != nil {
 			return nil, err
 		}
@@ -194,7 +194,7 @@ func (c workspaceControllerAuthorization) RemoveUserRoleInWorkspace(ctx context.
 }
 
 func (c workspaceControllerAuthorization) RemoveUserFromWorkspace(ctx context.Context, req *chorus.RemoveUserFromWorkspaceRequest) (*chorus.RemoveUserFromWorkspaceReply, error) {
-	err := c.IsAuthorized(ctx, authz.ManageUsersInWorkspace.For(authz.WorkspaceID(req.Id)))
+	err := c.IsAuthorized(ctx, authz.PermManageUsersInWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}

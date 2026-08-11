@@ -32,7 +32,7 @@ func WorkspaceFileAuthorizing(logger *logger.ContextLogger, authorizer authoriza
 }
 
 func (c workspaceFileControllerAuthorization) ListWorkspaceFileStores(ctx context.Context, req *chorus.ListWorkspaceFileStoresRequest) (*chorus.ListWorkspaceFileStoresReply, error) {
-	err := c.IsAuthorized(ctx, authz.ListFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermListFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (c workspaceFileControllerAuthorization) ListWorkspaceFileStores(ctx contex
 }
 
 func (c workspaceFileControllerAuthorization) GetWorkspaceFile(ctx context.Context, req *chorus.GetWorkspaceFileRequest) (*chorus.GetWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authz.DownloadFilesFromWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermDownloadFilesFromWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c workspaceFileControllerAuthorization) GetWorkspaceFile(ctx context.Conte
 }
 
 func (c workspaceFileControllerAuthorization) ListWorkspaceFiles(ctx context.Context, req *chorus.ListWorkspaceFilesRequest) (*chorus.ListWorkspaceFilesReply, error) {
-	err := c.IsAuthorized(ctx, authz.ListFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermListFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (c workspaceFileControllerAuthorization) ListWorkspaceFiles(ctx context.Con
 }
 
 func (c workspaceFileControllerAuthorization) CreateWorkspaceFile(ctx context.Context, req *chorus.CreateWorkspaceFileRequest) (*chorus.CreateWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authz.UploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermUploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (c workspaceFileControllerAuthorization) CreateWorkspaceFile(ctx context.Co
 }
 
 func (c workspaceFileControllerAuthorization) UpdateWorkspaceFile(ctx context.Context, req *chorus.UpdateWorkspaceFileRequest) (*chorus.UpdateWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authz.ModifyFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermModifyFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c workspaceFileControllerAuthorization) UpdateWorkspaceFile(ctx context.Co
 }
 
 func (c workspaceFileControllerAuthorization) DeleteWorkspaceFile(ctx context.Context, req *chorus.DeleteWorkspaceFileRequest) (*chorus.DeleteWorkspaceFileReply, error) {
-	err := c.IsAuthorized(ctx, authz.ModifyFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermModifyFilesInWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c workspaceFileControllerAuthorization) DeleteWorkspaceFile(ctx context.Co
 }
 
 func (c workspaceFileControllerAuthorization) InitiateWorkspaceFileUpload(ctx context.Context, req *chorus.InitiateWorkspaceFileUploadRequest) (*chorus.InitiateWorkspaceFileUploadReply, error) {
-	err := c.IsAuthorized(ctx, authz.UploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermUploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (c workspaceFileControllerAuthorization) InitiateWorkspaceFileUpload(ctx co
 }
 
 func (c workspaceFileControllerAuthorization) UploadWorkspaceFilePart(ctx context.Context, req *chorus.UploadWorkspaceFilePartRequest) (*chorus.UploadWorkspaceFilePartReply, error) {
-	err := c.IsAuthorized(ctx, authz.UploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermUploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c workspaceFileControllerAuthorization) UploadWorkspaceFilePart(ctx contex
 }
 
 func (c workspaceFileControllerAuthorization) CompleteWorkspaceFileUpload(ctx context.Context, req *chorus.CompleteWorkspaceFileUploadRequest) (*chorus.CompleteWorkspaceFileUploadReply, error) {
-	err := c.IsAuthorized(ctx, authz.UploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermUploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (c workspaceFileControllerAuthorization) CompleteWorkspaceFileUpload(ctx co
 }
 
 func (c workspaceFileControllerAuthorization) AbortWorkspaceFileUpload(ctx context.Context, req *chorus.AbortWorkspaceFileUploadRequest) (*chorus.AbortWorkspaceFileUploadReply, error) {
-	err := c.IsAuthorized(ctx, authz.UploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermUploadFilesToWorkspace.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}

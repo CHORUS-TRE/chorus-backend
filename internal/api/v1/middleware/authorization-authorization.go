@@ -62,11 +62,11 @@ func (c authorizationControllerAuthorization) CreateDynamicRole(ctx context.Cont
 		if err != nil {
 			return nil, fmt.Errorf("invalid workspace id in validation context: %w", err)
 		}
-		if err := c.IsAuthorized(ctx, authz.ManageUsersInWorkspace.For(authz.WorkspaceID(workspaceID))); err != nil {
+		if err := c.IsAuthorized(ctx, authz.PermManageUsersInWorkspace.For(authz.WorkspaceID(workspaceID))); err != nil {
 			return nil, err
 		}
 	case authz.RoleScopePlatform:
-		if err := c.IsAuthorized(ctx, authz.ManageDynamicRoles.For()); err != nil {
+		if err := c.IsAuthorized(ctx, authz.PermManageDynamicRoles.For()); err != nil {
 			return nil, err
 		}
 	default:

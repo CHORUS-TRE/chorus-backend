@@ -44,20 +44,20 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorizati
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	err := c.IsAuthorized(ctx, authz.ListAppInstances.For()) // TODO: check if context should be provided here
+	err := c.IsAuthorized(ctx, authz.PermListAppInstances.For()) // TODO: check if context should be provided here
 	if err != nil {
 		return nil, err
 	}
 
 	if req.Filter != nil && len(req.Filter.WorkbenchIdsIn) > 0 {
 		for _, id := range req.Filter.WorkbenchIdsIn {
-			err := c.IsAuthorized(ctx, authz.GetWorkbench.For(authz.WorkbenchID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkbench.For(authz.WorkbenchID(id)))
 			if err != nil {
 				return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("not authorized to access workbench %d", id))
 			}
 		}
 	} else {
-		attrs, err := c.GetContextListForPermission(ctx, authz.GetWorkbench.Name)
+		attrs, err := c.GetContextListForPermission(ctx, authz.PermGetWorkbench.Name)
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 		}
@@ -101,7 +101,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 		return nil, status.Errorf(codes.NotFound, "unable to resolve app instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authz.GetAppInstance.For(authz.WorkbenchID(appInstance.WorkbenchID)))
+	err = c.IsAuthorized(ctx, authz.PermGetAppInstance.For(authz.WorkbenchID(appInstance.WorkbenchID)))
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 }
 
 func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authz.CreateAppInstance.For(authz.WorkbenchID(req.WorkbenchId)))
+	err := c.IsAuthorized(ctx, authz.PermCreateAppInstance.For(authz.WorkbenchID(req.WorkbenchId)))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authz.UpdateAppInstance.For(authz.WorkbenchID(req.WorkbenchId)))
+	err := c.IsAuthorized(ctx, authz.PermUpdateAppInstance.For(authz.WorkbenchID(req.WorkbenchId)))
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Contex
 		return nil, status.Errorf(codes.NotFound, "unable to resolve app instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authz.DeleteAppInstance.For(authz.WorkbenchID(appInstance.WorkbenchID)))
+	err = c.IsAuthorized(ctx, authz.PermDeleteAppInstance.For(authz.WorkbenchID(appInstance.WorkbenchID)))
 	if err != nil {
 		return nil, err
 	}

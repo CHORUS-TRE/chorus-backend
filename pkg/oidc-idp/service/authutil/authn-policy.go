@@ -407,7 +407,7 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 					logger.TechLog.Error(context.Background(), "invalid workspace id in user workspaces", zap.String("workspace", w), zap.Error(err))
 					continue
 				}
-				permission := authz.ModifyFilesInWorkspace.For(authz.WorkspaceID(workspaceID))
+				permission := authz.PermModifyFilesInWorkspace.For(authz.WorkspaceID(workspaceID))
 				logger.TechLog.Debug(context.Background(), "checking user role for workspace", zap.String("workspace", w), zap.Uint64("user_id", uint64(user.ID)), zap.Any("permission", permission), zap.Any("user_roles", userRoles))
 				authorized, err := a.authorizer.IsUserAllowed(userRoles, permission)
 				if err != nil {

@@ -29,7 +29,7 @@ func StewardAuthorizing(logger *logger.ContextLogger, authorizer authorization_s
 }
 
 func (c stewardControllerAuthorization) InitializeTenant(ctx context.Context, request *chorus.InitializeTenantRequest) (*chorus.InitializeTenantReply, error) {
-	err := c.IsAuthorized(ctx, authz.InitializeTenant.For())
+	err := c.IsAuthorized(ctx, authz.PermInitializeTenant.For())
 	if err != nil {
 		return nil, err
 	}

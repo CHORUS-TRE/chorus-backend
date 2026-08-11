@@ -44,13 +44,13 @@ func WorkspaceServiceInstanceAuthorizing(logger *logger.ContextLogger, authorize
 func (c workspaceServiceInstanceControllerAuthorization) ListWorkspaceServiceInstances(ctx context.Context, req *chorus.ListWorkspaceServiceInstancesRequest) (*chorus.ListWorkspaceServiceInstancesReply, error) {
 	if req.Filter != nil && len(req.Filter.WorkspaceIdsIn) > 0 {
 		for _, id := range req.Filter.WorkspaceIdsIn {
-			err := c.IsAuthorized(ctx, authz.GetWorkspace.For(authz.WorkspaceID(id)))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(id)))
 			if err != nil {
 				return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("not authorized to access workspace %d", id))
 			}
 		}
 	} else {
-		attrs, err := c.GetContextListForPermission(ctx, authz.GetWorkspace.Name)
+		attrs, err := c.GetContextListForPermission(ctx, authz.PermGetWorkspace.Name)
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 		}
@@ -94,7 +94,7 @@ func (c workspaceServiceInstanceControllerAuthorization) GetWorkspaceServiceInst
 		return nil, status.Errorf(codes.NotFound, "unable to resolve workspace service instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authz.GetWorkspaceServiceInstance.For(authz.WorkspaceID(instance.WorkspaceID)))
+	err = c.IsAuthorized(ctx, authz.PermGetWorkspaceServiceInstance.For(authz.WorkspaceID(instance.WorkspaceID)))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (c workspaceServiceInstanceControllerAuthorization) GetWorkspaceServiceInst
 		return nil, status.Errorf(codes.NotFound, "unable to resolve workspace service instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authz.GetWorkspaceServiceInstanceSecret.For(authz.WorkspaceID(instance.WorkspaceID)))
+	err = c.IsAuthorized(ctx, authz.PermGetWorkspaceServiceInstanceSecret.For(authz.WorkspaceID(instance.WorkspaceID)))
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (c workspaceServiceInstanceControllerAuthorization) GetWorkspaceServiceInst
 }
 
 func (c workspaceServiceInstanceControllerAuthorization) CreateWorkspaceServiceInstance(ctx context.Context, req *chorus.WorkspaceServiceInstance) (*chorus.CreateWorkspaceServiceInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authz.CreateWorkspaceServiceInstance.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermCreateWorkspaceServiceInstance.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (c workspaceServiceInstanceControllerAuthorization) CreateWorkspaceServiceI
 }
 
 func (c workspaceServiceInstanceControllerAuthorization) UpdateWorkspaceServiceInstance(ctx context.Context, req *chorus.WorkspaceServiceInstance) (*chorus.UpdateWorkspaceServiceInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authz.UpdateWorkspaceServiceInstance.For(authz.WorkspaceID(req.WorkspaceId)))
+	err := c.IsAuthorized(ctx, authz.PermUpdateWorkspaceServiceInstance.For(authz.WorkspaceID(req.WorkspaceId)))
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (c workspaceServiceInstanceControllerAuthorization) DeleteWorkspaceServiceI
 		return nil, status.Errorf(codes.NotFound, "unable to resolve workspace service instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authz.DeleteWorkspaceServiceInstance.For(authz.WorkspaceID(instance.WorkspaceID)))
+	err = c.IsAuthorized(ctx, authz.PermDeleteWorkspaceServiceInstance.For(authz.WorkspaceID(instance.WorkspaceID)))
 	if err != nil {
 		return nil, err
 	}
