@@ -2,9 +2,6 @@ image:
   repository: harbor.int.chorus-tre.ch/backend-master/backend
   imagePullPolicy: Always
 
-service:
-  port: 5000
-
 serviceMonitor:
   enabled: true
   basicAuth:
