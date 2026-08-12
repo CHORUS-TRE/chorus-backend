@@ -163,7 +163,7 @@ var (
 			PermResetPassword,
 			PermListWorkspaces,
 			PermListPublicWorkspaces,
-			PermListWorkbenchs,
+			PermListWorkbenches,
 			PermListApps,
 			PermListAppInstances,
 			PermListMyRequests,
@@ -230,7 +230,7 @@ var (
 		RoleScopeWorkspace,
 		merge(RoleWorkspaceMaintainer.Permissions, grant(
 			PermListAppInstances,
-			PermListWorkbenchs,
+			PermListWorkbenches,
 			PermUpdateWorkbench,
 			PermGetWorkbench,
 			PermStreamWorkbench,
@@ -255,7 +255,7 @@ var (
 		RoleScopeWorkbench,
 		merge(RoleAuthenticated.Permissions, grant(
 			PermListAppInstances,
-			PermListWorkbenchs,
+			PermListWorkbenches,
 			PermGetWorkbench,
 			PermStreamWorkbench,
 			PermListUsers,

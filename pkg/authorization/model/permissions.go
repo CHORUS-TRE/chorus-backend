@@ -128,7 +128,7 @@ var (
 	PermDeleteAppInstance = permWithOneContext[WorkbenchID]("deleteAppInstance", "Allow the user to delete an app instance")
 
 	// Workbenches
-	PermListWorkbenchs         = permWithOneContext[WorkbenchID]("listWorkbenchs", "Allow the user to list workbenchs")
+	PermListWorkbenches        = permWithOneContext[WorkbenchID]("listWorkbenches", "Allow the user to list workbenchs")
 	PermCreateWorkbench        = permWithOneContext[WorkspaceID]("createWorkbench", "Allow the user to create a workbench")
 	PermUpdateWorkbench        = permWithOneContext[WorkbenchID]("updateWorkbench", "Allow the user to update a workbench")
 	PermGetWorkbench           = permWithOneContext[WorkbenchID]("getWorkbench", "Allow the user to get a workbench")
