@@ -19,15 +19,6 @@ func registerPermission(name PermissionName, description string, dims ...Context
 // PermissionDefinitions returns every declared permission definition.
 func PermissionDefinitions() []PermissionDefinition { return permissionDefinitions }
 
-// PermissionDefinitionsMap returns every declared permission definition as a map keyed by permission name.
-func PermissionDefinitionsMap() map[PermissionName]PermissionDefinition {
-	m := make(map[PermissionName]PermissionDefinition, len(permissionDefinitions))
-	for _, def := range permissionDefinitions {
-		m[def.Name] = def
-	}
-	return m
-}
-
 // -------------------------------------------------------------------
 // Permission factories
 // -------------------------------------------------------------------

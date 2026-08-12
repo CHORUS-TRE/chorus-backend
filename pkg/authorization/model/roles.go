@@ -21,18 +21,6 @@ func registerRole(name RoleName, description string, scope RoleScope, required m
 // RoleDefinitions returns every declared role definition.
 func RoleDefinitions() []*RoleDefinition { return roleDefinitions }
 
-// RoleDefinitionsMap returns every declared role definition as a map keyed by role name.
-func RoleDefinitionsMap() map[RoleName]*RoleDefinition {
-	m := make(map[RoleName]*RoleDefinition, len(roleDefinitions))
-	for _, def := range roleDefinitions {
-		if _, exists := m[def.Name]; exists {
-			panic(fmt.Sprintf("duplicate role definition: %s", def.Name))
-		}
-		m[def.Name] = def
-	}
-	return m
-}
-
 // -------------------------------------------------------------------
 // Role factories
 // -------------------------------------------------------------------
