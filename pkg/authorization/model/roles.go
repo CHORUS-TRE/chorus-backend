@@ -74,11 +74,11 @@ func requiredContext(exact, wildcards []ContextDimension) map[ContextDimension]C
 	return required
 }
 
-func roleWithNoContext(name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryNoContext {
+func newRoleFactoryNoContext(name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryNoContext {
 	return roleFactoryNoContext{registerRole(name, description, scope, requiredContext(nil, wildcards), permissions), wildcards}
 }
 
-func roleWithOneContext[A contextID](name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryOneContext[A] {
+func newRoleFactoryOneContext[A contextID](name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryOneContext[A] {
 	var a A
 	return roleFactoryOneContext[A]{registerRole(name, description, scope, requiredContext([]ContextDimension{a.dimension()}, wildcards), permissions), wildcards}
 }
@@ -121,7 +121,7 @@ func merge(groups ...[]PermissionName) []PermissionName {
 // Each role's permissions live here: a role inherits its parent's set via
 // `Parent.Permissions` and adds its own with `grant(...)`.
 var (
-	RolePublic = roleWithNoContext(
+	RolePublic = newRoleFactoryNoContext(
 		"Public",
 		"Public users can authenticate and read public platform settings",
 		RoleScopePlatform,
@@ -133,7 +133,7 @@ var (
 			PermGetPlatformSettings,
 		),
 	)
-	RoleAuthenticated = roleWithOneContext[UserID](
+	RoleAuthenticated = newRoleFactoryOneContext[UserID](
 		"Authenticated",
 		"Authenticated users can manage their own session, profile, notifications, and base resources",
 		RoleScopePlatform,
@@ -163,7 +163,7 @@ var (
 			PermGetOrganization,
 		)),
 	)
-	RoleWorkspaceGuest = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceGuest = newRoleFactoryOneContext[WorkspaceID](
 		"WorkspaceGuest",
 		"Workspace guests can view workspace metadata and create requests",
 		RoleScopeWorkspace,
@@ -175,7 +175,7 @@ var (
 			PermListWorkspaceServiceInstances,
 		)),
 	)
-	RoleWorkspaceMember = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceMember = newRoleFactoryOneContext[WorkspaceID](
 		"WorkspaceMember",
 		"Workspace members can create workbenches and list workspace files",
 		RoleScopeWorkspace,
@@ -187,7 +187,7 @@ var (
 			PermGetWorkspaceServiceInstanceSecret,
 		)),
 	)
-	RoleWorkspaceMaintainer = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceMaintainer = newRoleFactoryOneContext[WorkspaceID](
 		"WorkspaceMaintainer",
 		"Workspace maintainers can update workspace metadata and manage workspace files",
 		RoleScopeWorkspace,
@@ -199,7 +199,7 @@ var (
 			PermCreateRequest,
 		)),
 	)
-	RoleWorkspaceDataManager = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceDataManager = newRoleFactoryOneContext[WorkspaceID](
 		"WorkspaceDataManager",
 		"Workspace data managers can manage workspace files and data-manager assignments",
 		RoleScopeWorkspace,
@@ -212,7 +212,7 @@ var (
 			PermListRequests,
 		)),
 	)
-	RoleWorkspaceAdmin = roleWithOneContext[WorkspaceID](
+	RoleWorkspaceAdmin = newRoleFactoryOneContext[WorkspaceID](
 		"WorkspaceAdmin",
 		"Workspace admins can administer workspace users, requests, workbenches, files, and services",
 		RoleScopeWorkspace,
@@ -237,7 +237,7 @@ var (
 			PermDeleteWorkspaceServiceInstance,
 		)),
 	)
-	RoleWorkbenchViewer = roleWithOneContext[WorkbenchID](
+	RoleWorkbenchViewer = newRoleFactoryOneContext[WorkbenchID](
 		"WorkbenchViewer",
 		"Workbench viewers can view and stream workbenches",
 		RoleScopeWorkbench,
@@ -249,7 +249,7 @@ var (
 			PermListUsers,
 		)),
 	)
-	RoleWorkbenchMember = roleWithOneContext[WorkbenchID](
+	RoleWorkbenchMember = newRoleFactoryOneContext[WorkbenchID](
 		"WorkbenchMember",
 		"Workbench members can update workbenches and manage app instances",
 		RoleScopeWorkbench,
@@ -261,7 +261,7 @@ var (
 			PermUpdateWorkbench,
 		)),
 	)
-	RoleWorkbenchAdmin = roleWithOneContext[WorkbenchID](
+	RoleWorkbenchAdmin = newRoleFactoryOneContext[WorkbenchID](
 		"WorkbenchAdmin",
 		"Workbench admins can administer workbenches and their users",
 		RoleScopeWorkbench,
@@ -272,7 +272,7 @@ var (
 			PermAuditWorkbench,
 		)),
 	)
-	RoleHealthchecker = roleWithNoContext(
+	RoleHealthchecker = newRoleFactoryNoContext(
 		"Healthchecker",
 		"Healthcheckers can read healthcheck status",
 		RoleScopePlatform,
@@ -281,7 +281,7 @@ var (
 		),
 		ContextUser,
 	)
-	RolePlatformSettingsManager = roleWithNoContext(
+	RolePlatformSettingsManager = newRoleFactoryNoContext(
 		"PlatformSettingsManager",
 		"Platform settings managers can manage platform settings",
 		RoleScopePlatform,
@@ -295,7 +295,7 @@ var (
 		)),
 		ContextUser,
 	)
-	RolePlatformUserManager = roleWithNoContext(
+	RolePlatformUserManager = newRoleFactoryNoContext(
 		"PlatformUserManager",
 		"Platform user managers can administer platform users and their roles",
 		RoleScopePlatform,
@@ -312,7 +312,7 @@ var (
 		)),
 		ContextUser,
 	)
-	RolePlatformOrganizationManager = roleWithNoContext(
+	RolePlatformOrganizationManager = newRoleFactoryNoContext(
 		"PlatformOrganizationManager",
 		"Platform organization managers can manage organizations",
 		RoleScopePlatform,
@@ -323,7 +323,7 @@ var (
 		)),
 		ContextUser,
 	)
-	RolePlatformAuditor = roleWithNoContext(
+	RolePlatformAuditor = newRoleFactoryNoContext(
 		"PlatformAuditor",
 		"Platform auditors can audit the platform",
 		RoleScopePlatform,
@@ -332,7 +332,7 @@ var (
 		)),
 		ContextUser,
 	)
-	RolePlatformWorkspaceManager = roleWithNoContext(
+	RolePlatformWorkspaceManager = newRoleFactoryNoContext(
 		"PlatformWorkspaceManager",
 		"Platform workspace managers can create, update, and delete any workspace",
 		RoleScopePlatform,
@@ -344,7 +344,7 @@ var (
 		)),
 		ContextWorkspace,
 	)
-	RoleAppStoreAdmin = roleWithNoContext(
+	RoleAppStoreAdmin = newRoleFactoryNoContext(
 		"AppStoreAdmin",
 		"App store admins can administer apps",
 		RoleScopePlatform,
@@ -357,7 +357,7 @@ var (
 		)),
 		ContextUser,
 	)
-	RolePlatformDataManager = roleWithNoContext(
+	RolePlatformDataManager = newRoleFactoryNoContext(
 		"PlatformDataManager",
 		"Data managers can manage workspace data across workspaces",
 		RoleScopePlatform,
@@ -371,7 +371,7 @@ var (
 		)),
 		ContextWorkspace,
 	)
-	RoleSuperAdmin = roleWithNoContext(
+	RoleSuperAdmin = newRoleFactoryNoContext(
 		"SuperAdmin",
 		"Super admins can perform all platform, workspace, and workbench actions",
 		RoleScopeSystem,
