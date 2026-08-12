@@ -100,7 +100,7 @@ func roleWithOneContext[A contextID](name RoleName, description string, scope Ro
 // -------------------------------------------------------------------
 
 // grant lists the names of the given permission factories.
-func grant(perms ...permFactory) []PermissionName {
+func grant(perms ...permissionFactory) []PermissionName {
 	out := make([]PermissionName, len(perms))
 	for i, p := range perms {
 		out[i] = p.name()

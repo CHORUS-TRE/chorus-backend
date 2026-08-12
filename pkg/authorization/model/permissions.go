@@ -37,44 +37,44 @@ func PermissionDefinitionsMap() map[PermissionName]PermissionDefinition {
 // accepts the matching id. The types are unexported — declare with
 // perm0/perm1/perm2 (permissions.go) and reach them through .For.
 
-// permFactory is any permission factory, regardless of arity — grant reads the
+// permissionFactory is any permission factory, regardless of arity — grant reads the
 // name off it (promoted from the embedded PermissionDefinition).
-type permFactory interface{ name() PermissionName }
+type permissionFactory interface{ name() PermissionName }
 
 func (d PermissionDefinition) name() PermissionName { return d.Name }
 
-type permFactoryNoContext struct{ PermissionDefinition }
+type permissionFactoryNoContext struct{ PermissionDefinition }
 
-func (p permFactoryNoContext) For() Permission { return Permission{Name: p.Name} }
+func (p permissionFactoryNoContext) For() Permission { return Permission{Name: p.Name} }
 
-type permFactoryOneContext[A contextID] struct{ PermissionDefinition }
+type permissionFactoryOneContext[A contextID] struct{ PermissionDefinition }
 
-func (p permFactoryOneContext[A]) For(a A) Permission {
+func (p permissionFactoryOneContext[A]) For(a A) Permission {
 	return Permission{Name: p.Name, Context: Context{a.dimension(): fmt.Sprint(a)}}
 }
 
-type permFactoryTwoContexts[A, B contextID] struct{ PermissionDefinition }
+type permissionFactoryTwoContexts[A, B contextID] struct{ PermissionDefinition }
 
-func (p permFactoryTwoContexts[A, B]) For(a A, b B) Permission {
+func (p permissionFactoryTwoContexts[A, B]) For(a A, b B) Permission {
 	return Permission{Name: p.Name, Context: Context{
 		a.dimension(): fmt.Sprint(a),
 		b.dimension(): fmt.Sprint(b),
 	}}
 }
 
-func permWithNoContext(name PermissionName, description string) permFactoryNoContext {
-	return permFactoryNoContext{registerPermission(name, description)}
+func permWithNoContext(name PermissionName, description string) permissionFactoryNoContext {
+	return permissionFactoryNoContext{registerPermission(name, description)}
 }
 
-func permWithOneContext[A contextID](name PermissionName, description string) permFactoryOneContext[A] {
+func permWithOneContext[A contextID](name PermissionName, description string) permissionFactoryOneContext[A] {
 	var a A
-	return permFactoryOneContext[A]{registerPermission(name, description, a.dimension())}
+	return permissionFactoryOneContext[A]{registerPermission(name, description, a.dimension())}
 }
 
-func permWithTwoContexts[A, B contextID](name PermissionName, description string) permFactoryTwoContexts[A, B] {
+func permWithTwoContexts[A, B contextID](name PermissionName, description string) permissionFactoryTwoContexts[A, B] {
 	var a A
 	var b B
-	return permFactoryTwoContexts[A, B]{registerPermission(name, description, a.dimension(), b.dimension())}
+	return permissionFactoryTwoContexts[A, B]{registerPermission(name, description, a.dimension(), b.dimension())}
 }
 
 // One factory per permission — name, description, and required context (via the
