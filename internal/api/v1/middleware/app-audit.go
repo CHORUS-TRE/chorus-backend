@@ -74,12 +74,12 @@ func (c appControllerAudit) CreateApp(ctx context.Context, req *chorus.App) (*ch
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to create app %s.", req.Name)),
+			audit.WithDescription(fmt.Sprintf("Failed to create app %q.", req.Name)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Created app %s (ID %d).", res.Result.App.Name, res.Result.App.Id)),
+			audit.WithDescription(fmt.Sprintf("Created app %q (ID %d).", res.Result.App.Name, res.Result.App.Id)),
 			audit.WithDetail("app_id", res.Result.App.Id),
 			audit.WithDetail("app_name", res.Result.App.Name),
 			audit.WithDetail("app_description", res.Result.App.Description),
@@ -110,12 +110,12 @@ func (c appControllerAudit) UpdateApp(ctx context.Context, req *chorus.App) (*ch
 
 	if err != nil {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Failed to update app %s (ID %d).", req.Name, req.Id)),
+			audit.WithDescription(fmt.Sprintf("Failed to update app %q (ID %d).", req.Name, req.Id)),
 			audit.WithError(err),
 		)
 	} else {
 		opts = append(opts,
-			audit.WithDescription(fmt.Sprintf("Updated app %s (ID %d).", req.Name, req.Id)),
+			audit.WithDescription(fmt.Sprintf("Updated app %q (ID %d).", req.Name, req.Id)),
 			audit.WithDetail("app_id", res.Result.App.Id),
 			audit.WithDetail("app_name", res.Result.App.Name),
 			audit.WithDetail("app_description", res.Result.App.Description),
