@@ -468,10 +468,20 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
+	// Resolve workbench IDs in the workspace
+	workbenchIDs, err := s.workbenchIDsInWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		return err
+	}
+
 	// Get the user's roles in workspace and workbenches
 	matchingRolesIDs := []uint64{}
 	for _, r := range user.Roles {
 		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) {
+			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			continue
+		}
+		if workbenchID := r.Context["workbench"]; workbenchID != "" && workbenchIDs[workbenchID] {
 			matchingRolesIDs = append(matchingRolesIDs, r.ID)
 		}
 	}
@@ -501,6 +511,23 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	}
 
 	return nil
+}
+
+// workbenchIDsInWorkspace returns the ids of the workbenches the workspace
+// owns, as strings so they can be compared to a role context directly.
+func (s *WorkspaceService) workbenchIDsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) (map[string]bool, error) {
+	workbenches, _, err := s.workbencher.ListWorkbenches(ctx, tenantID, nil, workbench_model.WorkbenchFilter{
+		WorkspaceIDsIn: &[]uint64{workspaceID},
+	})
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to list workbenches in workspace %v", workspaceID))
+	}
+
+	ids := make(map[string]bool, len(workbenches))
+	for _, w := range workbenches {
+		ids[fmt.Sprintf("%d", w.ID)] = true
+	}
+	return ids, nil
 }
 
 func (s *WorkspaceService) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {
