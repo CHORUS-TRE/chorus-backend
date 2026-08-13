@@ -202,7 +202,10 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 }
 
 func TestDefaultSchemaSuperAdminGrantsEveryPermission(t *testing.T) {
-	schema := model.GetDefaultSchema()
+	schema := model.AuthorizationSchema{
+		Permissions: model.PermissionDefinitions(),
+		Roles:       model.RoleDefinitions(),
+	}
 	policy, err := newTestAuthorizationService(&schema)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

@@ -164,23 +164,6 @@ type AuthorizationSchema struct {
 	Permissions []PermissionDefinition
 }
 
-// GetDefaultSchema returns the code-defined schema — the permission and role
-// definitions declared by the factories in permissions.go / roles.go. It hands
-// back fresh copies so a caller may adjust a role (e.g. a config-driven grant)
-// without mutating the registries.
-func GetDefaultSchema() AuthorizationSchema {
-	roles := make([]*RoleDefinition, len(RoleDefinitions()))
-	for i, def := range RoleDefinitions() {
-		clone := *def
-		clone.Permissions = append([]PermissionName(nil), def.Permissions...)
-		roles[i] = &clone
-	}
-	return AuthorizationSchema{
-		Permissions: append([]PermissionDefinition(nil), PermissionDefinitions()...),
-		Roles:       roles,
-	}
-}
-
 type RoleScope string
 
 const (

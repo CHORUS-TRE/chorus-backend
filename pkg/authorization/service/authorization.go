@@ -86,30 +86,41 @@ func extractAuthorizationStructures(schema *model.AuthorizationSchema) (authStru
 // reloads the full role set from the store, and builds the in-memory schema.
 // The store is the single source of truth for roles after construction.
 func NewAuthorizationService(ctx context.Context, cfg config.Config, store AuthorizationStore) (Authorizer, error) {
-	codeSchema := model.GetDefaultSchema()
-
-	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
-		for i, role := range codeSchema.Roles {
-			if role.Name == model.RoleWorkspaceAdmin.Name {
-				codeSchema.Roles[i].Permissions = append(codeSchema.Roles[i].Permissions, model.PermManageUsersDataRoleInWorkspace.Name)
-				break
-			}
-		}
-	}
-
 	if store == nil {
 		return nil, fmt.Errorf("authorization store is nil")
 	}
 
-	if err := store.SyncSystemRoles(ctx, codeSchema.Roles); err != nil {
+	roles := model.RoleDefinitions()
+	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
+		roles = withDataManagerGrant(roles)
+	}
+
+	if err := store.SyncSystemRoles(ctx, roles); err != nil {
 		return nil, fmt.Errorf("sync system roles: %w", err)
 	}
 
 	s := &authorizationService{store: store}
-	if err := s.reloadSchema(ctx, codeSchema.Permissions); err != nil {
+	if err := s.reloadSchema(ctx, model.PermissionDefinitions()); err != nil {
 		return nil, err
 	}
 	return s, nil
+}
+
+// withDataManagerGrant returns the role definitions with WorkspaceAdmin also
+// granting manageUsersDataRoleInWorkspace.
+func withDataManagerGrant(roles []*model.RoleDefinition) []*model.RoleDefinition {
+	adjusted := make([]*model.RoleDefinition, len(roles))
+	copy(adjusted, roles)
+	for i, role := range adjusted {
+		if role.Name != model.RoleWorkspaceAdmin.Name {
+			continue
+		}
+		clone := *role
+		clone.Permissions = append(append([]model.PermissionName(nil), role.Permissions...), model.PermManageUsersDataRoleInWorkspace.Name)
+		adjusted[i] = &clone
+		break
+	}
+	return adjusted
 }
 
 func (s *authorizationService) reloadSchema(ctx context.Context, permissions []model.PermissionDefinition) error {
