@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"sync"
 )
 
 // Typed resource ids. Each knows its context dimension, so a permission or role
@@ -68,44 +67,15 @@ func (p PermissionName) String() string {
 	return string(p)
 }
 
-// permissionNameIndex resolves a raw string to its declared PermissionName; a
-// permission absent from the registry is not resolvable. It is built lazily on
-// first use — the permission registry is populated by package-level factory
-// vars, so it is only complete once package initialization has finished.
-var permissionNameIndex = sync.OnceValue(func() map[string]PermissionName {
-	index := make(map[string]PermissionName, len(PermissionDefinitions()))
-	for _, def := range PermissionDefinitions() {
-		index[string(def.Name)] = def.Name
-	}
-	return index
-})
-
+// ToPermissionName resolves a raw string to its declared PermissionName; a
+// permission absent from the registry is not resolvable.
 func ToPermissionName(p string) (PermissionName, error) {
-	if name, ok := permissionNameIndex()[p]; ok {
-		return name, nil
+	for _, def := range PermissionDefinitions() {
+		if string(def.Name) == p {
+			return def.Name, nil
+		}
 	}
 	return "", fmt.Errorf("unknown permission type: %s", p)
-}
-
-func ToPermission(p string, c map[string]string) (Permission, error) {
-	permissionName, err := ToPermissionName(p)
-	if err != nil {
-		return Permission{}, err
-	}
-
-	ctx := make(Context)
-	for k, v := range c {
-		cd, err := ToContextDimension(k)
-		if err != nil {
-			return Permission{}, fmt.Errorf("invalid context dimension in permission: %s", err)
-		}
-		ctx[cd] = v
-	}
-
-	return Permission{
-		Name:    permissionName,
-		Context: ctx,
-	}, nil
 }
 
 func (p Permission) String() string {
@@ -169,21 +139,9 @@ func (r RoleName) String() string {
 	return string(r)
 }
 
-// systemRoleIndex resolves the system roles by name; unknown names are
-// accepted by ToRoleName as dynamic roles.
-var systemRoleIndex = func() map[string]RoleName {
-	index := make(map[string]RoleName)
-	for _, role := range RoleDefinitions() {
-		index[string(role.Name)] = role.Name
-	}
-	return index
-}()
-
+// ToRoleName resolves a raw string to a RoleName; unknown names are accepted
+// as dynamic roles. Callers that need the role to exist check the schema.
 func ToRoleName(r string) (RoleName, error) {
-	if name, ok := systemRoleIndex[r]; ok {
-		return name, nil
-	}
-
 	if strings.TrimSpace(r) == "" {
 		return "", fmt.Errorf("empty role type")
 	}
@@ -191,9 +149,11 @@ func ToRoleName(r string) (RoleName, error) {
 	return RoleName(r), nil
 }
 
+// IsSystemRole reports whether the name is one of the code-defined roles.
 func IsSystemRole(role RoleName) bool {
-	_, ok := systemRoleIndex[string(role)]
-	return ok
+	return slices.ContainsFunc(RoleDefinitions(), func(def *RoleDefinition) bool {
+		return def.Name == role
+	})
 }
 
 // AuthorizationSchema is the full authorization model in effect: every
