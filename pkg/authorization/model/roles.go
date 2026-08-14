@@ -18,8 +18,8 @@ func registerRole(name RoleName, description string, scope RoleScope, required m
 	return def
 }
 
-// RoleDefinitions returns every declared role definition.
-func RoleDefinitions() []*RoleDefinition { return roleDefinitions }
+// GetRoleDefinitions returns every declared role definition.
+func GetRoleDefinitions() []*RoleDefinition { return roleDefinitions }
 
 // -------------------------------------------------------------------
 // Role factories

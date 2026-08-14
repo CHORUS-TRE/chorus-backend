@@ -203,8 +203,8 @@ func TestIsUserAllowedRequiresExplicitRolePermission(t *testing.T) {
 
 func TestDefaultSchemaSuperAdminGrantsEveryPermission(t *testing.T) {
 	schema := model.AuthorizationSchema{
-		Permissions: model.PermissionDefinitions(),
-		Roles:       model.RoleDefinitions(),
+		Permissions: model.GetPermissionDefinitions(),
+		Roles:       model.GetRoleDefinitions(),
 	}
 	policy, err := newTestAuthorizationService(&schema)
 	if err != nil {

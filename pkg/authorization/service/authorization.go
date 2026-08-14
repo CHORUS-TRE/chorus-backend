@@ -90,7 +90,7 @@ func NewAuthorizationService(ctx context.Context, cfg config.Config, store Autho
 		return nil, fmt.Errorf("authorization store is nil")
 	}
 
-	roles := model.RoleDefinitions()
+	roles := model.GetRoleDefinitions()
 	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
 		roles = addDataManagerGrant(roles)
 	}
@@ -100,7 +100,7 @@ func NewAuthorizationService(ctx context.Context, cfg config.Config, store Autho
 	}
 
 	s := &authorizationService{store: store}
-	if err := s.reloadSchema(ctx, model.PermissionDefinitions()); err != nil {
+	if err := s.reloadSchema(ctx, model.GetPermissionDefinitions()); err != nil {
 		return nil, err
 	}
 	return s, nil

@@ -70,7 +70,7 @@ func (p PermissionName) String() string {
 // ToPermissionName resolves a raw string to its declared PermissionName; a
 // permission absent from the registry is not resolvable.
 func ToPermissionName(p string) (PermissionName, error) {
-	for _, def := range PermissionDefinitions() {
+	for _, def := range GetPermissionDefinitions() {
 		if string(def.Name) == p {
 			return def.Name, nil
 		}
@@ -151,7 +151,7 @@ func ToRoleName(r string) (RoleName, error) {
 
 // IsSystemRole reports whether the name is one of the code-defined roles.
 func IsSystemRole(role RoleName) bool {
-	return slices.ContainsFunc(RoleDefinitions(), func(def *RoleDefinition) bool {
+	return slices.ContainsFunc(GetRoleDefinitions(), func(def *RoleDefinition) bool {
 		return def.Name == role
 	})
 }

@@ -16,8 +16,8 @@ func registerPermission(name PermissionName, description string, dims ...Context
 	return def
 }
 
-// PermissionDefinitions returns every declared permission definition.
-func PermissionDefinitions() []PermissionDefinition { return permissionDefinitions }
+// GetPermissionDefinitions returns every declared permission definition.
+func GetPermissionDefinitions() []PermissionDefinition { return permissionDefinitions }
 
 // -------------------------------------------------------------------
 // Permission factories

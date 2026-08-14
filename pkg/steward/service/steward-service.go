@@ -125,7 +125,7 @@ func (s *StewardService) InitializeNewTenant(ctx context.Context, name string) (
 }
 
 func (s *StewardService) createDefaultRoles(ctx context.Context) error {
-	allRoles := authz.RoleDefinitions()
+	allRoles := authz.GetRoleDefinitions()
 
 	for _, r := range allRoles {
 		if err := s.userer.CreateRole(ctx, r.Name.String()); err != nil {
