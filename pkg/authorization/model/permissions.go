@@ -6,7 +6,7 @@ import "fmt"
 // populated by the perm0/perm1/perm2 declarations in permissions.go.
 var permissionDefinitions []PermissionDefinition
 
-func registerPermission(name PermissionName, description string, dims ...ContextDimension) PermissionDefinition {
+func registerPermissionDefinition(name PermissionName, description string, dims ...ContextDimension) PermissionDefinition {
 	def := PermissionDefinition{
 		Name:                      name,
 		Description:               description,
@@ -54,18 +54,18 @@ func (p permissionFactoryTwoContexts[A, B]) For(a A, b B) Permission {
 }
 
 func newPermissionFactoryNoContext(name PermissionName, description string) permissionFactoryNoContext {
-	return permissionFactoryNoContext{registerPermission(name, description)}
+	return permissionFactoryNoContext{registerPermissionDefinition(name, description)}
 }
 
 func newPermissionFactoryOneContext[A contextID](name PermissionName, description string) permissionFactoryOneContext[A] {
 	var a A
-	return permissionFactoryOneContext[A]{registerPermission(name, description, a.dimension())}
+	return permissionFactoryOneContext[A]{registerPermissionDefinition(name, description, a.dimension())}
 }
 
 func newPermissionFactoryTwoContexts[A, B contextID](name PermissionName, description string) permissionFactoryTwoContexts[A, B] {
 	var a A
 	var b B
-	return permissionFactoryTwoContexts[A, B]{registerPermission(name, description, a.dimension(), b.dimension())}
+	return permissionFactoryTwoContexts[A, B]{registerPermissionDefinition(name, description, a.dimension(), b.dimension())}
 }
 
 // One factory per permission — name, description, and required context (via the

@@ -6,7 +6,7 @@ import "fmt"
 // the role declarations below.
 var roleDefinitions []*RoleDefinition
 
-func registerRole(name RoleName, description string, scope RoleScope, required map[ContextDimension]ContextQuantifier, permissions []PermissionName) *RoleDefinition {
+func registerRoleDefinition(name RoleName, description string, scope RoleScope, required map[ContextDimension]ContextQuantifier, permissions []PermissionName) *RoleDefinition {
 	def := &RoleDefinition{
 		Name:                      name,
 		Description:               description,
@@ -75,12 +75,12 @@ func requiredContext(exact, wildcards []ContextDimension) map[ContextDimension]C
 }
 
 func newRoleFactoryNoContext(name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryNoContext {
-	return roleFactoryNoContext{registerRole(name, description, scope, requiredContext(nil, wildcards), permissions), wildcards}
+	return roleFactoryNoContext{registerRoleDefinition(name, description, scope, requiredContext(nil, wildcards), permissions), wildcards}
 }
 
 func newRoleFactoryOneContext[A contextID](name RoleName, description string, scope RoleScope, permissions []PermissionName, wildcards ...ContextDimension) roleFactoryOneContext[A] {
 	var a A
-	return roleFactoryOneContext[A]{registerRole(name, description, scope, requiredContext([]ContextDimension{a.dimension()}, wildcards), permissions), wildcards}
+	return roleFactoryOneContext[A]{registerRoleDefinition(name, description, scope, requiredContext([]ContextDimension{a.dimension()}, wildcards), permissions), wildcards}
 }
 
 // -------------------------------------------------------------------
