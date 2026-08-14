@@ -469,7 +469,7 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	}
 
 	// Resolve workbench IDs in the workspace
-	workbenchIDs, err := s.workbenchIDsInWorkspace(ctx, tenantID, workspaceID)
+	workbenchIDs, err := s.listWorkbenchIDsInWorkspace(ctx, tenantID, workspaceID)
 	if err != nil {
 		return err
 	}
@@ -481,8 +481,16 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 			matchingRolesIDs = append(matchingRolesIDs, r.ID)
 			continue
 		}
-		if workbenchID := r.Context["workbench"]; workbenchID != "" && workbenchIDs[workbenchID] {
-			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+
+		// Check if the role is in a workbench in the workspace
+		workbenchID := r.Context["workbench"]
+		if workbenchID != "" {
+			for _, wbID := range workbenchIDs {
+				if workbenchID == fmt.Sprintf("%d", wbID) {
+					matchingRolesIDs = append(matchingRolesIDs, r.ID)
+					break
+				}
+			}
 		}
 	}
 
@@ -513,9 +521,8 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	return nil
 }
 
-// workbenchIDsInWorkspace returns the ids of the workbenches the workspace
-// owns, as strings so they can be compared to a role context directly.
-func (s *WorkspaceService) workbenchIDsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) (map[string]bool, error) {
+// listWorkbenchIDsInWorkspace returns the ids of the workbenches in the workspace
+func (s *WorkspaceService) listWorkbenchIDsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) ([]uint64, error) {
 	workbenches, _, err := s.workbencher.ListWorkbenches(ctx, tenantID, nil, workbench_model.WorkbenchFilter{
 		WorkspaceIDsIn: &[]uint64{workspaceID},
 	})
@@ -523,9 +530,9 @@ func (s *WorkspaceService) workbenchIDsInWorkspace(ctx context.Context, tenantID
 		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to list workbenches in workspace %v", workspaceID))
 	}
 
-	ids := make(map[string]bool, len(workbenches))
-	for _, w := range workbenches {
-		ids[fmt.Sprintf("%d", w.ID)] = true
+	ids := make([]uint64, len(workbenches))
+	for i, w := range workbenches {
+		ids[i] = w.ID
 	}
 	return ids, nil
 }
