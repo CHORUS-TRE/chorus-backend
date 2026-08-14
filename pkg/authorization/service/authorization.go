@@ -92,7 +92,7 @@ func NewAuthorizationService(ctx context.Context, cfg config.Config, store Autho
 
 	roles := model.GetRoleDefinitions()
 	if cfg.Services.AuthorizationService.WorkspaceAdminCanAssignDataManager {
-		roles = addDataManagerGrant(roles)
+		roles = grantWorkspaceAdminDataRoleManagement(roles)
 	}
 
 	if err := store.SyncSystemRoles(ctx, roles); err != nil {
@@ -106,9 +106,9 @@ func NewAuthorizationService(ctx context.Context, cfg config.Config, store Autho
 	return s, nil
 }
 
-// addDataManagerGrant returns the role definitions with WorkspaceAdmin also
+// grantWorkspaceAdminDataRoleManagement returns the role definitions with WorkspaceAdmin also
 // granting manageUsersDataRoleInWorkspace.
-func addDataManagerGrant(roles []*model.RoleDefinition) []*model.RoleDefinition {
+func grantWorkspaceAdminDataRoleManagement(roles []*model.RoleDefinition) []*model.RoleDefinition {
 	adjusted := make([]*model.RoleDefinition, len(roles))
 	copy(adjusted, roles)
 	for i, role := range adjusted {
