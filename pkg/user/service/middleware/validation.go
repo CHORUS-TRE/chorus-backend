@@ -30,10 +30,10 @@ func Validation(validate *val.Validate, requireEmail bool) func(service.Userer) 
 }
 
 func (v validation) CreateRole(ctx context.Context, role string) error {
-	allRoles := authorization_model.GetAllRoles()
+	allRoles := authorization_model.GetRoleDefinitions()
 	allRolesStr := make([]string, len(allRoles))
 	for i, role := range allRoles {
-		allRolesStr[i] = string(role)
+		allRolesStr[i] = string(role.Name)
 	}
 	if !contains(allRolesStr, role) {
 		return cerr.ErrValidation.WithMessage(fmt.Sprintf("Invalid role '%v', should be one of: %v", role, allRolesStr))

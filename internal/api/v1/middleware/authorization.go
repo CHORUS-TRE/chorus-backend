@@ -10,7 +10,7 @@ import (
 	chorus_errors "github.com/CHORUS-TRE/chorus-backend/internal/errors"
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 
 	"go.uber.org/zap"
@@ -40,7 +40,7 @@ func NewAuthorization(logger *logger.ContextLogger, cfg config.Config, authorize
 	}
 }
 
-func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authorization.Role, *jwt_model.JWTClaims, error) {
+func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authz_model.Role, *jwt_model.JWTClaims, error) {
 
 	claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims)
 	if !ok {
@@ -57,9 +57,7 @@ func (c Authorization) getRolesAndClaims(ctx context.Context) ([]authorization.R
 	return aRoles, claims, nil
 }
 
-func (c Authorization) IsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) error {
-	permission := authorization.NewPermission(permissionName, opts...)
-
+func (c Authorization) IsAuthorized(ctx context.Context, permission authz_model.Permission) error {
 	aRoles, claims, err := c.getRolesAndClaims(ctx)
 	if err != nil {
 		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
@@ -68,30 +66,18 @@ func (c Authorization) IsAuthorized(ctx context.Context, permissionName authoriz
 
 	isAuthorized, err := c.authorizer.IsUserAllowed(aRoles, permission)
 	if err != nil {
-		c.logger.Error(ctx, "failed to evaluate permission", zap.String("permission", string(permissionName)), zap.Error(err))
-		return chorus_errors.ErrInternal.Wrap(err, fmt.Sprintf("failed to evaluate permission %s: %v", permissionName, err))
+		c.logger.Error(ctx, "failed to evaluate permission", zap.String("permission", permission.Name.String()), zap.Error(err))
+		return chorus_errors.ErrInternal.Wrap(err, fmt.Sprintf("failed to evaluate permission %s: %v", permission.Name, err))
 	}
 
 	if !isAuthorized {
-		return c.permissionDenied(ctx, claims, permission)
+		return c.permissionDenied(ctx, claims, aRoles, permission)
 	}
 
 	return nil
 }
 
-func (c Authorization) ExplainIsAuthorized(ctx context.Context, permissionName authorization.PermissionName, opts ...authorization.NewContextOption) string {
-	permission := authorization.NewPermission(permissionName, opts...)
-
-	aRoles, _, err := c.getRolesAndClaims(ctx)
-	if err != nil {
-		return fmt.Sprintf("error getting roles and claims: %v", err)
-	}
-
-	return c.authorizer.ExplainIsUserAllowed(aRoles, permission)
-
-}
-
-func (c Authorization) GetContextListForPermission(ctx context.Context, permissionName authorization.PermissionName) ([]authorization.Context, error) {
+func (c Authorization) GetContextListForPermission(ctx context.Context, permissionName authz_model.PermissionName) ([]authz_model.Context, error) {
 	aRoles, _, err := c.getRolesAndClaims(ctx)
 	if err != nil {
 		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
@@ -107,11 +93,11 @@ func (c Authorization) GetContextListForPermission(ctx context.Context, permissi
 	return contextList, nil
 }
 
-func (c Authorization) IsRoleInScope(roleName authorization.RoleName, scopes ...authorization.RoleScope) bool {
+func (c Authorization) IsRoleInScope(roleName authz_model.RoleName, scopes ...authz_model.RoleScope) bool {
 	return c.authorizer.IsRoleInScope(roleName, scopes...)
 }
 
-func (c Authorization) CanAssignRole(ctx context.Context, roleName authorization.RoleName, assignmentContext authorization.Context) error {
+func (c Authorization) CanAssignRole(ctx context.Context, roleName authz_model.RoleName, assignmentContext authz_model.Context) error {
 	aRoles, _, err := c.getRolesAndClaims(ctx)
 	if err != nil {
 		c.logger.Error(ctx, "failed to get roles and claims", zap.Error(err))
@@ -150,26 +136,24 @@ func (c Authorization) getSetCookieHeader(token string, expires string) metadata
 	return metadata.Pairs("Set-Cookie", "jwttoken="+token+"; Path=/; Domain="+c.cfg.Daemon.HTTP.Headers.CookieDomain+"; SameSite=None; Secure; HttpOnly; Expires="+expires)
 }
 
-func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, p authorization.Permission) error {
-	aRoles, err := claimRolesToAuthRoles(claims)
-	var permissions []authorization.Permission
-	if err == nil {
-		permissions, _ = c.authorizer.GetUserPermissions(aRoles)
-	}
+func (c Authorization) permissionDenied(ctx context.Context, claims *jwt_model.JWTClaims, aRoles []authz_model.Role, p authz_model.Permission) error {
+	permissions, _ := c.authorizer.GetUserPermissions(aRoles)
+	explanation := c.authorizer.ExplainIsUserAllowed(aRoles, p)
 
 	c.logger.Warn(ctx, "permission denied",
 		zap.Uint64("id", claims.ID),
 		zap.Uint64("tenant_id", claims.TenantID),
 		zap.String("required_permission", string(p.Name)),
-		zap.Strings("user_permissions", authorization.UniquePermissionNames(permissions)),
+		zap.String("explanation", explanation),
+		zap.Strings("user_permissions", authz_model.UniquePermissionNames(permissions)),
 		zap.Strings("user_roles", uniqueRoleNames(claims.Roles)))
 	return chorus_errors.ErrPermissionDenied.WithMessage(fmt.Sprintf("required permission: %v", p))
 }
 
-func claimRolesToAuthRoles(claims *jwt_model.JWTClaims) ([]authorization.Role, error) {
-	roles := make([]authorization.Role, 0, len(claims.Roles))
+func claimRolesToAuthRoles(claims *jwt_model.JWTClaims) ([]authz_model.Role, error) {
+	roles := make([]authz_model.Role, 0, len(claims.Roles))
 	for _, r := range claims.Roles {
-		role, err := authorization.ToRole(r.Name, r.Context)
+		role, err := authz_model.ToRole(r.Name, r.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -178,15 +162,13 @@ func claimRolesToAuthRoles(claims *jwt_model.JWTClaims) ([]authorization.Role, e
 	return roles, nil
 }
 
-// withUserFromCtx binds the user context dimension to the caller's own id,
-// taken from the JWT claims. Kept here (not in the authorization model) so the
-// model stays free of any JWT dependency.
-func withUserFromCtx(ctx context.Context) authorization.NewContextOption {
-	userID := ""
+// userFromCtx resolves the caller's own user id from the JWT claims, for a
+// self-scoped permission check (e.g. "get my own user").
+func userFromCtx(ctx context.Context) authz_model.UserID {
 	if claims, ok := ctx.Value(jwt_model.JWTClaimsContextKey).(*jwt_model.JWTClaims); ok {
-		userID = fmt.Sprintf("%v", claims.ID)
+		return authz_model.UserID(claims.ID)
 	}
-	return authorization.WithUser(userID)
+	return 0
 }
 
 // uniqueRoleNames returns a sorted, deduplicated list of role names from the

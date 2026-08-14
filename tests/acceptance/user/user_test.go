@@ -78,7 +78,7 @@ var _ = Describe("user service", func() {
 
 				Then("users should be returned with email", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.Name.String(), map[string]string{"user": "*"}))
 					req := user.NewUserServiceListUsersParams()
 
 					c := helpers.UserServiceHTTPClient()
@@ -120,7 +120,7 @@ var _ = Describe("user service", func() {
 				When("the route GET '/api/rest/v1/users/{id}' is called", func() {
 
 					Then("a permission error should be raised", func() {
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "1"}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "1"}))
 						req := user.NewUserServiceGetUserParams().WithID("90000")
 
 						c := helpers.UserServiceHTTPClient()
@@ -139,7 +139,7 @@ var _ = Describe("user service", func() {
 
 				Then("a user should be returned", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleSuperAdmin.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceGetUserParams().WithID("90000")
 
 					c := helpers.UserServiceHTTPClient()
@@ -197,7 +197,7 @@ var _ = Describe("user service", func() {
 
 				Then("a user should be returned", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 
 					c := helpers.UserServiceHTTPClient()
 					resp, err := c.UserService.UserServiceGetUserMe(nil, auth)
@@ -239,7 +239,7 @@ var _ = Describe("user service", func() {
 				When("the route DELETE '/api/rest/v1/users/{id}' is called", func() {
 
 					Then("a permission error should be raised", func() {
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "1"}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "1"}))
 						req := user.NewUserServiceDeleteUserParams().WithID("90000")
 
 						c := helpers.UserServiceHTTPClient()
@@ -258,7 +258,7 @@ var _ = Describe("user service", func() {
 
 				Then("a user should be deleted", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.Name.String(), map[string]string{"user": "*"}))
 					req := user.NewUserServiceDeleteUserParams().WithID("90000")
 
 					c := helpers.UserServiceHTTPClient()
@@ -305,7 +305,7 @@ var _ = Describe("user service", func() {
 				When("the route PUT '/api/rest/v1/users' is called", func() {
 
 					Then("a permission error should be raised", func() {
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "1"}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "1"}))
 						req := user.NewUserServiceUpdateUserParams().WithBody(
 							&models.ChorusUser{
 								FirstName: "Bob",
@@ -333,7 +333,7 @@ var _ = Describe("user service", func() {
 
 				Then("a user should be updated", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.String(), map[string]string{"user": "*"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RoleSuperAdmin.Name.String(), map[string]string{"user": "*"}))
 					req := user.NewUserServiceUpdateUserParams().WithBody(
 						&models.ChorusUser{
 							FirstName: "Bob",
@@ -412,7 +412,7 @@ var _ = Describe("user service", func() {
 
 				Then("an error should be returned", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceUpdatePasswordParams().WithBody(
 						&models.ChorusUpdatePasswordRequest{
 							CurrentPassword: "johnPassword",
@@ -435,7 +435,7 @@ var _ = Describe("user service", func() {
 
 				Then("a user's password should be updated", func() {
 					setupTables()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceUpdatePasswordParams().WithBody(
 						&models.ChorusUpdatePasswordRequest{
 							CurrentPassword: "johnPassword",
@@ -457,7 +457,7 @@ var _ = Describe("user service", func() {
 
 				Then("a user's password should be updated", func() {
 					setupTablesWithTotpUser()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceUpdatePasswordParams().WithBody(
 						&models.ChorusUpdatePasswordRequest{
 							CurrentPassword: "johnPassword",
@@ -523,7 +523,7 @@ var _ = Describe("user service", func() {
 
 				Then("an authentication error should be raised", func() {
 					setupTablesWithTotpUser()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceResetTotpParams().WithBody(
 						&models.ChorusResetTotpRequest{Password: "wrong password"},
 					)
@@ -543,7 +543,7 @@ var _ = Describe("user service", func() {
 
 				Then("a totpSecret and recovery codes should be returned", func() {
 					setupTablesWithTotpUser()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceResetTotpParams().WithBody(
 						&models.ChorusResetTotpRequest{Password: "johnPassword"},
 					)
@@ -590,7 +590,7 @@ var _ = Describe("user service", func() {
 				When("the route POST '/api/rest/v1/users/me/totp/enable' is called", func() {
 
 					Then("a permission error should be raised", func() {
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, "Public", map[string]string{"user": "1"}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(1, 88888, authorization.RolePublic.Name.String(), map[string]string{"user": "1"}))
 						req := user.NewUserServiceEnableTotpParams().WithBody(
 							&models.ChorusEnableTotpRequest{
 								Totp: "totp",
@@ -616,7 +616,7 @@ var _ = Describe("user service", func() {
 
 				Then("Totp is now enabled for the user and no error should be returned", func() {
 					setupTablesWithTotpUser()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceResetTotpParams().WithBody(
 						&models.ChorusResetTotpRequest{Password: "johnPassword"},
 					)
@@ -647,7 +647,7 @@ var _ = Describe("user service", func() {
 
 				Then("Totp is not enabled for the user and an error should be returned", func() {
 					setupTablesWithTotpUser()
-					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "90000"}))
+					auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "90000"}))
 					req := user.NewUserServiceResetTotpParams().WithBody(
 						&models.ChorusResetTotpRequest{Password: "johnPassword"},
 					)
@@ -679,7 +679,7 @@ var _ = Describe("user service", func() {
 				When("the route POST '/api/rest/v1/users' is called", func() {
 
 					Then("a validation error should be raised", func() {
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlatformUserManager), map[string]string{}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlatformUserManager.Name), map[string]string{}))
 
 						req := user.NewUserServiceCreateUserParams().WithBody(
 							&models.ChorusUser{
@@ -707,7 +707,7 @@ var _ = Describe("user service", func() {
 
 					Then("a user should be returned", func() {
 						setupBaseTables()
-						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlatformUserManager), map[string]string{}))
+						auth := getAuthAsClientOpts(helpers.CreateJWTToken(90000, 88888, string(authorization.RolePlatformUserManager.Name), map[string]string{}))
 
 						req := user.NewUserServiceCreateUserParams().WithBody(
 							&models.ChorusUser{

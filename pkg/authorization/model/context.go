@@ -14,14 +14,6 @@ const Wildcard = "*"
 // (or Wildcard).
 type Context map[ContextDimension]string
 
-func NewContext(opts ...NewContextOption) Context {
-	c := make(Context)
-	for _, v := range opts {
-		v(&c)
-	}
-	return c
-}
-
 func (c Context) String() string {
 	var parts []string
 	for k, v := range c {
@@ -29,32 +21,6 @@ func (c Context) String() string {
 	}
 	sort.Strings(parts)
 	return strings.Join(parts, "&")
-}
-
-type NewContextOption func(*Context)
-
-func WithWorkspace(workspace any) NewContextOption {
-	return func(c *Context) {
-		(*c)[ContextWorkspace] = fmt.Sprintf("%v", workspace)
-	}
-}
-
-func WithWorkbench(workbench any) NewContextOption {
-	return func(c *Context) {
-		(*c)[ContextWorkbench] = fmt.Sprintf("%v", workbench)
-	}
-}
-
-func WithRequest(request any) NewContextOption {
-	return func(c *Context) {
-		(*c)[ContextRequest] = fmt.Sprintf("%v", request)
-	}
-}
-
-func WithUser(user any) NewContextOption {
-	return func(c *Context) {
-		(*c)[ContextUser] = fmt.Sprintf("%v", user)
-	}
 }
 
 type ContextDimension string

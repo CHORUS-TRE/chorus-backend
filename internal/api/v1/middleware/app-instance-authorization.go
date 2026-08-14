@@ -12,7 +12,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/model"
 )
@@ -44,20 +44,20 @@ func AppInstanceAuthorizing(logger *logger.ContextLogger, authorizer authorizati
 }
 
 func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context, req *chorus.ListAppInstancesRequest) (*chorus.ListAppInstancesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListAppInstances) // TODO: check if context should be provided here
+	err := c.IsAuthorized(ctx, authz.PermListAppInstances.For()) // TODO: check if context should be provided here
 	if err != nil {
 		return nil, err
 	}
 
 	if req.Filter != nil && len(req.Filter.WorkbenchIdsIn) > 0 {
 		for _, id := range req.Filter.WorkbenchIdsIn {
-			err := c.IsAuthorized(ctx, authorization.PermissionGetWorkbench, authorization.WithWorkbench(id))
+			err := c.IsAuthorized(ctx, authz.PermGetWorkbench.For(authz.WorkbenchID(id)))
 			if err != nil {
 				return nil, status.Error(codes.PermissionDenied, fmt.Sprintf("not authorized to access workbench %d", id))
 			}
 		}
 	} else {
-		attrs, err := c.GetContextListForPermission(ctx, authorization.PermissionGetWorkbench)
+		attrs, err := c.GetContextListForPermission(ctx, authz.PermGetWorkbench.Name)
 		if err != nil {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("unable to get context list for permission: %v", err.Error()))
 		}
@@ -67,7 +67,7 @@ func (c appInstanceControllerAuthorization) ListAppInstances(ctx context.Context
 		}
 
 		for _, attr := range attrs {
-			if workbenchIDStr, ok := attr[authorization.ContextWorkbench]; ok {
+			if workbenchIDStr, ok := attr[authz.ContextWorkbench]; ok {
 				if workbenchIDStr == "" {
 					continue
 				}
@@ -101,10 +101,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 		return nil, status.Errorf(codes.NotFound, "unable to resolve app instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionGetAppInstance,
-		authorization.WithWorkbench(appInstance.WorkbenchID),
-		authorization.WithWorkspace(appInstance.WorkspaceID),
-	)
+	err = c.IsAuthorized(ctx, authz.PermGetAppInstance.For(authz.WorkbenchID(appInstance.WorkbenchID)))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +110,7 @@ func (c appInstanceControllerAuthorization) GetAppInstance(ctx context.Context, 
 }
 
 func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.CreateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateAppInstance, authorization.WithWorkbench(req.WorkbenchId), authorization.WithWorkspace(req.WorkspaceId))
+	err := c.IsAuthorized(ctx, authz.PermCreateAppInstance.For(authz.WorkbenchID(req.WorkbenchId)))
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +119,7 @@ func (c appInstanceControllerAuthorization) CreateAppInstance(ctx context.Contex
 }
 
 func (c appInstanceControllerAuthorization) UpdateAppInstance(ctx context.Context, req *chorus.AppInstance) (*chorus.UpdateAppInstanceReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateAppInstance, authorization.WithWorkbench(req.WorkbenchId), authorization.WithWorkspace(req.WorkspaceId))
+	err := c.IsAuthorized(ctx, authz.PermUpdateAppInstance.For(authz.WorkbenchID(req.WorkbenchId)))
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +138,7 @@ func (c appInstanceControllerAuthorization) DeleteAppInstance(ctx context.Contex
 		return nil, status.Errorf(codes.NotFound, "unable to resolve app instance %v: %v", req.Id, err)
 	}
 
-	err = c.IsAuthorized(ctx, authorization.PermissionDeleteAppInstance,
-		authorization.WithWorkbench(appInstance.WorkbenchID),
-		authorization.WithWorkspace(appInstance.WorkspaceID),
-	)
+	err = c.IsAuthorized(ctx, authz.PermDeleteAppInstance.For(authz.WorkbenchID(appInstance.WorkbenchID)))
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ import (
 	jwt_model "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	auth_helper "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/helper"
 	authentication_service "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 )
@@ -322,10 +322,7 @@ func (c UserController) registerUserSelfService(ctx context.Context, req *chorus
 
 func (c UserController) assignDefaultAuthenticatedRole(ctx context.Context, tenantID, userID uint64) error {
 	return c.user.CreateUserRoles(ctx, tenantID, userID, []model.UserRole{{
-		Role: authorization_model.NewRole(
-			authorization_model.RoleAuthenticated,
-			authorization_model.WithUser(userID),
-		),
+		Role: authz.RoleAuthenticated.For(authz.UserID(userID)),
 	}})
 }
 
@@ -343,7 +340,7 @@ func (c UserController) CreateUserRole(ctx context.Context, req *chorus.CreateUs
 		return nil, cerr.ErrInvalidRequest.WithMessage("Could not extract tenant ID from token")
 	}
 
-	role, err := authorization_model.ToRole(req.Role.Name, req.Role.Context)
+	role, err := authz.ToRole(req.Role.Name, req.Role.Context)
 	if err != nil {
 		return nil, cerr.ErrValidation.Wrap(err, "Invalid role")
 	}

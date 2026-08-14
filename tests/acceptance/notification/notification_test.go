@@ -25,7 +25,7 @@ func getAuthAsClientOpts(t string) func(*runtime.ClientOperation) {
 }
 
 func validUserAuth() func(*runtime.ClientOperation) {
-	return getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.String(), map[string]string{"user": "88888"}))
+	return getAuthAsClientOpts(helpers.CreateJWTToken(88888, 88888, authorization.RoleAuthenticated.Name.String(), map[string]string{"user": "88888"}))
 }
 
 var _ = Describe("notification service", func() {

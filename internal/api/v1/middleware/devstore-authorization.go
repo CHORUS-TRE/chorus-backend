@@ -6,7 +6,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -40,7 +40,7 @@ func (c devstoreControllerAuthorization) GetGlobalEntry(ctx context.Context, req
 }
 
 func (c devstoreControllerAuthorization) PutGlobalEntry(ctx context.Context, req *chorus.PutEntryRequest) (*chorus.PutEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
+	err := c.IsAuthorized(ctx, authz.PermSetPlatformSettings.For())
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (c devstoreControllerAuthorization) PutGlobalEntry(ctx context.Context, req
 }
 
 func (c devstoreControllerAuthorization) DeleteGlobalEntry(ctx context.Context, req *chorus.DeleteEntryRequest) (*chorus.DeleteEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
+	err := c.IsAuthorized(ctx, authz.PermSetPlatformSettings.For())
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c devstoreControllerAuthorization) DeleteGlobalEntry(ctx context.Context, 
 }
 
 func (c devstoreControllerAuthorization) ListUserEntries(ctx context.Context, req *chorus.ListEntriesRequest) (*chorus.ListEntriesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.PermGetMyOwnUser.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c devstoreControllerAuthorization) ListUserEntries(ctx context.Context, re
 }
 
 func (c devstoreControllerAuthorization) GetUserEntry(ctx context.Context, req *chorus.GetEntryRequest) (*chorus.GetEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.PermGetMyOwnUser.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c devstoreControllerAuthorization) GetUserEntry(ctx context.Context, req *
 }
 
 func (c devstoreControllerAuthorization) PutUserEntry(ctx context.Context, req *chorus.PutEntryRequest) (*chorus.PutEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.PermGetMyOwnUser.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (c devstoreControllerAuthorization) PutUserEntry(ctx context.Context, req *
 }
 
 func (c devstoreControllerAuthorization) DeleteUserEntry(ctx context.Context, req *chorus.DeleteEntryRequest) (*chorus.DeleteEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetMyOwnUser, withUserFromCtx(ctx))
+	err := c.IsAuthorized(ctx, authz.PermGetMyOwnUser.For(userFromCtx(ctx)))
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (c devstoreControllerAuthorization) DeleteUserEntry(ctx context.Context, re
 }
 
 func (c devstoreControllerAuthorization) ListWorkspaceEntries(ctx context.Context, req *chorus.ListWorkspaceEntriesRequest) (*chorus.ListEntriesReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (c devstoreControllerAuthorization) ListWorkspaceEntries(ctx context.Contex
 }
 
 func (c devstoreControllerAuthorization) GetWorkspaceEntry(ctx context.Context, req *chorus.GetWorkspaceEntryRequest) (*chorus.GetEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authz.PermGetWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c devstoreControllerAuthorization) GetWorkspaceEntry(ctx context.Context, 
 }
 
 func (c devstoreControllerAuthorization) PutWorkspaceEntry(ctx context.Context, req *chorus.PutWorkspaceEntryRequest) (*chorus.PutEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authz.PermUpdateWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (c devstoreControllerAuthorization) PutWorkspaceEntry(ctx context.Context, 
 }
 
 func (c devstoreControllerAuthorization) DeleteWorkspaceEntry(ctx context.Context, req *chorus.DeleteWorkspaceEntryRequest) (*chorus.DeleteEntryReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateWorkspace, authorization.WithWorkspace(req.Id))
+	err := c.IsAuthorized(ctx, authz.PermUpdateWorkspace.For(authz.WorkspaceID(req.Id)))
 	if err != nil {
 		return nil, err
 	}

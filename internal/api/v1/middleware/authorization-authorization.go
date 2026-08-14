@@ -3,11 +3,12 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -46,22 +47,26 @@ func (c authorizationControllerAuthorization) CreateDynamicRole(ctx context.Cont
 		return c.next.CreateDynamicRole(ctx, req)
 	}
 
-	scope, err := authorization.ToRoleScope(req.Role.Scope)
+	scope, err := authz.ToRoleScope(req.Role.Scope)
 	if err != nil {
 		return nil, fmt.Errorf("invalid role scope: %w", err)
 	}
 
 	switch scope {
-	case authorization.RoleScopeWorkspace:
-		workspaceID := req.ValidationContext[authorization.ContextWorkspace.String()]
-		if workspaceID == "" {
+	case authz.RoleScopeWorkspace:
+		workspaceIDStr := req.ValidationContext[authz.ContextWorkspace.String()]
+		if workspaceIDStr == "" {
 			return nil, fmt.Errorf("workspace-scoped dynamic roles require workspace validation context")
 		}
-		if err := c.IsAuthorized(ctx, authorization.PermissionManageUsersInWorkspace, authorization.WithWorkspace(workspaceID)); err != nil {
+		workspaceID, err := strconv.ParseUint(workspaceIDStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid workspace id in validation context: %w", err)
+		}
+		if err := c.IsAuthorized(ctx, authz.PermManageUsersInWorkspace.For(authz.WorkspaceID(workspaceID))); err != nil {
 			return nil, err
 		}
-	case authorization.RoleScopePlatform:
-		if err := c.IsAuthorized(ctx, authorization.PermissionManageDynamicRoles); err != nil {
+	case authz.RoleScopePlatform:
+		if err := c.IsAuthorized(ctx, authz.PermManageDynamicRoles.For()); err != nil {
 			return nil, err
 		}
 	default:

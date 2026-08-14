@@ -5,7 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -29,7 +29,7 @@ func AppAuthorizing(logger *logger.ContextLogger, authorizer authorization_servi
 }
 
 func (c appControllerAuthorization) ListApps(ctx context.Context, req *chorus.ListAppsRequest) (*chorus.ListAppsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionListApps)
+	err := c.IsAuthorized(ctx, authz.PermListApps.For())
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func (c appControllerAuthorization) ListApps(ctx context.Context, req *chorus.Li
 }
 
 func (c appControllerAuthorization) GetApp(ctx context.Context, req *chorus.GetAppRequest) (*chorus.GetAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionGetApp)
+	err := c.IsAuthorized(ctx, authz.PermGetApp.For())
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c appControllerAuthorization) GetApp(ctx context.Context, req *chorus.GetA
 }
 
 func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.App) (*chorus.CreateAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateApp)
+	err := c.IsAuthorized(ctx, authz.PermCreateApp.For())
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c appControllerAuthorization) CreateApp(ctx context.Context, req *chorus.A
 }
 
 func (c appControllerAuthorization) BulkCreateApps(ctx context.Context, req *chorus.BulkCreateAppsRequest) (*chorus.BulkCreateAppsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionCreateApp)
+	err := c.IsAuthorized(ctx, authz.PermCreateApp.For())
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c appControllerAuthorization) BulkCreateApps(ctx context.Context, req *cho
 }
 
 func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.App) (*chorus.UpdateAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionUpdateApp)
+	err := c.IsAuthorized(ctx, authz.PermUpdateApp.For())
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (c appControllerAuthorization) UpdateApp(ctx context.Context, req *chorus.A
 }
 
 func (c appControllerAuthorization) DeleteApp(ctx context.Context, req *chorus.DeleteAppRequest) (*chorus.DeleteAppReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionDeleteApp)
+	err := c.IsAuthorized(ctx, authz.PermDeleteApp.For())
 	if err != nil {
 		return nil, err
 	}

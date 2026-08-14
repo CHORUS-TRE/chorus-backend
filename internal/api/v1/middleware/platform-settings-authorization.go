@@ -5,7 +5,7 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 )
 
@@ -33,7 +33,7 @@ func (c platformSettingsControllerAuthorization) GetPlatformSettings(ctx context
 }
 
 func (c platformSettingsControllerAuthorization) UpdatePlatformSettings(ctx context.Context, req *chorus.UpdatePlatformSettingsRequest) (*chorus.UpdatePlatformSettingsReply, error) {
-	err := c.IsAuthorized(ctx, authorization.PermissionSetPlatformSettings)
+	err := c.IsAuthorized(ctx, authz.PermSetPlatformSettings.For())
 	if err != nil {
 		return nil, err
 	}

@@ -15,15 +15,15 @@ func TestExpandDropsUnboundRequiredContext(t *testing.T) {
 	schema := &model.AuthorizationSchema{
 		Permissions: []model.PermissionDefinition{
 			{
-				Name:                      model.PermissionGetWorkbench,
+				Name:                      model.PermGetWorkbench.Name,
 				RequiredContextDimensions: []model.ContextDimension{model.ContextWorkbench},
 			},
 		},
 		Roles: []*model.RoleDefinition{
 			// WorkspaceAdmin shape: binds workspace, grants a workbench-scoped permission.
-			{Name: model.RoleWorkspaceAdmin, Permissions: []model.PermissionName{model.PermissionGetWorkbench}},
+			{Name: model.RoleWorkspaceAdmin.Name, Permissions: []model.PermissionName{model.PermGetWorkbench.Name}},
 			// WorkbenchAdmin shape: binds workbench, grants the same permission.
-			{Name: model.RoleWorkbenchAdmin, Permissions: []model.PermissionName{model.PermissionGetWorkbench}},
+			{Name: model.RoleWorkbenchAdmin.Name, Permissions: []model.PermissionName{model.PermGetWorkbench.Name}},
 		},
 	}
 
@@ -40,20 +40,20 @@ func TestExpandDropsUnboundRequiredContext(t *testing.T) {
 	}{
 		{
 			name:  "WorkspaceAdmin (binds workspace, not workbench) denied on any workbench — the bug",
-			roles: []model.Role{{Name: model.RoleWorkspaceAdmin, Context: model.Context{model.ContextWorkspace: "4"}}},
-			check: model.NewPermission(model.PermissionGetWorkbench, model.WithWorkbench(7)),
+			roles: []model.Role{{Name: model.RoleWorkspaceAdmin.Name, Context: model.Context{model.ContextWorkspace: "4"}}},
+			check: model.PermGetWorkbench.For(model.WorkbenchID(7)),
 			want:  false,
 		},
 		{
 			name:  "WorkbenchAdmin bound to workbench 7 allowed on workbench 7",
-			roles: []model.Role{{Name: model.RoleWorkbenchAdmin, Context: model.Context{model.ContextWorkbench: "7"}}},
-			check: model.NewPermission(model.PermissionGetWorkbench, model.WithWorkbench(7)),
+			roles: []model.Role{{Name: model.RoleWorkbenchAdmin.Name, Context: model.Context{model.ContextWorkbench: "7"}}},
+			check: model.PermGetWorkbench.For(model.WorkbenchID(7)),
 			want:  true,
 		},
 		{
 			name:  "WorkbenchAdmin bound to workbench 9 denied on workbench 7",
-			roles: []model.Role{{Name: model.RoleWorkbenchAdmin, Context: model.Context{model.ContextWorkbench: "9"}}},
-			check: model.NewPermission(model.PermissionGetWorkbench, model.WithWorkbench(7)),
+			roles: []model.Role{{Name: model.RoleWorkbenchAdmin.Name, Context: model.Context{model.ContextWorkbench: "9"}}},
+			check: model.PermGetWorkbench.For(model.WorkbenchID(7)),
 			want:  false,
 		},
 	}
@@ -76,15 +76,15 @@ func TestExpandDropsUnboundRequiredContext(t *testing.T) {
 func TestExpandKeepsZeroContextAndWildcard(t *testing.T) {
 	schema := &model.AuthorizationSchema{
 		Permissions: []model.PermissionDefinition{
-			{Name: model.PermissionCreateWorkspace}, // no required context
+			{Name: model.PermCreateWorkspace.Name}, // no required context
 			{
-				Name:                      model.PermissionGetWorkbench,
+				Name:                      model.PermGetWorkbench.Name,
 				RequiredContextDimensions: []model.ContextDimension{model.ContextWorkbench},
 			},
 		},
 		Roles: []*model.RoleDefinition{
-			{Name: model.RoleAuthenticated, Permissions: []model.PermissionName{model.PermissionCreateWorkspace}},
-			{Name: model.RoleSuperAdmin, Permissions: []model.PermissionName{model.PermissionGetWorkbench}},
+			{Name: model.RoleAuthenticated.Name, Permissions: []model.PermissionName{model.PermCreateWorkspace.Name}},
+			{Name: model.RoleSuperAdmin.Name, Permissions: []model.PermissionName{model.PermGetWorkbench.Name}},
 		},
 	}
 	svc, err := newTestAuthorizationService(schema)
@@ -94,16 +94,16 @@ func TestExpandKeepsZeroContextAndWildcard(t *testing.T) {
 
 	// context-free permission matches with no context supplied.
 	if allowed, err := svc.IsUserAllowed(
-		[]model.Role{{Name: model.RoleAuthenticated}},
-		model.NewPermission(model.PermissionCreateWorkspace),
+		[]model.Role{{Name: model.RoleAuthenticated.Name}},
+		model.PermCreateWorkspace.For(),
 	); err != nil || !allowed {
 		t.Fatalf("context-free permission should be allowed: allowed=%v err=%v", allowed, err)
 	}
 
 	// wildcard workbench binding matches any workbench.
 	if allowed, err := svc.IsUserAllowed(
-		[]model.Role{{Name: model.RoleSuperAdmin, Context: model.Context{model.ContextWorkbench: model.Wildcard}}},
-		model.NewPermission(model.PermissionGetWorkbench, model.WithWorkbench(999)),
+		[]model.Role{{Name: model.RoleSuperAdmin.Name, Context: model.Context{model.ContextWorkbench: model.Wildcard}}},
+		model.PermGetWorkbench.For(model.WorkbenchID(999)),
 	); err != nil || !allowed {
 		t.Fatalf("wildcard workbench should match any workbench: allowed=%v err=%v", allowed, err)
 	}

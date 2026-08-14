@@ -13,7 +13,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	audit_model "github.com/CHORUS-TRE/chorus-backend/pkg/audit/model"
 	audit_service "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
-	authorization_model "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	common_model "github.com/CHORUS-TRE/chorus-backend/pkg/common/model"
 	notification_model "github.com/CHORUS-TRE/chorus-backend/pkg/notification/model"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
@@ -36,7 +36,7 @@ type Workspaceer interface {
 	DeleteWorkspace(ctx context.Context, tenantId, workspaceId uint64) error
 
 	AddUserRoleInWorkspace(ctx context.Context, tenantID, userID uint64, role user_model.UserRole) error
-	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error
+	RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authz.RoleName) error
 	RemoveUserFromWorkspace(ctx context.Context, tenantID, userID uint64, workspaceID uint64) error
 
 	GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error)
@@ -339,11 +339,11 @@ func (s *WorkspaceService) CreateWorkspace(ctx context.Context, workspace *model
 
 	var rolesToAssign []user_model.UserRole
 	if s.cfg.Services.WorkspaceService.CreatorIsAdmin {
-		r := authorization_model.NewRole(authorization_model.RoleWorkspaceAdmin, authorization_model.WithWorkspace(newWorkspace.ID))
+		r := authz.RoleWorkspaceAdmin.For(authz.WorkspaceID(newWorkspace.ID))
 		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
 	}
 	if s.cfg.Services.WorkspaceService.CreatorIsDataManager {
-		r := authorization_model.NewRole(authorization_model.RoleWorkspaceDataManager, authorization_model.WithWorkspace(newWorkspace.ID))
+		r := authz.RoleWorkspaceDataManager.For(authz.WorkspaceID(newWorkspace.ID))
 		rolesToAssign = append(rolesToAssign, user_model.UserRole{Role: r})
 	}
 
@@ -408,7 +408,7 @@ func (s *WorkspaceService) AddUserRoleInWorkspace(ctx context.Context, tenantID,
 	return nil
 }
 
-func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authorization_model.RoleName) error {
+func (s *WorkspaceService) RemoveUserRoleInWorkspace(ctx context.Context, tenantID, userID, workspaceID uint64, roleName authz.RoleName) error {
 	// Verify that the user exists and get its roles
 	user, err := s.userer.GetUser(ctx, user_service.GetUserReq{TenantID: tenantID, ID: userID})
 	if err != nil {
@@ -468,11 +468,29 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 		return cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to get user %v", userID))
 	}
 
+	// Resolve workbench IDs in the workspace
+	workbenchIDs, err := s.listWorkbenchIDsInWorkspace(ctx, tenantID, workspaceID)
+	if err != nil {
+		return err
+	}
+
 	// Get the user's roles in workspace and workbenches
 	matchingRolesIDs := []uint64{}
 	for _, r := range user.Roles {
 		if r.Context["workspace"] == fmt.Sprintf("%d", workspaceID) {
 			matchingRolesIDs = append(matchingRolesIDs, r.ID)
+			continue
+		}
+
+		// Check if the role is in a workbench in the workspace
+		workbenchID := r.Context["workbench"]
+		if workbenchID != "" {
+			for _, wbID := range workbenchIDs {
+				if workbenchID == fmt.Sprintf("%d", wbID) {
+					matchingRolesIDs = append(matchingRolesIDs, r.ID)
+					break
+				}
+			}
 		}
 	}
 
@@ -501,6 +519,22 @@ func (s *WorkspaceService) RemoveUserFromWorkspace(ctx context.Context, tenantID
 	}
 
 	return nil
+}
+
+// listWorkbenchIDsInWorkspace returns the ids of the workbenches in the workspace
+func (s *WorkspaceService) listWorkbenchIDsInWorkspace(ctx context.Context, tenantID, workspaceID uint64) ([]uint64, error) {
+	workbenches, _, err := s.workbencher.ListWorkbenches(ctx, tenantID, nil, workbench_model.WorkbenchFilter{
+		WorkspaceIDsIn: &[]uint64{workspaceID},
+	})
+	if err != nil {
+		return nil, cerr.ErrInternal.Wrap(err, fmt.Sprintf("Unable to list workbenches in workspace %v", workspaceID))
+	}
+
+	ids := make([]uint64, len(workbenches))
+	for i, w := range workbenches {
+		ids[i] = w.ID
+	}
+	return ids, nil
 }
 
 func (s *WorkspaceService) GetWorkspaceServiceInstance(ctx context.Context, tenantID, workspaceServiceInstanceID uint64) (*model.WorkspaceServiceInstance, error) {

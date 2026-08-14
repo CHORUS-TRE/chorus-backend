@@ -15,7 +15,7 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	jwt "github.com/CHORUS-TRE/chorus-backend/internal/jwt/model"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	authorization "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
+	authz "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/model"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	user_model "github.com/CHORUS-TRE/chorus-backend/pkg/user/model"
 	user_service "github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
@@ -372,9 +372,9 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 
 			roles := []string{}
 
-			userRoles := []authorization.Role{}
+			userRoles := []authz.Role{}
 			for _, r := range jwtRoles {
-				ur, err := authorization.ToRole(r.Name, r.Context)
+				ur, err := authz.ToRole(r.Name, r.Context)
 				if err != nil {
 					return goidc.StatusFailure, fmt.Errorf("unable to convert jwt role to auth role: %w", err)
 				}
@@ -402,7 +402,12 @@ func (a authenticator) finishFlow(as *goidc.AuthnSession) (goidc.Status, error) 
 			})
 
 			for _, w := range userWorkspaces {
-				permission := authorization.NewPermission(authorization.PermissionModifyFilesInWorkspace, authorization.WithWorkspace(w))
+				workspaceID, err := strconv.ParseUint(w, 10, 64)
+				if err != nil {
+					logger.TechLog.Error(context.Background(), "invalid workspace id in user workspaces", zap.String("workspace", w), zap.Error(err))
+					continue
+				}
+				permission := authz.PermModifyFilesInWorkspace.For(authz.WorkspaceID(workspaceID))
 				logger.TechLog.Debug(context.Background(), "checking user role for workspace", zap.String("workspace", w), zap.Uint64("user_id", uint64(user.ID)), zap.Any("permission", permission), zap.Any("user_roles", userRoles))
 				authorized, err := a.authorizer.IsUserAllowed(userRoles, permission)
 				if err != nil {
