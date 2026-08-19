@@ -130,8 +130,8 @@ type (
 
 		ImagePullSecretName string `yaml:"image_pull_secret_name"`
 
-		ServerVersion        string `yaml:"server_version" validate:"required_if=Enabled true"`
-		InitContainerVersion string `yaml:"init_container_version" validate:"required_if=Enabled true"`
+		ServerVersion        string `yaml:"server_version" validate:"required_if=Enabled true" init:"latest"`
+		InitContainerVersion string `yaml:"init_container_version" validate:"required_if=Enabled true" init:"latest"`
 
 		InsecureTLS bool `yaml:"insecure_tls"` // if true, TLS certificate verification is skipped (testing only)
 

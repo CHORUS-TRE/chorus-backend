@@ -16,6 +16,10 @@ config:
       password: "" # set in secret
     kubernetes:
       default_registry: "harbor.int.chorus-tre.ch"
+      # xpra-server image version to inject into the workbench CR
+      server_version: "6.3.6-r0-3"
+      # app-init image version to inject into the workbench CR
+      init_container_version: "0.0.2-7"
   daemon:
     jwt:
       secret: "" # set in secret

@@ -148,6 +148,8 @@ func bracketToDotted(path string) string {
 //   - "privatekey": a generated EC private key PEM
 //   - "jwks": a generated JWKS document
 //   - "localdev=<value>": a fixed credential matching `make deps`
+//   - "latest": the literal string "latest" (e.g. for image version fields,
+//     where it's an actually-usable value rather than a must-replace one)
 //   - "placeholder", or no tag at all (an as-yet-untagged mandatory field):
 //     an explicit "CHANGEME" rather than an empty value
 func generateValue(initTag string) (string, error) {
@@ -162,6 +164,8 @@ func generateValue(initTag string) (string, error) {
 		return jwksJSON, err
 	case "localdev":
 		return param, nil
+	case "latest":
+		return "latest", nil
 	default:
 		return placeholder, nil
 	}
