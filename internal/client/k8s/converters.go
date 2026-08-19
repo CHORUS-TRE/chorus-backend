@@ -67,9 +67,9 @@ func (c *client) workbenchToK8sWorkbench(workbench Workbench) (K8sWorkbench, err
 		}
 	}
 
-	// Add user details if configured and not empty
+	// Add user details if not empty
 	username := workbench.SanitizedUsername()
-	if c.cfg.Clients.K8sClient.AddUserDetails && username != "" {
+	if username != "" {
 		k8sWorkbench.Spec.Server.User = username
 		k8sWorkbench.Spec.Server.UserID = int(workbench.UserID + workbenchUserIDOffset)
 	}
