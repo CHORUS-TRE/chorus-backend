@@ -362,7 +362,7 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("clients.kubernetes.image_pull_secret_name", "regcred")
 	v.SetDefault("clients.kubernetes.server_version", "6.3.6-r0-3")
 	v.SetDefault("clients.kubernetes.init_container_version", "0.0.2-4")
-	v.SetDefault("clients.kubernetes.add_user_details", false)
+	v.SetDefault("clients.kubernetes.add_user_details", true)
 	v.SetDefault("clients.kubernetes.insecure_tls", false)
 	v.SetDefault("clients.kubernetes.is_watcher", true)
 	v.SetDefault("clients.kubernetes.poll_interval", 500*time.Millisecond)
