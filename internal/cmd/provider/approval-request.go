@@ -10,7 +10,6 @@ import (
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/client/filestore"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/approval-request/store/middleware"
@@ -55,7 +54,7 @@ var approvalRequestStore service.ApprovalRequestStore
 
 func ProvideApprovalRequestStore() service.ApprovalRequestStore {
 	approvalRequestStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("approval-request-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("approval-request-store"))
 		switch db.Type {
 		case POSTGRES:
 			approvalRequestStore = postgres.NewApprovalRequestStorage(db.DB.GetSqlxDB())

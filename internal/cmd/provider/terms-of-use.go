@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/terms-of-use/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/terms-of-use/service/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/terms-of-use/store/postgres"
@@ -46,7 +45,7 @@ var termsOfUseStore service.TermsOfUseStore
 
 func ProvideTermsOfUseStore() service.TermsOfUseStore {
 	termsOfUseStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("terms-of-use-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("terms-of-use-store"))
 		switch db.Type {
 		case POSTGRES:
 			termsOfUseStore = postgres.NewTermsOfUseStorage(db.DB.GetSqlxDB())

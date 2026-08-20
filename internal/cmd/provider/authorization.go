@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	authorization_service "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authorization/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/authorization/store/middleware"
@@ -49,7 +48,7 @@ var authorizationStore authorization_service.AuthorizationStore
 
 func ProvideAuthorizationStore() authorization_service.AuthorizationStore {
 	authorizationStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("authorization-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("authorization-store"))
 		switch db.Type {
 		case POSTGRES:
 			authorizationStore = postgres.NewAuthorizationStorage(db.DB.GetSqlxDB())

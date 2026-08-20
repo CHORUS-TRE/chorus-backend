@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/workbench/store/middleware"
@@ -57,7 +56,7 @@ var workbenchStore service.WorkbenchStore
 
 func ProvideWorkbenchStore() service.WorkbenchStore {
 	workbenchStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("workbench-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("workbench-store"))
 		switch db.Type {
 		case POSTGRES:
 			workbenchStore = postgres.NewWorkbenchStorage(db.DB.GetSqlxDB())

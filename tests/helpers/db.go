@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/cmd/provider"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 
 	_ "github.com/lib/pq"
 
@@ -18,13 +17,14 @@ import (
 )
 
 // DB returns the database connection as specified by the configuration
-// file. Note that the migrations are handled by the provider.
+// file. Migrations are run ahead of time via `chorus migrate`, not by this
+// helper or the backend it connects to.
 func DB() *sqlx.DB {
 	return provideDB().DB.GetSqlxDB()
 }
 
 func provideDB() *provider.Database {
-	return provider.ProvideDB("chorus", provider.WithClient("acceptance-tests"), provider.WithMigrations(migration.GetMigration))
+	return provider.ProvideDB("chorus", provider.WithClient("acceptance-tests"))
 }
 
 func Populate(query string, args ...interface{}) {

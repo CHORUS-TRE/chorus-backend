@@ -20,6 +20,10 @@ fi
 COVERAGE_DIR="${COVERAGE_DIR:-tests/coverage}"
 CONFIG_FILE="${CONFIG_FILE:-configs/config.yaml}"
 ACCEPTANCE_CONFIG_SET="${ACCEPTANCE_CONFIG_SET:-storage.datastores.chorus.database=chorus_ci,storage.file_stores.disk.disk_config.base_path=docker/.diskfilestoreci,clients.oci.enabled=false,clients.harbor.enabled=false,clients.kubernetes.enabled=false}"
+# Migrator credentials: same role as the runtime user until the DB-side role
+# split lands, but still routed through storage.migrations.* rather than
+# storage.datastores.* to exercise the decoupled `chorus migrate` config path.
+MIGRATION_CONFIG_SET="${MIGRATION_CONFIG_SET:-storage.migrations.chorus.username=admin,storage.migrations.chorus.password=password,storage.migrations.audit.username=admin,storage.migrations.audit.password=password}"
 
 # go test runs each suite with its package directory as the working directory
 # (tests/acceptance/<suite>), not the repo root, so the path handed to it must
@@ -29,6 +33,10 @@ CONFIG_FILE="$(cd "$(dirname "$CONFIG_FILE")" && pwd)/$(basename "$CONFIG_FILE")
 overrides=()
 IFS=',' read -ra kvs <<< "$ACCEPTANCE_CONFIG_SET"
 for kv in "${kvs[@]}"; do overrides+=(--set "$kv"); done
+
+migration_overrides=()
+IFS=',' read -ra mkvs <<< "$MIGRATION_CONFIG_SET"
+for kv in "${mkvs[@]}"; do migration_overrides+=(--set "$kv"); done
 
 # Read daemon.http.port from the resolved config (file + overrides) rather
 # than assuming a fixed port, so this follows whatever CONFIG_FILE sets.
@@ -55,10 +63,20 @@ if $COVERAGE; then
     mkdir -p "$RAW_DIR"
     BIN=bin/chorus-cov
     go build -cover -coverpkg=./... -o "$BIN" ./cmd/chorus
-    GOCOVERDIR="$RAW_DIR" "$BIN" --config "$CONFIG_FILE" "${overrides[@]}" start > "$COVERAGE_DIR/backend.log" 2>&1 &
 else
     BIN=bin/chorus-acceptance
     go build -o "$BIN" ./cmd/chorus
+fi
+
+# Run migrations against both datastores
+# before the backend (or the test suite, via
+# tests/helpers/db.go) ever connects.
+"$BIN" --config "$CONFIG_FILE" "${overrides[@]}" "${migration_overrides[@]}" migrate chorus
+"$BIN" --config "$CONFIG_FILE" "${overrides[@]}" "${migration_overrides[@]}" migrate audit
+
+if $COVERAGE; then
+    GOCOVERDIR="$RAW_DIR" "$BIN" --config "$CONFIG_FILE" "${overrides[@]}" start > "$COVERAGE_DIR/backend.log" 2>&1 &
+else
     "$BIN" --config "$CONFIG_FILE" "${overrides[@]}" start > "$COVERAGE_DIR/backend.log" 2>&1 &
 fi
 BACKEND_PID=$!

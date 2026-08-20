@@ -11,7 +11,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	grpc_mw "github.com/CHORUS-TRE/chorus-backend/internal/protocol/grpc/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/authentication/service/middleware"
@@ -53,7 +52,7 @@ var authenticationStore service.AuthenticationStore
 
 func ProvideAuthenticationStore() service.AuthenticationStore {
 	authenticationStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("authentication-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("authentication-store"))
 		switch db.Type {
 		case POSTGRES:
 			authenticationStore = postgres.NewAuthenticationStorage(db.DB.GetSqlxDB())

@@ -9,7 +9,7 @@ SUITE ?=
 UNIT_TARGET       = $(if $(PKG),./pkg/$(PKG)/service,./...)
 ACCEPTANCE_TARGET = $(if $(SUITE),./tests/acceptance/$(SUITE),./tests/acceptance/...)
 
-.PHONY: help deps deps-down deps-clean build run protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean trim-config diff-config check-config
+.PHONY: help deps deps-down deps-clean build run migrate protos test-unit test-integration test-acceptance test-acceptance-coverage coverage-html clean trim-config diff-config check-config
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-26s\033[0m %s\n", $$1, $$2}'
@@ -26,7 +26,11 @@ deps-clean: ## Stop local dependencies and remove their volumes (postgres/minio 
 build: ## Build the backend binary into bin/chorus
 	go build -o bin/chorus ./cmd/chorus
 
-run: ## Run the backend with the dev config
+migrate: ## Run pending migrations against the dev datastores (chorus, audit)
+	go run ./cmd/chorus/main.go migrate chorus --config $(CONFIG_FILE) --set storage.migrations.chorus.username=admin --set storage.migrations.chorus.password=password
+	go run ./cmd/chorus/main.go migrate audit --config $(CONFIG_FILE) --set storage.migrations.audit.username=admin --set storage.migrations.audit.password=password
+
+run: migrate ## Run the backend with the dev config
 	go run ./cmd/chorus/main.go start --config $(CONFIG_FILE) | go run ./cmd/logger/main.go
 
 diff-config: ## Show drift between CONFIG_FILE and the code-level defaults, from live source

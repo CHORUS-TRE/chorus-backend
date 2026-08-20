@@ -8,7 +8,6 @@ import (
 	jobmemory "github.com/CHORUS-TRE/chorus-backend/internal/job/memory"
 	jobpostgres "github.com/CHORUS-TRE/chorus-backend/internal/job/postgres"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	appservice "github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 
 	"go.uber.org/zap"
@@ -27,7 +26,7 @@ func ProvideJobber() job.Jobber {
 		case "memory":
 			lockStore = jobmemory.NewLockStore()
 		default:
-			db := ProvideMainDB(WithClient("jobber"), WithMigrations(migration.GetMigration))
+			db := ProvideMainDB(WithClient("jobber"))
 			lockStore = jobpostgres.NewLockStore(db.GetSqlxDB())
 		}
 

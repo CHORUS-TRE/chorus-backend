@@ -7,7 +7,6 @@ import (
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/config"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/internal/utils/database"
 	_ "github.com/lib/pq"
 
@@ -76,7 +75,7 @@ func ProvideDB(datastoreID string, opts ...Option) *Database {
 		switch cfg.Type {
 		case POSTGRES:
 			logger.TechLog.Info(ctx, fmt.Sprintf("providing Postgres DB for storage '%v'", datastoreID))
-			m[o.clientName] = providePostgresDB(ctx, cfg, o)
+			m[o.clientName] = providePostgresDB(ctx, cfg)
 		default:
 			logger.TechLog.Fatal(ctx, fmt.Sprintf("invalid storage type. Must be 'postgres', got: '%v'", cfg.Type))
 		}
@@ -85,11 +84,8 @@ func ProvideDB(datastoreID string, opts ...Option) *Database {
 	return m[o.clientName]
 }
 
-type MigrationFetcher func(string) (map[string]string, string, error)
-
 type options struct {
 	clientName string
-	f          MigrationFetcher
 }
 
 // Option is used to pass options to the DB provider.
@@ -102,14 +98,7 @@ func WithClient(client string) Option {
 	}
 }
 
-// WithMigrations is the option used to set the migrations.
-func WithMigrations(f MigrationFetcher) Option {
-	return func(o *options) {
-		o.f = f
-	}
-}
-
-func providePostgresDB(ctx context.Context, cfg config.Datastore, opts *options) *Database {
+func providePostgresDB(ctx context.Context, cfg config.Datastore) *Database {
 	var dataSourceName string
 	if cfg.SSL.Enabled {
 		dataSourceName = fmt.Sprintf("postgresql://%s@%s:%s/%s?sslmode=require&sslcert=%s&sslkey=%s&application_name=%s", cfg.Username, cfg.Host, cfg.Port, cfg.Database, cfg.SSL.CertificateFile, cfg.SSL.KeyFile, ProvideComponentInfo().Name)
@@ -125,22 +114,6 @@ func providePostgresDB(ctx context.Context, cfg config.Datastore, opts *options)
 	}
 	db.SetMaxOpenConns(cfg.MaxConnections)
 	db.SetConnMaxLifetime(cfg.MaxLifetime)
-
-	// Do migrations only once.
-	if opts.f != nil {
-		migrations, migrationTable, err := opts.f(POSTGRES)
-		if err != nil {
-			logger.TechLog.Fatal(ctx, "unable to get migration", zap.Error(err))
-		}
-
-		if migrations != nil && migrationTable != "" {
-			n, err := migration.Migrate(POSTGRES, migrations, migrationTable, db)
-			if err != nil {
-				logger.TechLog.Fatal(ctx, "unable to migrate database "+opts.clientName, zap.Error(err))
-			}
-			logger.TechLog.Info(ctx, "migrated database: "+opts.clientName, zap.Int("num_migrations", n))
-		}
-	}
 
 	return &Database{
 		DB:   database.NewDefaultDB(db),

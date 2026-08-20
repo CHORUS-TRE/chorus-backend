@@ -14,6 +14,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type MigrationFetcher func(string) (map[string]string, string, error)
+
 type migratableDatastore struct {
 	ID      string
 	Fetcher MigrationFetcher
