@@ -125,6 +125,18 @@ affinity: {}
 clusterRole:
   create: true
 
+# Runs `chorus migrate <db-name>` once per release for each datastore below,
+# as a pre-install/pre-upgrade hook, reading its password from Secret
+# "<release-fullname>-migrator-credentials". To override the migrator
+# username (default "migrator"), set config.storage.migrations.<db-name>.username.
+migrationJob:
+  enabled: true
+  datastores:
+  - chorus
+  - audit
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+
 # The whole config section is passed to the backend as a config file, so you can override any config value here.
 # You can use chorus-backend/configs/chorus-int/values.yaml as a reference for the default values.
 config: {}

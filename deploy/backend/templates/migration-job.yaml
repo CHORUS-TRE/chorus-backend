@@ -1,0 +1,70 @@
+{{- if .Values.migrationJob.enabled }}
+{{- range $db := .Values.migrationJob.datastores }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "backend.fullname" $ }}-migrate-{{ $db }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "backend.labels" $ | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ $.Values.migrationJob.backoffLimit }}
+  ttlSecondsAfterFinished: {{ $.Values.migrationJob.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "backend.labels" $ | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: migrate-{{ $db }}
+        image: {{ include "backend.image" $ }}
+        args:
+        - migrate
+        - {{ $db }}
+        - --config
+        - /configs/config.yaml
+        securityContext:
+          {{- toYaml $.Values.securityContext | nindent 10 }}
+        env:
+        - name: {{ printf "CHORUS_STORAGE_MIGRATIONS_%s_PASSWORD" ($db | upper) }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "backend.migratorSecretName" $ }}
+              key: {{ printf "CHORUS_STORAGE_MIGRATIONS_%s_PASSWORD" ($db | upper) }}
+        volumeMounts:
+        - name: config
+          mountPath: /configs
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "backend.fullname" $ }}
+          items:
+          - key: config.yaml
+            path: config.yaml
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}
