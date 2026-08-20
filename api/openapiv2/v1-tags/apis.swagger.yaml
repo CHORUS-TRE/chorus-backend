@@ -6149,6 +6149,15 @@ definitions:
         type: string
       category:
         type: string
+      webServicePort:
+        type: string
+        description: |-
+          Web-service apps: the operator runs the image as a sidecar on this port/path
+          and composes a shared kiosk shell to render it. Empty for ordinary apps.
+      webServicePath:
+        type: string
+      webServiceTokenParam:
+        type: string
       createdAt:
         type: string
         format: date-time

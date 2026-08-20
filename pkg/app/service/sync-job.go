@@ -29,6 +29,12 @@ const (
 	labelOCITitle       = "org.opencontainers.image.title"
 	labelOCIDescription = "org.opencontainers.image.description"
 
+	// Web-service apps declare their shape with these labels; the operator then runs
+	// the image as a service sidecar and composes a shared kiosk shell to render it.
+	labelWebServicePort       = "ch.chorus-tre.app.web-service.port"
+	labelWebServicePath       = "ch.chorus-tre.app.web-service.path"
+	labelWebServiceTokenParam = "ch.chorus-tre.app.web-service.token-param"
+
 	// categoryChorus tags internal apps that should not be synced.
 	categoryChorus = "chorus"
 
@@ -170,6 +176,9 @@ func (j *AppSyncJob) harborAppToModels(ha harbor.App, tenantID, userID uint64) [
 	app.MinMemory = labels[labelMinMemory]
 	app.MaxEphemeralStorage = labels[labelMaxEphemeral]
 	app.MinEphemeralStorage = labels[labelMinEphemeral]
+	app.WebServicePort = labels[labelWebServicePort]
+	app.WebServicePath = labels[labelWebServicePath]
+	app.WebServiceTokenParam = labels[labelWebServiceTokenParam]
 	return []*model.App{&app}
 }
 

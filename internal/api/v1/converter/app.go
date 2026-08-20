@@ -50,6 +50,10 @@ func AppToBusiness(app *chorus.App) (*model.App, error) {
 		StabilityStatus:              model.AppStabilityStatus(app.StabilityStatus),
 		Category:                     app.Category,
 
+		WebServicePort:       app.WebServicePort,
+		WebServicePath:       app.WebServicePath,
+		WebServiceTokenParam: app.WebServiceTokenParam,
+
 		CreatedAt: ca,
 		UpdatedAt: ua,
 	}, nil
@@ -94,6 +98,10 @@ func AppFromBusiness(app *model.App) (*chorus.App, error) {
 		IconBackgroundColor:          app.IconBackgroundColor,
 		StabilityStatus:              app.StabilityStatus.String(),
 		Category:                     app.Category,
+
+		WebServicePort:       app.WebServicePort,
+		WebServicePath:       app.WebServicePath,
+		WebServiceTokenParam: app.WebServiceTokenParam,
 
 		CreatedAt: ca,
 		UpdatedAt: ua,

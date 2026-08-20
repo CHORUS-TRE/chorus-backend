@@ -99,6 +99,16 @@ type ChorusApp struct {
 
 	// user Id
 	UserID string `json:"userId,omitempty"`
+
+	// web service path
+	WebServicePath string `json:"webServicePath,omitempty"`
+
+	// Web-service apps: the operator runs the image as a sidecar on this port/path
+	// and composes a shared kiosk shell to render it. Empty for ordinary apps.
+	WebServicePort string `json:"webServicePort,omitempty"`
+
+	// web service token param
+	WebServiceTokenParam string `json:"webServiceTokenParam,omitempty"`
 }
 
 // Validate validates this chorus app

@@ -139,8 +139,11 @@ func (s *WorkbenchStorage) ListWorkbenchAppInstances(ctx context.Context, workbe
 			a.minmemory as AppMinMemory,
 			a.maxephemeralstorage as AppMaxEphemeralStorage,
 			a.minephemeralstorage as AppMinEphemeralStorage,
-			a.iconurl as AppIconURL
-		FROM 
+			a.iconurl as AppIconURL,
+			a.webserviceport as AppWebServicePort,
+			a.webservicepath as AppWebServicePath,
+			a.webservicetokenparam as AppWebServiceTokenParam
+		FROM
 			app_instances ai
 		JOIN 
 			apps a ON ai.appid = a.id
