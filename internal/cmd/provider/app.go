@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/app/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/app/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/app/store/middleware"
@@ -49,7 +48,7 @@ var appStore service.AppStore
 
 func ProvideAppStore() service.AppStore {
 	appStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("app-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("app-store"))
 		switch db.Type {
 		case POSTGRES:
 			appStore = postgres.NewAppStorage(db.DB.GetSqlxDB())

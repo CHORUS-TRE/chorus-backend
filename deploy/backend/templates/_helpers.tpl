@@ -64,3 +64,12 @@ Return the proper image name
 {{- define "backend.image" -}}
 {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
+
+{{/*
+Name of the Secret holding migrator-role credentials for the migration Job,
+kept separate from the runtime Secret so it is never mounted into the
+Deployment.
+*/}}
+{{- define "backend.migratorSecretName" -}}
+{{- include "backend.fullname" . }}-migrator-credentials
+{{- end }}

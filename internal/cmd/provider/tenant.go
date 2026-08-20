@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
-
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/tenant/store/postgres"
 
@@ -18,7 +16,7 @@ var tenantStore service.TenantStore
 
 func ProvideTenantStore() service.TenantStore {
 	tenantStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("default-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("default-store"))
 		switch db.Type {
 		case POSTGRES:
 			tenantStore = postgres.NewTenantStorage(db.DB.GetSqlxDB())

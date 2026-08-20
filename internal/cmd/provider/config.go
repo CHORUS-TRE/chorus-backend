@@ -91,32 +91,38 @@ func CheckConfig() error {
 		return err
 	}
 
+	identity := func(relPath string) string { return relPath }
+
 	lines := make([]string, 0, len(validationErrs))
 	for _, fe := range validationErrs {
-		lines = append(lines, formatValidationError(cfg, fe))
+		lines = append(lines, formatValidationError(cfg, identity, fe))
 	}
 	return errors.New(strings.Join(lines, "\n"))
 }
 
-func formatValidationError(cfg config.Config, fe val.FieldError) string {
-	// Namespace() is rooted at the Config struct's Go type name (e.g.
-	// "Config.daemon.grpc.host"); strip it to get the plain dotted path
-	// used everywhere else (--set, CHORUS_* env vars, config.yaml).
-	_, path, _ := strings.Cut(fe.Namespace(), ".")
+// formatValidationError renders one validation failure as a human-readable
+// "FAIL '...'" line. Namespace() is rooted at root's Go type name (e.g.
+// "Config.daemon.grpc.host"); pathFor turns the stripped relative path
+// ("daemon.grpc.host") into the path shown to the user -- the identity
+// function when root is the whole Config (already the schema root), or a
+// prefixing function when root is some sub-struct validated on its own.
+func formatValidationError(root any, pathFor func(relPath string) string, fe val.FieldError) string {
+	_, relPath, _ := strings.Cut(fe.Namespace(), ".")
+	path := pathFor(relPath)
 
 	switch fe.Tag() {
 	case "required":
 		return fmt.Sprintf("FAIL '%s' is missing", path)
 	case "required_without":
-		sibling := siblingPath(cfg, fe, fe.Param())
+		sibling := pathFor(siblingRelPath(root, fe, fe.Param()))
 		return fmt.Sprintf("FAIL '%s' is missing (required unless '%s' is set)", path, sibling)
 	case "required_with":
-		sibling := siblingPath(cfg, fe, fe.Param())
+		sibling := pathFor(siblingRelPath(root, fe, fe.Param()))
 		return fmt.Sprintf("FAIL '%s' is missing (required when '%s' is set)", path, sibling)
 	case "required_if":
-		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", path, describeConditions(cfg, fe))
+		return fmt.Sprintf("FAIL '%s' is missing (required when %s)", path, describeConditions(root, pathFor, fe))
 	case "required_unless":
-		return fmt.Sprintf("FAIL '%s' is missing (required unless %s)", path, describeConditions(cfg, fe))
+		return fmt.Sprintf("FAIL '%s' is missing (required unless %s)", path, describeConditions(root, pathFor, fe))
 	case "oneof":
 		return fmt.Sprintf("FAIL '%s' must be one of: %s", path, fe.Param())
 	case "ne":
@@ -134,20 +140,20 @@ func formatValidationError(cfg config.Config, fe val.FieldError) string {
 	}
 }
 
-// siblingPath resolves a required_if/required_without Param (a Go field name
-// within the same parent struct) to its full dotted yaml path, e.g. "Enabled"
-// on Config.Clients.K8sClient.DefaultRegistry becomes "clients.kubernetes.enabled".
-// Parent segments may be map-indexed (e.g. "Jobs[app_sync]") when the field
-// lives inside a map, as with Daemon.Jobs. Falls back to the raw Go field name
-// if anything doesn't resolve cleanly.
-func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) string {
+// siblingRelPath resolves a required_if/required_without Param (a Go field
+// name within the same parent struct) to its relative dotted yaml path, e.g.
+// "Enabled" on Clients.K8sClient.DefaultRegistry becomes
+// "kubernetes.enabled". Parent segments may be map-indexed (e.g.
+// "Jobs[app_sync]") when the field lives inside a map, as with Daemon.Jobs.
+// Falls back to the raw Go field name if anything doesn't resolve cleanly.
+func siblingRelPath(root any, fe val.FieldError, goFieldName string) string {
 	structSegments := strings.Split(fe.StructNamespace(), ".")
 	if len(structSegments) < 2 {
 		return goFieldName
 	}
-	parentSegments := structSegments[1 : len(structSegments)-1] // drop leading "Config" and the leaf field
+	parentSegments := structSegments[1 : len(structSegments)-1] // drop the root segment and the leaf field
 
-	v := reflect.ValueOf(cfg)
+	v := reflect.ValueOf(root)
 	for _, seg := range parentSegments {
 		fieldName, mapKey, hasMapKey := strings.Cut(seg, "[")
 		v = v.FieldByName(fieldName)
@@ -175,10 +181,10 @@ func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) strin
 		return goFieldName
 	}
 
-	_, path, _ := strings.Cut(fe.Namespace(), ".")
-	parentPath := path
-	if idx := strings.LastIndex(path, "."); idx >= 0 {
-		parentPath = path[:idx]
+	_, relPath, _ := strings.Cut(fe.Namespace(), ".")
+	parentPath := relPath
+	if idx := strings.LastIndex(relPath, "."); idx >= 0 {
+		parentPath = relPath[:idx]
 	}
 	return parentPath + "." + yamlName
 }
@@ -186,12 +192,12 @@ func siblingPath(cfg config.Config, fe val.FieldError, goFieldName string) strin
 // describeConditions renders a required_if/required_unless Param -- one or
 // more space-separated "Field Value" pairs, ANDed together per go-playground's
 // own semantics -- as a human-readable "'x' is true and 'y' is false" list of
-// sibling yaml paths.
-func describeConditions(cfg config.Config, fe val.FieldError) string {
+// sibling paths.
+func describeConditions(root any, pathFor func(relPath string) string, fe val.FieldError) string {
 	params := strings.Fields(fe.Param())
 	var conditions []string
 	for i := 0; i+1 < len(params); i += 2 {
-		sibling := siblingPath(cfg, fe, params[i])
+		sibling := pathFor(siblingRelPath(root, fe, params[i]))
 		conditions = append(conditions, fmt.Sprintf("'%s' is %s", sibling, params[i+1]))
 	}
 	return strings.Join(conditions, " and ")
@@ -411,6 +417,13 @@ func SetDefaultConfig(v *viper.Viper) {
 	v.SetDefault("storage.datastores.audit.max_lifetime", 10*time.Second)
 	v.SetDefault("storage.datastores.audit.ssl.enabled", false)
 	v.SetDefault("storage.datastores.audit.password", "")
+
+	// Storage - Migrations
+	v.SetDefault("storage.migrations.chorus.username", "migrator")
+	v.SetDefault("storage.migrations.chorus.password", "")
+
+	v.SetDefault("storage.migrations.audit.username", "migrator")
+	v.SetDefault("storage.migrations.audit.password", "")
 
 	// Storage - File Stores
 	v.SetDefault("storage.file_stores.archive.type", "minio")

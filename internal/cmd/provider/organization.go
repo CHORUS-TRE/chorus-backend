@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/organization/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/organization/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/organization/store/middleware"
@@ -47,7 +46,7 @@ var organizationStore service.OrganizationStore
 
 func ProvideOrganizationStore() service.OrganizationStore {
 	organizationStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("organization-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("organization-store"))
 		switch db.Type {
 		case POSTGRES:
 			organizationStore = postgres.NewOrganizationStorage(db.DB.GetSqlxDB())

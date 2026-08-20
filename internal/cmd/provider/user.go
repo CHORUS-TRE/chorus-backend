@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/user/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/user/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/user/store/middleware"
@@ -55,7 +54,7 @@ var userStore service.UserStore
 
 func ProvideUserStore() service.UserStore {
 	userStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("user-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("user-store"))
 		switch db.Type {
 		case POSTGRES:
 			userStore = postgres.NewUserStorage(db.DB.GetSqlxDB())

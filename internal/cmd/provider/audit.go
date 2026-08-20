@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/audit/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/audit/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/audit/store/middleware"
@@ -55,7 +54,7 @@ var auditStore service.AuditStore
 
 func ProvideAuditStore() service.AuditStore {
 	auditStoreOnce.Do(func() {
-		db := ProvideAuditDB(WithClient("audit-store"), WithMigrations(migration.GetAuditMigration))
+		db := ProvideAuditDB(WithClient("audit-store"))
 		switch db.Type {
 		case POSTGRES:
 			auditStore = postgres.NewAuditStorage(db.DB.GetSqlxDB())

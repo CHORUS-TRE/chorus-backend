@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/service"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/store/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/oidc-idp/store/postgres"
@@ -46,7 +45,7 @@ var authnSessionManager goidc.AuthnSessionManager
 
 func ProvideOIDCIDPAuthnSessionManager() goidc.AuthnSessionManager {
 	authnSessionManagerOnce.Do(func() {
-		db := ProvideMainDB(WithClient("default-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("default-store"))
 		switch db.Type {
 		case POSTGRES:
 			authnSessionManager = postgres.NewAuthnSessionManager(db.DB.GetSqlxDB())
@@ -63,7 +62,7 @@ var logoutSessionManager goidc.LogoutSessionManager
 
 func ProvideOIDCIDPLogoutSessionManager() goidc.LogoutSessionManager {
 	logoutSessionManagerOnce.Do(func() {
-		db := ProvideMainDB(WithClient("default-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("default-store"))
 		switch db.Type {
 		case POSTGRES:
 			logoutSessionManager = postgres.NewLogoutSessionManager(db.DB.GetSqlxDB())
@@ -80,7 +79,7 @@ var grantSessionManager goidc.GrantSessionManager
 
 func ProvideOIDCIDPGrantSessionManager() goidc.GrantSessionManager {
 	grantSessionManagerOnce.Do(func() {
-		db := ProvideMainDB(WithClient("default-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("default-store"))
 		switch db.Type {
 		case POSTGRES:
 			grantSessionManager = postgres.NewGrantSessionManager(db.DB.GetSqlxDB())

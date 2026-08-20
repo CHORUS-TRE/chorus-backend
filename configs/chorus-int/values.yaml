@@ -117,6 +117,13 @@ config:
         host: chorus-int-backend-db-postgresql
         username: backend
         password: "" # set in secret
+    migrations:
+      audit:
+        username: backend-audit # TODO: remove once a migrator role is created for this db
+        password: "" # set in migrator secret
+      chorus:
+        username: backend # TODO: remove once a migrator role is created for this db
+        password: "" # set in migrator secret
     file_stores:
       archive:
         minio_config:

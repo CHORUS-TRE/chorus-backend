@@ -197,8 +197,14 @@ type (
 	}
 
 	Storage struct {
-		Datastores map[string]Datastore `yaml:"datastores" validate:"dive"`
-		FileStores map[string]FileStore `yaml:"file_stores" validate:"dive"`
+		Datastores map[string]Datastore            `yaml:"datastores" validate:"dive"`
+		Migrations map[string]MigrationCredentials `yaml:"migrations"`
+		FileStores map[string]FileStore            `yaml:"file_stores" validate:"dive"`
+	}
+
+	MigrationCredentials struct {
+		Username string    `yaml:"username"`
+		Password Sensitive `yaml:"password"`
 	}
 
 	Datastore struct {

@@ -8,7 +8,6 @@ import (
 	"github.com/CHORUS-TRE/chorus-backend/internal/api/v1/chorus"
 	ctrl_mw "github.com/CHORUS-TRE/chorus-backend/internal/api/v1/middleware"
 	"github.com/CHORUS-TRE/chorus-backend/internal/logger"
-	"github.com/CHORUS-TRE/chorus-backend/internal/migration"
 	"github.com/CHORUS-TRE/chorus-backend/pkg/notification/service"
 	service_mw "github.com/CHORUS-TRE/chorus-backend/pkg/notification/service/middleware"
 	store_mw "github.com/CHORUS-TRE/chorus-backend/pkg/notification/store/middleware"
@@ -44,7 +43,7 @@ var notificationStore service.NotificationStore
 
 func ProvideNotificationStore() service.NotificationStore {
 	notificationStoreOnce.Do(func() {
-		db := ProvideMainDB(WithClient("notification-store"), WithMigrations(migration.GetMigration))
+		db := ProvideMainDB(WithClient("notification-store"))
 		switch db.Type {
 		case POSTGRES:
 			notificationStore = postgres.NewNotificationStorage(db.DB.GetSqlxDB())
