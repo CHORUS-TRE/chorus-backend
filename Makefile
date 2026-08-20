@@ -30,7 +30,7 @@ migrate: ## Run pending migrations against the dev datastores (chorus, audit)
 	go run ./cmd/chorus/main.go migrate chorus --config $(CONFIG_FILE) --set storage.migrations.chorus.username=admin --set storage.migrations.chorus.password=password
 	go run ./cmd/chorus/main.go migrate audit --config $(CONFIG_FILE) --set storage.migrations.audit.username=admin --set storage.migrations.audit.password=password
 
-run: migrate ## Run the backend with the dev config
+run: migrate ## Run migrations and start the backend with the dev config
 	go run ./cmd/chorus/main.go start --config $(CONFIG_FILE) | go run ./cmd/logger/main.go
 
 diff-config: ## Show drift between CONFIG_FILE and the code-level defaults, from live source
